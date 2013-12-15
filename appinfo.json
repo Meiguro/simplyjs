@@ -1,0 +1,17 @@
+{
+  "uuid": "133215f0-cf20-4c05-997b-3c9be5a64e5b",
+  "shortName": "Simply.js 1",
+  "longName": "Simply.js 1",
+  "companyName": "Meiguro",
+  "versionCode": 1,
+  "versionLabel": "0.1.0",
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": []
+  }
+}

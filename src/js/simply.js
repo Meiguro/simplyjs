@@ -21,6 +21,13 @@ var commands = [{
   params: [{
     name: 'button',
   }],
+}, {
+  name: 'accelTap',
+  params: [{
+    name: 'axis',
+  }, {
+    name: 'direction',
+  }],
 }];
 
 var commandMap = {};
@@ -48,6 +55,12 @@ var buttons = [
   'up',
   'select',
   'down',
+];
+
+var accelAxes = [
+  'x',
+  'y',
+  'z',
 ];
 
 simply = {};
@@ -88,14 +101,16 @@ simply.emit = function(type, e) {
 };
 
 simply.loadScript = function(scriptUrl) {
+  console.log('loading: ' + scriptUrl);
   ajax({ url: scriptUrl }, function(data) {
     if (data && data.length) {
       localStorage.setItem('mainJs', data);
       eval(data);
     }
-  }, function(data) {
+  }, function(data, status) {
     data = localStorage.getItem('mainJs');
     if (data && data.length) {
+      console.log(status + ': failed, loading saved script instead');
       eval(data);
     }
   });
@@ -160,9 +175,14 @@ simply.onAppMessage = function(e) {
     case 'singleClick':
     case 'longClick':
       simply.emit(command.name, {
-        button: buttons[payload[1]]
+        button: buttons[payload[1]],
       });
       break;
+    case 'accelTap':
+      simply.emit(command.name, {
+        axis: accelAxes[payload[1]],
+        direction: payload[2],
+      });
   }
 };
 

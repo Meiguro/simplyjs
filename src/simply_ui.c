@@ -149,8 +149,7 @@ static void window_unload(Window *window) {
 }
 
 static void handle_accel_tap(AccelAxisType axis, int32_t direction) {
-  SimplyData *data = s_data;
-  (void) data;
+  simply_msg_accel_tap(axis, direction);
 }
 
 SimplyData *simply_create(void) {

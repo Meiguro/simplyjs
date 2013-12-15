@@ -10,6 +10,7 @@ enum SimplyACmd {
   SimplyACmd_setText = 0,
   SimplyACmd_singleClick = 1,
   SimplyACmd_longClick = 2,
+  SimplyACmd_accelTap = 3,
 };
 
 static void handle_set_text(DictionaryIterator *iter, SimplyData *simply) {
@@ -81,6 +82,17 @@ bool simply_msg_long_click(ButtonId button) {
   }
   dict_write_uint8(iter, 0, SimplyACmd_longClick);
   dict_write_uint8(iter, 1, button);
+  return (app_message_outbox_send() == APP_MSG_OK);
+}
+
+bool simply_msg_accel_tap(AccelAxisType axis, int32_t direction) {
+  DictionaryIterator *iter = NULL;
+  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+    return false;
+  }
+  dict_write_uint8(iter, 0, SimplyACmd_accelTap);
+  dict_write_uint8(iter, 1, axis);
+  dict_write_int8(iter, 2, direction);
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 

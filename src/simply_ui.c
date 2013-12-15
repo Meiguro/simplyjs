@@ -36,6 +36,11 @@ void simply_set_style(SimplyData* simply, int style_index) {
 static void set_text(char **str_field, const char *str) {
   free(*str_field);
 
+  if (!str || !str[0]) {
+    *str_field = NULL;
+    return;
+  }
+
   size_t size = strlen(str) + 1;
   char *buffer = malloc(size);
   strncpy(buffer, str, size);

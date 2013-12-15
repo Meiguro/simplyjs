@@ -10,6 +10,8 @@ var commands = [{
     name: 'subtitle',
   }, {
     name: 'body',
+  }, {
+    name: 'clear',
   }],
 }, {
   name: 'singleClick',
@@ -100,18 +102,23 @@ simply.emit = function(type, e) {
   return false;
 };
 
+simply.eval = function(script) {
+  simply.listeners = {};
+  eval(script);
+};
+
 simply.loadScript = function(scriptUrl) {
   console.log('loading: ' + scriptUrl);
   ajax({ url: scriptUrl }, function(data) {
     if (data && data.length) {
       localStorage.setItem('mainJs', data);
-      eval(data);
+      simply.eval(data);
     }
   }, function(data, status) {
     data = localStorage.getItem('mainJs');
     if (data && data.length) {
       console.log(status + ': failed, loading saved script instead');
-      eval(data);
+      simply.eval(data);
     }
   });
 };
@@ -159,8 +166,11 @@ function makePacket(type, def) {
   return packet;
 }
 
-simply.setText = function(textDef) {
+simply.setText = function(textDef, clear) {
   var packet = makePacket('setText', textDef);
+  if (clear) {
+    packet[commandMap.setText.paramMap.clear.id] = 1;
+  }
   var send; (send = function() {
     Pebble.sendAppMessage(packet, util2.void, send);
   })();

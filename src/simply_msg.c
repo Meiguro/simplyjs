@@ -15,14 +15,24 @@ enum SimplyACmd {
 
 static void handle_set_text(DictionaryIterator *iter, SimplyData *simply) {
   Tuple *tuple;
+  bool clear = false;
+  if ((tuple = dict_find(iter, 4))) {
+    clear = true;
+  }
   if ((tuple = dict_find(iter, 1))) {
     simply_set_text(simply, &simply->title_text, tuple->value->cstring);
+  } else if (clear) {
+    simply_set_text(simply, &simply->title_text, NULL);
   }
   if ((tuple = dict_find(iter, 2))) {
     simply_set_text(simply, &simply->subtitle_text, tuple->value->cstring);
+  } else if (clear) {
+    simply_set_text(simply, &simply->subtitle_text, NULL);
   }
   if ((tuple = dict_find(iter, 3))) {
     simply_set_text(simply, &simply->body_text, tuple->value->cstring);
+  } else if (clear) {
+    simply_set_text(simply, &simply->body_text, NULL);
   }
 }
 

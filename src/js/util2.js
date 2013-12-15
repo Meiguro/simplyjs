@@ -6,6 +6,23 @@ var util2 = (function(util2){
 
 util2.void = function() {};
 
+util2.toInteger = function (x) {
+  if (!isNaN(x = parseInt(x))) { return x; }
+};
+
+util2.toNumber = function (x) {
+  if (!isNaN(x = parseFloat(x))) { return x; }
+};
+
+util2.toArray = function (x) {
+  if (x instanceof Array) { return x; }
+  return [x];
+};
+
+util2.trim = function (s) {
+  return s ? s.toString().trim() : s;
+};
+
 var chunkSize = 128;
 
 var randomBytes = function(chunkSize) {

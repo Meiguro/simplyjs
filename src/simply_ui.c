@@ -1,5 +1,7 @@
 #include "simply_ui.h"
 
+#include "simply_msg.h"
+
 #include "simply-js.h"
 
 #include <pebble.h>
@@ -90,19 +92,18 @@ void display_layer_update_callback(Layer *layer, GContext* ctx) {
   }
 }
 
-static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+static void single_click_handler(ClickRecognizerRef recognizer, void *context) {
+  simply_msg_single_click(click_recognizer_get_button_id(recognizer));
 }
 
-static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+static void long_click_handler(ClickRecognizerRef recognizer, void *context) {
+  simply_msg_long_click(click_recognizer_get_button_id(recognizer));
 }
-
-static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
-}
-
 static void click_config_provider(void *context) {
-  window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler) select_click_handler);
-  window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler) up_click_handler);
-  window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler) down_click_handler);
+  for (int i = 0; i < NUM_BUTTONS; ++i) {
+    window_single_click_subscribe(i, (ClickHandler) single_click_handler);
+    window_long_click_subscribe(i, 500, (ClickHandler) long_click_handler, NULL);
+  }
 }
 
 static void window_load(Window *window) {

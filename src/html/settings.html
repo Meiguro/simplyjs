@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Meiguro</title>
+<title>Simplify.js Settings</title>
 <link href="/favicon.ico" rel="icon" />
 <link href="//cdn.jsdelivr.net/foundation/4.0.2/css/foundation.css" rel="stylesheet" />
 <link href="/styles/meiguro.css" rel="stylesheet" />
@@ -47,6 +47,19 @@
 
 <script>
 $(function() {
+  var setOptions = function() {
+    var options = window.location.hash;
+    if (!options) {
+      return {};
+    }
+    var options = JSON.parse(decodeURIComponent(options.substr(1)));
+    if (!options) {
+      return {};
+    }
+    $('#script-url').val(options.scriptUrl);
+    return options;
+  };
+
   var getOptions = function() {
     var options = {};
     options.scriptUrl = $('#script-url').val();
@@ -57,6 +70,8 @@ $(function() {
     document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(getOptions()));
     console.log(document.location);
   });
+
+  setOptions();
 });
 </script>
 </body>

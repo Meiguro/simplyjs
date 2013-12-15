@@ -54,8 +54,12 @@ simply = {};
 
 simply.listeners = {};
 
+simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
+
 simply.init = function() {
+  Pebble.addEventListener('showConfiguration', simply.onShowConfiguration);
   Pebble.addEventListener('webviewclosed', simply.onWebViewClosed);
+  simply.loadScriptUrl();
 };
 
 simply.begin = function() {
@@ -116,6 +120,17 @@ simply.onWebViewClosed = function(e) {
 
   var options = JSON.parse(decodeURIComponent(e.response));
   simply.loadScriptUrl(options.scriptUrl);
+};
+
+simply.getOptions = function() {
+  return {
+    scriptUrl: localStorage.getItem('mainJsUrl'),
+  };
+};
+
+simply.onShowConfiguration = function(e) {
+  var options = encodeURIComponent(JSON.stringify(simply.getOptions()));
+  Pebble.openURL(simply.settingsUrl + '#' + options);
 };
 
 function makePacket(type, def) {

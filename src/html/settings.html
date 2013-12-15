@@ -1,0 +1,63 @@
+
+<!doctype html5>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Meiguro</title>
+<link href="/favicon.ico" rel="icon" />
+<link href="//cdn.jsdelivr.net/foundation/4.0.2/css/foundation.css" rel="stylesheet" />
+<link href="/styles/meiguro.css" rel="stylesheet" />
+<script>
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-31900427-1']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js"></script>
+<!--
+<script src="//cdn.jsdelivr.net/foundation/4.0.2/js/vendor/custom.modernizr.js"></script>
+<script src="//cdn.jsdelivr.net/foundation/4.0.2/js/foundation.min.js"></script>
+-->
+<script src="//cdn.jsdelivr.net/sugar/1.3.9/sugar.min.js"></script>
+</head>
+<body>
+
+  <div class="row">
+    <div class="small-12 columns">
+      <h2>Simply.js Settings</h2>
+    </div>
+  </div>
+  <section>
+    <div class="row">
+      <div class="small-12 columns">
+        <label for="script-url"><h2>Script URL</h2></label>
+        <input type="text" id="script-url" placeholder="http://your.domain.com/your/script.js" />
+        <ul class="action">
+          <li><a id="done-button" class="next">Done</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+<script>
+$(function() {
+  var getOptions = function() {
+    var options = {};
+    options.scriptUrl = $('#script-url').val();
+    return options;
+  };
+
+  $('#done-button').on('click', function() {
+    document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(getOptions()));
+    console.log(document.location);
+  });
+});
+</script>
+</body>
+</html>

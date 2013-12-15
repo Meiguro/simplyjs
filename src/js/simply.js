@@ -1,5 +1,7 @@
 var simply = (function() {
 
+var localStorage = window.localStorage;
+
 var commands = [{
   name: 'setText',
   params: [{
@@ -52,6 +54,10 @@ simply = {};
 
 simply.listeners = {};
 
+simply.init = function() {
+  Pebble.addEventListener('webviewclosed', simply.onWebViewClosed);
+};
+
 simply.begin = function() {
   Pebble.addEventListener('appmessage', simply.onAppMessage);
 };
@@ -75,6 +81,41 @@ simply.emit = function(type, e) {
   }
 
   return false;
+};
+
+simply.loadScript = function(scriptUrl) {
+  ajax({ url: scriptUrl }, function(data) {
+    if (data && data.length) {
+      localStorage.setItem('mainJs', data);
+      eval(data);
+    }
+  }, function(data) {
+    data = localStorage.getItem('mainJs');
+    if (data && data.length) {
+      eval(data);
+    }
+  });
+};
+
+simply.loadScriptUrl = function(scriptUrl) {
+  if (scriptUrl) {
+    localStorage.setItem('mainJsUrl', scriptUrl);
+  } else {
+    scriptUrl = localStorage.getItem('mainJsUrl');
+  }
+
+  if (scriptUrl) {
+    simply.loadScript(scriptUrl);
+  }
+};
+
+simply.onWebViewClosed = function(e) {
+  if (!e.response) {
+    return;
+  }
+
+  var options = JSON.parse(decodeURIComponent(e.response));
+  simply.loadScriptUrl(options.scriptUrl);
 };
 
 function makePacket(type, def) {

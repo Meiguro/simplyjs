@@ -5,6 +5,7 @@
   "companyName": "Meiguro",
   "versionCode": 1,
   "versionLabel": "0.1.0",
+  "capabilities": [ "configurable" ],
   "watchapp": {
     "watchface": false
   },

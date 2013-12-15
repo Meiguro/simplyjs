@@ -7,11 +7,35 @@
 typedef enum SimplyACmd SimplyACmd;
 
 enum SimplyACmd {
+  SimplyACmd_setText = 0,
   SimplyACmd_singleClick = 1,
   SimplyACmd_longClick = 2,
 };
 
+static void handle_set_text(DictionaryIterator *iter, SimplyData *simply) {
+  Tuple *tuple;
+  if ((tuple = dict_find(iter, 1))) {
+    simply_set_text(simply, &simply->title_text, tuple->value->cstring);
+  }
+  if ((tuple = dict_find(iter, 2))) {
+    simply_set_text(simply, &simply->subtitle_text, tuple->value->cstring);
+  }
+  if ((tuple = dict_find(iter, 3))) {
+    simply_set_text(simply, &simply->body_text, tuple->value->cstring);
+  }
+}
+
 static void received_callback(DictionaryIterator *iter, void *context) {
+  Tuple *tuple = dict_find(iter, 0);
+  if (!tuple) {
+    return;
+  }
+
+  switch (tuple->value->uint8) {
+    case SimplyACmd_setText:
+      handle_set_text(iter, context);
+      break;
+  }
 }
 
 static void dropped_callback(AppMessageResult reason, void *context) {

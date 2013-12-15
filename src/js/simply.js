@@ -3,9 +3,11 @@ var simply = (function() {
 var commands = [{
   name: 'setText',
   params: [{
-    name: 'field',
+    name: 'title',
   }, {
-    name: 'text',
+    name: 'subtitle',
+  }, {
+    name: 'body',
   }],
 }, {
   name: 'singleClick',
@@ -18,6 +20,26 @@ var commands = [{
     name: 'button',
   }],
 }];
+
+var commandMap = {};
+
+for (var i = 0, ii = commands.length; i < ii; ++i) {
+  var command = commands[i];
+  commandMap[command.name] = command;
+  command.id = i;
+
+  var params = command.params;
+  if (!params) {
+    continue;
+  }
+
+  var paramMap = command.paramMap = {};
+  for (var j = 0, jj = params.length; j < jj; ++j) {
+    var param = params[j];
+    paramMap[param.name] = param;
+    param.id = j + 1;
+  }
+}
 
 var buttons = [
   'back',
@@ -53,6 +75,24 @@ simply.emit = function(type, e) {
   }
 
   return false;
+};
+
+function makePacket(type, def) {
+  var packet = {};
+  var command = commandMap[type];
+  packet[0] = command.id;
+  var paramMap = command.paramMap;
+  for (var k in def) {
+    packet[paramMap[k].id] = def[k];
+  }
+  return packet;
+}
+
+simply.setText = function(textDef) {
+  var packet = makePacket('setText', textDef);
+  var send; (send = function() {
+    Pebble.sendAppMessage(packet, util2.void, send);
+  })();
 };
 
 simply.onAppMessage = function(e) {

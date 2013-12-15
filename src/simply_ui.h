@@ -18,3 +18,7 @@ struct SimplyData {
 SimplyData *simply_create(void);
 
 void simply_destroy(SimplyData *data);
+
+void simply_set_style(SimplyData* simply, int style_index);
+
+void simply_set_text(SimplyData* simply, char **str_field, const char *str);

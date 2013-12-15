@@ -30,12 +30,28 @@ SimplyData *s_data = NULL;
 
 void simply_set_style(SimplyData* simply, int style_index) {
   simply->style = &STYLES[style_index];
+  layer_mark_dirty(simply->display_layer);
+}
+
+static void set_text(char **str_field, const char *str) {
+  free(*str_field);
+
+  size_t size = strlen(str) + 1;
+  char *buffer = malloc(size);
+  strncpy(buffer, str, size);
+  buffer[size - 1] = '\0';
+
+  *str_field = buffer;
+}
+
+void simply_set_text(SimplyData* simply, char **str_field, const char *str) {
+  set_text(str_field, str);
+  layer_mark_dirty(simply->display_layer);
 }
 
 static bool is_string(const char* str) {
   return str && str[0];
 }
-
 void display_layer_update_callback(Layer *layer, GContext* ctx) {
   SimplyData *data = s_data;
 
@@ -61,19 +77,21 @@ void display_layer_update_callback(Layer *layer, GContext* ctx) {
 
   if (is_string(data->title_text)) {
     GSize title_size = graphics_text_layout_get_content_size(data->title_text, title_font, text_bounds,
-        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
+        GTextOverflowModeWordWrap, GTextAlignmentLeft);
+    title_size.w = text_bounds.size.w;
     graphics_draw_text(ctx, data->title_text, title_font,
         (GRect) { .origin = cursor, .size = title_size },
-        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
     cursor.y += title_size.h;
   }
 
   if (is_string(data->subtitle_text)) {
     GSize subtitle_size = graphics_text_layout_get_content_size(data->subtitle_text, title_font, text_bounds,
-        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
+        GTextOverflowModeWordWrap, GTextAlignmentLeft);
+    subtitle_size.w = text_bounds.size.w;
     graphics_draw_text(ctx, data->subtitle_text, subtitle_font,
         (GRect) { .origin = cursor, .size = subtitle_size },
-        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
     cursor.y += subtitle_size.h;
   }
 
@@ -83,7 +101,7 @@ void display_layer_update_callback(Layer *layer, GContext* ctx) {
     body_rect.size.w -= 2 * x_margin;
     body_rect.size.h -= 2 * y_margin + cursor.y;
     GSize body_size = graphics_text_layout_get_content_size(data->body_text, body_font, text_bounds,
-        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
+        GTextOverflowModeWordWrap, GTextAlignmentLeft);
     if (body_size.h > body_rect.size.h) {
       body_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
     }
@@ -109,8 +127,6 @@ static void click_config_provider(void *context) {
 static void window_load(Window *window) {
   SimplyData *data = window_get_user_data(window);
 
-  simply_set_style(data, 1);
-
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
   bounds.origin = GPointZero;
@@ -119,11 +135,11 @@ static void window_load(Window *window) {
   layer_set_update_proc(data->display_layer, display_layer_update_callback);
   layer_add_child(window_layer, data->display_layer);
 
-  data->title_text = "Simply.js 1";
-  data->subtitle_text = "Welcome";
-  data->body_text = "Simply.js allows you to push interactive text to your Pebble with just JavaScript!";
+  simply_set_style(data, 1);
 
-  layer_mark_dirty(data->display_layer);
+  simply_set_text(data, &data->title_text, "Simply.js 1");
+  simply_set_text(data, &data->subtitle_text, "Welcome");
+  simply_set_text(data, &data->body_text, "Simply.js allows you to push interactive text to your Pebble with just JavaScript!");
 }
 
 static void window_unload(Window *window) {

@@ -36,7 +36,7 @@ var ajax = function(opt, success, failure) {
   }
 
   req.open(method.toUpperCase(), url, !opt.async);
-  req.onload = function(e) {
+  req.onreadystatechange = function(e) {
     if (req.readyState == 4) {
       var body = req.responseText;
       if (opt.type == 'json') {

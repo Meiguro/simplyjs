@@ -81,8 +81,8 @@ void display_layer_update_callback(Layer *layer, GContext* ctx) {
   graphics_context_set_text_color(ctx, GColorBlack);
 
   if (is_string(data->title_text)) {
-    GSize title_size = graphics_text_layout_get_content_size(data->title_text, title_font, text_bounds,
-        GTextOverflowModeWordWrap, GTextAlignmentLeft);
+    GSize title_size = graphics_text_layout_get_max_used_size(ctx, data->title_text, title_font, text_bounds,
+        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
     title_size.w = text_bounds.size.w;
     graphics_draw_text(ctx, data->title_text, title_font,
         (GRect) { .origin = cursor, .size = title_size },
@@ -91,8 +91,8 @@ void display_layer_update_callback(Layer *layer, GContext* ctx) {
   }
 
   if (is_string(data->subtitle_text)) {
-    GSize subtitle_size = graphics_text_layout_get_content_size(data->subtitle_text, title_font, text_bounds,
-        GTextOverflowModeWordWrap, GTextAlignmentLeft);
+    GSize subtitle_size = graphics_text_layout_get_max_used_size(ctx, data->subtitle_text, title_font, text_bounds,
+        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
     subtitle_size.w = text_bounds.size.w;
     graphics_draw_text(ctx, data->subtitle_text, subtitle_font,
         (GRect) { .origin = cursor, .size = subtitle_size },
@@ -105,8 +105,8 @@ void display_layer_update_callback(Layer *layer, GContext* ctx) {
     body_rect.origin = cursor;
     body_rect.size.w -= 2 * x_margin;
     body_rect.size.h -= 2 * y_margin + cursor.y;
-    GSize body_size = graphics_text_layout_get_content_size(data->body_text, body_font, text_bounds,
-        GTextOverflowModeWordWrap, GTextAlignmentLeft);
+    GSize body_size = graphics_text_layout_get_max_used_size(ctx, data->body_text, body_font, text_bounds,
+        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
     if (body_size.h > body_rect.size.h) {
       body_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
     }

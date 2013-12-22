@@ -8,6 +8,7 @@ simply.on('singleClick', function(e) {
 simply.on('longClick', function(e) {
   console.log(util2.format('long clicked $button!', e));
   simply.vibe();
+  simply.scrollable(e.button !== 'select');
 });
 
 simply.on('accelTap', function(e) {

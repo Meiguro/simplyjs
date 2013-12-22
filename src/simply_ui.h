@@ -12,13 +12,17 @@ struct SimplyData {
   char *title_text;
   char *subtitle_text;
   char *body_text;
+  ScrollLayer *scroll_layer;
   Layer *display_layer;
+  bool is_scrollable;
 };
 
 SimplyData *simply_create(void);
 
-void simply_destroy(SimplyData *data);
+void simply_destroy(SimplyData *simply);
 
-void simply_set_style(SimplyData* simply, int style_index);
+void simply_set_style(SimplyData *simply, int style_index);
 
-void simply_set_text(SimplyData* simply, char **str_field, const char *str);
+void simply_set_text(SimplyData *simply, char **str_field, const char *str);
+
+void simply_set_scrollable(SimplyData *simply, bool is_scrollable);

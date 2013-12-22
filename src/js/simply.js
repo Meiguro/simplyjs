@@ -35,6 +35,11 @@ var commands = [{
   params: [{
     name: 'type',
   }],
+}, {
+  name: 'setScrollable',
+  params: [{
+    name: 'scrollable',
+  }],
 }];
 
 var commandMap = {};
@@ -78,6 +83,8 @@ var vibeTypes = [
 
 simply = {};
 
+simply.state = {};
+
 simply.listeners = {};
 
 simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
@@ -99,6 +106,7 @@ simply.begin = function() {
 };
 
 simply.reset = function() {
+  simply.state = {};
   simply.off();
 };
 
@@ -257,6 +265,8 @@ simply.setText = function(textDef, clear) {
   simply.sendPacket(packet);
 };
 
+simply.text = simply.setText;
+
 simply.setTextField = function(field, text, clear) {
   var command = commandMap.setText;
   var packet = makePacket(command);
@@ -287,6 +297,18 @@ simply.vibe = function(type) {
   var packet = makePacket(command);
   var vibeIndex = vibeTypes.indexOf(type);
   packet[command.paramMap.type.id] = vibeIndex !== -1 ? vibeIndex : 0;
+  simply.sendPacket(packet);
+};
+
+simply.scrollable = function(scrollable) {
+  if (scrollable === null) {
+    return simply.state.scrollable === true;
+  }
+  simply.state.scrollable = scrollable;
+
+  var command = commandMap.setScrollable;
+  var packet = makePacket(command);
+  packet[command.paramMap.scrollable.id] = scrollable ? 1 : 0;
   simply.sendPacket(packet);
 };
 

@@ -27,8 +27,23 @@ static const SimplyStyle STYLES[] = {
 
 SimplyData *s_data = NULL;
 
-void simply_set_style(SimplyData* simply, int style_index) {
+void simply_set_style(SimplyData *simply, int style_index) {
   simply->style = &STYLES[style_index];
+  layer_mark_dirty(simply->display_layer);
+}
+
+void simply_set_scrollable(SimplyData *simply, bool is_scrollable) {
+  simply->is_scrollable = is_scrollable;
+  scroll_layer_set_click_config_onto_window(simply->scroll_layer, simply->window);
+
+  if (!is_scrollable) {
+    GRect bounds = layer_get_bounds(window_get_root_layer(simply->window));
+    layer_set_bounds(simply->display_layer, bounds);
+    const bool animated = true;
+    scroll_layer_set_content_offset(simply->scroll_layer, GPointZero, animated);
+    scroll_layer_set_content_size(simply->scroll_layer, bounds.size);
+  }
+
   layer_mark_dirty(simply->display_layer);
 }
 
@@ -48,17 +63,18 @@ static void set_text(char **str_field, const char *str) {
   *str_field = buffer;
 }
 
-void simply_set_text(SimplyData* simply, char **str_field, const char *str) {
+void simply_set_text(SimplyData *simply, char **str_field, const char *str) {
   set_text(str_field, str);
   layer_mark_dirty(simply->display_layer);
 }
 
-static bool is_string(const char* str) {
+static bool is_string(const char *str) {
   return str && str[0];
 }
-void display_layer_update_callback(Layer *layer, GContext* ctx) {
+void display_layer_update_callback(Layer *layer, GContext *ctx) {
   SimplyData *data = s_data;
 
+  GRect window_bounds = layer_get_bounds(window_get_root_layer(data->window));
   GRect bounds = layer_get_bounds(layer);
 
   const SimplyStyle *style = data->style;
@@ -74,41 +90,66 @@ void display_layer_update_callback(Layer *layer, GContext* ctx) {
   text_bounds.size.h += 1000;
   GPoint cursor = { x_margin, y_margin };
 
-  graphics_context_set_fill_color(ctx, GColorWhite);
-  graphics_fill_rect(ctx, bounds, 4, GCornersAll);
-
   graphics_context_set_text_color(ctx, GColorBlack);
 
-  if (is_string(data->title_text)) {
-    GSize title_size = graphics_text_layout_get_max_used_size(ctx, data->title_text, title_font, text_bounds,
+  bool has_title = is_string(data->title_text);
+  bool has_subtitle = is_string(data->subtitle_text);
+  bool has_body = is_string(data->body_text);
+
+  GSize title_size, subtitle_size;
+  GPoint title_pos, subtitle_pos;
+  GRect body_rect;
+
+  if (has_title) {
+    title_size = graphics_text_layout_get_max_used_size(ctx, data->title_text, title_font, text_bounds,
         GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
     title_size.w = text_bounds.size.w;
-    graphics_draw_text(ctx, data->title_text, title_font,
-        (GRect) { .origin = cursor, .size = title_size },
-        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+    title_pos = cursor;
     cursor.y += title_size.h;
   }
 
-  if (is_string(data->subtitle_text)) {
-    GSize subtitle_size = graphics_text_layout_get_max_used_size(ctx, data->subtitle_text, title_font, text_bounds,
+  if (has_subtitle) {
+    subtitle_size = graphics_text_layout_get_max_used_size(ctx, data->subtitle_text, title_font, text_bounds,
         GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
     subtitle_size.w = text_bounds.size.w;
-    graphics_draw_text(ctx, data->subtitle_text, subtitle_font,
-        (GRect) { .origin = cursor, .size = subtitle_size },
-        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+    subtitle_pos = cursor;
     cursor.y += subtitle_size.h;
   }
 
-  if (is_string(data->body_text)) {
-    GRect body_rect = bounds;
+  if (has_body) {
+    body_rect = bounds;
     body_rect.origin = cursor;
     body_rect.size.w -= 2 * x_margin;
     body_rect.size.h -= 2 * y_margin + cursor.y;
     GSize body_size = graphics_text_layout_get_max_used_size(ctx, data->body_text, body_font, text_bounds,
         GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-    if (body_size.h > body_rect.size.h) {
+    if (data->is_scrollable) {
+      body_rect.size = body_size;
+      int16_t new_height = cursor.y + 2 * y_margin + body_size.h;
+      bounds.size.h = window_bounds.size.h > new_height ? window_bounds.size.h : new_height;
+      layer_set_frame(layer, bounds);
+      scroll_layer_set_content_size(data->scroll_layer, bounds.size);
+    } else if (body_size.h > body_rect.size.h) {
       body_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
     }
+  }
+
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_fill_rect(ctx, bounds, 4, GCornersAll);
+
+  if (has_title) {
+    graphics_draw_text(ctx, data->title_text, title_font,
+        (GRect) { .origin = title_pos, .size = title_size },
+        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+  }
+
+  if (has_subtitle) {
+    graphics_draw_text(ctx, data->subtitle_text, subtitle_font,
+        (GRect) { .origin = subtitle_pos, .size = subtitle_size },
+        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+  }
+
+  if (has_body) {
     graphics_draw_text(ctx, data->body_text, body_font, body_rect,
         GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
   }
@@ -122,10 +163,12 @@ static void long_click_handler(ClickRecognizerRef recognizer, void *context) {
   simply_msg_long_click(click_recognizer_get_button_id(recognizer));
 }
 
-static void click_config_provider(void *context) {
+static void click_config_provider(SimplyData *data) {
   for (int i = 0; i < NUM_BUTTONS; ++i) {
-    window_single_click_subscribe(i, (ClickHandler) single_click_handler);
-    window_long_click_subscribe(i, 500, (ClickHandler) long_click_handler, NULL);
+    if (!data->is_scrollable || (i != BUTTON_ID_UP && i != BUTTON_ID_DOWN)) {
+      window_single_click_subscribe(i, (ClickHandler) single_click_handler);
+      window_long_click_subscribe(i, 500, (ClickHandler) long_click_handler, NULL);
+    }
   }
 }
 
@@ -146,9 +189,19 @@ static void window_load(Window *window) {
   GRect bounds = layer_get_bounds(window_layer);
   bounds.origin = GPointZero;
 
-  data->display_layer = layer_create(bounds);
-  layer_set_update_proc(data->display_layer, display_layer_update_callback);
-  layer_add_child(window_layer, data->display_layer);
+  ScrollLayer *scroll_layer = data->scroll_layer = scroll_layer_create(bounds);
+  Layer *scroll_base_layer = scroll_layer_get_layer(scroll_layer);
+  layer_add_child(window_layer, scroll_base_layer);
+
+  Layer *display_layer = data->display_layer = layer_create(bounds);
+  layer_set_update_proc(display_layer, display_layer_update_callback);
+  scroll_layer_add_child(scroll_layer, display_layer);
+
+  scroll_layer_set_context(scroll_layer, data);
+  scroll_layer_set_callbacks(scroll_layer, (ScrollLayerCallbacks) {
+    .click_config_provider = (ClickConfigProvider) click_config_provider,
+  });
+  scroll_layer_set_click_config_onto_window(scroll_layer, window);
 
   simply_set_style(data, 1);
 
@@ -177,7 +230,7 @@ SimplyData *simply_create(void) {
   Window *window = data->window = window_create();
   window_set_user_data(window, data);
   window_set_background_color(window, GColorBlack);
-  window_set_click_config_provider(window, click_config_provider);
+  window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
   window_set_window_handlers(window, (WindowHandlers) {
     .load = window_load,
     .unload = window_unload,

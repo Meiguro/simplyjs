@@ -77,7 +77,11 @@ static void dropped_callback(AppMessageResult reason, void *context) {
 static void sent_callback(DictionaryIterator *iter, void *context) {
 }
 
-static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, void *context) {
+static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, SimplyData *simply) {
+  if (reason == APP_MSG_NOT_CONNECTED) {
+    simply_set_text(simply, &simply->subtitle_text, "Disconnected");
+    simply_set_text(simply, &simply->body_text, "Run the Pebble Phone App");
+  }
 }
 
 void simply_msg_init(SimplyData *simply) {
@@ -90,7 +94,7 @@ void simply_msg_init(SimplyData *simply) {
   app_message_register_inbox_received(received_callback);
   app_message_register_inbox_dropped(dropped_callback);
   app_message_register_outbox_sent(sent_callback);
-  app_message_register_outbox_failed(failed_callback);
+  app_message_register_outbox_failed((AppMessageOutboxFailed) failed_callback);
 }
 
 void simply_msg_deinit() {

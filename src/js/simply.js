@@ -193,6 +193,30 @@ simply.setText = function(textDef, clear) {
   simply.sendPacket(packet);
 };
 
+simply.setTextField = function(field, text, clear) {
+  var command = commandMap.setText;
+  var param = command.paramMap[field];
+  if (param) {
+    packet[param.id] = text;
+  }
+  if (clear) {
+    packet[command.paramMap.clear.id] = 1;
+  }
+  simply.sendPacket(packet);
+};
+
+simply.title = function(text, clear) {
+  simply.setTextField('title', text, clear);
+};
+
+simply.subtitle = function(text, clear) {
+  simply.setTextField('subtitle', text, clear);
+};
+
+simply.body = function(text, clear) {
+  simply.setTextField('body', text, clear);
+};
+
 simply.vibe = function(type) {
   var command = commandMap.vibe;
   var packet = makePacket(command);

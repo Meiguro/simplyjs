@@ -2,9 +2,7 @@ console.log('Simply.js demo!');
 
 simply.on('singleClick', function(e) {
   console.log(util2.format('single clicked $button!', e));
-  simply.setText({
-    subtitle: 'Pressed ' + e.button + '!',
-  });
+  simply.subtitle('Pressed ' + e.button + '!');
 });
 
 simply.on('longClick', function(e) {
@@ -14,9 +12,7 @@ simply.on('longClick', function(e) {
 
 simply.on('accelTap', function(e) {
   console.log(util2.format('tapped accel axis $axis $direction!', e));
-  simply.setText({
-    subtitle: 'Tapped ' + (e.direction > 0 ? '+' : '-') + e.axis + '!',
-  });
+  simply.subtitle('Tapped ' + (e.direction > 0 ? '+' : '-') + e.axis + '!');
 });
 
 simply.setText({

@@ -142,7 +142,7 @@ static void window_load(Window *window) {
 
   simply_set_style(data, 1);
 
-  simply_set_text(data, &data->title_text, "Simply.js 1");
+  simply_set_text(data, &data->title_text, "Simply.js");
   simply_set_text(data, &data->subtitle_text, "Welcome");
   simply_set_text(data, &data->body_text, "Simply.js allows you to push interactive text to your Pebble with just JavaScript!");
 }

@@ -85,37 +85,62 @@ simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
 simply.init = function() {
   Pebble.addEventListener('showConfiguration', simply.onShowConfiguration);
   Pebble.addEventListener('webviewclosed', simply.onWebViewClosed);
+  Pebble.addEventListener('appmessage', simply.onAppMessage);
   simply.loadScriptUrl();
 };
 
 simply.begin = function() {
-  Pebble.addEventListener('appmessage', simply.onAppMessage);
 };
 
-simply.on = function(type, success) {
-  var map = simply.listeners;
-  return (map[type] || ( map[type] = [] )).push(success);
+simply.reset = function() {
+  simply.listeners = {};
 };
 
-simply.emit = function(type, e) {
-  var map = simply.listeners;
-  var handlers = map[type];
+simply.on = function(type, subtype, handler) {
+  if (!handler) {
+    handler = subtype;
+    subtype = 'all';
+  }
+  var typeMap = simply.listeners;
+  var subtypeMap = (typeMap[type] || ( typeMap[type] = {} ));
+  (subtypeMap[subtype] || ( subtypeMap[subtype] = [] )).push(handler);
+};
+
+simply.emitToHandlers = function(type, handlers, e) {
   if (!handlers) {
     return;
   }
-
   for (var i = 0, ii = handlers.length; i < ii; ++i) {
-    if (handlers[i](e, type, i) == false) {
+    if (handlers[i](e, type, i) === false) {
       return true;
     }
   }
+  return false;
+}
 
+simply.emit = function(type, subtype, e) {
+  if (!e) {
+    e = subtype;
+    subtype = null;
+  }
+  var typeMap = simply.listeners;
+  var subtypeMap = typeMap[type];
+  if (!subtypeMap) {
+    return;
+  }
+  if (simply.emitToHandlers(type, subtypeMap[subtype], e) === true) {
+    return true;
+  }
+  if (simply.emitToHandlers(type, subtypeMap.all, e) === true) {
+    return true;
+  }
   return false;
 };
 
 simply.eval = function(script) {
-  simply.listeners = {};
+  simply.reset();
   eval(script);
+  simply.begin();
 };
 
 simply.loadScript = function(scriptUrl) {
@@ -234,13 +259,15 @@ simply.onAppMessage = function(e) {
   switch (command.name) {
     case 'singleClick':
     case 'longClick':
-      simply.emit(command.name, {
-        button: buttons[payload[1]],
+      var button = buttons[payload[1]];
+      simply.emit(command.name, button, {
+        button: button,
       });
       break;
     case 'accelTap':
-      simply.emit(command.name, {
-        axis: accelAxes[payload[1]],
+      var axis = accelAxes[payload[1]];
+      simply.emit(command.name, axis, {
+        axis: axis,
         direction: payload[2],
       });
   }

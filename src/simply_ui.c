@@ -25,7 +25,6 @@ static const SimplyStyle STYLES[] = {
   }
 };
 
-// FIXME: all service need to support a user context
 SimplyData *s_data = NULL;
 
 void simply_set_style(SimplyData* simply, int style_index) {
@@ -122,11 +121,22 @@ static void single_click_handler(ClickRecognizerRef recognizer, void *context) {
 static void long_click_handler(ClickRecognizerRef recognizer, void *context) {
   simply_msg_long_click(click_recognizer_get_button_id(recognizer));
 }
+
 static void click_config_provider(void *context) {
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     window_single_click_subscribe(i, (ClickHandler) single_click_handler);
     window_long_click_subscribe(i, 500, (ClickHandler) long_click_handler, NULL);
   }
+}
+
+static void show_welcome_text(SimplyData *data) {
+  if (data->title_text || data->subtitle_text || data->body_text) {
+    return;
+  }
+
+  simply_set_text(data, &data->title_text, "Simply.js");
+  simply_set_text(data, &data->subtitle_text, "Welcome");
+  simply_set_text(data, &data->body_text, "Simply.js allows you to push interactive text to your Pebble with just JavaScript!");
 }
 
 static void window_load(Window *window) {
@@ -142,9 +152,7 @@ static void window_load(Window *window) {
 
   simply_set_style(data, 1);
 
-  simply_set_text(data, &data->title_text, "Simply.js");
-  simply_set_text(data, &data->subtitle_text, "Welcome");
-  simply_set_text(data, &data->body_text, "Simply.js allows you to push interactive text to your Pebble with just JavaScript!");
+  app_timer_register(1000, (AppTimerCallback) show_welcome_text, data);
 }
 
 static void window_unload(Window *window) {

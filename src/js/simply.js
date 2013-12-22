@@ -83,9 +83,15 @@ simply.listeners = {};
 simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
 
 simply.init = function() {
+  if (simply.inited) {
+    return;
+  }
+
   Pebble.addEventListener('showConfiguration', simply.onShowConfiguration);
   Pebble.addEventListener('webviewclosed', simply.onWebViewClosed);
   Pebble.addEventListener('appmessage', simply.onAppMessage);
+  simply.inited = true;
+
   simply.loadScriptUrl();
 };
 

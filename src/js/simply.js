@@ -91,6 +91,7 @@ simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
 
 simply.init = function() {
   if (simply.inited) {
+    simply.loadScriptUrl();
     return;
   }
 

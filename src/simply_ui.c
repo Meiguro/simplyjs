@@ -196,9 +196,13 @@ void simply_destroy(SimplyData *data) {
     return;
   }
 
+  simply_set_text(data, &data->title_text, NULL);
+  simply_set_text(data, &data->subtitle_text, NULL);
+  simply_set_text(data, &data->body_text, NULL);
+
   accel_tap_service_unsubscribe();
 
-  //window_destroy(data->window);
+  window_destroy(data->window);
   free(data);
 
   s_data = NULL;

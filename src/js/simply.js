@@ -195,6 +195,7 @@ simply.setText = function(textDef, clear) {
 
 simply.setTextField = function(field, text, clear) {
   var command = commandMap.setText;
+  var packet = makePacket(command);
   var param = command.paramMap[field];
   if (param) {
     packet[param.id] = text;

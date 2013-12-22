@@ -93,7 +93,7 @@ simply.begin = function() {
 };
 
 simply.reset = function() {
-  simply.listeners = {};
+  simply.off();
 };
 
 simply.on = function(type, subtype, handler) {
@@ -104,6 +104,39 @@ simply.on = function(type, subtype, handler) {
   var typeMap = simply.listeners;
   var subtypeMap = (typeMap[type] || ( typeMap[type] = {} ));
   (subtypeMap[subtype] || ( subtypeMap[subtype] = [] )).push(handler);
+};
+
+simply.off = function(type, subtype, handler) {
+  if (!handler) {
+    handler = subtype;
+    subtype = 'all';
+  }
+  if (!type) {
+    simply.listeners = {};
+    return;
+  }
+  var typeMap = simply.listeners;
+  if (!handler && subtype === 'all') {
+    delete typeMap[type];
+    return;
+  }
+  var subtypeMap = typeMap[type];
+  if (!subtypeMap) {
+    return;
+  }
+  if (!handler) {
+    delete subtypeMap[subtype];
+    return;
+  }
+  var handlers = subtypeMap[subtype];
+  if (!handlers) {
+    return;
+  }
+  var index = handlers.indexOf(handler);
+  if (index !== -1) {
+    return;
+  }
+  handlers.splice(index, 1);
 };
 
 simply.emitToHandlers = function(type, handlers, e) {

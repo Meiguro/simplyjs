@@ -30,6 +30,11 @@ var commands = [{
   }, {
     name: 'direction',
   }],
+}, {
+  name: 'vibe',
+  params: [{
+    name: 'type',
+  }],
 }];
 
 var commandMap = {};
@@ -63,6 +68,12 @@ var accelAxes = [
   'x',
   'y',
   'z',
+];
+
+var vibeTypes = [
+  'short',
+  'long',
+  'double',
 ];
 
 simply = {};
@@ -155,25 +166,39 @@ simply.onShowConfiguration = function(e) {
   Pebble.openURL(simply.settingsUrl + '#' + options);
 };
 
-function makePacket(type, def) {
+function makePacket(command, def) {
   var packet = {};
-  var command = commandMap[type];
   packet[0] = command.id;
-  var paramMap = command.paramMap;
-  for (var k in def) {
-    packet[paramMap[k].id] = def[k];
+  if (def) {
+    var paramMap = command.paramMap;
+    for (var k in def) {
+      packet[paramMap[k].id] = def[k];
+    }
   }
   return packet;
 }
 
-simply.setText = function(textDef, clear) {
-  var packet = makePacket('setText', textDef);
-  if (clear) {
-    packet[commandMap.setText.paramMap.clear.id] = 1;
-  }
+simply.sendPacket = function(packet) {
   var send; (send = function() {
     Pebble.sendAppMessage(packet, util2.void, send);
   })();
+}
+
+simply.setText = function(textDef, clear) {
+  var command = commandMap.setText;
+  var packet = makePacket(command, textDef);
+  if (clear) {
+    packet[command.paramMap.clear.id] = 1;
+  }
+  simply.sendPacket(packet);
+};
+
+simply.vibe = function(type) {
+  var command = commandMap.vibe;
+  var packet = makePacket(command);
+  var vibeIndex = vibeTypes.indexOf(type);
+  packet[command.paramMap.type.id] = vibeIndex !== -1 ? vibeIndex : 0;
+  simply.sendPacket(packet);
 };
 
 simply.onAppMessage = function(e) {

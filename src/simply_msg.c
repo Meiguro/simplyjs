@@ -11,6 +11,15 @@ enum SimplyACmd {
   SimplyACmd_singleClick = 1,
   SimplyACmd_longClick = 2,
   SimplyACmd_accelTap = 3,
+  SimplyACmd_vibe = 4,
+};
+
+typedef enum VibeType VibeType;
+
+enum VibeType {
+  VibeShort = 0,
+  VibeLong = 1,
+  VibeDouble = 2,
 };
 
 static void handle_set_text(DictionaryIterator *iter, SimplyData *simply) {
@@ -36,6 +45,17 @@ static void handle_set_text(DictionaryIterator *iter, SimplyData *simply) {
   }
 }
 
+static void handle_vibe(DictionaryIterator *iter, SimplyData *simply) {
+  Tuple *tuple;
+  if ((tuple = dict_find(iter, 1))) {
+    switch ((VibeType) tuple->value->int32) {
+      case VibeShort: vibes_short_pulse(); break;
+      case VibeLong: vibes_short_pulse(); break;
+      case VibeDouble: vibes_double_pulse(); break;
+    }
+  }
+}
+
 static void received_callback(DictionaryIterator *iter, void *context) {
   Tuple *tuple = dict_find(iter, 0);
   if (!tuple) {
@@ -45,6 +65,8 @@ static void received_callback(DictionaryIterator *iter, void *context) {
   switch (tuple->value->uint8) {
     case SimplyACmd_setText:
       handle_set_text(iter, context);
+    case SimplyACmd_vibe:
+      handle_vibe(iter, context);
       break;
   }
 }

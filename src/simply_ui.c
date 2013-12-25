@@ -212,6 +212,8 @@ static void window_unload(Window *window) {
   SimplyData *data = window_get_user_data(window);
 
   layer_destroy(data->display_layer);
+  scroll_layer_destroy(data->scroll_layer);
+  window_destroy(window);
 }
 
 static void handle_accel_tap(AccelAxisType axis, int32_t direction) {
@@ -255,7 +257,6 @@ void simply_destroy(SimplyData *data) {
 
   accel_tap_service_unsubscribe();
 
-  window_destroy(data->window);
   free(data);
 
   s_data = NULL;

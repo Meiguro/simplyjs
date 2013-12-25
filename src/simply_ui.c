@@ -165,6 +165,9 @@ static void long_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void click_config_provider(SimplyData *data) {
   for (int i = 0; i < NUM_BUTTONS; ++i) {
+    if (i == BUTTON_ID_BACK) {
+      continue;
+    }
     if (!data->is_scrollable || (i != BUTTON_ID_UP && i != BUTTON_ID_DOWN)) {
       window_single_click_subscribe(i, (ClickHandler) single_click_handler);
       window_long_click_subscribe(i, 500, (ClickHandler) long_click_handler, NULL);

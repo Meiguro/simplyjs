@@ -10,9 +10,11 @@ struct SimplyStyle {
   const char* title_font;
   const char* subtitle_font;
   const char* body_font;
+  int custom_body_font_id;
+  GFont custom_body_font;
 };
 
-static const SimplyStyle STYLES[] = {
+static SimplyStyle STYLES[] = {
   {
     .title_font = FONT_KEY_GOTHIC_24_BOLD,
     .subtitle_font = FONT_KEY_GOTHIC_18_BOLD,
@@ -22,7 +24,12 @@ static const SimplyStyle STYLES[] = {
     .title_font = FONT_KEY_GOTHIC_28_BOLD,
     .subtitle_font = FONT_KEY_GOTHIC_28,
     .body_font = FONT_KEY_GOTHIC_24_BOLD,
-  }
+  },
+  {
+    .title_font = FONT_KEY_GOTHIC_24_BOLD,
+    .subtitle_font = FONT_KEY_GOTHIC_18_BOLD,
+    .custom_body_font_id = RESOURCE_ID_MONO_FONT_14,
+  },
 };
 
 SimplyData *s_data = NULL;
@@ -80,7 +87,7 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
   const SimplyStyle *style = data->style;
   GFont title_font = fonts_get_system_font(style->title_font);
   GFont subtitle_font = fonts_get_system_font(style->subtitle_font);
-  GFont body_font = fonts_get_system_font(style->body_font);
+  GFont body_font = style->custom_body_font ? style->custom_body_font : fonts_get_system_font(style->body_font);
 
   const int16_t x_margin = 5;
   const int16_t y_margin = 2;
@@ -129,7 +136,7 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
       bounds.size.h = window_bounds.size.h > new_height ? window_bounds.size.h : new_height;
       layer_set_frame(layer, bounds);
       scroll_layer_set_content_size(data->scroll_layer, bounds.size);
-    } else if (body_size.h > body_rect.size.h) {
+    } else if (!style->custom_body_font && body_size.h > body_rect.size.h) {
       body_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
     }
   }
@@ -226,6 +233,13 @@ static void handle_accel_tap(AccelAxisType axis, int32_t direction) {
 SimplyData *simply_create(void) {
   if (s_data) {
     return s_data;
+  }
+
+  for (unsigned int i = 0; i < ARRAY_LENGTH(STYLES); ++i) {
+    SimplyStyle *style = &STYLES[i];
+    if (style->custom_body_font_id) {
+      style->custom_body_font = fonts_load_custom_font(resource_get_handle(style->custom_body_font_id));
+    }
   }
 
   SimplyData *data = malloc(sizeof(struct SimplyData));

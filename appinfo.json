@@ -11,6 +11,12 @@
   },
   "appKeys": {},
   "resources": {
-    "media": []
+    "media": [
+      {
+        "type": "font",
+        "name": "MONO_FONT_14",
+        "file": "fonts/UbuntuMono-regular.ttf"
+      }
+    ]
   }
 }

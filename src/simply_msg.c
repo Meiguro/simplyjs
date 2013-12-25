@@ -13,6 +13,7 @@ enum SimplyACmd {
   SimplyACmd_accelTap,
   SimplyACmd_vibe,
   SimplyACmd_setScrollable,
+  SimplyACmd_setStyle,
 };
 
 typedef enum VibeType VibeType;
@@ -64,6 +65,13 @@ static void handle_set_scrollable(DictionaryIterator *iter, SimplyData *simply) 
   }
 }
 
+static void handle_set_style(DictionaryIterator *iter, SimplyData *simply) {
+  Tuple *tuple;
+  if ((tuple = dict_find(iter, 1))) {
+    simply_set_style(simply, tuple->value->int32);
+  }
+}
+
 static void received_callback(DictionaryIterator *iter, void *context) {
   Tuple *tuple = dict_find(iter, 0);
   if (!tuple) {
@@ -79,6 +87,9 @@ static void received_callback(DictionaryIterator *iter, void *context) {
       break;
     case SimplyACmd_setScrollable:
       handle_set_scrollable(iter, context);
+      break;
+    case SimplyACmd_setStyle:
+      handle_set_style(iter, context);
       break;
   }
 }

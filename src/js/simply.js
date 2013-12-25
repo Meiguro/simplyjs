@@ -40,6 +40,11 @@ var commands = [{
   params: [{
     name: 'scrollable',
   }],
+}, {
+  name: 'setStyle',
+  params: [{
+    name: 'type',
+  }],
 }];
 
 var commandMap = {};
@@ -79,6 +84,12 @@ var vibeTypes = [
   'short',
   'long',
   'double',
+];
+
+var styleTypes = [
+  'small',
+  'large',
+  'mono',
 ];
 
 simply = {};
@@ -310,6 +321,14 @@ simply.scrollable = function(scrollable) {
   var command = commandMap.setScrollable;
   var packet = makePacket(command);
   packet[command.paramMap.scrollable.id] = scrollable ? 1 : 0;
+  simply.sendPacket(packet);
+};
+
+simply.style = function(type) {
+  var command = commandMap.setStyle;
+  var packet = makePacket(command);
+  var styleIndex = styleTypes.indexOf(type);
+  packet[command.paramMap.type.id] = styleIndex !== -1 ? styleIndex : 1;
   simply.sendPacket(packet);
 };
 

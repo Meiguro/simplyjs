@@ -56,7 +56,7 @@ $(function() {
     if (!options) {
       return {};
     }
-    $('#script-url').val(options.scriptUrl);
+    $('#script-url').val(options.scriptUrl ? options.scriptUrl : 'http://meiguro.com/simplifyjs/demo.js');
     return options;
   };
 

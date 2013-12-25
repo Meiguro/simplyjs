@@ -101,16 +101,16 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
   GRect body_rect;
 
   if (has_title) {
-    title_size = graphics_text_layout_get_max_used_size(ctx, data->title_text, title_font, text_bounds,
-        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+    title_size = graphics_text_layout_get_content_size(data->title_text, title_font, text_bounds,
+        GTextOverflowModeWordWrap, GTextAlignmentLeft);
     title_size.w = text_bounds.size.w;
     title_pos = cursor;
     cursor.y += title_size.h;
   }
 
   if (has_subtitle) {
-    subtitle_size = graphics_text_layout_get_max_used_size(ctx, data->subtitle_text, title_font, text_bounds,
-        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+    subtitle_size = graphics_text_layout_get_content_size(data->subtitle_text, title_font, text_bounds,
+        GTextOverflowModeWordWrap, GTextAlignmentLeft);
     subtitle_size.w = text_bounds.size.w;
     subtitle_pos = cursor;
     cursor.y += subtitle_size.h;
@@ -121,8 +121,8 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
     body_rect.origin = cursor;
     body_rect.size.w -= 2 * x_margin;
     body_rect.size.h -= 2 * y_margin + cursor.y;
-    GSize body_size = graphics_text_layout_get_max_used_size(ctx, data->body_text, body_font, text_bounds,
-        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+    GSize body_size = graphics_text_layout_get_content_size(data->body_text, body_font, text_bounds,
+        GTextOverflowModeWordWrap, GTextAlignmentLeft);
     if (data->is_scrollable) {
       body_rect.size = body_size;
       int16_t new_height = cursor.y + 2 * y_margin + body_size.h;

@@ -6,6 +6,12 @@ var util2 = (function(util2){
 
 util2.void = function() {};
 
+util2.copy = function (a, b) {
+  b = b || (a instanceof Array ? [] : {});
+  for (var k in a) { b[k] = a[k]; }
+  return b;
+};
+
 util2.toInteger = function (x) {
   if (!isNaN(x = parseInt(x))) { return x; }
 };

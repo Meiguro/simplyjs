@@ -159,7 +159,7 @@ simply.off = function(type, subtype, handler) {
     return;
   }
   var index = handlers.indexOf(handler);
-  if (index !== -1) {
+  if (index === -1) {
     return;
   }
   handlers.splice(index, 1);

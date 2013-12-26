@@ -1,4 +1,4 @@
-#include "simply-js.h"
+#include "simplyjs.h"
 
 #include "simply_ui.h"
 #include "simply_msg.h"

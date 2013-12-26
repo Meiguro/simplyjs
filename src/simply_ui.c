@@ -2,7 +2,7 @@
 
 #include "simply_msg.h"
 
-#include "simply-js.h"
+#include "simplyjs.h"
 
 #include <pebble.h>
 

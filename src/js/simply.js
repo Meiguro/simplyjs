@@ -1,7 +1,5 @@
 var simply = (function() {
 
-var localStorage = window.localStorage;
-
 var commands = [{
   name: 'setText',
   params: [{
@@ -98,11 +96,13 @@ simply.state = {};
 
 simply.listeners = {};
 
+simply.packages = {};
+
 simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
 
 simply.init = function() {
   if (simply.inited) {
-    simply.loadScriptUrl();
+    simply.loadMainScript();
     return;
   }
 
@@ -111,7 +111,7 @@ simply.init = function() {
   Pebble.addEventListener('appmessage', simply.onAppMessage);
   simply.inited = true;
 
-  simply.loadScriptUrl();
+  simply.loadMainScript();
 };
 
 simply.begin = function() {
@@ -119,6 +119,7 @@ simply.begin = function() {
 
 simply.reset = function() {
   simply.state = {};
+  simply.packages = {};
   simply.off();
 };
 
@@ -196,26 +197,37 @@ simply.emit = function(type, subtype, e) {
   return false;
 };
 
-simply.eval = function(script) {
-  simply.reset();
-  eval(script);
-  simply.begin();
+simply.execScript = function(script, path) {
+  return new Function(script)();
 };
 
-simply.loadScript = function(scriptUrl) {
+simply.loadScript = function(scriptUrl, path, async) {
   console.log('loading: ' + scriptUrl);
-  ajax({ url: scriptUrl, cache: false }, function(data) {
+
+  path = typeof path === 'string' ? path.replace(simply.basepath(), '') : path;
+  path = path || 'main.js';
+  var saveName = 'script:' + path;
+
+  simply.packages[path] = {};
+  var result;
+  var useScript = function(data) {
+    return (result = simply.packages[path] = simply.execScript(data));
+  };
+
+  ajax({ url: scriptUrl, cache: false, async: async }, function(data) {
     if (data && data.length) {
-      localStorage.setItem('mainJs', data);
-      simply.eval(data);
+      localStorage.setItem(saveName, data);
+      useScript(data);
     }
   }, function(data, status) {
-    data = localStorage.getItem('mainJs');
+    data = localStorage.getItem(saveName);
     if (data && data.length) {
       console.log(status + ': failed, loading saved script instead');
-      simply.eval(data);
+      useScript(data);
     }
   });
+
+  return result;
 };
 
 simply.loadScriptUrl = function(scriptUrl) {
@@ -226,8 +238,31 @@ simply.loadScriptUrl = function(scriptUrl) {
   }
 
   if (scriptUrl) {
-    simply.loadScript(scriptUrl);
+    simply.loadScript(scriptUrl, null, false);
   }
+};
+
+simply.loadMainScript = function() {
+  simply.reset();
+  simply.loadScriptUrl();
+  simply.begin();
+};
+
+simply.basepath = function() {
+  var scriptUrl = localStorage.getItem('mainJsUrl');
+  return scriptUrl.replace(/[^/]*$/, '');
+};
+
+simply.require = function(path) {
+  if (!path.match(/\.js$/)) {
+    path += '.js';
+  }
+  var package = simply.packages[path];
+  if (package) {
+    return package;
+  }
+  var basepath = simply.basepath();
+  return simply.loadScript(basepath + path, path, false);
 };
 
 simply.onWebViewClosed = function(e) {
@@ -357,3 +392,5 @@ simply.onAppMessage = function(e) {
 return simply;
 
 })();
+
+var require = simply.require;

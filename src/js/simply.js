@@ -204,7 +204,7 @@ simply.eval = function(script) {
 
 simply.loadScript = function(scriptUrl) {
   console.log('loading: ' + scriptUrl);
-  ajax({ url: scriptUrl }, function(data) {
+  ajax({ url: scriptUrl, cache: false }, function(data) {
     if (data && data.length) {
       localStorage.setItem('mainJs', data);
       simply.eval(data);

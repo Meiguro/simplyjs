@@ -35,6 +35,11 @@ var ajax = function(opt, success, failure) {
     }
   }
 
+  if (opt.cache === false) {
+    var appendSymbol = url.indexOf('?') === -1 ? '?' : '&';
+    url += appendSymbol + '_=' + new Date().getTime();
+  }
+
   req.open(method.toUpperCase(), url, !opt.async);
   req.onreadystatechange = function(e) {
     if (req.readyState == 4) {

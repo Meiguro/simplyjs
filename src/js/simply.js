@@ -204,7 +204,9 @@ simply.execScript = function(script, path) {
 simply.loadScript = function(scriptUrl, path, async) {
   console.log('loading: ' + scriptUrl);
 
-  path = typeof path === 'string' ? path.replace(simply.basepath(), '') : path;
+  if (typeof path === 'string' && !path.match(/^[^\/]*\/\//)) {
+    path = path.replace(simply.basepath(), '');
+  }
   path = path || 'main.js';
   var saveName = 'script:' + path;
 
@@ -250,7 +252,7 @@ simply.loadMainScript = function() {
 
 simply.basepath = function() {
   var scriptUrl = localStorage.getItem('mainJsUrl');
-  return scriptUrl.replace(/[^/]*$/, '');
+  return scriptUrl.replace(/[^\/]*$/, '');
 };
 
 simply.require = function(path) {

@@ -40,7 +40,7 @@ var ajax = function(opt, success, failure) {
     url += appendSymbol + '_=' + new Date().getTime();
   }
 
-  req.open(method.toUpperCase(), url, !opt.async);
+  req.open(method.toUpperCase(), url, opt.async !== false);
   req.onreadystatechange = function(e) {
     if (req.readyState == 4) {
       var body = req.responseText;

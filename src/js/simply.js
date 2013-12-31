@@ -117,10 +117,15 @@ simply.init = function() {
 simply.begin = function() {
 };
 
+simply.end = function() {
+  simply.state.run = false;
+};
+
 simply.reset = function() {
   simply.state = {};
   simply.packages = {};
   simply.off();
+  simply.state.run = true;
 };
 
 simply.on = function(type, subtype, handler) {
@@ -176,9 +181,12 @@ simply.emitToHandlers = function(type, handlers, e) {
     }
   }
   return false;
-}
+};
 
 simply.emit = function(type, subtype, e) {
+  if (!simply.state.run) {
+    return;
+  }
   if (!e) {
     e = subtype;
     subtype = null;
@@ -198,7 +206,18 @@ simply.emit = function(type, subtype, e) {
 };
 
 simply.execScript = function(script, path) {
-  return new Function(script)();
+  if (!simply.state.run) {
+    return;
+  }
+  try {
+    return new Function(script)();
+  } catch (e) {
+    simply.text({
+      subtitle: path,
+      body: e.line + ' ' + e,
+    }, true);
+    simply.state.run = false;
+  }
 };
 
 simply.loadScript = function(scriptUrl, path, async) {
@@ -207,13 +226,13 @@ simply.loadScript = function(scriptUrl, path, async) {
   if (typeof path === 'string' && !path.match(/^[^\/]*\/\//)) {
     path = path.replace(simply.basepath(), '');
   }
-  path = path || 'main.js';
   var saveName = 'script:' + path;
+  path = path || simply.basename();
 
   simply.packages[path] = {};
   var result;
   var useScript = function(data) {
-    return (result = simply.packages[path] = simply.execScript(data));
+    return (result = simply.packages[path] = simply.execScript(data, path));
   };
 
   ajax({ url: scriptUrl, cache: false, async: async }, function(data) {
@@ -250,9 +269,14 @@ simply.loadMainScript = function() {
   simply.begin();
 };
 
-simply.basepath = function() {
-  var scriptUrl = localStorage.getItem('mainJsUrl');
-  return scriptUrl.replace(/[^\/]*$/, '');
+simply.basepath = function(path) {
+  path = path || localStorage.getItem('mainJsUrl');
+  return path.replace(/[^\/]*$/, '');
+};
+
+simply.basename = function(path) {
+  path = path || localStorage.getItem('mainJsUrl');
+  return path.match(/[^\/]*$/)[0];
 };
 
 simply.require = function(path) {
@@ -300,6 +324,9 @@ function makePacket(command, def) {
 }
 
 simply.sendPacket = function(packet) {
+  if (!simply.state.run) {
+    return;
+  }
   var send; (send = function() {
     Pebble.sendAppMessage(packet, util2.void, send);
   })();

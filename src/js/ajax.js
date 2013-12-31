@@ -17,6 +17,12 @@ var ajax = function(opt, success, failure) {
   var url = opt.url;
   //console.log(method + ' ' + url);
 
+  var onHandler = ajax.onHandler;
+  if (onHandler) {
+    if (success) { success = onHandler('success', success); }
+    if (failure) { failure = onHandler('failure', failure); }
+  }
+
   var req = new XMLHttpRequest();
   var headers = opt.headers;
   if (headers) {

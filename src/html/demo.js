@@ -20,3 +20,4 @@ simply.setText({
   title: 'Simply Demo!',
   body: 'This is a demo. Press buttons or tap the watch!',
 }, true);
+

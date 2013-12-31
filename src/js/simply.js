@@ -93,18 +93,30 @@ var styleTypes = [
 simply = {};
 
 simply.state = {};
-
+simply.packages = {};
 simply.listeners = {};
 
-simply.packages = {};
-
 simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
+
+var wrapHandler = function(handler, level) {
+  setHandlerPath(handler, null, level || 1);
+  var package = simply.packages[handler.path];
+  if (package) {
+    return simply.protect(package.fwrap(handler), handler.path);
+  } else {
+    return simply.protect(handler, handler.path);
+  }
+};
 
 simply.init = function() {
   if (simply.inited) {
     simply.loadMainScript();
     return;
   }
+
+  ajax.onHandler = function(type, handler) {
+    return wrapHandler(handler, 2);
+  };
 
   Pebble.addEventListener('showConfiguration', simply.onShowConfiguration);
   Pebble.addEventListener('webviewclosed', simply.onWebViewClosed);
@@ -129,8 +141,8 @@ simply.reset = function() {
   simply.state.numPackages = 0;
 };
 
-var setHandlerPath = function(handler, path) {
-  handler.path = path || getExceptionFile(new Error()) || simply.basename();
+var setHandlerPath = function(handler, path, level) {
+  handler.path = path || getExceptionScope(new Error(), (level || 0) + 2) || simply.basename();
   return handler;
 };
 
@@ -139,7 +151,7 @@ simply.on = function(type, subtype, handler) {
     handler = subtype;
     subtype = 'all';
   }
-  setHandlerPath(handler);
+  handler = wrapHandler(handler);
   var typeMap = simply.listeners;
   var subtypeMap = (typeMap[type] || ( typeMap[type] = {} ));
   (subtypeMap[subtype] || ( subtypeMap[subtype] = [] )).push(handler);
@@ -184,7 +196,7 @@ simply.emitToHandlers = function(type, handlers, e) {
   }
   for (var i = 0, ii = handlers.length; i < ii; ++i) {
     var handler = handlers[i];
-    if (simply.papply(handler, [e, type, i], handler.path) === false) {
+    if (handler(e, type, i) === false) {
       return true;
     }
   }
@@ -223,9 +235,9 @@ var getExecPackage = function(execName) {
   }
 }
 
-var getExceptionFile = function(e) {
+var getExceptionFile = function(e, level) {
   var stack = e.stack.split('\n');
-  for (var i = 0, ii = stack.length; i < ii; ++i) {
+  for (var i = level || 0, ii = stack.length; i < ii; ++i) {
     var line = stack[i];
     if (line.match(/^\$\d/)) {
       var path = getExecPackage(line);
@@ -234,7 +246,17 @@ var getExceptionFile = function(e) {
       }
     }
   }
-  return stack[1];
+  return stack[level];
+};
+
+var getExceptionScope = function(e, level) {
+  var stack = e.stack.split('\n');
+  for (var i = level || 0, ii = stack.length; i < ii; ++i) {
+    var line = stack[i];
+    if (!line || line.match('native code')) { continue; }
+    return line.match(/^\$\d/) && getExecPackage(line) || line;
+  }
+  return stack[level];
 };
 
 simply.papply = function(f, args, path) {
@@ -249,9 +271,9 @@ simply.papply = function(f, args, path) {
   }
 };
 
-simply.protect = function(f) {
+simply.protect = function(f, path) {
   return function() {
-    return simply.papply(f, arguments);
+    return simply.papply(f, arguments, path);
   };
 };
 
@@ -290,8 +312,12 @@ simply.loadScript = function(scriptUrl, path, async) {
 
   path = path || simply.basename();
   var execName = '$' + simply.state.numPackages++ + toSafeName(path);
+  var fapply = simply.defun(execName, ['f, args'], 'return f.apply(this, args)')
+  var fwrap = function(f) { return function() { return fapply(f, arguments) } }
   simply.packages[path] = {
     execName: execName,
+    fapply: fapply,
+    fwrap: fwrap,
   };
 
   var result;

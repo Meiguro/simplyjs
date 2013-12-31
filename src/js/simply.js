@@ -126,6 +126,12 @@ simply.reset = function() {
   simply.packages = {};
   simply.off();
   simply.state.run = true;
+  simply.state.numPackages = 0;
+};
+
+var setHandlerPath = function(handler, path) {
+  handler.path = path || getExceptionFile(new Error()) || simply.basename();
+  return handler;
 };
 
 simply.on = function(type, subtype, handler) {
@@ -133,6 +139,7 @@ simply.on = function(type, subtype, handler) {
     handler = subtype;
     subtype = 'all';
   }
+  setHandlerPath(handler);
   var typeMap = simply.listeners;
   var subtypeMap = (typeMap[type] || ( typeMap[type] = {} ));
   (subtypeMap[subtype] || ( subtypeMap[subtype] = [] )).push(handler);
@@ -176,7 +183,8 @@ simply.emitToHandlers = function(type, handlers, e) {
     return;
   }
   for (var i = 0, ii = handlers.length; i < ii; ++i) {
-    if (handlers[i](e, type, i) === false) {
+    var handler = handlers[i];
+    if (simply.papply(handler, [e, type, i], handler.path) === false) {
       return true;
     }
   }
@@ -205,19 +213,71 @@ simply.emit = function(type, subtype, e) {
   return false;
 };
 
+var getExecPackage = function(execName) {
+  var packages = simply.packages;
+  for (var path in packages) {
+    var package = packages[path];
+    if (package && package.execName === execName) {
+      return path;
+    }
+  }
+}
+
+var getExceptionFile = function(e) {
+  var stack = e.stack.split('\n');
+  for (var i = 0, ii = stack.length; i < ii; ++i) {
+    var line = stack[i];
+    if (line.match(/^\$\d/)) {
+      var path = getExecPackage(line);
+      if (path) {
+        return path;
+      }
+    }
+  }
+  return stack[1];
+};
+
+simply.papply = function(f, args, path) {
+  try {
+    return f.apply(this, args);
+  } catch (e) {
+    simply.text({
+      subtitle: !path && getExceptionFile(e) || getExecPackage(path) || path,
+      body: e.line + ' ' + e.message,
+    }, true);
+    simply.state.run = false;
+  }
+};
+
+simply.protect = function(f) {
+  return function() {
+    return simply.papply(f, arguments);
+  };
+};
+
+simply.defun = function(fn, fargs, fbody) {
+  if (!fbody) {
+    fbody = fargs;
+    fargs = [];
+  }
+  return new Function('return function ' + fn + '(' + fargs.join(', ') + ') {' + fbody + '}')();
+};
+
+var toSafeName = function(name) {
+  name = name.replace(/[^0-9A-Za-z_$]/g, '_');
+  if (name.match(/^[0-9]/)) {
+    name = '_' + name;
+  }
+  return name;
+}
+
 simply.execScript = function(script, path) {
   if (!simply.state.run) {
     return;
   }
-  try {
-    return new Function(script)();
-  } catch (e) {
-    simply.text({
-      subtitle: path,
-      body: e.line + ' ' + e,
-    }, true);
-    simply.state.run = false;
-  }
+  return simply.papply(function() {
+    return simply.defun(path, script)();
+  }, null, path);
 };
 
 simply.loadScript = function(scriptUrl, path, async) {
@@ -227,12 +287,16 @@ simply.loadScript = function(scriptUrl, path, async) {
     path = path.replace(simply.basepath(), '');
   }
   var saveName = 'script:' + path;
-  path = path || simply.basename();
 
-  simply.packages[path] = {};
+  path = path || simply.basename();
+  var execName = '$' + simply.state.numPackages++ + toSafeName(path);
+  simply.packages[path] = {
+    execName: execName,
+  };
+
   var result;
   var useScript = function(data) {
-    return (result = simply.packages[path] = simply.execScript(data, path));
+    return (result = simply.packages[path].value = simply.execScript(data, execName));
   };
 
   ajax({ url: scriptUrl, cache: false, async: async }, function(data) {
@@ -285,7 +349,7 @@ simply.require = function(path) {
   }
   var package = simply.packages[path];
   if (package) {
-    return package;
+    return package.value;
   }
   var basepath = simply.basepath();
   return simply.loadScript(basepath + path, path, false);

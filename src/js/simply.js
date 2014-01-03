@@ -118,9 +118,6 @@ simply.init = function() {
     return wrapHandler(handler, 2);
   };
 
-  Pebble.addEventListener('showConfiguration', simply.onShowConfiguration);
-  Pebble.addEventListener('webviewclosed', simply.onWebViewClosed);
-  Pebble.addEventListener('appmessage', simply.onAppMessage);
   simply.inited = true;
 
   simply.loadMainScript();
@@ -233,7 +230,7 @@ var getExecPackage = function(execName) {
       return path;
     }
   }
-}
+};
 
 var getExceptionFile = function(e, level) {
   var stack = e.stack.split('\n');
@@ -291,7 +288,7 @@ var toSafeName = function(name) {
     name = '_' + name;
   }
   return name;
-}
+};
 
 simply.execScript = function(script, path) {
   if (!simply.state.run) {
@@ -312,8 +309,8 @@ simply.loadScript = function(scriptUrl, path, async) {
 
   path = path || simply.basename();
   var execName = '$' + simply.state.numPackages++ + toSafeName(path);
-  var fapply = simply.defun(execName, ['f, args'], 'return f.apply(this, args)')
-  var fwrap = function(f) { return function() { return fapply(f, arguments) } }
+  var fapply = simply.defun(execName, ['f, args'], 'return f.apply(this, args)');
+  var fwrap = function(f) { return function() { return fapply(f, arguments); }; };
   simply.packages[path] = {
     execName: execName,
     fapply: fapply,
@@ -417,10 +414,12 @@ simply.sendPacket = function(packet) {
   if (!simply.state.run) {
     return;
   }
-  var send; (send = function() {
+  var send;
+  send = function() {
     Pebble.sendAppMessage(packet, util2.void, send);
-  })();
-}
+  };
+  send();
+};
 
 simply.setText = function(textDef, clear) {
   var command = commandMap.setText;
@@ -507,6 +506,10 @@ simply.onAppMessage = function(e) {
       });
   }
 };
+
+Pebble.addEventListener('showConfiguration', simply.onShowConfiguration);
+Pebble.addEventListener('webviewclosed', simply.onWebViewClosed);
+Pebble.addEventListener('appmessage', simply.onAppMessage);
 
 return simply;
 

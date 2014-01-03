@@ -31,8 +31,8 @@ def build(ctx):
 
     if js_files:
         ctx(rule=package_javascript,
-                source=js_files,
-                target=ctx.path.make_node('build/src/js/pebble-js-app.js'))
+            source=js_files,
+            target=ctx.path.make_node('build/src/js/pebble-js-app.js'))
 
     ctx.pbl_bundle(elf='pebble-app.elf',
                    js=ctx.path.ant_glob('build/src/js/**/*.js'))

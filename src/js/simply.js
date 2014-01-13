@@ -148,14 +148,21 @@ var setHandlerPath = function(handler, path, level) {
 };
 
 /**
+ * Simply.js event handler callback.
+ * @callback simply.eventHandler
+ * @param {simply.event} event - The event object with event specific information.
+ */
+
+/**
  * Subscribe to Pebble events.
- * There are three events supported currently: singleClick, longClick, and accelTap.
- * Events can have a subtype. For click events, they are up, down, or select. For accel events, they are x, y, or z.
+ * See {@link simply.event} for the possible event types to subscribe to.
  * Subscribing to a Pebble event requires a handler. An event object will be passed to your handler with event information.
+ * Events can have a subtype which can be used to filter events before the handler is called.
  * @memberOf simply
  * @param {string} type - The event type.
  * @param {string} [subtype] - The event subtype.
- * @param {function} handler - The event handler. The handler will be called with corresponding event.
+ * @param {simply.eventHandler} handler - The event handler. The handler will be called with corresponding event.
+ * @see simply.event
  */
 simply.on = function(type, subtype, handler) {
   if (!handler) {
@@ -558,6 +565,28 @@ simply.style = function(type) {
   packet[command.paramMap.type.id] = styleIndex !== -1 ? styleIndex : 1;
   simply.sendPacket(packet);
 };
+
+/**
+ * Simply.js event. See all the possible event types. Subscribe to events using {@link simply.on}.
+ * @typedef simply.event
+ * @see simply.clickEvent
+ * @see simply.accelTapEvent
+ */
+
+/**
+ * Simply.js button click event. This can either be a single click or long click.
+ * Use the event type 'singleClick' or 'longClick' to subscribe to these events.
+ * @typedef simply.clickEvent
+ * @property {string} button - The button that was pressed: 'up', 'select', or 'down'. This is also the event subtype.
+ */
+
+/**
+ * Simply.js accel tap event.
+ * Use the event type 'accelTap' to subscribe to these events.
+ * @typedef simply.accelTapEvent
+ * @property {string} axis - The axis the tap event occurred on: 'x', 'y', or 'z'. This is also the event subtype.
+ * @property {number} direction - The direction of the tap along the axis: 1 or -1.
+ */
 
 simply.onAppMessage = function(e) {
   var payload = e.payload;

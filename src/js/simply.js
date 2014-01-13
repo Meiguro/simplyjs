@@ -452,7 +452,24 @@ simply.sendPacket = function(packet) {
   send();
 };
 
-simply.setText = function(textDef, clear) {
+/**
+ * The text definition parameter for simply.text.
+ * @typedef {object} simply.textDef
+ * @property {string} title - A new title for the first and largest text field.
+ * @property {string} subtitle - A new subtitle for the second large text field.
+ * @property {string} body - A new body for the last text field meant to display large bodies of text.
+ */
+
+/**
+ * Sets a group of text fields at once.
+ * For example, passing a text definition { title: "A", subtitle: "B", body: "C" }
+ * will set the title, subtitle, and body simultaneously. Not all fields need to be specified.
+ * When setting a single field, consider using the specific text setters simply.title, simply.subtitle, simply.body.
+ * @memberOf simply
+ * @param {simply.textDef} textDef - An object defining new text values.
+ * @param {boolean} [clear] - If true, all other text fields will be cleared.
+ */
+simply.text = function(textDef, clear) {
   var command = commandMap.setText;
   var packet = makePacket(command, textDef);
   if (clear) {
@@ -461,7 +478,7 @@ simply.setText = function(textDef, clear) {
   simply.sendPacket(packet);
 };
 
-simply.text = simply.setText;
+simply.setText = simply.text;
 
 simply.setTextField = function(field, text, clear) {
   var command = commandMap.setText;
@@ -476,14 +493,34 @@ simply.setTextField = function(field, text, clear) {
   simply.sendPacket(packet);
 };
 
+/**
+ * Sets the title field. The title field is the first and largest text field available.
+ * @memberOf simply
+ * @param {string} text - The desired text to display.
+ * @param {boolean} [clear] - If true, all other text fields will be cleared.
+ */
 simply.title = function(text, clear) {
   simply.setTextField('title', text, clear);
 };
 
+/**
+ * Sets the subtitle field. The subtitle field is the second large text field available.
+ * @memberOf simply
+ * @param {string} text - The desired text to display.
+ * @param {boolean} [clear] - If true, all other text fields will be cleared.
+ */
 simply.subtitle = function(text, clear) {
   simply.setTextField('subtitle', text, clear);
 };
 
+/**
+ * Sets the body field. The body field is the last text field available meant to display large bodies of text.
+ * This can be used to display entire text interfaces.
+ * You may even clear the title and subtitle fields in order to display more in the body field.
+ * @memberOf simply
+ * @param {string} text - The desired text to display.
+ * @param {boolean} [clear] - If true, all other text fields will be cleared.
+ */
 simply.body = function(text, clear) {
   simply.setTextField('body', text, clear);
 };

@@ -477,7 +477,11 @@ simply.sendPacket = function(packet) {
  */
 simply.text = function(textDef, clear) {
   var command = commandMap.setText;
-  var packet = makePacket(command, textDef);
+  var packetDef = {};
+  for (var k in textDef) {
+    packetDef[k] = textDef[k].toString();
+  }
+  var packet = makePacket(command, packetDef);
   if (clear) {
     packet[command.paramMap.clear.id] = 1;
   }
@@ -491,7 +495,7 @@ simply.setTextField = function(field, text, clear) {
   var packet = makePacket(command);
   var param = command.paramMap[field];
   if (param) {
-    packet[param.id] = text;
+    packet[param.id] = text.toString();
   }
   if (clear) {
     packet[command.paramMap.clear.id] = 1;

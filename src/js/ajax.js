@@ -24,6 +24,8 @@ var ajax = function(opt, success, failure) {
   }
 
   var req = new XMLHttpRequest();
+  req.open(method.toUpperCase(), url, opt.async !== false);
+
   var headers = opt.headers;
   if (headers) {
     for (var name in headers) {
@@ -46,7 +48,6 @@ var ajax = function(opt, success, failure) {
     url += appendSymbol + '_=' + new Date().getTime();
   }
 
-  req.open(method.toUpperCase(), url, opt.async !== false);
   req.onreadystatechange = function(e) {
     if (req.readyState == 4) {
       var body = req.responseText;
@@ -58,7 +59,7 @@ var ajax = function(opt, success, failure) {
         callback(body, req.status, req);
       }
     }
-  }
+  };
 
   req.send(data);
 };

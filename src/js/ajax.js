@@ -12,6 +12,32 @@ var formify = function(data) {
   return params.join('&');
 };
 
+/**
+ * ajax options. There are various properties with url being the only required property.
+ * @typedef ajaxOptions
+ * @property {string} [method='get'] - The HTTP method to use: 'get', 'post', 'put', 'delete', 'options',
+ *    or any other standard method supported by the running environment.
+ * @property {string} url - The URL to make the ajax request to. e.g. 'http://www.example.com?name=value'
+ * @property {string} [type='text'] - The expected response format. Specify 'json' to have ajax parse
+ *    the response as json and pass an object as the data parameter.
+ * @property {object} [data] - The request body, mainly to be used in combination with 'post' or 'put'.
+ *    e.g. { username: 'guest' }
+ * @property {object} headers - Custom HTTP headers. Specify additional headers.
+ *    e.g. { 'x-extra': 'Extra Header' }
+ * @property {boolean} [async=true] - Whether the request will be asynchronous.
+ *    Specify false for a blocking, synchronous request.
+ * @property {boolean} [cache=true] - Whether the result may be cached.
+ *    Specify false to use the internal cache buster which appends the URL with the query parameter _
+ *    set to the current time in milliseconds.
+ */
+
+/**
+ * ajax
+ * @global
+ * @param {ajaxOptions} opt - Options specifying the type of ajax request to make.
+ * @param {function} success - The success handler that is called when a HTTP 200 response is given.
+ * @param {function} failure - The failure handler when the HTTP request fails or is not 200.
+ */
 var ajax = function(opt, success, failure) {
   var method = opt.method || 'GET';
   var url = opt.url;

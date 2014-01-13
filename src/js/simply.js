@@ -525,6 +525,12 @@ simply.body = function(text, clear) {
   simply.setTextField('body', text, clear);
 };
 
+/**
+ * Vibrates the Pebble.
+ * There are three support vibe types: short, long, and double.
+ * @memberOf simply
+ * @param {string} [type] - The vibe type. Defaults to short.
+ */
 simply.vibe = function(type) {
   var command = commandMap.vibe;
   var packet = makePacket(command);

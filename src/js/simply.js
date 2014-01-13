@@ -390,6 +390,13 @@ simply.basename = function(path) {
   return path.match(/[^\/]*$/)[0];
 };
 
+/**
+ * Loads external dependencies, allowing you to write a multi-file project.
+ * This currently only supports a relative path to another javascript file.
+ * @name require
+ * @type {function}
+ * @param {string} path - The path to the dependency.
+ */
 simply.require = function(path) {
   if (!path.match(/\.js$/)) {
     path += '.js';

@@ -1,3 +1,7 @@
+/**
+ * Simply.js
+ * @namespace simply
+ */
 var simply = (function() {
 
 var commands = [{
@@ -90,7 +94,7 @@ var styleTypes = [
   'mono',
 ];
 
-simply = {};
+var simply = {};
 
 simply.state = {};
 simply.packages = {};
@@ -143,6 +147,16 @@ var setHandlerPath = function(handler, path, level) {
   return handler;
 };
 
+/**
+ * Subscribe to Pebble events.
+ * There are three events supported currently: singleClick, longClick, and accelTap.
+ * Events can have a subtype. For click events, they are up, down, or select. For accel events, they are x, y, or z.
+ * Subscribing to a Pebble event requires a handler. An event object will be passed to your handler with event information.
+ * @memberOf simply
+ * @param {string} type - The event type.
+ * @param {string} [subtype] - The event subtype.
+ * @param {function} handler - The event handler. The handler will be called with corresponding event.
+ */
 simply.on = function(type, subtype, handler) {
   if (!handler) {
     handler = subtype;
@@ -154,6 +168,16 @@ simply.on = function(type, subtype, handler) {
   (subtypeMap[subtype] || ( subtypeMap[subtype] = [] )).push(handler);
 };
 
+/**
+ * Unsubscribe from Pebble events.
+ * When called without a handler, all handlers of the type and subtype are unsubscribe.
+ * When called with no parameters, all handlers are unsubscribed.
+ * @memberOf simply
+ * @param {string} type - The event type.
+ * @param {string} [subtype] - The event subtype.
+ * @param {function} [handler] - The event handler to unsubscribe.
+ * @see simply.on
+ */
 simply.off = function(type, subtype, handler) {
   if (!handler) {
     handler = subtype;

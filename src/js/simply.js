@@ -400,8 +400,7 @@ simply.basename = function(path) {
 /**
  * Loads external dependencies, allowing you to write a multi-file project.
  * This currently only supports a relative path to another javascript file.
- * @name require
- * @type {function}
+ * @global
  * @param {string} path - The path to the dependency.
  */
 simply.require = function(path) {

@@ -459,7 +459,7 @@ simply.sendPacket = function(packet) {
 };
 
 /**
- * The text definition parameter for simply.text.
+ * The text definition parameter for {@link simply.text}.
  * @typedef {object} simply.textDef
  * @property {string} title - A new title for the first and largest text field.
  * @property {string} subtitle - A new subtitle for the second large text field.
@@ -468,7 +468,7 @@ simply.sendPacket = function(packet) {
 
 /**
  * Sets a group of text fields at once.
- * For example, passing a text definition { title: "A", subtitle: "B", body: "C" }
+ * For example, passing a text definition { title: 'A', subtitle: 'B', body: 'C' }
  * will set the title, subtitle, and body simultaneously. Not all fields need to be specified.
  * When setting a single field, consider using the specific text setters simply.title, simply.subtitle, simply.body.
  * @memberOf simply

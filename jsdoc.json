@@ -1,0 +1,8 @@
+{
+  "source": {
+    "include": [
+      "src/js/ajax.js",
+      "src/js/simply.js"
+    ]
+  }
+}

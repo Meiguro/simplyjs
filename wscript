@@ -1,9 +1,3 @@
-#
-# This file is the default set of rules to compile a Pebble project.
-#
-# Feel free to customize this to your needs.
-#
-
 top = '.'
 out = 'build'
 
@@ -28,13 +22,14 @@ def build(ctx):
         task.exec_command(' '.join(cmd))
 
     js_files = ctx.path.ant_glob('src/js/**/*.js')
+    js_target = ctx.path.make_node('build/src/js/pebble-js-app.js')
 
     if js_files:
         ctx(rule=package_javascript,
             source=js_files,
-            target=ctx.path.make_node('build/src/js/pebble-js-app.js'))
+            target=js_target)
 
     ctx.pbl_bundle(elf='pebble-app.elf',
-                   js=ctx.path.ant_glob('build/src/js/**/*.js'))
+                   js=js_target)
 
 # vim:filetype=python

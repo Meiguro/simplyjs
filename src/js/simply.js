@@ -291,6 +291,7 @@ simply.papply = function(f, args, path) {
   try {
     return f.apply(this, args);
   } catch (e) {
+    console.log(e.line + ': ' + e + '\n' + e.stack);
     simply.text({
       subtitle: !path && getExceptionFile(e) || getExecPackage(path) || path,
       body: e.line + ' ' + e.message,

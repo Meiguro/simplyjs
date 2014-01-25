@@ -550,6 +550,14 @@ simply.vibe = function(type) {
   simply.sendPacket(packet);
 };
 
+/**
+ * Enable scrolling in the Pebble UI.
+ * When scrolling is enabled, up and down button presses are no longer forwarded to JavaScript handlers.
+ * Single select, long select, and accel tap events are still available to you however.
+ * @memberOf simply
+ * @param {boolean} scrollable - Whether to enable a scrollable view.
+ */
+
 simply.scrollable = function(scrollable) {
   if (scrollable === null) {
     return simply.state.scrollable === true;

@@ -108,8 +108,8 @@ static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, S
 }
 
 void simply_msg_init(SimplyData *simply) {
-  const uint32_t size_inbound = 1024;
-  const uint32_t size_outbound = 512;
+  const uint32_t size_inbound = 2048;
+  const uint32_t size_outbound = 128;
   app_message_open(size_inbound, size_outbound);
 
   app_message_set_context(simply);

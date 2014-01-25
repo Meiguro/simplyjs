@@ -570,6 +570,14 @@ simply.scrollable = function(scrollable) {
   simply.sendPacket(packet);
 };
 
+/**
+ * Set the Pebble UI style.
+ * The available styles are 'small', 'large', and 'mono'. Small and large correspond to the system notification styles.
+ * Mono sets a monospace font for the body textfield, enabling more complex text UIs or ASCII art.
+ * @memberOf simply
+ * @param {string} type - The type of style to set: 'small', 'large', or 'mono'.
+ */
+
 simply.style = function(type) {
   var command = commandMap.setStyle;
   var packet = makePacket(command);

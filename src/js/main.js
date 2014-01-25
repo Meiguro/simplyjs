@@ -1,7 +1,9 @@
+/* global SimplyPebble */
+
 (function() {
 
 Pebble.addEventListener('ready', function(e) {
-  simply.init();
+  SimplyPebble.init();
 });
 
 })();

@@ -4,96 +4,6 @@
  */
 var simply = (function() {
 
-var commands = [{
-  name: 'setText',
-  params: [{
-    name: 'title',
-  }, {
-    name: 'subtitle',
-  }, {
-    name: 'body',
-  }, {
-    name: 'clear',
-  }],
-}, {
-  name: 'singleClick',
-  params: [{
-    name: 'button',
-  }],
-}, {
-  name: 'longClick',
-  params: [{
-    name: 'button',
-  }],
-}, {
-  name: 'accelTap',
-  params: [{
-    name: 'axis',
-  }, {
-    name: 'direction',
-  }],
-}, {
-  name: 'vibe',
-  params: [{
-    name: 'type',
-  }],
-}, {
-  name: 'setScrollable',
-  params: [{
-    name: 'scrollable',
-  }],
-}, {
-  name: 'setStyle',
-  params: [{
-    name: 'type',
-  }],
-}];
-
-var commandMap = {};
-
-for (var i = 0, ii = commands.length; i < ii; ++i) {
-  var command = commands[i];
-  commandMap[command.name] = command;
-  command.id = i;
-
-  var params = command.params;
-  if (!params) {
-    continue;
-  }
-
-  var paramMap = command.paramMap = {};
-  for (var j = 0, jj = params.length; j < jj; ++j) {
-    var param = params[j];
-    paramMap[param.name] = param;
-    param.id = j + 1;
-  }
-}
-
-var buttons = [
-  'back',
-  'up',
-  'select',
-  'down',
-];
-
-var accelAxes = [
-  'x',
-  'y',
-  'z',
-];
-
-var vibeTypes = [
-  'short',
-  'long',
-  'double',
-];
-
-var styleTypes = [
-  'small',
-  'large',
-  'mono',
-];
-
 var simply = {};
 
 simply.state = {};
@@ -102,16 +12,6 @@ simply.listeners = {};
 
 simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
 
-var wrapHandler = function(handler, level) {
-  setHandlerPath(handler, null, level || 1);
-  var package = simply.packages[handler.path];
-  if (package) {
-    return simply.protect(package.fwrap(handler), handler.path);
-  } else {
-    return simply.protect(handler, handler.path);
-  }
-};
-
 simply.init = function() {
   if (simply.inited) {
     simply.loadMainScript();
@@ -119,12 +19,16 @@ simply.init = function() {
   }
 
   ajax.onHandler = function(type, handler) {
-    return wrapHandler(handler, 2);
+    return simply.wrapHandler(handler, 2);
   };
 
   simply.inited = true;
 
   simply.loadMainScript();
+};
+
+simply.wrapHandler = function() {
+  return simply.impl.wrapHandler.apply(this, arguments);
 };
 
 simply.begin = function() {
@@ -140,11 +44,6 @@ simply.reset = function() {
   simply.off();
   simply.state.run = true;
   simply.state.numPackages = 0;
-};
-
-var setHandlerPath = function(handler, path, level) {
-  handler.path = path || getExceptionScope(new Error(), (level || 0) + 2) || simply.basename();
-  return handler;
 };
 
 /**
@@ -169,7 +68,7 @@ simply.on = function(type, subtype, handler) {
     handler = subtype;
     subtype = 'all';
   }
-  handler = wrapHandler(handler);
+  handler = simply.wrapHandler(handler);
   var typeMap = simply.listeners;
   var subtypeMap = (typeMap[type] || ( typeMap[type] = {} ));
   (subtypeMap[subtype] || ( subtypeMap[subtype] = [] )).push(handler);
@@ -253,121 +152,8 @@ simply.emit = function(type, subtype, e) {
   return false;
 };
 
-var getExecPackage = function(execName) {
-  var packages = simply.packages;
-  for (var path in packages) {
-    var package = packages[path];
-    if (package && package.execName === execName) {
-      return path;
-    }
-  }
-};
-
-var getExceptionFile = function(e, level) {
-  var stack = e.stack.split('\n');
-  for (var i = level || 0, ii = stack.length; i < ii; ++i) {
-    var line = stack[i];
-    if (line.match(/^\$\d/)) {
-      var path = getExecPackage(line);
-      if (path) {
-        return path;
-      }
-    }
-  }
-  return stack[level];
-};
-
-var getExceptionScope = function(e, level) {
-  var stack = e.stack.split('\n');
-  for (var i = level || 0, ii = stack.length; i < ii; ++i) {
-    var line = stack[i];
-    if (!line || line.match('native code')) { continue; }
-    return line.match(/^\$\d/) && getExecPackage(line) || line;
-  }
-  return stack[level];
-};
-
-simply.papply = function(f, args, path) {
-  try {
-    return f.apply(this, args);
-  } catch (e) {
-    console.log(e.line + ': ' + e + '\n' + e.stack);
-    simply.text({
-      subtitle: !path && getExceptionFile(e) || getExecPackage(path) || path,
-      body: e.line + ' ' + e.message,
-    }, true);
-    simply.state.run = false;
-  }
-};
-
-simply.protect = function(f, path) {
-  return function() {
-    return simply.papply(f, arguments, path);
-  };
-};
-
-simply.defun = function(fn, fargs, fbody) {
-  if (!fbody) {
-    fbody = fargs;
-    fargs = [];
-  }
-  return new Function('return function ' + fn + '(' + fargs.join(', ') + ') {' + fbody + '}')();
-};
-
-var toSafeName = function(name) {
-  name = name.replace(/[^0-9A-Za-z_$]/g, '_');
-  if (name.match(/^[0-9]/)) {
-    name = '_' + name;
-  }
-  return name;
-};
-
-simply.execScript = function(script, path) {
-  if (!simply.state.run) {
-    return;
-  }
-  return simply.papply(function() {
-    return simply.defun(path, script)();
-  }, null, path);
-};
-
-simply.loadScript = function(scriptUrl, path, async) {
-  console.log('loading: ' + scriptUrl);
-
-  if (typeof path === 'string' && !path.match(/^[^\/]*\/\//)) {
-    path = path.replace(simply.basepath(), '');
-  }
-  var saveName = 'script:' + path;
-
-  path = path || simply.basename();
-  var execName = '$' + simply.state.numPackages++ + toSafeName(path);
-  var fapply = simply.defun(execName, ['f, args'], 'return f.apply(this, args)');
-  var fwrap = function(f) { return function() { return fapply(f, arguments); }; };
-  simply.packages[path] = {
-    execName: execName,
-    fapply: fapply,
-    fwrap: fwrap,
-  };
-
-  var result;
-  var useScript = function(data) {
-    return (result = simply.packages[path].value = simply.execScript(data, execName));
-  };
-
-  ajax({ url: scriptUrl, cache: false, async: async }, function(data) {
-    if (data && data.length) {
-      localStorage.setItem(saveName, data);
-      useScript(data);
-    }
-  }, function(data, status) {
-    data = localStorage.getItem(saveName);
-    if (data && data.length) {
-      console.log(status + ': failed, loading saved script instead');
-      useScript(data);
-    }
-  });
-
-  return result;
+simply.loadScript = function() {
+  return simply.impl.loadScript.apply(this, arguments);
 };
 
 simply.loadScriptUrl = function(scriptUrl) {
@@ -416,49 +202,6 @@ simply.require = function(path) {
   return simply.loadScript(basepath + path, path, false);
 };
 
-simply.onWebViewClosed = function(e) {
-  if (!e.response) {
-    return;
-  }
-
-  var options = JSON.parse(decodeURIComponent(e.response));
-  simply.loadScriptUrl(options.scriptUrl);
-};
-
-simply.getOptions = function() {
-  return {
-    scriptUrl: localStorage.getItem('mainJsUrl'),
-  };
-};
-
-simply.onShowConfiguration = function(e) {
-  var options = encodeURIComponent(JSON.stringify(simply.getOptions()));
-  Pebble.openURL(simply.settingsUrl + '#' + options);
-};
-
-function makePacket(command, def) {
-  var packet = {};
-  packet[0] = command.id;
-  if (def) {
-    var paramMap = command.paramMap;
-    for (var k in def) {
-      packet[paramMap[k].id] = def[k];
-    }
-  }
-  return packet;
-}
-
-simply.sendPacket = function(packet) {
-  if (!simply.state.run) {
-    return;
-  }
-  var send;
-  send = function() {
-    Pebble.sendAppMessage(packet, util2.void, send);
-  };
-  send();
-};
-
 /**
  * The text definition parameter for {@link simply.text}.
  * @typedef {object} simply.textDef
@@ -477,32 +220,10 @@ simply.sendPacket = function(packet) {
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.text = function(textDef, clear) {
-  var command = commandMap.setText;
-  var packetDef = {};
-  for (var k in textDef) {
-    packetDef[k] = textDef[k].toString();
-  }
-  var packet = makePacket(command, packetDef);
-  if (clear) {
-    packet[command.paramMap.clear.id] = 1;
-  }
-  simply.sendPacket(packet);
+  return simply.impl.text.apply(this, arguments);
 };
 
 simply.setText = simply.text;
-
-simply.setTextField = function(field, text, clear) {
-  var command = commandMap.setText;
-  var packet = makePacket(command);
-  var param = command.paramMap[field];
-  if (param) {
-    packet[param.id] = text.toString();
-  }
-  if (clear) {
-    packet[command.paramMap.clear.id] = 1;
-  }
-  simply.sendPacket(packet);
-};
 
 /**
  * Sets the title field. The title field is the first and largest text field available.
@@ -511,7 +232,7 @@ simply.setTextField = function(field, text, clear) {
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.title = function(text, clear) {
-  simply.setTextField('title', text, clear);
+  return simply.impl.textfield('title', text, clear);
 };
 
 /**
@@ -521,7 +242,7 @@ simply.title = function(text, clear) {
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.subtitle = function(text, clear) {
-  simply.setTextField('subtitle', text, clear);
+  return simply.impl.textfield('subtitle', text, clear);
 };
 
 /**
@@ -533,7 +254,7 @@ simply.subtitle = function(text, clear) {
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.body = function(text, clear) {
-  simply.setTextField('body', text, clear);
+  return simply.impl.textfield('body', text, clear);
 };
 
 /**
@@ -542,12 +263,8 @@ simply.body = function(text, clear) {
  * @memberOf simply
  * @param {string} [type] - The vibe type. Defaults to short.
  */
-simply.vibe = function(type) {
-  var command = commandMap.vibe;
-  var packet = makePacket(command);
-  var vibeIndex = vibeTypes.indexOf(type);
-  packet[command.paramMap.type.id] = vibeIndex !== -1 ? vibeIndex : 0;
-  simply.sendPacket(packet);
+simply.vibe = function() {
+  return simply.impl.vibe.apply(this, arguments);
 };
 
 /**
@@ -559,15 +276,7 @@ simply.vibe = function(type) {
  */
 
 simply.scrollable = function(scrollable) {
-  if (scrollable === null) {
-    return simply.state.scrollable === true;
-  }
-  simply.state.scrollable = scrollable;
-
-  var command = commandMap.setScrollable;
-  var packet = makePacket(command);
-  packet[command.paramMap.scrollable.id] = scrollable ? 1 : 0;
-  simply.sendPacket(packet);
+  return simply.impl.scrollable.apply(this, arguments);
 };
 
 /**
@@ -579,11 +288,7 @@ simply.scrollable = function(scrollable) {
  */
 
 simply.style = function(type) {
-  var command = commandMap.setStyle;
-  var packet = makePacket(command);
-  var styleIndex = styleTypes.indexOf(type);
-  packet[command.paramMap.type.id] = styleIndex !== -1 ? styleIndex : 1;
-  simply.sendPacket(packet);
+  return simply.impl.style.apply(this, arguments);
 };
 
 /**
@@ -608,31 +313,18 @@ simply.style = function(type) {
  * @property {number} direction - The direction of the tap along the axis: 1 or -1.
  */
 
-simply.onAppMessage = function(e) {
-  var payload = e.payload;
-  var code = payload[0];
-  var command = commands[code];
-
-  switch (command.name) {
-    case 'singleClick':
-    case 'longClick':
-      var button = buttons[payload[1]];
-      simply.emit(command.name, button, {
-        button: button,
-      });
-      break;
-    case 'accelTap':
-      var axis = accelAxes[payload[1]];
-      simply.emit(command.name, axis, {
-        axis: axis,
-        direction: payload[2],
-      });
-  }
+simply.emitClick = function(type, button) {
+  simply.emit(type, button, {
+    button: button,
+  });
 };
 
-Pebble.addEventListener('showConfiguration', simply.onShowConfiguration);
-Pebble.addEventListener('webviewclosed', simply.onWebViewClosed);
-Pebble.addEventListener('appmessage', simply.onAppMessage);
+simply.emitAccelTap = function(axis, direction) {
+  simply.emit('accelTap', axis, {
+    axis: axis,
+    direction: direction,
+  });
+};
 
 return simply;
 

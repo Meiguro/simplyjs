@@ -31,8 +31,8 @@ def concat_javascript(self, *k, **kw):
 
     def concat_javascript_task(task):
         cmd = ['cat']
-        cmd.extend([x.abspath() for x in task.inputs])
-        cmd.extend(['>', task.outputs[0].abspath()])
+        cmd.extend(['"{}"'.format(x.abspath()) for x in task.inputs])
+        cmd.extend(['>', "{}".format(task.outputs[0].abspath())])
         task.exec_command(' '.join(cmd))
 
     js_target = self.path.make_node('build/src/js/pebble-js-app.js')

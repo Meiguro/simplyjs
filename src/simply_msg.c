@@ -14,6 +14,7 @@ enum SimplyACmd {
   SimplyACmd_vibe,
   SimplyACmd_setScrollable,
   SimplyACmd_setStyle,
+  SimplyACmd_setFullscreen,
 };
 
 typedef enum VibeType VibeType;
@@ -72,6 +73,13 @@ static void handle_set_style(DictionaryIterator *iter, SimplyData *simply) {
   }
 }
 
+static void handle_set_fullscreen(DictionaryIterator *iter, SimplyData *simply) {
+  Tuple *tuple;
+  if ((tuple = dict_find(iter, 1))) {
+    simply_set_fullscreen(simply, tuple->value->int32);
+  }
+}
+
 static void received_callback(DictionaryIterator *iter, void *context) {
   Tuple *tuple = dict_find(iter, 0);
   if (!tuple) {
@@ -90,6 +98,9 @@ static void received_callback(DictionaryIterator *iter, void *context) {
       break;
     case SimplyACmd_setStyle:
       handle_set_style(iter, context);
+      break;
+    case SimplyACmd_setFullscreen:
+      handle_set_fullscreen(iter, context);
       break;
   }
 }

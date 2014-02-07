@@ -26,3 +26,5 @@ void simply_set_style(SimplyData *simply, int style_index);
 void simply_set_text(SimplyData *simply, char **str_field, const char *str);
 
 void simply_set_scrollable(SimplyData *simply, bool is_scrollable);
+
+void simply_set_fullscreen(SimplyData *simply, bool is_fullscreen);

@@ -45,6 +45,11 @@ var commands = [{
   params: [{
     name: 'type',
   }],
+}, {
+  name: 'setFullscreen',
+  params: [{
+    name: 'fullscreen',
+  }],
 }];
 
 var commandMap = {};
@@ -322,6 +327,18 @@ SimplyPebble.scrollable = function(scrollable) {
   packet[command.paramMap.scrollable.id] = scrollable ? 1 : 0;
   SimplyPebble.sendPacket(packet);
 };
+
+SimplyPebble.fullscreen = function(fullscreen) {
+  if (fullscreen === null) {
+    return simply.state.fullscreen === true;
+  }
+  simply.state.fullscreen = fullscreen;
+
+  var command = commandMap.setFullscreen;
+  var packet = makePacket(command);
+  packet[command.paramMap.fullscreen.id] = fullscreen ? 1 : 0;
+  SimplyPebble.sendPacket(packet);
+}
 
 SimplyPebble.style = function(type) {
   var command = commandMap.setStyle;

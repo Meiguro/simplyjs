@@ -280,6 +280,17 @@ simply.scrollable = function(scrollable) {
 };
 
 /**
+ * Enable fullscreen in the Pebble UI.
+ * Fullscreen removes the Pebble status bar, giving slightly more vertical display height.
+ * @memberOf simply
+ * @param {boolean} fullscreen - Whether to enable fullscreen mode.
+ */
+
+simply.fullscreen = function(fullscreen) {
+  return simply.impl.fullscreen.apply(this, arguments);
+};
+
+/**
  * Set the Pebble UI style.
  * The available styles are 'small', 'large', and 'mono'. Small and large correspond to the system notification styles.
  * Mono sets a monospace font for the body textfield, enabling more complex text UIs or ASCII art.

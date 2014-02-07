@@ -54,6 +54,20 @@ void simply_set_scrollable(SimplyData *simply, bool is_scrollable) {
   layer_mark_dirty(simply->display_layer);
 }
 
+void simply_set_fullscreen(SimplyData *simply, bool is_fullscreen) {
+  window_set_fullscreen(simply->window, is_fullscreen);
+
+  GRect frame = layer_get_frame(window_get_root_layer(simply->window));
+  scroll_layer_set_frame(simply->scroll_layer, frame);
+  layer_set_frame(simply->display_layer, frame);
+
+  // HACK: Refresh app chrome state
+  Window *window = window_create();
+  window_stack_push(window, false);
+  window_stack_remove(window, false);
+  window_destroy(window);
+}
+
 static void set_text(char **str_field, const char *str) {
   free(*str_field);
 

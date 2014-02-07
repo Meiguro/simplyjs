@@ -134,7 +134,8 @@ var getExceptionScope = function(e, level) {
 };
 
 var setHandlerPath = function(handler, path, level) {
-  handler.path = path || getExceptionScope(new Error(), (level || 0) + 2) || simply.basename();
+  var level0 = 4; // caller -> wrap -> apply -> wrap -> set
+  handler.path = path || getExceptionScope(new Error(), (level || 0) + level0) || simply.basename();
   return handler;
 };
 
@@ -142,9 +143,10 @@ SimplyPebble.papply = function(f, args, path) {
   try {
     return f.apply(this, args);
   } catch (e) {
-    console.log(e.line + ': ' + e + '\n' + e.stack);
+    var scope = !path && getExceptionFile(e) || getExecPackage(path) || path;
+    console.log(scope + ':' + e.line + ': ' + e + e.stack);
     simply.text({
-      subtitle: !path && getExceptionFile(e) || getExecPackage(path) || path,
+      subtitle: scope,
       body: e.line + ' ' + e.message,
     }, true);
     simply.state.run = false;

@@ -4,9 +4,9 @@
 
 typedef struct SimplyStyle SimplyStyle;
 
-typedef struct SimplyData SimplyData;
+typedef struct SimplyUi SimplyUi;
 
-struct SimplyData {
+struct SimplyUi {
   Window *window;
   const SimplyStyle *style;
   char *title_text;
@@ -17,14 +17,14 @@ struct SimplyData {
   bool is_scrollable;
 };
 
-SimplyData *simply_create(void);
+SimplyUi *simply_ui_create(void);
 
-void simply_destroy(SimplyData *simply);
+void simply_ui_destroy(SimplyUi *self);
 
-void simply_set_style(SimplyData *simply, int style_index);
+void simply_ui_set_style(SimplyUi *self, int style_index);
 
-void simply_set_text(SimplyData *simply, char **str_field, const char *str);
+void simply_ui_set_text(SimplyUi *self, char **str_field, const char *str);
 
-void simply_set_scrollable(SimplyData *simply, bool is_scrollable);
+void simply_ui_set_scrollable(SimplyUi *self, bool is_scrollable);
 
-void simply_set_fullscreen(SimplyData *simply, bool is_fullscreen);
+void simply_ui_set_fullscreen(SimplyUi *self, bool is_fullscreen);

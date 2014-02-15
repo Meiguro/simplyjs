@@ -42,6 +42,7 @@ simply.reset = function() {
   simply.off();
   simply.state.run = true;
   simply.state.numPackages = 0;
+  simply.accelInit();
 };
 
 /**
@@ -372,6 +373,39 @@ simply.style = function(type) {
   return simply.impl.style.apply(this, arguments);
 };
 
+simply.accelInit = function() {
+  simply.state.accel = {
+    rate: 100,
+    samples: 25,
+    subscribe: false,
+    listeners: [],
+  };
+};
+
+simply.accelConfig = function(opt) {
+  var accelState = simply.state.accel;
+  if (typeof opt === 'undefined') {
+    return {
+      rate: accelState.rate,
+      samples: accelState.samples,
+      subscribe: accelState.subscribe,
+    };
+  } else if (typeof opt === 'boolean') {
+    opt = { subscribe: opt };
+  }
+  for (var k in opt) {
+    accelState[k] = opt[k];
+  }
+  return simply.impl.accelConfig.apply(this, arguments);
+};
+
+simply.accelPeek = function(callback) {
+  if (simply.state.accel.subscribe) {
+    throw Error('Cannot use accelPeek when listening to accelData events');
+  }
+  return simply.impl.accelPeek.apply(this, arguments);
+};
+
 /**
  * Simply.js event. See all the possible event types. Subscribe to events using {@link simply.on}.
  * @typedef simply.event
@@ -405,6 +439,18 @@ simply.emitAccelTap = function(axis, direction) {
     axis: axis,
     direction: direction,
   });
+};
+
+simply.emitAccelData = function(accels, callback) {
+  var e = {
+    count: accels.length,
+    accel: accels[0],
+    accels: accels,
+  };
+  if (callback) {
+    return callback(e);
+  }
+  simply.emit('accelData', e);
 };
 
 return simply;

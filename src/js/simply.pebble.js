@@ -50,6 +50,29 @@ var commands = [{
   params: [{
     name: 'fullscreen',
   }],
+}, {
+  name: 'accelData',
+  params: [{
+    name: 'transactionId',
+  }, {
+    name: 'numSamples',
+  }, {
+    name: 'accelData',
+  }],
+}, {
+  name: 'getAccelData',
+  params: [{
+    name: 'transactionId',
+  }],
+}, {
+  name: 'configAccelData',
+  params: [{
+    name: 'rate'
+  }, {
+    name: 'samples'
+  }, {
+    name: 'subscribe'
+  }],
 }];
 
 var commandMap = {};
@@ -300,6 +323,38 @@ SimplyPebble.style = function(type) {
   SimplyPebble.sendPacket(packet);
 };
 
+SimplyPebble.accelConfig = function(configDef) {
+  var command = commandMap.configAccelData;
+  var packetDef = {};
+  for (var k in configDef) {
+    packetDef[k] = configDef[k];
+  }
+  var packet = makePacket(command, packetDef);
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.accelPeek = function(callback) {
+  simply.state.accel.listeners.push(callback);
+  var command = commandMap.getAccelData;
+  var packet = makePacket(command);
+  SimplyPebble.sendPacket(packet);
+};
+
+readInt = function(packet, width, pos, signed) {
+  var value = 0;
+  pos = pos || 0;
+  for (var i = 0; i < width; ++i) {
+    value += (packet[pos + i] & 0xFF) << (i * 8);
+  }
+  if (signed) {
+    var mask = 1 << (width * 8 - 1);
+    if (value & mask) {
+      value = value - (((mask - 1) << 1) + 1);
+    }
+  }
+  return value;
+};
+
 SimplyPebble.onAppMessage = function(e) {
   var payload = e.payload;
   var code = payload[0];
@@ -314,6 +369,33 @@ SimplyPebble.onAppMessage = function(e) {
     case 'accelTap':
       var axis = accelAxes[payload[1]];
       simply.emitAccelTap(axis, payload[2]);
+      break;
+    case 'accelData':
+      var transactionId = payload[1];
+      var samples = payload[2];
+      var data = payload[3];
+      var accels = [];
+      for (var i = 0; i < samples; i++) {
+        var pos = i * 15;
+        var accel = {
+          x: readInt(data, 2, pos, true),
+          y: readInt(data, 2, pos + 2, true),
+          z: readInt(data, 2, pos + 4, true),
+          vibe: readInt(data, 1, pos + 6),
+          time: readInt(data, 8, pos + 7),
+        };
+        accels[i] = accel;
+      }
+      if (typeof transactionId === 'undefined') {
+        simply.emitAccelData(accels);
+      } else {
+        var handlers = simply.state.accel.listeners;
+        simply.state.accel.listeners = [];
+        for (var i = 0, ii = handlers.length; i < ii; ++i) {
+          simply.emitAccelData(accels, handlers[i]);
+        }
+      }
+      break;
   }
 };
 

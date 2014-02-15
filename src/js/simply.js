@@ -15,16 +15,12 @@ simply.listeners = {};
 simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
 
 simply.init = function() {
-  if (simply.inited) {
-    simply.loadMainScript();
-    return;
+  if (!simply.inited) {
+    simply.inited = true;
+    ajax.onHandler = function(type, handler) {
+      return simply.wrapHandler(handler, 2);
+    };
   }
-
-  ajax.onHandler = function(type, handler) {
-    return simply.wrapHandler(handler, 2);
-  };
-
-  simply.inited = true;
 
   simply.loadMainScript();
 };

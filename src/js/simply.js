@@ -67,10 +67,12 @@ simply.on = function(type, subtype, handler) {
     handler = subtype;
     subtype = 'all';
   }
-  handler = simply.wrapHandler(handler);
   var typeMap = simply.listeners;
   var subtypeMap = (typeMap[type] || ( typeMap[type] = {} ));
-  (subtypeMap[subtype] || ( subtypeMap[subtype] = [] )).push(handler);
+  (subtypeMap[subtype] || ( subtypeMap[subtype] = [] )).push({
+    id: handler,
+    handler: simply.wrapHandler(handler),
+  });
 };
 
 /**
@@ -109,7 +111,13 @@ simply.off = function(type, subtype, handler) {
   if (!handlers) {
     return;
   }
-  var index = handlers.indexOf(handler);
+  var index = -1;
+  for (var i = 0, ii = handlers.length; i < ii; ++i) {
+    if (handlers[i].id === handler) {
+      index = i;
+      break;
+    }
+  }
   if (index === -1) {
     return;
   }
@@ -121,7 +129,7 @@ simply.emitToHandlers = function(type, handlers, e) {
     return;
   }
   for (var i = 0, ii = handlers.length; i < ii; ++i) {
-    var handler = handlers[i];
+    var handler = handlers[i].handler;
     if (handler(e, type, i) === false) {
       return true;
     }

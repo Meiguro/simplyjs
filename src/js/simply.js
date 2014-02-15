@@ -154,7 +154,7 @@ simply.emit = function(type, subtype, e) {
 
 var pathToName = function(path) {
   var name = path;
-  if (typeof name === 'string' && !name.match(/^[^\/]*\/\//)) {
+  if (typeof name === 'string') {
     name = name.replace(simply.basepath(), '');
   }
   return name || simply.basename();
@@ -173,7 +173,7 @@ simply.makePackage = function(path) {
     pkg = simply.packages[name] = {
       name: name,
       saveName: saveName,
-      path: path
+      filename: path
     };
   }
 
@@ -374,4 +374,5 @@ return simply;
 
 })();
 
+Pebble.require = require;
 var require = simply.require;

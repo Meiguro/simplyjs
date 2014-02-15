@@ -4,6 +4,8 @@
  */
 var simply = (function() {
 
+var noop = typeof util2 !== 'undefined' ? util2.noop : function() {};
+
 var simply = {};
 
 simply.state = {};
@@ -152,11 +154,80 @@ simply.emit = function(type, subtype, e) {
   return false;
 };
 
-simply.loadScript = function() {
-  return simply.impl.loadScript.apply(this, arguments);
+var pathToName = function(path) {
+  var name = path;
+  if (typeof name === 'string') {
+    name = name.replace(simply.basepath(), '');
+  }
+  return name || simply.basename();
 };
 
-simply.loadScriptUrl = function(scriptUrl) {
+simply.getPackageByPath = function(path) {
+  return simply.packages[pathToName(path)];
+};
+
+simply.makePackage = function(path) {
+  var name = pathToName(path);
+  var saveName = 'script:' + path;
+  var pkg = simply.packages[name];
+
+  if (!pkg) {
+    pkg = simply.packages[name] = {
+      name: name,
+      saveName: saveName,
+      filename: path
+    };
+  }
+
+  return pkg;
+};
+
+simply.defun = function(fn, fargs, fbody) {
+  if (!fbody) {
+    fbody = fargs;
+    fargs = [];
+  }
+  return new Function('return function ' + fn + '(' + fargs.join(', ') + ') {' + fbody + '}')();
+};
+
+simply.fexecPackage = function(script, pkg) {
+  return function() {
+    if (!simply.state.run) {
+      return;
+    }
+    simply.defun(pkg.execName, ['module'], script)(pkg);
+    return pkg.exports;
+  };
+};
+
+simply.loadScript = function(scriptUrl, async) {
+  console.log('loading: ' + scriptUrl);
+
+  var pkg = simply.makePackage(scriptUrl);
+  pkg.exports = {};
+
+  var loader = noop;
+  var useScript = function(script) {
+    loader = simply.fexecPackage(script, pkg);
+  };
+
+  ajax({ url: scriptUrl, cache: false, async: async }, function(data) {
+    if (data && data.length) {
+      localStorage.setItem(pkg.saveName, data);
+      useScript(data);
+    }
+  }, function(data, status) {
+    data = localStorage.getItem(pkg.saveName);
+    if (data && data.length) {
+      console.log(status + ': failed, loading saved script instead');
+      useScript(data);
+    }
+  });
+
+  return simply.impl.loadPackage.call(this, pkg, loader);
+};
+
+simply.loadMainScriptUrl = function(scriptUrl) {
   if (typeof scriptUrl === 'string' && !scriptUrl.match(/^(\w+:)?\/\//)) {
     scriptUrl = 'http://' + scriptUrl;
   }
@@ -167,14 +238,13 @@ simply.loadScriptUrl = function(scriptUrl) {
     scriptUrl = localStorage.getItem('mainJsUrl');
   }
 
-  if (scriptUrl) {
-    simply.loadScript(scriptUrl, null, false);
-  }
+  return scriptUrl;
 };
 
-simply.loadMainScript = function() {
+simply.loadMainScript = function(scriptUrl) {
   simply.reset();
-  simply.loadScriptUrl();
+  scriptUrl = simply.loadMainScriptUrl(scriptUrl);
+  simply.loadScript(scriptUrl, false);
   simply.begin();
 };
 
@@ -203,7 +273,7 @@ simply.require = function(path) {
     return package.value;
   }
   var basepath = simply.basepath();
-  return simply.loadScript(basepath + path, path, false);
+  return simply.loadScript(basepath + path, false);
 };
 
 /**
@@ -345,4 +415,5 @@ return simply;
 
 })();
 
+Pebble.require = require;
 var require = simply.require;

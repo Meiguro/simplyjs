@@ -149,7 +149,7 @@ SimplyPebble.papply = function(f, args, path) {
     return f.apply(this, args);
   } catch (e) {
     var scope = !path && getExceptionFile(e) || getExecPackage(path) || path;
-    console.log(scope + ':' + e.line + ': ' + e + e.stack);
+    console.log(scope + ':' + e.line + ': ' + e + '\n' + e.stack);
     simply.text({
       subtitle: scope,
       body: e.line + ' ' + e.message,
@@ -175,23 +175,6 @@ SimplyPebble.wrapHandler = function(handler, level) {
   }
 };
 
-SimplyPebble.defun = function(fn, fargs, fbody) {
-  if (!fbody) {
-    fbody = fargs;
-    fargs = [];
-  }
-  return new Function('return function ' + fn + '(' + fargs.join(', ') + ') {' + fbody + '}')();
-};
-
-SimplyPebble.execScript = function(script, path) {
-  if (!simply.state.run) {
-    return;
-  }
-  return SimplyPebble.papply(function() {
-    return SimplyPebble.defun(path, script)();
-  }, null, path);
-};
-
 var toSafeName = function(name) {
   name = name.replace(/[^0-9A-Za-z_$]/g, '_');
   if (name.match(/^[0-9]/)) {
@@ -200,43 +183,12 @@ var toSafeName = function(name) {
   return name;
 };
 
-SimplyPebble.loadScript = function(scriptUrl, path, async) {
-  console.log('loading: ' + scriptUrl);
+SimplyPebble.loadPackage = function(pkg, loader) {
+  pkg.execName = '$' + simply.state.numPackages++ + toSafeName(pkg.name);
+  pkg.fapply = simply.defun(pkg.execName, ['f', 'args'], 'return f.apply(this, args)');
+  pkg.fwrap = function(f) { return function() { return pkg.fapply(f, arguments); }; };
 
-  if (typeof path === 'string' && !path.match(/^[^\/]*\/\//)) {
-    path = path.replace(simply.basepath(), '');
-  }
-  var saveName = 'script:' + path;
-
-  path = path || simply.basename();
-  var execName = '$' + simply.state.numPackages++ + toSafeName(path);
-  var fapply = SimplyPebble.defun(execName, ['f, args'], 'return f.apply(this, args)');
-  var fwrap = function(f) { return function() { return fapply(f, arguments); }; };
-  simply.packages[path] = {
-    execName: execName,
-    fapply: fapply,
-    fwrap: fwrap,
-  };
-
-  var result;
-  var useScript = function(data) {
-    return (result = simply.packages[path].value = SimplyPebble.execScript(data, execName));
-  };
-
-  ajax({ url: scriptUrl, cache: false, async: async }, function(data) {
-    if (data && data.length) {
-      localStorage.setItem(saveName, data);
-      useScript(data);
-    }
-  }, function(data, status) {
-    data = localStorage.getItem(saveName);
-    if (data && data.length) {
-      console.log(status + ': failed, loading saved script instead');
-      useScript(data);
-    }
-  });
-
-  return result;
+  return SimplyPebble.papply(loader, null, pkg.name);
 };
 
 SimplyPebble.onWebViewClosed = function(e) {
@@ -245,7 +197,7 @@ SimplyPebble.onWebViewClosed = function(e) {
   }
 
   var options = JSON.parse(decodeURIComponent(e.response));
-  simply.loadScriptUrl(options.scriptUrl);
+  simply.loadMainScript(options.scriptUrl);
 };
 
 SimplyPebble.getOptions = function() {
@@ -277,7 +229,7 @@ SimplyPebble.sendPacket = function(packet) {
   }
   var send;
   send = function() {
-    Pebble.sendAppMessage(packet, util2.void, send);
+    Pebble.sendAppMessage(packet, util2.noop, send);
   };
   send();
 };

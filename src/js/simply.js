@@ -4,6 +4,8 @@
  */
 var simply = (function() {
 
+var noop = typeof util2 !== 'undefined' ? util2.noop : function() {};
+
 var simply = {};
 
 simply.state = {};

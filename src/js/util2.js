@@ -4,7 +4,7 @@
 
 var util2 = (function(util2){
 
-util2.void = function() {};
+util2.noop = function() {};
 
 util2.copy = function (a, b) {
   b = b || (a instanceof Array ? [] : {});

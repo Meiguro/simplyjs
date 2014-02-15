@@ -273,7 +273,7 @@ SimplyPebble.sendPacket = function(packet) {
   }
   var send;
   send = function() {
-    Pebble.sendAppMessage(packet, util2.void, send);
+    Pebble.sendAppMessage(packet, util2.noop, send);
   };
   send();
 };

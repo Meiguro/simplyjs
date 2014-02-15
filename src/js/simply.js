@@ -315,9 +315,9 @@ simply.require = function(path) {
 /**
  * The text definition parameter for {@link simply.text}.
  * @typedef {object} simply.textDef
- * @property {string} title - A new title for the first and largest text field.
- * @property {string} subtitle - A new subtitle for the second large text field.
- * @property {string} body - A new body for the last text field meant to display large bodies of text.
+ * @property {string} [title] - A new title for the first and largest text field.
+ * @property {string} [subtitle] - A new subtitle for the second large text field.
+ * @property {string} [body] - A new body for the last text field meant to display large bodies of text.
  */
 
 /**
@@ -433,6 +433,21 @@ simply.accelAutoSubscribe = function() {
   }
 };
 
+/**
+ * The accelerometer configuration parameter for {@link simply.accelConfig}.
+ * The accelerometer data stream is useful for applications such as gesture recognition when accelTap is too limited.
+ * However, keep in mind that smaller batch sample sizes and faster rates will drastically impact the battery life of both the Pebble and phone because of the taxing use of the processors and Bluetooth modules.
+ * @typedef {object} simply.accelConf
+ * @property {string} [rate] - The rate accelerometer data points are generated in hertz. Valid values are 10, 25, 50, and 100. Defaults to 100.
+ * @property {string} [samples] - The number of accelerometer data points to accumulate in a batch before calling the event handler. Valid values are 1 to 25 inclusive. Defaults to 25.
+ * @property {string} [subscribe] - Whether to subscribe to accelerometer data events. {@link simply.accelPeek} cannot be used when subscribed. Simply.js will automatically (un)subscribe for you depending on the amount of accelData handlers registered.
+ */
+
+/**
+ * Changes the accelerometer configuration.
+ * @memberOf simply
+ * @param {simply.accelConfig} accelConf - An object defining the accelerometer configuration.
+ */
 simply.accelConfig = function(opt, auto) {
   var accelState = simply.state.accel;
   if (typeof opt === 'undefined') {
@@ -453,6 +468,10 @@ simply.accelConfig = function(opt, auto) {
   return simply.impl.accelConfig.apply(this, arguments);
 };
 
+/**
+ * Peeks at the current accelerometer values.
+ * @memberOf simply
+ */
 simply.accelPeek = function(callback) {
   if (simply.state.accel.subscribe) {
     throw Error('Cannot use accelPeek when listening to accelData events');
@@ -465,6 +484,7 @@ simply.accelPeek = function(callback) {
  * @typedef simply.event
  * @see simply.clickEvent
  * @see simply.accelTapEvent
+ * @see simply.accelDataEvent
  */
 
 /**
@@ -474,6 +494,12 @@ simply.accelPeek = function(callback) {
  * @property {string} button - The button that was pressed: 'up', 'select', or 'down'. This is also the event subtype.
  */
 
+simply.emitClick = function(type, button) {
+  simply.emit(type, button, {
+    button: button,
+  });
+};
+
 /**
  * Simply.js accel tap event.
  * Use the event type 'accelTap' to subscribe to these events.
@@ -482,12 +508,6 @@ simply.accelPeek = function(callback) {
  * @property {number} direction - The direction of the tap along the axis: 1 or -1.
  */
 
-simply.emitClick = function(type, button) {
-  simply.emit(type, button, {
-    button: button,
-  });
-};
-
 simply.emitAccelTap = function(axis, direction) {
   simply.emit('accelTap', axis, {
     axis: axis,
@@ -495,9 +515,29 @@ simply.emitAccelTap = function(axis, direction) {
   });
 };
 
+/**
+ * Simply.js accel data point.
+ * Typical values for gravity is around -1000 on the z axis.
+ * @typedef simply.accelPoint
+ * @property {number} x - The acceleration across the x-axis.
+ * @property {number} y - The acceleration across the y-axis.
+ * @property {number} z - The acceleration across the z-axis.
+ * @property {boolean} vibe - Whether the watch was vibrating when measuring this point.
+ * @property {number} time - The amount of ticks in millisecond resolution when measuring this point.
+ */
+
+/**
+ * Simply.js accel data event.
+ * Use the event type 'accelData' to subscribe to these events.
+ * @typedef simply.accelDataEvent
+ * @property {number} samples - The number of accelerometer samples in this event.
+ * @property {simply.accelPoint} accel - The first accel in the batch. This is provided for convenience.
+ * @property {simply.accelPoint[]} accels - The accelerometer samples in an array.
+ */
+
 simply.emitAccelData = function(accels, callback) {
   var e = {
-    count: accels.length,
+    samples: accels.length,
     accel: accels[0],
     accels: accels,
   };

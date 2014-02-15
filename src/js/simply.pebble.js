@@ -381,7 +381,7 @@ SimplyPebble.onAppMessage = function(e) {
           x: readInt(data, 2, pos, true),
           y: readInt(data, 2, pos + 2, true),
           z: readInt(data, 2, pos + 4, true),
-          vibe: readInt(data, 1, pos + 6),
+          vibe: readInt(data, 1, pos + 6) ? true : false,
           time: readInt(data, 8, pos + 7),
         };
         accels[i] = accel;

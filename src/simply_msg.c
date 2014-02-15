@@ -1,5 +1,8 @@
 #include "simply_msg.h"
 
+#include "simply_accel.h"
+#include "simply_ui.h"
+
 #include "simplyjs.h"
 
 #include <pebble.h>
@@ -15,6 +18,9 @@ enum SimplyACmd {
   SimplyACmd_setScrollable,
   SimplyACmd_setStyle,
   SimplyACmd_setFullscreen,
+  SimplyACmd_accelData,
+  SimplyACmd_getAccelData,
+  SimplyACmd_configAccelData,
 };
 
 typedef enum VibeType VibeType;
@@ -75,6 +81,30 @@ static void handle_set_fullscreen(DictionaryIterator *iter, Simply *simply) {
   }
 }
 
+static void get_accel_data_timer_callback(void *context) {
+  Simply *simply = context;
+  AccelData data = { .x = 0 };
+  simply_accel_peek(simply->accel, &data);
+  simply_msg_accel_data(&data, 1, 0);
+}
+
+static void handle_get_accel_data(DictionaryIterator *iter, Simply *simply) {
+  app_timer_register(30, get_accel_data_timer_callback, simply);
+}
+
+static void handle_set_accel_config(DictionaryIterator *iter, Simply *simply) {
+  Tuple *tuple;
+  if ((tuple = dict_find(iter, 1))) {
+    simply_accel_set_data_rate(simply->accel, tuple->value->int32);
+  }
+  if ((tuple = dict_find(iter, 2))) {
+    simply_accel_set_data_samples(simply->accel, tuple->value->int32);
+  }
+  if ((tuple = dict_find(iter, 3))) {
+    simply_accel_set_data_subscribe(simply->accel, tuple->value->int32);
+  }
+}
+
 static void received_callback(DictionaryIterator *iter, void *context) {
   Tuple *tuple = dict_find(iter, 0);
   if (!tuple) {
@@ -97,6 +127,12 @@ static void received_callback(DictionaryIterator *iter, void *context) {
     case SimplyACmd_setFullscreen:
       handle_set_fullscreen(iter, context);
       break;
+    case SimplyACmd_getAccelData:
+      handle_get_accel_data(iter, context);
+      break;
+    case SimplyACmd_configAccelData:
+      handle_set_accel_config(iter, context);
+      break;
   }
 }
 
@@ -116,7 +152,7 @@ static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, S
 
 void simply_msg_init(Simply *simply) {
   const uint32_t size_inbound = 2048;
-  const uint32_t size_outbound = 128;
+  const uint32_t size_outbound = 512;
   app_message_open(size_inbound, size_outbound);
 
   app_message_set_context(simply);
@@ -162,3 +198,16 @@ bool simply_msg_accel_tap(AccelAxisType axis, int32_t direction) {
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
+bool simply_msg_accel_data(AccelData *data, uint32_t num_samples, int32_t transaction_id) {
+  DictionaryIterator *iter = NULL;
+  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+    return false;
+  }
+  dict_write_uint8(iter, 0, SimplyACmd_accelData);
+  if (transaction_id >= 0) {
+    dict_write_int32(iter, 1, transaction_id);
+  }
+  dict_write_uint8(iter, 2, num_samples);
+  dict_write_data(iter, 3, (uint8_t*) data, sizeof(*data) * num_samples);
+  return (app_message_outbox_send() == APP_MSG_OK);
+}

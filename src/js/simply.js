@@ -157,6 +157,10 @@ simply.loadScript = function() {
 };
 
 simply.loadScriptUrl = function(scriptUrl) {
+  if (typeof scriptUrl === 'string' && !scriptUrl.match(/^(\w+:)?\/\//)) {
+    scriptUrl = 'http://' + scriptUrl;
+  }
+
   if (scriptUrl) {
     localStorage.setItem('mainJsUrl', scriptUrl);
   } else {

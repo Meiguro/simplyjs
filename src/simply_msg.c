@@ -31,20 +31,14 @@ static void handle_set_text(DictionaryIterator *iter, SimplyUi *simply) {
   if ((tuple = dict_find(iter, 4))) {
     clear = true;
   }
-  if ((tuple = dict_find(iter, 1))) {
-    simply_ui_set_text(simply, &simply->title_text, tuple->value->cstring);
-  } else if (clear) {
-    simply_ui_set_text(simply, &simply->title_text, NULL);
+  if ((tuple = dict_find(iter, 1)) || clear) {
+    simply_ui_set_text(simply, &simply->title_text, tuple ? tuple->value->cstring : NULL);
   }
-  if ((tuple = dict_find(iter, 2))) {
-    simply_ui_set_text(simply, &simply->subtitle_text, tuple->value->cstring);
-  } else if (clear) {
-    simply_ui_set_text(simply, &simply->subtitle_text, NULL);
+  if ((tuple = dict_find(iter, 2)) || clear) {
+    simply_ui_set_text(simply, &simply->subtitle_text, tuple ? tuple->value->cstring : NULL);
   }
-  if ((tuple = dict_find(iter, 3))) {
-    simply_ui_set_text(simply, &simply->body_text, tuple->value->cstring);
-  } else if (clear) {
-    simply_ui_set_text(simply, &simply->body_text, NULL);
+  if ((tuple = dict_find(iter, 3)) || clear) {
+    simply_ui_set_text(simply, &simply->body_text, tuple ? tuple->value->cstring : NULL);
   }
 }
 

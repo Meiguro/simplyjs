@@ -200,15 +200,7 @@ var toSafeName = function(name) {
   return name;
 };
 
-SimplyPebble.loadScript = function(scriptUrl, path, async) {
-  console.log('loading: ' + scriptUrl);
-
-  var pkg = simply.makePackage(scriptUrl);
-
-  pkg.execName = '$' + simply.state.numPackages++ + toSafeName(pkg.name);
-  pkg.fapply = SimplyPebble.defun(pkg.execName, ['f, args'], 'return f.apply(this, args)');
-  pkg.fwrap = function(f) { return function() { return pkg.fapply(f, arguments); }; };
-
+SimplyPebble.loadPackage = function(pkg, scriptUrl, async) {
   var result;
   var useScript = function(data) {
     return (result = pkg.value = SimplyPebble.execScript(data, pkg.execName));
@@ -228,6 +220,18 @@ SimplyPebble.loadScript = function(scriptUrl, path, async) {
   });
 
   return result;
+};
+
+SimplyPebble.loadScript = function(scriptUrl, path, async) {
+  console.log('loading: ' + scriptUrl);
+
+  var pkg = simply.makePackage(scriptUrl);
+
+  pkg.execName = '$' + simply.state.numPackages++ + toSafeName(pkg.name);
+  pkg.fapply = SimplyPebble.defun(pkg.execName, ['f, args'], 'return f.apply(this, args)');
+  pkg.fwrap = function(f) { return function() { return pkg.fapply(f, arguments); }; };
+
+  return SimplyPebble.loadPackage(pkg, scriptUrl, async);
 };
 
 SimplyPebble.onWebViewClosed = function(e) {

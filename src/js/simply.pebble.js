@@ -149,7 +149,7 @@ SimplyPebble.papply = function(f, args, path) {
     return f.apply(this, args);
   } catch (e) {
     var scope = !path && getExceptionFile(e) || getExecPackage(path) || path;
-    console.log(scope + ':' + e.line + ': ' + e + e.stack);
+    console.log(scope + ':' + e.line + ': ' + e + '\n' + e.stack);
     simply.text({
       subtitle: scope,
       body: e.line + ' ' + e.message,
@@ -203,33 +203,24 @@ var toSafeName = function(name) {
 SimplyPebble.loadScript = function(scriptUrl, path, async) {
   console.log('loading: ' + scriptUrl);
 
-  if (typeof path === 'string' && !path.match(/^[^\/]*\/\//)) {
-    path = path.replace(simply.basepath(), '');
-  }
-  var saveName = 'script:' + path;
+  var pkg = simply.makePackage(scriptUrl);
 
-  path = path || simply.basename();
-  var execName = '$' + simply.state.numPackages++ + toSafeName(path);
-  var fapply = SimplyPebble.defun(execName, ['f, args'], 'return f.apply(this, args)');
-  var fwrap = function(f) { return function() { return fapply(f, arguments); }; };
-  simply.packages[path] = {
-    execName: execName,
-    fapply: fapply,
-    fwrap: fwrap,
-  };
+  pkg.execName = '$' + simply.state.numPackages++ + toSafeName(pkg.name);
+  pkg.fapply = SimplyPebble.defun(pkg.execName, ['f, args'], 'return f.apply(this, args)');
+  pkg.fwrap = function(f) { return function() { return pkg.fapply(f, arguments); }; };
 
   var result;
   var useScript = function(data) {
-    return (result = simply.packages[path].value = SimplyPebble.execScript(data, execName));
+    return (result = pkg.value = SimplyPebble.execScript(data, pkg.execName));
   };
 
   ajax({ url: scriptUrl, cache: false, async: async }, function(data) {
     if (data && data.length) {
-      localStorage.setItem(saveName, data);
+      localStorage.setItem(pkg.saveName, data);
       useScript(data);
     }
   }, function(data, status) {
-    data = localStorage.getItem(saveName);
+    data = localStorage.getItem(pkg.saveName);
     if (data && data.length) {
       console.log(status + ': failed, loading saved script instead');
       useScript(data);

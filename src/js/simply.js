@@ -152,6 +152,34 @@ simply.emit = function(type, subtype, e) {
   return false;
 };
 
+var pathToName = function(path) {
+  var name = path;
+  if (typeof name === 'string' && !name.match(/^[^\/]*\/\//)) {
+    name = name.replace(simply.basepath(), '');
+  }
+  return name || simply.basename();
+};
+
+simply.getPackageByPath = function(path) {
+  return simply.packages[pathToName(path)];
+};
+
+simply.makePackage = function(path) {
+  var name = pathToName(path);
+  var saveName = 'script:' + name;
+  var pkg = simply.packages[name];
+
+  if (!pkg) {
+    pkg = simply.packages[name] = {
+      name: name,
+      saveName: saveName,
+      path: path
+    };
+  }
+
+  return pkg;
+};
+
 simply.loadScript = function() {
   return simply.impl.loadScript.apply(this, arguments);
 };
@@ -168,6 +196,7 @@ simply.loadScriptUrl = function(scriptUrl) {
   }
 
   if (scriptUrl) {
+    simply.makePackage(scriptUrl);
     simply.loadScript(scriptUrl, null, false);
   }
 };

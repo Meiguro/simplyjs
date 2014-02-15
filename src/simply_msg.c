@@ -1,6 +1,9 @@
 #include "simply_msg.h"
 
+#include "simply_accel.h"
 #include "simply_ui.h"
+
+#include "simplyjs.h"
 
 #include <pebble.h>
 
@@ -15,6 +18,9 @@ enum SimplyACmd {
   SimplyACmd_setScrollable,
   SimplyACmd_setStyle,
   SimplyACmd_setFullscreen,
+  SimplyACmd_accelData,
+  SimplyACmd_getAccelData,
+  SimplyACmd_configAccelData,
 };
 
 typedef enum VibeType VibeType;
@@ -25,24 +31,25 @@ enum VibeType {
   VibeDouble = 2,
 };
 
-static void handle_set_text(DictionaryIterator *iter, SimplyUi *simply) {
+static void handle_set_text(DictionaryIterator *iter, Simply *simply) {
+  SimplyUi *ui = simply->ui;
   Tuple *tuple;
   bool clear = false;
   if ((tuple = dict_find(iter, 4))) {
     clear = true;
   }
   if ((tuple = dict_find(iter, 1)) || clear) {
-    simply_ui_set_text(simply, &simply->title_text, tuple ? tuple->value->cstring : NULL);
+    simply_ui_set_text(ui, &ui->title_text, tuple ? tuple->value->cstring : NULL);
   }
   if ((tuple = dict_find(iter, 2)) || clear) {
-    simply_ui_set_text(simply, &simply->subtitle_text, tuple ? tuple->value->cstring : NULL);
+    simply_ui_set_text(ui, &ui->subtitle_text, tuple ? tuple->value->cstring : NULL);
   }
   if ((tuple = dict_find(iter, 3)) || clear) {
-    simply_ui_set_text(simply, &simply->body_text, tuple ? tuple->value->cstring : NULL);
+    simply_ui_set_text(ui, &ui->body_text, tuple ? tuple->value->cstring : NULL);
   }
 }
 
-static void handle_vibe(DictionaryIterator *iter, SimplyUi *simply) {
+static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
     switch ((VibeType) tuple->value->int32) {
@@ -53,24 +60,50 @@ static void handle_vibe(DictionaryIterator *iter, SimplyUi *simply) {
   }
 }
 
-static void handle_set_scrollable(DictionaryIterator *iter, SimplyUi *simply) {
+static void handle_set_scrollable(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
-    simply_ui_set_scrollable(simply, tuple->value->int32);
+    simply_ui_set_scrollable(simply->ui, tuple->value->int32);
   }
 }
 
-static void handle_set_style(DictionaryIterator *iter, SimplyUi *simply) {
+static void handle_set_style(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
-    simply_ui_set_style(simply, tuple->value->int32);
+    simply_ui_set_style(simply->ui, tuple->value->int32);
   }
 }
 
-static void handle_set_fullscreen(DictionaryIterator *iter, SimplyUi *simply) {
+static void handle_set_fullscreen(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
-    simply_ui_set_fullscreen(simply, tuple->value->int32);
+    simply_ui_set_fullscreen(simply->ui, tuple->value->int32);
+  }
+}
+
+static void get_accel_data_timer_callback(void *context) {
+  Simply *simply = context;
+  AccelData data = { .x = 0 };
+  simply_accel_peek(simply->accel, &data);
+  if (!simply_msg_accel_data(&data, 1, 0)) {
+    app_timer_register(10, get_accel_data_timer_callback, simply);
+  }
+}
+
+static void handle_get_accel_data(DictionaryIterator *iter, Simply *simply) {
+  app_timer_register(10, get_accel_data_timer_callback, simply);
+}
+
+static void handle_set_accel_config(DictionaryIterator *iter, Simply *simply) {
+  Tuple *tuple;
+  if ((tuple = dict_find(iter, 1))) {
+    simply_accel_set_data_rate(simply->accel, tuple->value->int32);
+  }
+  if ((tuple = dict_find(iter, 2))) {
+    simply_accel_set_data_samples(simply->accel, tuple->value->int32);
+  }
+  if ((tuple = dict_find(iter, 3))) {
+    simply_accel_set_data_subscribe(simply->accel, tuple->value->int32);
   }
 }
 
@@ -96,6 +129,12 @@ static void received_callback(DictionaryIterator *iter, void *context) {
     case SimplyACmd_setFullscreen:
       handle_set_fullscreen(iter, context);
       break;
+    case SimplyACmd_getAccelData:
+      handle_get_accel_data(iter, context);
+      break;
+    case SimplyACmd_configAccelData:
+      handle_set_accel_config(iter, context);
+      break;
   }
 }
 
@@ -105,16 +144,17 @@ static void dropped_callback(AppMessageResult reason, void *context) {
 static void sent_callback(DictionaryIterator *iter, void *context) {
 }
 
-static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, SimplyUi *simply) {
+static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, Simply *simply) {
+  SimplyUi *ui = simply->ui;
   if (reason == APP_MSG_NOT_CONNECTED) {
-    simply_ui_set_text(simply, &simply->subtitle_text, "Disconnected");
-    simply_ui_set_text(simply, &simply->body_text, "Run the Pebble Phone App");
+    simply_ui_set_text(ui, &ui->subtitle_text, "Disconnected");
+    simply_ui_set_text(ui, &ui->body_text, "Run the Pebble Phone App");
   }
 }
 
-void simply_msg_init(SimplyUi *simply) {
+void simply_msg_init(Simply *simply) {
   const uint32_t size_inbound = 2048;
-  const uint32_t size_outbound = 128;
+  const uint32_t size_outbound = 512;
   app_message_open(size_inbound, size_outbound);
 
   app_message_set_context(simply);
@@ -160,3 +200,16 @@ bool simply_msg_accel_tap(AccelAxisType axis, int32_t direction) {
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
+bool simply_msg_accel_data(AccelData *data, uint32_t num_samples, int32_t transaction_id) {
+  DictionaryIterator *iter = NULL;
+  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+    return false;
+  }
+  dict_write_uint8(iter, 0, SimplyACmd_accelData);
+  if (transaction_id >= 0) {
+    dict_write_int32(iter, 1, transaction_id);
+  }
+  dict_write_uint8(iter, 2, num_samples);
+  dict_write_data(iter, 3, (uint8_t*) data, sizeof(*data) * num_samples);
+  return (app_message_outbox_send() == APP_MSG_OK);
+}

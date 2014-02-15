@@ -1,10 +1,10 @@
 #pragma once
 
-#include "simply_ui.h"
+#include "simplyjs.h"
 
 #include <pebble.h>
 
-void simply_msg_init(SimplyUi *simply);
+void simply_msg_init(Simply *simply);
 
 void simply_msg_deinit();
 

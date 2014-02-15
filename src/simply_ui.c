@@ -240,10 +240,6 @@ static void window_unload(Window *window) {
   window_destroy(window);
 }
 
-static void handle_accel_tap(AccelAxisType axis, int32_t direction) {
-  simply_msg_accel_tap(axis, direction);
-}
-
 SimplyUi *simply_ui_create(void) {
   if (s_ui) {
     return s_ui;
@@ -272,8 +268,6 @@ SimplyUi *simply_ui_create(void) {
   const bool animated = true;
   window_stack_push(window, animated);
 
-  accel_tap_service_subscribe(handle_accel_tap);
-
   return self;
 }
 
@@ -285,8 +279,6 @@ void simply_ui_destroy(SimplyUi *self) {
   simply_ui_set_text(self, &self->title_text, NULL);
   simply_ui_set_text(self, &self->subtitle_text, NULL);
   simply_ui_set_text(self, &self->body_text, NULL);
-
-  accel_tap_service_unsubscribe();
 
   free(self);
 

@@ -1,6 +1,6 @@
 #include "simply_msg.h"
 
-#include "simply_ui.h"
+#include "simplyjs.h"
 
 #include <pebble.h>
 
@@ -25,24 +25,25 @@ enum VibeType {
   VibeDouble = 2,
 };
 
-static void handle_set_text(DictionaryIterator *iter, SimplyUi *simply) {
+static void handle_set_text(DictionaryIterator *iter, Simply *simply) {
+  SimplyUi *ui = simply->ui;
   Tuple *tuple;
   bool clear = false;
   if ((tuple = dict_find(iter, 4))) {
     clear = true;
   }
   if ((tuple = dict_find(iter, 1)) || clear) {
-    simply_ui_set_text(simply, &simply->title_text, tuple ? tuple->value->cstring : NULL);
+    simply_ui_set_text(ui, &ui->title_text, tuple ? tuple->value->cstring : NULL);
   }
   if ((tuple = dict_find(iter, 2)) || clear) {
-    simply_ui_set_text(simply, &simply->subtitle_text, tuple ? tuple->value->cstring : NULL);
+    simply_ui_set_text(ui, &ui->subtitle_text, tuple ? tuple->value->cstring : NULL);
   }
   if ((tuple = dict_find(iter, 3)) || clear) {
-    simply_ui_set_text(simply, &simply->body_text, tuple ? tuple->value->cstring : NULL);
+    simply_ui_set_text(ui, &ui->body_text, tuple ? tuple->value->cstring : NULL);
   }
 }
 
-static void handle_vibe(DictionaryIterator *iter, SimplyUi *simply) {
+static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
     switch ((VibeType) tuple->value->int32) {
@@ -53,24 +54,24 @@ static void handle_vibe(DictionaryIterator *iter, SimplyUi *simply) {
   }
 }
 
-static void handle_set_scrollable(DictionaryIterator *iter, SimplyUi *simply) {
+static void handle_set_scrollable(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
-    simply_ui_set_scrollable(simply, tuple->value->int32);
+    simply_ui_set_scrollable(simply->ui, tuple->value->int32);
   }
 }
 
-static void handle_set_style(DictionaryIterator *iter, SimplyUi *simply) {
+static void handle_set_style(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
-    simply_ui_set_style(simply, tuple->value->int32);
+    simply_ui_set_style(simply->ui, tuple->value->int32);
   }
 }
 
-static void handle_set_fullscreen(DictionaryIterator *iter, SimplyUi *simply) {
+static void handle_set_fullscreen(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
-    simply_ui_set_fullscreen(simply, tuple->value->int32);
+    simply_ui_set_fullscreen(simply->ui, tuple->value->int32);
   }
 }
 
@@ -105,14 +106,15 @@ static void dropped_callback(AppMessageResult reason, void *context) {
 static void sent_callback(DictionaryIterator *iter, void *context) {
 }
 
-static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, SimplyUi *simply) {
+static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, Simply *simply) {
+  SimplyUi *ui = simply->ui;
   if (reason == APP_MSG_NOT_CONNECTED) {
-    simply_ui_set_text(simply, &simply->subtitle_text, "Disconnected");
-    simply_ui_set_text(simply, &simply->body_text, "Run the Pebble Phone App");
+    simply_ui_set_text(ui, &ui->subtitle_text, "Disconnected");
+    simply_ui_set_text(ui, &ui->body_text, "Run the Pebble Phone App");
   }
 }
 
-void simply_msg_init(SimplyUi *simply) {
+void simply_msg_init(Simply *simply) {
   const uint32_t size_inbound = 2048;
   const uint32_t size_outbound = 128;
   app_message_open(size_inbound, size_outbound);

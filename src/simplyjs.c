@@ -5,19 +5,22 @@
 
 #include <pebble.h>
 
-static SimplyUi *init(void) {
-  SimplyUi *simply = simply_ui_create();
+static Simply *init(void) {
+  Simply *simply = malloc(sizeof(*simply));
+  simply->accel = simply_accel_create();
+  simply->ui = simply_ui_create();
   simply_msg_init(simply);
   return simply;
 }
 
-static void deinit(SimplyUi *simply) {
+static void deinit(Simply *simply) {
   simply_msg_deinit();
-  simply_ui_destroy(simply);
+  simply_ui_destroy(simply->ui);
+  simply_accel_destroy(simply->accel);
 }
 
 int main(void) {
-  SimplyUi *simply = init();
+  Simply *simply = init();
   app_event_loop();
   deinit(simply);
 }

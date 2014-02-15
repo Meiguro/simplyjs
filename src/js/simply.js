@@ -168,7 +168,7 @@ simply.getPackageByPath = function(path) {
 
 simply.makePackage = function(path) {
   var name = pathToName(path);
-  var saveName = 'script:' + name;
+  var saveName = 'script:' + path;
   var pkg = simply.packages[name];
 
   if (!pkg) {
@@ -182,8 +182,49 @@ simply.makePackage = function(path) {
   return pkg;
 };
 
-simply.loadScript = function() {
-  return simply.impl.loadScript.apply(this, arguments);
+simply.defun = function(fn, fargs, fbody) {
+  if (!fbody) {
+    fbody = fargs;
+    fargs = [];
+  }
+  return new Function('return function ' + fn + '(' + fargs.join(', ') + ') {' + fbody + '}')();
+};
+
+simply.fexecPackage = function(script, pkg) {
+  return function() {
+    if (!simply.state.run) {
+      return;
+    }
+    simply.defun(pkg.execName, ['module'], script)(pkg);
+    return pkg.exports;
+  };
+};
+
+simply.loadScript = function(scriptUrl, async) {
+  console.log('loading: ' + scriptUrl);
+
+  var pkg = simply.makePackage(scriptUrl);
+  pkg.exports = {};
+
+  var loader = noop;
+  var useScript = function(script) {
+    loader = simply.fexecPackage(script, pkg);
+  };
+
+  ajax({ url: scriptUrl, cache: false, async: async }, function(data) {
+    if (data && data.length) {
+      localStorage.setItem(pkg.saveName, data);
+      useScript(data);
+    }
+  }, function(data, status) {
+    data = localStorage.getItem(pkg.saveName);
+    if (data && data.length) {
+      console.log(status + ': failed, loading saved script instead');
+      useScript(data);
+    }
+  });
+
+  return simply.impl.loadPackage.call(this, pkg, loader);
 };
 
 simply.loadScriptUrl = function(scriptUrl) {
@@ -198,8 +239,7 @@ simply.loadScriptUrl = function(scriptUrl) {
   }
 
   if (scriptUrl) {
-    simply.makePackage(scriptUrl);
-    simply.loadScript(scriptUrl, null, false);
+    simply.loadScript(scriptUrl, false);
   }
 };
 
@@ -234,7 +274,7 @@ simply.require = function(path) {
     return package.value;
   }
   var basepath = simply.basepath();
-  return simply.loadScript(basepath + path, path, false);
+  return simply.loadScript(basepath + path, false);
 };
 
 /**

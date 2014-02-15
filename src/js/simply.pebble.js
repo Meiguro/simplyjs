@@ -175,23 +175,6 @@ SimplyPebble.wrapHandler = function(handler, level) {
   }
 };
 
-SimplyPebble.defun = function(fn, fargs, fbody) {
-  if (!fbody) {
-    fbody = fargs;
-    fargs = [];
-  }
-  return new Function('return function ' + fn + '(' + fargs.join(', ') + ') {' + fbody + '}')();
-};
-
-SimplyPebble.execScript = function(script, pkg) {
-  if (!simply.state.run) {
-    return;
-  }
-  return SimplyPebble.papply(function() {
-    return SimplyPebble.defun(pkg.execName, ['module'], script)(pkg);
-  }, null, pkg.execName);
-};
-
 var toSafeName = function(name) {
   name = name.replace(/[^0-9A-Za-z_$]/g, '_');
   if (name.match(/^[0-9]/)) {
@@ -200,39 +183,12 @@ var toSafeName = function(name) {
   return name;
 };
 
-SimplyPebble.loadPackage = function(pkg, scriptUrl, async) {
-  var exports = pkg.exports = {};
-  var useScript = function(data) {
-    SimplyPebble.execScript(data, pkg);
-    return (exports = pkg.exports);
-  };
-
-  ajax({ url: scriptUrl, cache: false, async: async }, function(data) {
-    if (data && data.length) {
-      localStorage.setItem(pkg.saveName, data);
-      useScript(data);
-    }
-  }, function(data, status) {
-    data = localStorage.getItem(pkg.saveName);
-    if (data && data.length) {
-      console.log(status + ': failed, loading saved script instead');
-      useScript(data);
-    }
-  });
-
-  return exports;
-};
-
-SimplyPebble.loadScript = function(scriptUrl, path, async) {
-  console.log('loading: ' + scriptUrl);
-
-  var pkg = simply.makePackage(scriptUrl);
-
+SimplyPebble.loadPackage = function(pkg, loader) {
   pkg.execName = '$' + simply.state.numPackages++ + toSafeName(pkg.name);
-  pkg.fapply = SimplyPebble.defun(pkg.execName, ['f, args'], 'return f.apply(this, args)');
+  pkg.fapply = simply.defun(pkg.execName, ['f', 'args'], 'return f.apply(this, args)');
   pkg.fwrap = function(f) { return function() { return pkg.fapply(f, arguments); }; };
 
-  return SimplyPebble.loadPackage(pkg, scriptUrl, async);
+  return SimplyPebble.papply(loader, null, pkg.name);
 };
 
 SimplyPebble.onWebViewClosed = function(e) {

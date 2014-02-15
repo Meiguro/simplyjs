@@ -4,7 +4,7 @@
 
 #include <pebble.h>
 
-void simply_msg_init(SimplyData *simply);
+void simply_msg_init(SimplyUi *simply);
 
 void simply_msg_deinit();
 

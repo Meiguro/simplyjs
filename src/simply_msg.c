@@ -25,7 +25,7 @@ enum VibeType {
   VibeDouble = 2,
 };
 
-static void handle_set_text(DictionaryIterator *iter, SimplyData *simply) {
+static void handle_set_text(DictionaryIterator *iter, SimplyUi *simply) {
   Tuple *tuple;
   bool clear = false;
   if ((tuple = dict_find(iter, 4))) {
@@ -48,7 +48,7 @@ static void handle_set_text(DictionaryIterator *iter, SimplyData *simply) {
   }
 }
 
-static void handle_vibe(DictionaryIterator *iter, SimplyData *simply) {
+static void handle_vibe(DictionaryIterator *iter, SimplyUi *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
     switch ((VibeType) tuple->value->int32) {
@@ -59,21 +59,21 @@ static void handle_vibe(DictionaryIterator *iter, SimplyData *simply) {
   }
 }
 
-static void handle_set_scrollable(DictionaryIterator *iter, SimplyData *simply) {
+static void handle_set_scrollable(DictionaryIterator *iter, SimplyUi *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
     simply_set_scrollable(simply, tuple->value->int32);
   }
 }
 
-static void handle_set_style(DictionaryIterator *iter, SimplyData *simply) {
+static void handle_set_style(DictionaryIterator *iter, SimplyUi *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
     simply_set_style(simply, tuple->value->int32);
   }
 }
 
-static void handle_set_fullscreen(DictionaryIterator *iter, SimplyData *simply) {
+static void handle_set_fullscreen(DictionaryIterator *iter, SimplyUi *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
     simply_set_fullscreen(simply, tuple->value->int32);
@@ -111,14 +111,14 @@ static void dropped_callback(AppMessageResult reason, void *context) {
 static void sent_callback(DictionaryIterator *iter, void *context) {
 }
 
-static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, SimplyData *simply) {
+static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, SimplyUi *simply) {
   if (reason == APP_MSG_NOT_CONNECTED) {
     simply_set_text(simply, &simply->subtitle_text, "Disconnected");
     simply_set_text(simply, &simply->body_text, "Run the Pebble Phone App");
   }
 }
 
-void simply_msg_init(SimplyData *simply) {
+void simply_msg_init(SimplyUi *simply) {
   const uint32_t size_inbound = 2048;
   const uint32_t size_outbound = 128;
   app_message_open(size_inbound, size_outbound);

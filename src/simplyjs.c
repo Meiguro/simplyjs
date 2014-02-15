@@ -5,19 +5,19 @@
 
 #include <pebble.h>
 
-static SimplyData *init(void) {
-  SimplyData *simply = simply_create();
+static SimplyUi *init(void) {
+  SimplyUi *simply = simply_create();
   simply_msg_init(simply);
   return simply;
 }
 
-static void deinit(SimplyData *simply) {
+static void deinit(SimplyUi *simply) {
   simply_msg_deinit();
   simply_destroy(simply);
 }
 
 int main(void) {
-  SimplyData *simply = init();
+  SimplyUi *simply = init();
   app_event_loop();
   deinit(simply);
 }

@@ -51,6 +51,27 @@ simply.reset = function() {
  * @param {simply.event} event - The event object with event specific information.
  */
 
+simply.onAddHandler = function() {
+  simply.accelAutoSubscribe();
+};
+
+simply.onRemoveHandler = function() {
+  simply.accelAutoSubscribe();
+};
+
+simply.countHandlers = function(type, subtype) {
+  if (!subtype) {
+    subtype = 'all';
+  }
+  var typeMap = simply.listeners;
+  var subtypeMap = typeMap[type];
+  if (!subtypeMap) {
+    return 0;
+  }
+  var handlers = subtypeMap[subtype];
+  return handlers ? handlers.length : 0;
+};
+
 /**
  * Subscribe to Pebble events.
  * See {@link simply.event} for the possible event types to subscribe to.
@@ -63,6 +84,11 @@ simply.reset = function() {
  * @see simply.event
  */
 simply.on = function(type, subtype, handler) {
+  simply.rawOn(type, subtype, handler);
+  simply.onAddHandler();
+};
+
+simply.rawOn = function(type, subtype, handler) {
   if (!handler) {
     handler = subtype;
     subtype = 'all';
@@ -86,6 +112,11 @@ simply.on = function(type, subtype, handler) {
  * @see simply.on
  */
 simply.off = function(type, subtype, handler) {
+  simply.rawOff(type, subtype, handler);
+  simply.onRemoveHandler();
+};
+
+simply.rawOff = function(type, subtype, handler) {
   if (!handler) {
     handler = subtype;
     subtype = 'all';
@@ -386,11 +417,23 @@ simply.accelInit = function() {
     rate: 100,
     samples: 25,
     subscribe: false,
+    subscribeMode: 'auto',
     listeners: [],
   };
 };
 
-simply.accelConfig = function(opt) {
+simply.accelAutoSubscribe = function() {
+  var accelState = simply.state.accel;
+  if (!accelState || accelState.subscribeMode !== 'auto') {
+    return;
+  }
+  var subscribe = simply.countHandlers('accelData') > 0;
+  if (subscribe !== simply.state.accel.subscribe) {
+    return simply.accelConfig(subscribe, true);
+  }
+};
+
+simply.accelConfig = function(opt, auto) {
   var accelState = simply.state.accel;
   if (typeof opt === 'undefined') {
     return {
@@ -402,6 +445,9 @@ simply.accelConfig = function(opt) {
     opt = { subscribe: opt };
   }
   for (var k in opt) {
+    if (k === 'subscribe') {
+      accelState.subscribeMode = opt[k] && !auto ? 'manual' : 'auto';
+    }
     accelState[k] = opt[k];
   }
   return simply.impl.accelConfig.apply(this, arguments);

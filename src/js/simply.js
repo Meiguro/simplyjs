@@ -37,9 +37,9 @@ simply.end = function() {
 };
 
 simply.reset = function() {
-  simply.state = {};
-  simply.packages = {};
   simply.off();
+  simply.packages = {};
+  simply.state = {};
   simply.state.run = true;
   simply.state.numPackages = 0;
   simply.accelInit();

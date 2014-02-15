@@ -227,7 +227,7 @@ simply.loadScript = function(scriptUrl, async) {
   return simply.impl.loadPackage.call(this, pkg, loader);
 };
 
-simply.loadScriptUrl = function(scriptUrl) {
+simply.loadMainScriptUrl = function(scriptUrl) {
   if (typeof scriptUrl === 'string' && !scriptUrl.match(/^(\w+:)?\/\//)) {
     scriptUrl = 'http://' + scriptUrl;
   }
@@ -238,14 +238,13 @@ simply.loadScriptUrl = function(scriptUrl) {
     scriptUrl = localStorage.getItem('mainJsUrl');
   }
 
-  if (scriptUrl) {
-    simply.loadScript(scriptUrl, false);
-  }
+  return scriptUrl;
 };
 
-simply.loadMainScript = function() {
+simply.loadMainScript = function(scriptUrl) {
   simply.reset();
-  simply.loadScriptUrl();
+  scriptUrl = simply.loadMainScriptUrl(scriptUrl);
+  simply.loadScript(scriptUrl, false);
   simply.begin();
 };
 

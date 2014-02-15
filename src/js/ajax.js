@@ -39,6 +39,9 @@ var formify = function(data) {
  * @param {function} failure - The failure handler when the HTTP request fails or is not 200.
  */
 var ajax = function(opt, success, failure) {
+  if (typeof opt === 'string') {
+    opt = { url: opt };
+  }
   var method = opt.method || 'GET';
   var url = opt.url;
   //console.log(method + ' ' + url);

@@ -34,12 +34,12 @@ static SimplyStyle STYLES[] = {
 
 SimplyUi *s_ui = NULL;
 
-void simply_set_style(SimplyUi *self, int style_index) {
+void simply_ui_set_style(SimplyUi *self, int style_index) {
   self->style = &STYLES[style_index];
   layer_mark_dirty(self->display_layer);
 }
 
-void simply_set_scrollable(SimplyUi *self, bool is_scrollable) {
+void simply_ui_set_scrollable(SimplyUi *self, bool is_scrollable) {
   self->is_scrollable = is_scrollable;
   scroll_layer_set_click_config_onto_window(self->scroll_layer, self->window);
 
@@ -54,7 +54,7 @@ void simply_set_scrollable(SimplyUi *self, bool is_scrollable) {
   layer_mark_dirty(self->display_layer);
 }
 
-void simply_set_fullscreen(SimplyUi *self, bool is_fullscreen) {
+void simply_ui_set_fullscreen(SimplyUi *self, bool is_fullscreen) {
   window_set_fullscreen(self->window, is_fullscreen);
 
   GRect frame = layer_get_frame(window_get_root_layer(self->window));
@@ -84,7 +84,7 @@ static void set_text(char **str_field, const char *str) {
   *str_field = buffer;
 }
 
-void simply_set_text(SimplyUi *self, char **str_field, const char *str) {
+void simply_ui_set_text(SimplyUi *self, char **str_field, const char *str) {
   set_text(str_field, str);
   layer_mark_dirty(self->display_layer);
 }
@@ -201,9 +201,9 @@ static void show_welcome_text(SimplyUi *self) {
     return;
   }
 
-  simply_set_text(self, &self->title_text, "Simply.js");
-  simply_set_text(self, &self->subtitle_text, "Welcome");
-  simply_set_text(self, &self->body_text, "Simply.js allows you to push interactive text to your Pebble with just JavaScript!");
+  simply_ui_set_text(self, &self->title_text, "Simply.js");
+  simply_ui_set_text(self, &self->subtitle_text, "Welcome");
+  simply_ui_set_text(self, &self->body_text, "Simply.js allows you to push interactive text to your Pebble with just JavaScript!");
 }
 
 static void window_load(Window *window) {
@@ -227,7 +227,7 @@ static void window_load(Window *window) {
   });
   scroll_layer_set_click_config_onto_window(scroll_layer, window);
 
-  simply_set_style(self, 1);
+  simply_ui_set_style(self, 1);
 
   app_timer_register(1000, (AppTimerCallback) show_welcome_text, self);
 }
@@ -244,7 +244,7 @@ static void handle_accel_tap(AccelAxisType axis, int32_t direction) {
   simply_msg_accel_tap(axis, direction);
 }
 
-SimplyUi *simply_create(void) {
+SimplyUi *simply_ui_create(void) {
   if (s_ui) {
     return s_ui;
   }
@@ -277,14 +277,14 @@ SimplyUi *simply_create(void) {
   return self;
 }
 
-void simply_destroy(SimplyUi *self) {
+void simply_ui_destroy(SimplyUi *self) {
   if (!s_ui) {
     return;
   }
 
-  simply_set_text(self, &self->title_text, NULL);
-  simply_set_text(self, &self->subtitle_text, NULL);
-  simply_set_text(self, &self->body_text, NULL);
+  simply_ui_set_text(self, &self->title_text, NULL);
+  simply_ui_set_text(self, &self->subtitle_text, NULL);
+  simply_ui_set_text(self, &self->body_text, NULL);
 
   accel_tap_service_unsubscribe();
 

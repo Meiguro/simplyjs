@@ -6,14 +6,14 @@
 #include <pebble.h>
 
 static SimplyUi *init(void) {
-  SimplyUi *simply = simply_create();
+  SimplyUi *simply = simply_ui_create();
   simply_msg_init(simply);
   return simply;
 }
 
 static void deinit(SimplyUi *simply) {
   simply_msg_deinit();
-  simply_destroy(simply);
+  simply_ui_destroy(simply);
 }
 
 int main(void) {

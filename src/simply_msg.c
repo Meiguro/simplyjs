@@ -32,19 +32,19 @@ static void handle_set_text(DictionaryIterator *iter, SimplyUi *simply) {
     clear = true;
   }
   if ((tuple = dict_find(iter, 1))) {
-    simply_set_text(simply, &simply->title_text, tuple->value->cstring);
+    simply_ui_set_text(simply, &simply->title_text, tuple->value->cstring);
   } else if (clear) {
-    simply_set_text(simply, &simply->title_text, NULL);
+    simply_ui_set_text(simply, &simply->title_text, NULL);
   }
   if ((tuple = dict_find(iter, 2))) {
-    simply_set_text(simply, &simply->subtitle_text, tuple->value->cstring);
+    simply_ui_set_text(simply, &simply->subtitle_text, tuple->value->cstring);
   } else if (clear) {
-    simply_set_text(simply, &simply->subtitle_text, NULL);
+    simply_ui_set_text(simply, &simply->subtitle_text, NULL);
   }
   if ((tuple = dict_find(iter, 3))) {
-    simply_set_text(simply, &simply->body_text, tuple->value->cstring);
+    simply_ui_set_text(simply, &simply->body_text, tuple->value->cstring);
   } else if (clear) {
-    simply_set_text(simply, &simply->body_text, NULL);
+    simply_ui_set_text(simply, &simply->body_text, NULL);
   }
 }
 
@@ -62,21 +62,21 @@ static void handle_vibe(DictionaryIterator *iter, SimplyUi *simply) {
 static void handle_set_scrollable(DictionaryIterator *iter, SimplyUi *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
-    simply_set_scrollable(simply, tuple->value->int32);
+    simply_ui_set_scrollable(simply, tuple->value->int32);
   }
 }
 
 static void handle_set_style(DictionaryIterator *iter, SimplyUi *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
-    simply_set_style(simply, tuple->value->int32);
+    simply_ui_set_style(simply, tuple->value->int32);
   }
 }
 
 static void handle_set_fullscreen(DictionaryIterator *iter, SimplyUi *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
-    simply_set_fullscreen(simply, tuple->value->int32);
+    simply_ui_set_fullscreen(simply, tuple->value->int32);
   }
 }
 
@@ -113,8 +113,8 @@ static void sent_callback(DictionaryIterator *iter, void *context) {
 
 static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, SimplyUi *simply) {
   if (reason == APP_MSG_NOT_CONNECTED) {
-    simply_set_text(simply, &simply->subtitle_text, "Disconnected");
-    simply_set_text(simply, &simply->body_text, "Run the Pebble Phone App");
+    simply_ui_set_text(simply, &simply->subtitle_text, "Disconnected");
+    simply_ui_set_text(simply, &simply->body_text, "Run the Pebble Phone App");
   }
 }
 

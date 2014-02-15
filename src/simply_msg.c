@@ -85,11 +85,13 @@ static void get_accel_data_timer_callback(void *context) {
   Simply *simply = context;
   AccelData data = { .x = 0 };
   simply_accel_peek(simply->accel, &data);
-  simply_msg_accel_data(&data, 1, 0);
+  if (!simply_msg_accel_data(&data, 1, 0)) {
+    app_timer_register(10, get_accel_data_timer_callback, simply);
+  }
 }
 
 static void handle_get_accel_data(DictionaryIterator *iter, Simply *simply) {
-  app_timer_register(30, get_accel_data_timer_callback, simply);
+  app_timer_register(10, get_accel_data_timer_callback, simply);
 }
 
 static void handle_set_accel_config(DictionaryIterator *iter, Simply *simply) {

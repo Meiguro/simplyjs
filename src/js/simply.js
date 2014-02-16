@@ -547,13 +547,14 @@ simply.accelAutoSubscribe = function() {
  * The accelerometer data stream is useful for applications such as gesture recognition when accelTap is too limited.
  * However, keep in mind that smaller batch sample sizes and faster rates will drastically impact the battery life of both the Pebble and phone because of the taxing use of the processors and Bluetooth modules.
  * @typedef {object} simply.accelConf
- * @property {string} [rate] - The rate accelerometer data points are generated in hertz. Valid values are 10, 25, 50, and 100. Defaults to 100.
- * @property {string} [samples] - The number of accelerometer data points to accumulate in a batch before calling the event handler. Valid values are 1 to 25 inclusive. Defaults to 25.
- * @property {string} [subscribe] - Whether to subscribe to accelerometer data events. {@link simply.accelPeek} cannot be used when subscribed. Simply.js will automatically (un)subscribe for you depending on the amount of accelData handlers registered.
+ * @property {number} [rate] - The rate accelerometer data points are generated in hertz. Valid values are 10, 25, 50, and 100. Defaults to 100.
+ * @property {number} [samples] - The number of accelerometer data points to accumulate in a batch before calling the event handler. Valid values are 1 to 25 inclusive. Defaults to 25.
+ * @property {boolean} [subscribe] - Whether to subscribe to accelerometer data events. {@link simply.accelPeek} cannot be used when subscribed. Simply.js will automatically (un)subscribe for you depending on the amount of accelData handlers registered.
  */
 
 /**
  * Changes the accelerometer configuration.
+ * See {@link simply.accelConfig}
  * @memberOf simply
  * @param {simply.accelConfig} accelConf - An object defining the accelerometer configuration.
  */

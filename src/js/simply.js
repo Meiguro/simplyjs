@@ -15,6 +15,13 @@ var buttons = [
   'down',
 ];
 
+var eventTypes = [
+  'singleClick',
+  'longClick',
+  'accelTap',
+  'accelData',
+];
+
 simply.state = {};
 simply.packages = {};
 simply.listeners = {};
@@ -106,6 +113,12 @@ simply.countHandlers = function(type, subtype) {
   return handlers ? handlers.length : 0;
 };
 
+var checkEventType = function(type) {
+  if (eventTypes.indexOf(type) === -1) {
+    throw Error('Invalid event type: ' + type);
+  }
+};
+
 /**
  * Subscribe to Pebble events.
  * See {@link simply.event} for the possible event types to subscribe to.
@@ -118,6 +131,9 @@ simply.countHandlers = function(type, subtype) {
  * @see simply.event
  */
 simply.on = function(type, subtype, handler) {
+  if (type) {
+    checkEventType(type);
+  }
   if (!handler) {
     handler = subtype;
     subtype = 'all';
@@ -146,6 +162,9 @@ simply.rawOn = function(type, subtype, handler) {
  * @see simply.on
  */
 simply.off = function(type, subtype, handler) {
+  if (type) {
+    checkEventType(type);
+  }
   if (!handler) {
     handler = subtype;
     subtype = 'all';

@@ -8,6 +8,13 @@ var noop = typeof util2 !== 'undefined' ? util2.noop : function() {};
 
 var simply = {};
 
+var buttons = [
+  'back',
+  'up',
+  'select',
+  'down',
+];
+
 simply.state = {};
 simply.packages = {};
 simply.listeners = {};
@@ -25,7 +32,7 @@ simply.init = function() {
   simply.loadMainScript();
 };
 
-simply.wrapHandler = function() {
+simply.wrapHandler = function(handler) {
   return simply.impl.wrapHandler.apply(this, arguments);
 };
 
@@ -38,10 +45,24 @@ simply.end = function() {
 
 simply.reset = function() {
   simply.off();
+
   simply.packages = {};
+
   simply.state = {};
   simply.state.run = true;
   simply.state.numPackages = 0;
+
+  simply.state.button = {
+    config: {},
+    configMode: 'auto',
+  };
+  for (var i = 0, ii = buttons.length; i < ii; i++) {
+    var button = buttons[i];
+    if (button !== 'back') {
+      simply.state.button.config[buttons[i]] = true;
+    }
+  }
+
   simply.accelInit();
 };
 
@@ -51,13 +72,22 @@ simply.reset = function() {
  * @param {simply.event} event - The event object with event specific information.
  */
 
+var isBackEvent = function(type, subtype) {
+  return ((type === 'singleClick' || type === 'longClick') && subtype === 'back');
+};
+
 simply.onAddHandler = function(type, subtype) {
-  if (type === 'accelData') {
+  if (isBackEvent(type, subtype)) {
+    simply.buttonAutoConfig();
+  } else if (type === 'accelData') {
     simply.accelAutoSubscribe();
   }
 };
 
 simply.onRemoveHandler = function(type, subtype) {
+  if (!type || isBackEvent(type, subtype)) {
+    simply.buttonAutoConfig();
+  }
   if (!type || type === 'accelData') {
     simply.accelAutoSubscribe();
   }
@@ -345,6 +375,60 @@ simply.require = function(path) {
 };
 
 /**
+ * The button configuration parameter for {@link simply.buttonConfig}.
+ * The button configuration allows you to enable to disable buttons without having to register or unregister handlers if that is your preferred style.
+ * You may also enable the back button manually as an alternative to registering a click handler with 'back' as its subtype using {@link simply.on}.
+ * @typedef {object} simply.buttonConf
+ * @property {boolean} [back] - Whether to enable the back button. Defaults to false. Simply.js can also automatically register this for you based on the amount of click handlers with subtype 'back'.
+ * @property {boolean} [up] - Whether to enable the up button. Defaults to true. Note that this is disabled when using {@link simply.scrollable}.
+ * @property {boolean} [select] - Whether to enable the select button. Defaults to true.
+ * @property {boolean} [down] - Whether to enable the down button. Defaults to true. Note that this is disabled when using {@link simply.scrollable}.
+ */
+
+/**
+ * Changes the button configuration.
+ * See {@link simply.buttonConfig}
+ * @memberOf simply
+ * @param {simply.buttonConfig} buttonConf - An object defining the button configuration.
+ */
+simply.buttonConfig = function(buttonConf, auto) {
+  var buttonState = simply.state.button;
+  if (typeof buttonConf === 'undefined') {
+    var config = {};
+    for (var i = 0, ii = buttons.length; i < ii; ++i) {
+      var k = buttons[i];
+      config[k] = buttonConf.config[k];
+    }
+    return config;
+  }
+  for (var k in buttonConf) {
+    if (buttons.indexOf(k) !== -1) {
+      if (k === 'back') {
+        buttonState.configMode = buttonConf.back && !auto ? 'manual' : 'auto';
+      }
+      buttonState.config[k] = buttonConf[k];
+    }
+  }
+  if (simply.impl.buttonConfig) {
+    return simply.impl.buttonConfig(buttonState.config);
+  }
+};
+
+simply.buttonAutoConfig = function() {
+  var buttonState = simply.state.button;
+  if (!buttonState || buttonState.configMode !== 'auto') {
+    return;
+  }
+  var singleBackCount = simply.countHandlers('singleClick', 'back');
+  var longBackCount = simply.countHandlers('longClick', 'back');
+  var useBack = singleBackCount + longBackCount > 0;
+  if (useBack !== buttonState.config.back) {
+    buttonState.config.back = useBack;
+    return simply.buttonConfig(buttonState.config, true);
+  }
+};
+
+/**
  * The text definition parameter for {@link simply.text}.
  * @typedef {object} simply.textDef
  * @property {string} [title] - A new title for the first and largest text field.
@@ -470,13 +554,14 @@ simply.accelAutoSubscribe = function() {
  * The accelerometer data stream is useful for applications such as gesture recognition when accelTap is too limited.
  * However, keep in mind that smaller batch sample sizes and faster rates will drastically impact the battery life of both the Pebble and phone because of the taxing use of the processors and Bluetooth modules.
  * @typedef {object} simply.accelConf
- * @property {string} [rate] - The rate accelerometer data points are generated in hertz. Valid values are 10, 25, 50, and 100. Defaults to 100.
- * @property {string} [samples] - The number of accelerometer data points to accumulate in a batch before calling the event handler. Valid values are 1 to 25 inclusive. Defaults to 25.
- * @property {string} [subscribe] - Whether to subscribe to accelerometer data events. {@link simply.accelPeek} cannot be used when subscribed. Simply.js will automatically (un)subscribe for you depending on the amount of accelData handlers registered.
+ * @property {number} [rate] - The rate accelerometer data points are generated in hertz. Valid values are 10, 25, 50, and 100. Defaults to 100.
+ * @property {number} [samples] - The number of accelerometer data points to accumulate in a batch before calling the event handler. Valid values are 1 to 25 inclusive. Defaults to 25.
+ * @property {boolean} [subscribe] - Whether to subscribe to accelerometer data events. {@link simply.accelPeek} cannot be used when subscribed. Simply.js will automatically (un)subscribe for you depending on the amount of accelData handlers registered.
  */
 
 /**
  * Changes the accelerometer configuration.
+ * See {@link simply.accelConfig}
  * @memberOf simply
  * @param {simply.accelConfig} accelConf - An object defining the accelerometer configuration.
  */

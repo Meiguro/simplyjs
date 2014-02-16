@@ -34,6 +34,8 @@ static SimplyStyle STYLES[] = {
 
 SimplyUi *s_ui = NULL;
 
+static void click_config_provider(SimplyUi *self);
+
 void simply_ui_set_style(SimplyUi *self, int style_index) {
   self->style = &STYLES[style_index];
   layer_mark_dirty(self->display_layer);
@@ -72,6 +74,14 @@ void simply_ui_set_fullscreen(SimplyUi *self, bool is_fullscreen) {
   window_destroy(window);
 }
 
+void simply_ui_set_button(SimplyUi *self, ButtonId button, bool enable) {
+  if (enable) {
+    self->button_mask |= 1 << button;
+  } else {
+    self->button_mask &= ~(1 << button);
+  }
+}
+
 static void set_text(char **str_field, const char *str) {
   free(*str_field);
 
@@ -96,6 +106,7 @@ void simply_ui_set_text(SimplyUi *self, char **str_field, const char *str) {
 static bool is_string(const char *str) {
   return str && str[0];
 }
+
 void display_layer_update_callback(Layer *layer, GContext *ctx) {
   SimplyUi *self = s_ui;
 
@@ -181,18 +192,29 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
 }
 
 static void single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  simply_msg_single_click(click_recognizer_get_button_id(recognizer));
+  SimplyUi *self = s_ui;
+  ButtonId button = click_recognizer_get_button_id(recognizer);
+  bool is_enabled = (self->button_mask & (1 << button));
+  if (button == BUTTON_ID_BACK && !is_enabled) {
+    bool animated = true;
+    window_stack_pop(animated);
+  }
+  if (is_enabled) {
+    simply_msg_single_click(button);
+  }
 }
 
 static void long_click_handler(ClickRecognizerRef recognizer, void *context) {
-  simply_msg_long_click(click_recognizer_get_button_id(recognizer));
+  SimplyUi *self = s_ui;
+  ButtonId button = click_recognizer_get_button_id(recognizer);
+  bool is_enabled = (self->button_mask & (1 << button));
+  if (is_enabled) {
+    simply_msg_long_click(button);
+  }
 }
 
 static void click_config_provider(SimplyUi *self) {
   for (int i = 0; i < NUM_BUTTONS; ++i) {
-    if (i == BUTTON_ID_BACK) {
-      continue;
-    }
     if (!self->is_scrollable || (i != BUTTON_ID_UP && i != BUTTON_ID_DOWN)) {
       window_single_click_subscribe(i, (ClickHandler) single_click_handler);
       window_long_click_subscribe(i, 500, (ClickHandler) long_click_handler, NULL);
@@ -268,6 +290,12 @@ SimplyUi *simply_ui_create(void) {
   SimplyUi *self = malloc(sizeof(*self));
   *self = (SimplyUi) { .window = NULL };
   s_ui = self;
+
+  for (int i = 0; i < NUM_BUTTONS; ++i) {
+    if (i != BUTTON_ID_BACK) {
+      self->button_mask |= 1 << i;
+    }
+  }
 
   Window *window = self->window = window_create();
   window_set_user_data(window, self);

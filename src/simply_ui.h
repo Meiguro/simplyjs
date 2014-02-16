@@ -15,6 +15,7 @@ struct SimplyUi {
   ScrollLayer *scroll_layer;
   Layer *display_layer;
   bool is_scrollable;
+  uint32_t button_mask;
 };
 
 SimplyUi *simply_ui_create(void);
@@ -30,3 +31,6 @@ void simply_ui_set_text(SimplyUi *self, char **str_field, const char *str);
 void simply_ui_set_scrollable(SimplyUi *self, bool is_scrollable);
 
 void simply_ui_set_fullscreen(SimplyUi *self, bool is_fullscreen);
+
+void simply_ui_set_button(SimplyUi *self, ButtonId button, bool enable);
+

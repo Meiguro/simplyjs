@@ -21,6 +21,7 @@ enum SimplyACmd {
   SimplyACmd_accelData,
   SimplyACmd_getAccelData,
   SimplyACmd_configAccelData,
+  SimplyACmd_configButtons,
 };
 
 typedef enum VibeType VibeType;
@@ -89,6 +90,16 @@ static void handle_set_fullscreen(DictionaryIterator *iter, Simply *simply) {
   }
 }
 
+static void handle_config_buttons(DictionaryIterator *iter, Simply *simply) {
+  SimplyUi *ui = simply->ui;
+  Tuple *tuple;
+  for (int i = 0; i < NUM_BUTTONS; ++i) {
+    if ((tuple = dict_find(iter, i + 1))) {
+      simply_ui_set_button(ui, i, tuple->value->int32);
+    }
+  }
+}
+
 static void get_accel_data_timer_callback(void *context) {
   Simply *simply = context;
   AccelData data = { .x = 0 };
@@ -142,6 +153,9 @@ static void received_callback(DictionaryIterator *iter, void *context) {
       break;
     case SimplyACmd_configAccelData:
       handle_set_accel_config(iter, context);
+      break;
+    case SimplyACmd_configButtons:
+      handle_config_buttons(iter, context);
       break;
   }
 }

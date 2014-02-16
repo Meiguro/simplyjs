@@ -51,12 +51,16 @@ simply.reset = function() {
  * @param {simply.event} event - The event object with event specific information.
  */
 
-simply.onAddHandler = function() {
-  simply.accelAutoSubscribe();
+simply.onAddHandler = function(type, subtype) {
+  if (type === 'accelData') {
+    simply.accelAutoSubscribe();
+  }
 };
 
-simply.onRemoveHandler = function() {
-  simply.accelAutoSubscribe();
+simply.onRemoveHandler = function(type, subtype) {
+  if (!type || type === 'accelData') {
+    simply.accelAutoSubscribe();
+  }
 };
 
 simply.countHandlers = function(type, subtype) {
@@ -84,15 +88,15 @@ simply.countHandlers = function(type, subtype) {
  * @see simply.event
  */
 simply.on = function(type, subtype, handler) {
-  simply.rawOn(type, subtype, handler);
-  simply.onAddHandler();
-};
-
-simply.rawOn = function(type, subtype, handler) {
   if (!handler) {
     handler = subtype;
     subtype = 'all';
   }
+  simply.rawOn(type, subtype, handler);
+  simply.onAddHandler(type, subtype);
+};
+
+simply.rawOn = function(type, subtype, handler) {
   var typeMap = simply.listeners;
   var subtypeMap = (typeMap[type] || ( typeMap[type] = {} ));
   (subtypeMap[subtype] || ( subtypeMap[subtype] = [] )).push({
@@ -112,15 +116,15 @@ simply.rawOn = function(type, subtype, handler) {
  * @see simply.on
  */
 simply.off = function(type, subtype, handler) {
-  simply.rawOff(type, subtype, handler);
-  simply.onRemoveHandler();
-};
-
-simply.rawOff = function(type, subtype, handler) {
   if (!handler) {
     handler = subtype;
     subtype = 'all';
   }
+  simply.rawOff(type, subtype, handler);
+  simply.onRemoveHandler(type, subtype);
+};
+
+simply.rawOff = function(type, subtype, handler) {
   if (!type) {
     simply.listeners = {};
     return;

@@ -591,6 +591,7 @@ simply.accelConfig = function(opt, auto) {
 /**
  * Peeks at the current accelerometer values.
  * @memberOf simply
+ * @param {simply.eventHandler} callback - A callback function that will be provided the accel data point as an event.
  */
 simply.accelPeek = function(callback) {
   if (simply.state.accel.subscribe) {

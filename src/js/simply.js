@@ -382,10 +382,10 @@ simply.require = function(path) {
  * The button configuration allows you to enable to disable buttons without having to register or unregister handlers if that is your preferred style.
  * You may also enable the back button manually as an alternative to registering a click handler with 'back' as its subtype using {@link simply.on}.
  * @typedef {object} simply.buttonConf
- * @property {boolean} [back] - Whether to enable the back button. Defaults to false. Simply.js can also automatically register this for you based on the amount of click handlers with subtype 'back'.
- * @property {boolean} [up] - Whether to enable the up button. Defaults to true. Note that this is disabled when using {@link simply.scrollable}.
- * @property {boolean} [select] - Whether to enable the select button. Defaults to true.
- * @property {boolean} [down] - Whether to enable the down button. Defaults to true. Note that this is disabled when using {@link simply.scrollable}.
+ * @property {boolean} [back] - Whether to enable the back button. Initializes as false. Simply.js can also automatically register this for you based on the amount of click handlers with subtype 'back'.
+ * @property {boolean} [up] - Whether to enable the up button. Initializes as true. Note that this is disabled when using {@link simply.scrollable}.
+ * @property {boolean} [select] - Whether to enable the select button. Initializes as true.
+ * @property {boolean} [down] - Whether to enable the down button. Initializes as true. Note that this is disabled when using {@link simply.scrollable}.
  */
 
 /**
@@ -490,7 +490,7 @@ simply.body = function(text, clear) {
  * Vibrates the Pebble.
  * There are three support vibe types: short, long, and double.
  * @memberOf simply
- * @param {string} [type] - The vibe type. Defaults to short.
+ * @param {string} [type=short] - The vibe type.
  */
 simply.vibe = function() {
   return simply.impl.vibe.apply(this, arguments);
@@ -557,8 +557,8 @@ simply.accelAutoSubscribe = function() {
  * The accelerometer data stream is useful for applications such as gesture recognition when accelTap is too limited.
  * However, keep in mind that smaller batch sample sizes and faster rates will drastically impact the battery life of both the Pebble and phone because of the taxing use of the processors and Bluetooth modules.
  * @typedef {object} simply.accelConf
- * @property {number} [rate] - The rate accelerometer data points are generated in hertz. Valid values are 10, 25, 50, and 100. Defaults to 100.
- * @property {number} [samples] - The number of accelerometer data points to accumulate in a batch before calling the event handler. Valid values are 1 to 25 inclusive. Defaults to 25.
+ * @property {number} [rate] - The rate accelerometer data points are generated in hertz. Valid values are 10, 25, 50, and 100. Initializes as 100.
+ * @property {number} [samples] - The number of accelerometer data points to accumulate in a batch before calling the event handler. Valid values are 1 to 25 inclusive. Initializes as 25.
  * @property {boolean} [subscribe] - Whether to subscribe to accelerometer data events. {@link simply.accelPeek} cannot be used when subscribed. Simply.js will automatically (un)subscribe for you depending on the amount of accelData handlers registered.
  */
 

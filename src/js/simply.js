@@ -16,7 +16,6 @@ var buttons = [
 ];
 
 simply.state = {};
-simply.state.buttonConf = {};
 simply.packages = {};
 simply.listeners = {};
 
@@ -53,11 +52,14 @@ simply.reset = function() {
   simply.state.run = true;
   simply.state.numPackages = 0;
 
-  simply.state.buttonConf = {};
+  simply.state.button = {
+    config: {},
+    configMode: 'auto',
+  };
   for (var i = 0, ii = buttons.length; i < ii; i++) {
     var button = buttons[i];
     if (button !== 'back') {
-      simply.state.buttonConf[buttons[i]] = true;
+      simply.state.button.config[buttons[i]] = true;
     }
   }
 
@@ -365,19 +367,40 @@ simply.require = function(path) {
   return simply.loadScript(basepath + path, false);
 };
 
-simply.buttonConfig = function() {
+simply.buttonConfig = function(buttonConf, auto) {
+  var buttonState = simply.state.button;
+  if (typeof buttonConf === 'undefined') {
+    var config = {};
+    for (var i = 0, ii = buttons.length; i < ii; ++i) {
+      var k = buttons[i];
+      config[k] = buttonConf.config[k];
+    }
+    return config;
+  }
+  for (var k in buttonConf) {
+    if (buttons.indexOf(k) !== -1) {
+      if (k === 'back') {
+        buttonState.configMode = buttonConf.back && !auto ? 'manual' : 'auto';
+      }
+      buttonState.config[k] = buttonConf[k];
+    }
+  }
   if (simply.impl.buttonConfig) {
-    return simply.impl.buttonConfig.apply(this, arguments);
+    return simply.impl.buttonConfig(buttonState.config);
   }
 };
 
 simply.buttonAutoConfig = function() {
+  var buttonState = simply.state.button;
+  if (!buttonState || buttonState.configMode !== 'auto') {
+    return;
+  }
   var singleBackCount = simply.countHandlers('singleClick', 'back');
   var longBackCount = simply.countHandlers('longClick', 'back');
   var useBack = singleBackCount + longBackCount > 0;
-  if (useBack !== simply.state.buttonConf.back) {
-    simply.state.buttonConf.back = useBack;
-    return simply.buttonConfig(simply.state.buttonConf);
+  if (useBack !== buttonState.config.back) {
+    buttonState.config.back = useBack;
+    return simply.buttonConfig(buttonState.config, true);
   }
 };
 

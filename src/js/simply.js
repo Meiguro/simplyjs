@@ -631,7 +631,7 @@ simply.accelPeek = function(callback) {
  * Simply.js button click event. This can either be a single click or long click.
  * Use the event type 'singleClick' or 'longClick' to subscribe to these events.
  * @typedef simply.clickEvent
- * @property {string} button - The button that was pressed: 'up', 'select', or 'down'. This is also the event subtype.
+ * @property {string} button - The button that was pressed: 'back', 'up', 'select', or 'down'. This is also the event subtype.
  */
 
 simply.emitClick = function(type, button) {

@@ -367,6 +367,23 @@ simply.require = function(path) {
   return simply.loadScript(basepath + path, false);
 };
 
+/**
+ * The button configuration parameter for {@link simply.buttonConfig}.
+ * The button configuration allows you to enable to disable buttons without having to register or unregister handlers if that is your preferred style.
+ * You may also enable the back button manually as an alternative to registering a click handler with 'back' as its subtype using {@link simply.on}.
+ * @typedef {object} simply.buttonConf
+ * @property {boolean} [back] - Whether to enable the back button. Defaults to false. Simply.js can also automatically register this for you based on the amount of click handlers with subtype 'back'.
+ * @property {boolean} [up] - Whether to enable the up button. Defaults to true. Note that this is disabled when using {@link simply.scrollable}.
+ * @property {boolean} [select] - Whether to enable the select button. Defaults to true.
+ * @property {boolean} [down] - Whether to enable the down button. Defaults to true. Note that this is disabled when using {@link simply.scrollable}.
+ */
+
+/**
+ * Changes the button configuration.
+ * See {@link simply.buttonConfig}
+ * @memberOf simply
+ * @param {simply.buttonConfig} buttonConf - An object defining the button configuration.
+ */
 simply.buttonConfig = function(buttonConf, auto) {
   var buttonState = simply.state.button;
   if (typeof buttonConf === 'undefined') {

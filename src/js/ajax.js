@@ -32,7 +32,8 @@ var formify = function(data) {
  */
 
 /**
- * ajax
+ * ajax allows you to make various http or https requests.
+ * See {@link ajaxOptions}
  * @global
  * @param {ajaxOptions} opt - Options specifying the type of ajax request to make.
  * @param {function} success - The success handler that is called when a HTTP 200 response is given.

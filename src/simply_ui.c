@@ -61,6 +61,10 @@ void simply_ui_set_fullscreen(SimplyUi *self, bool is_fullscreen) {
   scroll_layer_set_frame(self->scroll_layer, frame);
   layer_set_frame(self->display_layer, frame);
 
+  if (!window_stack_contains_window(self->window)) {
+    return;
+  }
+
   // HACK: Refresh app chrome state
   Window *window = window_create();
   window_stack_push(window, false);
@@ -202,8 +206,10 @@ static void show_welcome_text(SimplyUi *self) {
   }
 
   simply_ui_set_text(self, &self->title_text, "Simply.js");
-  simply_ui_set_text(self, &self->subtitle_text, "Welcome");
-  simply_ui_set_text(self, &self->body_text, "Simply.js allows you to push interactive text to your Pebble with just JavaScript!");
+  simply_ui_set_text(self, &self->subtitle_text, "Write apps with JS!");
+  simply_ui_set_text(self, &self->body_text, "Visit simplyjs.io for details.");
+
+  simply_ui_show(self);
 }
 
 static void window_load(Window *window) {
@@ -229,7 +235,7 @@ static void window_load(Window *window) {
 
   simply_ui_set_style(self, 1);
 
-  app_timer_register(1000, (AppTimerCallback) show_welcome_text, self);
+  app_timer_register(10000, (AppTimerCallback) show_welcome_text, self);
 }
 
 static void window_unload(Window *window) {
@@ -238,6 +244,13 @@ static void window_unload(Window *window) {
   layer_destroy(self->display_layer);
   scroll_layer_destroy(self->scroll_layer);
   window_destroy(window);
+}
+
+void simply_ui_show(SimplyUi *self) {
+  if (!window_stack_contains_window(self->window)) {
+    bool animated = true;
+    window_stack_push(self->window, animated);
+  }
 }
 
 SimplyUi *simply_ui_create(void) {
@@ -252,7 +265,7 @@ SimplyUi *simply_ui_create(void) {
     }
   }
 
-  SimplyUi *self = malloc(sizeof(struct SimplyUi));
+  SimplyUi *self = malloc(sizeof(*self));
   *self = (SimplyUi) { .window = NULL };
   s_ui = self;
 
@@ -261,12 +274,10 @@ SimplyUi *simply_ui_create(void) {
   window_set_background_color(window, GColorBlack);
   window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
   window_set_window_handlers(window, (WindowHandlers) {
-    .load = window_load,
     .unload = window_unload,
   });
 
-  const bool animated = true;
-  window_stack_push(window, animated);
+  window_load(self->window);
 
   return self;
 }

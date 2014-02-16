@@ -53,7 +53,7 @@ SimplyAccel *simply_accel_create(void) {
     return s_accel;
   }
 
-  SimplyAccel *self = malloc(sizeof(struct SimplyUi));
+  SimplyAccel *self = malloc(sizeof(*self));
   *self = (SimplyAccel) {
     .rate = ACCEL_SAMPLING_100HZ,
     .num_samples = 25,

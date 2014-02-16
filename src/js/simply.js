@@ -231,7 +231,9 @@ simply.fexecPackage = function(script, pkg) {
     if (!simply.state.run) {
       return;
     }
-    simply.defun(pkg.execName, ['module'], script)(pkg);
+    simply.defun(pkg.execName,
+      ['module', 'require', 'console', 'Pebble', 'simply'], script)
+      (pkg, simply.require, console, Pebble, simply);
     return pkg.exports;
   };
 };

@@ -358,7 +358,10 @@ simply.basename = function(path) {
 
 /**
  * Loads external dependencies, allowing you to write a multi-file project.
- * This currently only supports a relative path to another javascript file.
+ * Package loading loosely follows the CommonJS format.
+ * Exporting is possible by modifying or setting module.exports within the required file.
+ * The module path is also available as module.path.
+ * This currently only supports a relative path to another JavaScript file.
  * @global
  * @param {string} path - The path to the dependency.
  */

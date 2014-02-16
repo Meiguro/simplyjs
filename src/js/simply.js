@@ -8,7 +8,15 @@ var noop = typeof util2 !== 'undefined' ? util2.noop : function() {};
 
 var simply = {};
 
+var buttons = [
+  'back',
+  'up',
+  'select',
+  'down',
+];
+
 simply.state = {};
+simply.state.buttonConf = {};
 simply.packages = {};
 simply.listeners = {};
 
@@ -25,7 +33,7 @@ simply.init = function() {
   simply.loadMainScript();
 };
 
-simply.wrapHandler = function() {
+simply.wrapHandler = function(handler) {
   return simply.impl.wrapHandler.apply(this, arguments);
 };
 
@@ -38,10 +46,21 @@ simply.end = function() {
 
 simply.reset = function() {
   simply.off();
+
   simply.packages = {};
+
   simply.state = {};
   simply.state.run = true;
   simply.state.numPackages = 0;
+
+  simply.state.buttonConf = {};
+  for (var i = 0, ii = buttons.length; i < ii; i++) {
+    var button = buttons[i];
+    if (button !== 'back') {
+      simply.state.buttonConf[buttons[i]] = true;
+    }
+  }
+
   simply.accelInit();
 };
 
@@ -51,13 +70,22 @@ simply.reset = function() {
  * @param {simply.event} event - The event object with event specific information.
  */
 
+var isBackEvent = function(type, subtype) {
+  return ((type === 'singleClick' || type === 'longClick') && subtype === 'back');
+};
+
 simply.onAddHandler = function(type, subtype) {
-  if (type === 'accelData') {
+  if (isBackEvent(type, subtype)) {
+    simply.buttonAutoConfig();
+  } else if (type === 'accelData') {
     simply.accelAutoSubscribe();
   }
 };
 
 simply.onRemoveHandler = function(type, subtype) {
+  if (!type || isBackEvent(type, subtype)) {
+    simply.buttonAutoConfig();
+  }
   if (!type || type === 'accelData') {
     simply.accelAutoSubscribe();
   }
@@ -335,6 +363,22 @@ simply.require = function(path) {
   }
   var basepath = simply.basepath();
   return simply.loadScript(basepath + path, false);
+};
+
+simply.buttonConfig = function() {
+  if (simply.impl.buttonConfig) {
+    return simply.impl.buttonConfig.apply(this, arguments);
+  }
+};
+
+simply.buttonAutoConfig = function() {
+  var singleBackCount = simply.countHandlers('singleClick', 'back');
+  var longBackCount = simply.countHandlers('longClick', 'back');
+  var useBack = singleBackCount + longBackCount > 0;
+  if (useBack !== simply.state.buttonConf.back) {
+    simply.state.buttonConf.back = useBack;
+    return simply.buttonConfig(simply.state.buttonConf);
+  }
 };
 
 /**

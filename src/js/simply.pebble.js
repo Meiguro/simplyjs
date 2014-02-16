@@ -67,11 +67,22 @@ var commands = [{
 }, {
   name: 'configAccelData',
   params: [{
-    name: 'rate'
+    name: 'rate',
   }, {
-    name: 'samples'
+    name: 'samples',
   }, {
-    name: 'subscribe'
+    name: 'subscribe',
+  }],
+}, {
+  name: 'configButtons',
+  params: [{
+    name: 'back',
+  }, {
+    name: 'up',
+  }, {
+    name: 'select',
+  }, {
+    name: 'down',
   }],
 }];
 
@@ -240,7 +251,10 @@ function makePacket(command, def) {
   if (def) {
     var paramMap = command.paramMap;
     for (var k in def) {
-      packet[paramMap[k].id] = def[k];
+      var param = paramMap[k];
+      if (param) {
+        packet[param.id] = def[k];
+      }
     }
   }
   return packet;
@@ -255,6 +269,12 @@ SimplyPebble.sendPacket = function(packet) {
     Pebble.sendAppMessage(packet, util2.noop, send);
   };
   send();
+};
+
+SimplyPebble.buttonConfig = function(buttonConf) {
+  var command = commandMap.configButtons;
+  var packet = makePacket(command, buttonConf);
+  SimplyPebble.sendPacket(packet);
 };
 
 SimplyPebble.text = function(textDef, clear) {

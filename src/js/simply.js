@@ -227,13 +227,32 @@ simply.defun = function(fn, fargs, fbody) {
 };
 
 simply.fexecPackage = function(script, pkg) {
+  // console shim for Android
+  var console2 = {};
+  for (var k in console) {
+    console2[k] = console[k];
+  }
+
+  console2.log = function() {
+    var args = [];
+    for (var i = 0, ii = arguments.length; i < ii; ++i) {
+      args[i] = arguments[i].toString();
+    }
+    var msg = pkg.name + ': ' + args.join(' ');
+    var width = 45;
+    var prefix = (new Array(width + 1)).join('\b'); // erase Simply.js source line
+    var suffix = msg.length < width ? (new Array(width - msg.length + 1)).join(' ') : 0;
+    console.log(prefix + msg + suffix);
+  };
+
+  // loader
   return function() {
     if (!simply.state.run) {
       return;
     }
     simply.defun(pkg.execName,
       ['module', 'require', 'console', 'Pebble', 'simply'], script)
-      (pkg, simply.require, console, Pebble, simply);
+      (pkg, simply.require, console2, Pebble, simply);
     return pkg.exports;
   };
 };

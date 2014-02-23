@@ -345,7 +345,7 @@ simply.loadScript = function(scriptUrl, async) {
 };
 
 simply.loadMainScriptUrl = function(scriptUrl) {
-  if (typeof scriptUrl === 'string' && !scriptUrl.match(/^(\w+:)?\/\//)) {
+  if (typeof scriptUrl === 'string' && scriptUrl.length && !scriptUrl.match(/^(\w+:)?\/\//)) {
     scriptUrl = 'http://' + scriptUrl;
   }
 
@@ -364,7 +364,15 @@ simply.loadMainScript = function(scriptUrl) {
   if (!scriptUrl) {
     return;
   }
-  simply.loadScript(scriptUrl, false);
+  try {
+    simply.loadScript(scriptUrl, false);
+  } catch (e) {
+    simply.text({
+      title: 'Failed to load',
+      body: scriptUrl,
+    }, true);
+    return;
+  }
   simply.begin();
 };
 

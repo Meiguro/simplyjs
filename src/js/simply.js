@@ -361,6 +361,9 @@ simply.loadMainScriptUrl = function(scriptUrl) {
 simply.loadMainScript = function(scriptUrl) {
   simply.reset();
   scriptUrl = simply.loadMainScriptUrl(scriptUrl);
+  if (!scriptUrl) {
+    return;
+  }
   simply.loadScript(scriptUrl, false);
   simply.begin();
 };

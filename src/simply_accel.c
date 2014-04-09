@@ -13,10 +13,12 @@ static void handle_accel_data(AccelData *data, uint32_t num_samples) {
 }
 
 void simply_accel_set_data_rate(SimplyAccel *self, AccelSamplingRate rate) {
+  self->rate = rate;
   accel_service_set_sampling_rate(rate);
 }
 
 void simply_accel_set_data_samples(SimplyAccel *self, uint32_t num_samples) {
+  self->num_samples = num_samples;
   accel_service_set_samples_per_update(num_samples);
   if (!self->data_subscribed) {
     return;
@@ -31,6 +33,7 @@ void simply_accel_set_data_subscribe(SimplyAccel *self, bool subscribe) {
   }
   if (subscribe) {
     accel_data_service_subscribe(self->num_samples, handle_accel_data);
+    accel_service_set_sampling_rate(self->rate);
   } else {
     accel_data_service_unsubscribe();
   }

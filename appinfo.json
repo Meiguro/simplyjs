@@ -4,7 +4,7 @@
   "longName": "Simply.js",
   "companyName": "Meiguro",
   "versionCode": 1,
-  "versionLabel": "0.3.3",
+  "versionLabel": "0.3.4",
   "capabilities": [ "configurable" ],
   "watchapp": {
     "watchface": false

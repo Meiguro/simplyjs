@@ -53,6 +53,11 @@ var ajax = function(opt, success, failure) {
     if (failure) { failure = onHandler('failure', failure); }
   }
 
+  if (opt.cache === false) {
+    var appendSymbol = url.indexOf('?') === -1 ? '?' : '&';
+    url += appendSymbol + '_=' + new Date().getTime();
+  }
+
   var req = new XMLHttpRequest();
   req.open(method.toUpperCase(), url, opt.async !== false);
 
@@ -71,11 +76,6 @@ var ajax = function(opt, success, failure) {
     } else {
       data = formify(opt.data);
     }
-  }
-
-  if (opt.cache === false) {
-    var appendSymbol = url.indexOf('?') === -1 ? '?' : '&';
-    url += appendSymbol + '_=' + new Date().getTime();
   }
 
   req.onreadystatechange = function(e) {

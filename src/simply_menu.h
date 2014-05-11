@@ -24,6 +24,7 @@ struct SimplyMenu {
   List1Node *sections;
   List1Node *items;
   AppTimer *get_timer;
+  uint32_t request_delay_ms;
   uint32_t num_sections;
 };
 

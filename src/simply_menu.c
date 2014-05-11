@@ -2,6 +2,8 @@
 
 #include "simply_msg.h"
 
+#define REQUEST_DELAY_MS 10
+
 SimplyMenu *s_menu = NULL;
 
 static bool section_filter(List1Node *node, void *data) {
@@ -86,7 +88,8 @@ static void request_menu_node(void *data) {
 
 static void schedule_get_timer(SimplyMenu *self) {
   if (self->get_timer) { return; }
-  self->get_timer = app_timer_register(10, request_menu_node, self);
+  self->get_timer = app_timer_register(self->request_delay_ms, request_menu_node, self);
+  self->request_delay_ms *= 2;
 }
 
 static void add_section(SimplyMenu *self, SimplyMenuSection *section) {
@@ -123,6 +126,7 @@ static void request_menu_item(SimplyMenu *self, uint16_t section_index, uint16_t
 static void mark_dirty(SimplyMenu *self) {
   layer_mark_dirty(window_get_root_layer(self->window));
   request_menu_node(self);
+  self->request_delay_ms = REQUEST_DELAY_MS;
 }
 
 void simply_menu_add_section(SimplyMenu *self, SimplyMenuSection *section) {
@@ -224,7 +228,9 @@ SimplyMenu *simply_menu_create(void) {
   }
 
   SimplyMenu *self = malloc(sizeof(*self));
-  *self = (SimplyMenu) { .window = NULL };
+  *self = (SimplyMenu) {
+    .request_delay_ms = REQUEST_DELAY_MS,
+  };
   s_menu = self;
 
   Window *window = self->window = window_create();

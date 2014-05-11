@@ -31,6 +31,8 @@ enum SimplyACmd {
   SimplyACmd_getMenuSection,
   SimplyACmd_setMenuItem,
   SimplyACmd_getMenuItem,
+  SimplyACmd_menuSelectClick,
+  SimplyACmd_menuSelectLongClick,
 };
 
 typedef enum VibeType VibeType;
@@ -273,24 +275,22 @@ void simply_msg_deinit() {
   app_message_deregister_callbacks();
 }
 
-bool simply_msg_single_click(ButtonId button) {
+static bool send_click(SimplyACmd type, ButtonId button) {
   DictionaryIterator *iter = NULL;
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
   }
-  dict_write_uint8(iter, 0, SimplyACmd_singleClick);
+  dict_write_uint8(iter, 0, type);
   dict_write_uint8(iter, 1, button);
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
+bool simply_msg_single_click(ButtonId button) {
+  return send_click(SimplyACmd_singleClick, button);
+}
+
 bool simply_msg_long_click(ButtonId button) {
-  DictionaryIterator *iter = NULL;
-  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
-    return false;
-  }
-  dict_write_uint8(iter, 0, SimplyACmd_longClick);
-  dict_write_uint8(iter, 1, button);
-  return (app_message_outbox_send() == APP_MSG_OK);
+  return send_click(SimplyACmd_longClick, button);
 }
 
 bool simply_msg_accel_tap(AccelAxisType axis, int32_t direction) {
@@ -328,14 +328,25 @@ bool simply_msg_menu_get_section(uint16_t index) {
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
-bool simply_msg_menu_get_item(uint16_t section, uint16_t index) {
+static bool send_menu_item(SimplyACmd type, uint16_t section, uint16_t index) {
   DictionaryIterator *iter = NULL;
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
   }
-  dict_write_uint8(iter, 0, SimplyACmd_getMenuItem);
+  dict_write_uint8(iter, 0, type);
   dict_write_uint16(iter, 1, section);
   dict_write_uint16(iter, 2, index);
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
+bool simply_msg_menu_get_item(uint16_t section, uint16_t index) {
+  return send_menu_item(SimplyACmd_getMenuItem, section, index);
+}
+
+bool simply_msg_menu_select_click(uint16_t section, uint16_t index) {
+  return send_menu_item(SimplyACmd_menuSelectClick, section, index);
+}
+
+bool simply_msg_menu_select_long_click(uint16_t section, uint16_t index) {
+  return send_menu_item(SimplyACmd_menuSelectLongClick, section, index);
+}

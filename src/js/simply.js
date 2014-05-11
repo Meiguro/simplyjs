@@ -22,6 +22,8 @@ var eventTypes = [
   'accelData',
   'menuSection',
   'menuItem',
+  'menuSelectClick',
+  'menuSelectLongClick',
 ];
 
 simply.state = {};
@@ -709,18 +711,23 @@ simply.emitAccelData = function(accels, callback) {
 };
 
 simply.emitMenuSection = function(section) {
-  var e = {
-    section: section,
-  };
-  simply.emit('menuSection', e);
+  simply.emit('menuSection', {
+    section: section
+  });
 };
 
 simply.emitMenuItem = function(section, row) {
-  var e = {
+  simply.emit('menuItem', {
     section: section,
     row: row,
-  };
-  simply.emit('menuItem', e);
+  });
+};
+
+simply.emitMenuSelect = function(type, section, row) {
+  simply.emit(type, {
+    section: section,
+    row: row,
+  });
 };
 
 return simply;

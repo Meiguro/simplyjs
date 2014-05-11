@@ -172,7 +172,12 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   menu_cell_basic_draw(ctx, cell_layer, item->title, item->subtitle, NULL);
 }
 
-static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+  simply_msg_menu_select_click(cell_index->section, cell_index->row);
+}
+
+static void menu_select_long_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+  simply_msg_menu_select_long_click(cell_index->section, cell_index->row);
 }
 
 static void window_load(Window *window) {
@@ -192,7 +197,8 @@ static void window_load(Window *window) {
     .get_header_height = menu_get_header_height_callback,
     .draw_header = menu_draw_header_callback,
     .draw_row = menu_draw_row_callback,
-    .select_click = menu_select_callback,
+    .select_click = menu_select_click_callback,
+    .select_long_click = menu_select_long_click_callback,
   });
 
   menu_layer_set_click_config_onto_window(menu_layer, window);

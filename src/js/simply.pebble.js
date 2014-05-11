@@ -120,6 +120,20 @@ var commands = [{
   }, {
     name: 'row',
   }],
+}, {
+  name: 'menuSelectClick',
+  params: [{
+    name: 'section',
+  }, {
+    name: 'row',
+  }],
+}, {
+  name: 'menuSelectLongClick',
+  params: [{
+    name: 'section',
+  }, {
+    name: 'row',
+  }],
 }];
 
 var commandMap = {};
@@ -484,6 +498,10 @@ SimplyPebble.onAppMessage = function(e) {
       break;
     case 'getMenuItem':
       simply.emitMenuItem(payload[1], payload[2]);
+      break;
+    case 'menuSelectClick':
+    case 'menuSelectLongClick':
+      simply.emitMenuSelect(command.name, payload[1], payload[2]);
       break;
   }
 };

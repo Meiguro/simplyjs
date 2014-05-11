@@ -212,7 +212,6 @@ static void window_unload(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
 
   menu_layer_destroy(self->menu_layer);
-  window_destroy(window);
 }
 
 void simply_menu_show(SimplyMenu *self) {
@@ -237,10 +236,9 @@ SimplyMenu *simply_menu_create(void) {
   window_set_user_data(window, self);
   window_set_background_color(window, GColorWhite);
   window_set_window_handlers(window, (WindowHandlers) {
+    .load = window_load,
     .unload = window_unload,
   });
-
-  window_load(self->window);
 
   return self;
 }

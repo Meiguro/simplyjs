@@ -4,6 +4,8 @@
 
 #include "simplyjs.h"
 
+#include "util/string.h"
+
 #include <pebble.h>
 
 struct SimplyStyle {
@@ -90,12 +92,7 @@ static void set_text(char **str_field, const char *str) {
     return;
   }
 
-  size_t size = strlen(str) + 1;
-  char *buffer = malloc(size);
-  strncpy(buffer, str, size);
-  buffer[size - 1] = '\0';
-
-  *str_field = buffer;
+  *str_field = strdup2(str);
 }
 
 void simply_ui_set_text(SimplyUi *self, char **str_field, const char *str) {

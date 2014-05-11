@@ -84,6 +84,10 @@ var commands = [{
   }, {
     name: 'down',
   }],
+}, {
+  name: 'showUi'
+}, {
+  name: 'showMenu'
 }];
 
 var commandMap = {};
@@ -271,6 +275,14 @@ SimplyPebble.sendPacket = function(packet) {
   send();
 };
 
+SimplyPebble.showUi = function() {
+  SimplyPebble.sendPacket(makePacket(commandMap.showUi));
+};
+
+SimplyPebble.showMenu = function() {
+  SimplyPebble.sendPacket(makePacket(commandMap.showMenu));
+};
+
 SimplyPebble.buttonConfig = function(buttonConf) {
   var command = commandMap.configButtons;
   var packet = makePacket(command, buttonConf);
@@ -360,7 +372,7 @@ SimplyPebble.accelPeek = function(callback) {
   SimplyPebble.sendPacket(packet);
 };
 
-readInt = function(packet, width, pos, signed) {
+var readInt = function(packet, width, pos, signed) {
   var value = 0;
   pos = pos || 0;
   for (var i = 0; i < width; ++i) {

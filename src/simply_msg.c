@@ -1,6 +1,7 @@
 #include "simply_msg.h"
 
 #include "simply_accel.h"
+#include "simply_menu.h"
 #include "simply_ui.h"
 
 #include "simplyjs.h"
@@ -22,6 +23,8 @@ enum SimplyACmd {
   SimplyACmd_getAccelData,
   SimplyACmd_configAccelData,
   SimplyACmd_configButtons,
+  SimplyACmd_showUi,
+  SimplyACmd_showMenu,
 };
 
 typedef enum VibeType VibeType;
@@ -126,6 +129,14 @@ static void handle_set_accel_config(DictionaryIterator *iter, Simply *simply) {
   }
 }
 
+static void handle_show_ui(DictionaryIterator *iter, Simply *simply) {
+  simply_ui_show(simply->ui);
+}
+
+static void handle_show_menu(DictionaryIterator *iter, Simply *simply) {
+  simply_menu_show(simply->menu);
+}
+
 static void received_callback(DictionaryIterator *iter, void *context) {
   Tuple *tuple = dict_find(iter, 0);
   if (!tuple) {
@@ -156,6 +167,12 @@ static void received_callback(DictionaryIterator *iter, void *context) {
       break;
     case SimplyACmd_configButtons:
       handle_config_buttons(iter, context);
+      break;
+    case SimplyACmd_showUi:
+      handle_show_ui(iter, context);
+      break;
+    case SimplyACmd_showMenu:
+      handle_show_menu(iter, context);
       break;
   }
 }

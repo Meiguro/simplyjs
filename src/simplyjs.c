@@ -2,6 +2,7 @@
 
 #include "simply_accel.h"
 #include "simply_splash.h"
+#include "simply_menu.h"
 #include "simply_ui.h"
 #include "simply_msg.h"
 
@@ -11,6 +12,7 @@ static Simply *init(void) {
   Simply *simply = malloc(sizeof(*simply));
   simply->accel = simply_accel_create();
   simply->splash = simply_splash_create(simply);
+  simply->menu = simply_menu_create();
   simply->ui = simply_ui_create();
 
   bool animated = true;

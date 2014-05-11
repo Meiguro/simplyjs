@@ -238,14 +238,14 @@ static void window_load(Window *window) {
   SimplyUi *self = window_get_user_data(window);
 
   Layer *window_layer = window_get_root_layer(window);
-  GRect bounds = layer_get_bounds(window_layer);
-  bounds.origin = GPointZero;
+  GRect frame = layer_get_frame(window_layer);
+  frame.origin = GPointZero;
 
-  ScrollLayer *scroll_layer = self->scroll_layer = scroll_layer_create(bounds);
+  ScrollLayer *scroll_layer = self->scroll_layer = scroll_layer_create(frame);
   Layer *scroll_base_layer = scroll_layer_get_layer(scroll_layer);
   layer_add_child(window_layer, scroll_base_layer);
 
-  Layer *display_layer = self->display_layer = layer_create(bounds);
+  Layer *display_layer = self->display_layer = layer_create(frame);
   layer_set_update_proc(display_layer, display_layer_update_callback);
   scroll_layer_add_child(scroll_layer, display_layer);
 

@@ -20,6 +20,8 @@ var eventTypes = [
   'longClick',
   'accelTap',
   'accelData',
+  'menuSection',
+  'menuItem',
 ];
 
 simply.state = {};
@@ -630,6 +632,14 @@ simply.accelPeek = function(callback) {
   return simply.impl.accelPeek.apply(this, arguments);
 };
 
+simply.menuSection = function(sectionDef) {
+  return simply.impl.menuSection.apply(this, arguments);
+};
+
+simply.menuItem = function(itemDef) {
+  return simply.impl.menuItem.apply(this, arguments);
+};
+
 /**
  * Simply.js event. See all the possible event types. Subscribe to events using {@link simply.on}.
  * @typedef simply.event
@@ -696,6 +706,21 @@ simply.emitAccelData = function(accels, callback) {
     return callback(e);
   }
   simply.emit('accelData', e);
+};
+
+simply.emitMenuSection = function(section) {
+  var e = {
+    section: section,
+  };
+  simply.emit('menuSection', e);
+};
+
+simply.emitMenuItem = function(section, row) {
+  var e = {
+    section: section,
+    row: row,
+  };
+  simply.emit('menuItem', e);
 };
 
 return simply;

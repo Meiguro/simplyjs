@@ -85,9 +85,41 @@ var commands = [{
     name: 'down',
   }],
 }, {
-  name: 'showUi'
+  name: 'showUi',
 }, {
-  name: 'showMenu'
+  name: 'showMenu',
+}, {
+  name: 'setMenuSection',
+  params: [{
+    name: 'section',
+  }, {
+    name: 'count',
+  }, {
+    name: 'title',
+  }],
+}, {
+  name: 'getMenuSection',
+  params: [{
+    name: 'section',
+  }],
+}, {
+  name: 'setMenuItem',
+  params: [{
+    name: 'section',
+  }, {
+    name: 'row',
+  }, {
+    name: 'title',
+  }, {
+    name: 'subtitle',
+  }],
+}, {
+  name: 'getMenuItem',
+  params: [{
+    name: 'section',
+  }, {
+    name: 'row',
+  }],
 }];
 
 var commandMap = {};
@@ -357,11 +389,7 @@ SimplyPebble.style = function(type) {
 
 SimplyPebble.accelConfig = function(configDef) {
   var command = commandMap.configAccelData;
-  var packetDef = {};
-  for (var k in configDef) {
-    packetDef[k] = configDef[k];
-  }
-  var packet = makePacket(command, packetDef);
+  var packet = makePacket(command, configDef);
   SimplyPebble.sendPacket(packet);
 };
 
@@ -369,6 +397,29 @@ SimplyPebble.accelPeek = function(callback) {
   simply.state.accel.listeners.push(callback);
   var command = commandMap.getAccelData;
   var packet = makePacket(command);
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.menuSection = function(sectionDef) {
+  var command = commandMap.setMenuSection;
+  var packetDef = util2.copy(sectionDef);
+  if ('title' in packetDef) {
+    packetDef.title = packetDef.title.toString();
+  }
+  var packet = makePacket(command, packetDef);
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.menuItem = function(itemDef) {
+  var command = commandMap.setMenuItem;
+  var packetDef = util2.copy(itemDef);
+  if ('title' in packetDef) {
+    packetDef.title = packetDef.title.toString();
+  }
+  if ('subtitle' in packetDef) {
+    packetDef.subtitle = packetDef.subtitle.toString();
+  }
+  var packet = makePacket(command, packetDef);
   SimplyPebble.sendPacket(packet);
 };
 
@@ -427,6 +478,12 @@ SimplyPebble.onAppMessage = function(e) {
           simply.emitAccelData(accels, handlers[i]);
         }
       }
+      break;
+    case 'getMenuSection':
+      simply.emitMenuSection(payload[1]);
+      break;
+    case 'getMenuItem':
+      simply.emitMenuItem(payload[1], payload[2]);
       break;
   }
 };

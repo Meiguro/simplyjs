@@ -1,23 +1,138 @@
 #include "simply_menu.h"
 
+#include "simply_msg.h"
+
 SimplyMenu *s_menu = NULL;
 
+static bool section_filter(List1Node *node, void *data) {
+  SimplyMenuSection *section = (SimplyMenuSection*) node;
+  uint16_t section_index = (uint16_t)(uintptr_t) data;
+  return (section->index == section_index);
+}
+
+static bool item_filter(List1Node *node, void *data) {
+  SimplyMenuItem *item = (SimplyMenuItem*) node;
+  uint32_t cell_index = (uint32_t)(uintptr_t) data;
+  uint16_t section_index = cell_index;
+  uint16_t row = cell_index >> 16;
+  return (item->section == section_index && item->index == row);
+}
+
+static bool empty_filter(List1Node *node, void *data) {
+  SimplyMenuCommon *item = (SimplyMenuCommon*) node;
+  return (item->title == NULL);
+}
+
 static SimplyMenuSection *get_menu_section(SimplyMenu *self, int index) {
-  for (SimplyMenuSection *section = self->sections; section; section = section->next) {
-    if (section->index == index) {
-      return section;
-    }
+  return (SimplyMenuSection*) list1_find(self->sections, section_filter, (void*)(uintptr_t) index);
+}
+
+static void free_section(SimplyMenuSection *section) {
+  if (!section) { return; }
+  if (section->title) {
+    free(section->title);
+    section->title = NULL;
   }
-  return NULL;
+  free(section);
+}
+
+static void remove_menu_section(List1Node **head, int index) {
+  free_section((SimplyMenuSection*) list1_remove_one(head, section_filter, (void*)(uintptr_t) index));
 }
 
 static SimplyMenuItem *get_menu_item(SimplyMenu *self, int section, int index) {
-  for (SimplyMenuItem *item = self->items; item; item = item->next) {
-    if (item->section == section && item->index == index) {
-      return item;
-    }
+  uint32_t cell_index = section | (index << 16);
+  return (SimplyMenuItem*) list1_find(self->items, item_filter, (void*)(uintptr_t) cell_index);
+}
+
+static void free_item(SimplyMenuItem *item) {
+  if (!item) { return; }
+  if (item->title) {
+    free(item->title);
+    item->title = NULL;
   }
-  return NULL;
+  if (item->subtitle) {
+    free(item->subtitle);
+    item->subtitle = NULL;
+  }
+  free(item);
+}
+
+static void remove_menu_item(List1Node **head, int section, int index) {
+  uint32_t cell_index = section | (index << 16);
+  free_item((SimplyMenuItem*) list1_remove_one(head, item_filter, (void*)(uintptr_t) cell_index));
+}
+
+static void schedule_get_timer(SimplyMenu *self);
+
+static void request_menu_node(void *data) {
+  SimplyMenu *self = data;
+  self->get_timer = NULL;
+  SimplyMenuSection *section = (SimplyMenuSection*) list1_find(self->sections, empty_filter, NULL);
+  bool found = false;
+  if (section) {
+    simply_msg_menu_get_section(section->index);
+    found = true;
+  }
+  SimplyMenuItem *item = (SimplyMenuItem*) list1_find(self->items, empty_filter, NULL);
+  if (item) {
+    simply_msg_menu_get_item(item->section, item->index);
+    found = true;
+  }
+  if (found) {
+    schedule_get_timer(self);
+  }
+}
+
+static void schedule_get_timer(SimplyMenu *self) {
+  if (self->get_timer) { return; }
+  self->get_timer = app_timer_register(10, request_menu_node, self);
+}
+
+static void add_section(SimplyMenu *self, SimplyMenuSection *section) {
+  remove_menu_section(&self->sections, section->index);
+  section->node.next = self->sections;
+  self->sections = &section->node;
+}
+
+static void add_item(SimplyMenu *self, SimplyMenuItem *item) {
+  remove_menu_item(&self->items, item->section, item->index);
+  item->node.next = self->items;
+  self->items = &item->node;
+}
+
+static void request_menu_section(SimplyMenu *self, uint16_t section_index) {
+  SimplyMenuSection *section = malloc(sizeof(*section));
+  *section = (SimplyMenuSection) {
+    .index = section_index,
+  };
+  add_section(self, section);
+  schedule_get_timer(self);
+}
+
+static void request_menu_item(SimplyMenu *self, uint16_t section_index, uint16_t item_index) {
+  SimplyMenuItem *item = malloc(sizeof(*item));
+  *item = (SimplyMenuItem) {
+    .section = section_index,
+    .index = item_index,
+  };
+  add_item(self, item);
+  schedule_get_timer(self);
+}
+
+static void mark_dirty(SimplyMenu *self) {
+  layer_mark_dirty(window_get_root_layer(self->window));
+  request_menu_node(self);
+}
+
+void simply_menu_add_section(SimplyMenu *self, SimplyMenuSection *section) {
+  add_section(self, section);
+  mark_dirty(self);
+}
+
+void simply_menu_add_item(SimplyMenu *self, SimplyMenuItem *item) {
+  add_item(self, item);
+  mark_dirty(self);
 }
 
 static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data) {
@@ -38,7 +153,10 @@ static int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t s
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
   SimplyMenu *self = data;
   SimplyMenuSection *section = get_menu_section(self, section_index);
-  if (!section) { return; }
+  if (!section) {
+    request_menu_section(self, section_index);
+    return;
+  }
 
   menu_cell_basic_header_draw(ctx, cell_layer, section->title);
 }
@@ -46,13 +164,15 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
   SimplyMenu *self = data;
   SimplyMenuItem *item = get_menu_item(self, cell_index->section, cell_index->row);
-  if (!item) { return; }
+  if (!item) {
+    request_menu_item(self, cell_index->section, cell_index->row);
+    return;
+  }
 
   menu_cell_basic_draw(ctx, cell_layer, item->title, item->subtitle, NULL);
 }
 
 static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
-
 }
 
 static void window_load(Window *window) {
@@ -74,6 +194,8 @@ static void window_load(Window *window) {
     .draw_row = menu_draw_row_callback,
     .select_click = menu_select_callback,
   });
+
+  menu_layer_set_click_config_onto_window(menu_layer, window);
 }
 
 static void window_unload(Window *window) {

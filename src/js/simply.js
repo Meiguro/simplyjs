@@ -79,8 +79,6 @@ simply.reset = function() {
   }
 
   simply.accelInit();
-
-  simply.menuInit();
 };
 
 /**
@@ -671,13 +669,6 @@ simply.accelPeek = function(callback) {
   return simply.impl.accelPeek.apply(this, arguments);
 };
 
-simply.menuInit = function() {
-  simply.on('menuSection', simply.onMenuSection);
-  simply.on('menuItem', simply.onMenuItem);
-  simply.on('menuSelect', simply.onMenuSelect);
-  simply.on('menuLongSelect', simply.onMenuSelect);
-};
-
 var getMenuSection = function(e) {
   var menu = e.menu || simply.state.menu;
   if (!menu) { return; }
@@ -836,26 +827,32 @@ simply.emitAccelData = function(accels, callback) {
 };
 
 simply.emitMenuSection = function(section) {
-  simply.emit('menuSection', {
+  var e = {
     menu: simply.state.menu,
     section: section
-  });
+  };
+  if (simply.emit('menuSection', e)) { return; }
+  simply.onMenuSection(e);
 };
 
 simply.emitMenuItem = function(section, item) {
-  simply.emit('menuItem', {
+  var e = {
     menu: simply.state.menu,
     section: section,
     item: item,
-  });
+  };
+  if (simply.emit('menuItem', e)) { return; }
+  simply.onMenuItem(e);
 };
 
 simply.emitMenuSelect = function(type, section, item) {
-  simply.emit(type, {
+  var e = {
     menu: simply.state.menu,
     section: section,
     item: item,
-  });
+  };
+  if (simply.emit(type, e)) { return; }
+  simply.onMenuSelect(e);
 };
 
 return simply;

@@ -102,8 +102,7 @@ static void add_section(SimplyMenu *self, SimplyMenuSection *section) {
     remove_menu_section(&self->sections, old_section->index);
   }
   remove_menu_section(&self->sections, section->index);
-  section->node.next = self->sections;
-  self->sections = &section->node;
+  list1_prepend(&self->sections, &section->node);
 }
 
 static void add_item(SimplyMenu *self, SimplyMenuItem *item) {
@@ -112,8 +111,7 @@ static void add_item(SimplyMenu *self, SimplyMenuItem *item) {
     remove_menu_item(&self->items, old_item->section, old_item->index);
   }
   remove_menu_item(&self->items, item->section, item->index);
-  item->node.next = self->items;
-  self->items = &item->node;
+  list1_prepend(&self->items, &item->node);
 }
 
 static void request_menu_section(SimplyMenu *self, uint16_t section_index) {
@@ -174,6 +172,9 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
     return;
   }
 
+  list1_remove(&self->sections, &section->node);
+  list1_prepend(&self->sections, &section->node);
+
   menu_cell_basic_header_draw(ctx, cell_layer, section->title);
 }
 
@@ -184,6 +185,9 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
     request_menu_item(self, cell_index->section, cell_index->row);
     return;
   }
+
+  list1_remove(&self->items, &item->node);
+  list1_prepend(&self->items, &item->node);
 
   menu_cell_basic_draw(ctx, cell_layer, item->title, item->subtitle, NULL);
 }

@@ -117,6 +117,8 @@ var commands = [{
     name: 'title',
   }, {
     name: 'subtitle',
+  }, {
+    name: 'image',
   }],
 }, {
   name: 'getMenuItem',
@@ -145,6 +147,17 @@ var commands = [{
     name: 'section',
   }, {
     name: 'item',
+  }],
+}, {
+  name: 'image',
+  params: [{
+    name: 'id',
+  }, {
+    name: 'width',
+  }, {
+    name: 'height',
+  }, {
+    name: 'pixels',
   }],
 }];
 
@@ -451,6 +464,14 @@ SimplyPebble.menuItem = function(sectionIndex, itemIndex, itemDef) {
   if ('subtitle' in packetDef) {
     packetDef.subtitle = packetDef.subtitle.toString();
   }
+  var packet = makePacket(command, packetDef);
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.image = function(id, gbitmap) {
+  var command = commandMap.image;
+  var packetDef = util2.copy(gbitmap);
+  packetDef.id = id;
   var packet = makePacket(command, packetDef);
   SimplyPebble.sendPacket(packet);
 };

@@ -1,6 +1,7 @@
 #include "simply_msg.h"
 
 #include "simply_accel.h"
+#include "simply_res.h"
 #include "simply_menu.h"
 #include "simply_ui.h"
 
@@ -35,6 +36,7 @@ enum SimplyACmd {
   SimplyACmd_menuSelect,
   SimplyACmd_menuLongSelect,
   SimplyACmd_menuExit,
+  SimplyACmd_image,
 };
 
 typedef enum VibeType VibeType;
@@ -192,14 +194,39 @@ static void handle_set_menu_item(DictionaryIterator *iter, Simply *simply) {
   if ((tuple = dict_find(iter, 4))) {
     subtitle = tuple->value->cstring;
   }
+  if ((tuple = dict_find(iter, 5))) {
+    image = tuple->value->uint32;
+  }
   SimplyMenuItem *item = malloc(sizeof(*item));
   *item = (SimplyMenuItem) {
     .section = section_index,
     .index = row,
     .title = strdup2(title),
     .subtitle = strdup2(subtitle),
+    .image = image,
   };
   simply_menu_add_item(simply->menu, item);
+}
+
+static void handle_set_image(DictionaryIterator *iter, Simply *simply) {
+  Tuple *tuple;
+  uint32_t id = 0;
+  int16_t width = 0;
+  int16_t height = 0;
+  uint32_t *pixels = NULL;
+  if ((tuple = dict_find(iter, 1))) {
+    id = tuple->value->uint32;
+  }
+  if ((tuple = dict_find(iter, 2))) {
+    width = tuple->value->int16;
+  }
+  if ((tuple = dict_find(iter, 3))) {
+    height = tuple->value->int16;
+  }
+  if ((tuple = dict_find(iter, 4))) {
+    pixels = (uint32_t*) tuple->value->data;
+  }
+  simply_res_add_image(simply->res, id, width, height, pixels);
 }
 
 static void received_callback(DictionaryIterator *iter, void *context) {
@@ -244,6 +271,9 @@ static void received_callback(DictionaryIterator *iter, void *context) {
       break;
     case SimplyACmd_setMenuItem:
       handle_set_menu_item(iter, context);
+      break;
+    case SimplyACmd_image:
+      handle_set_image(iter, context);
       break;
   }
 }

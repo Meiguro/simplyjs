@@ -13,8 +13,9 @@ def build(ctx):
     ctx.load('pebble_sdk')
 
     ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'),
-                    cflags=['-Wno-type-limits',
-                            '-Wno-address'],
+                    cflags=['-Wno-address',
+                            '-Wno-type-limits',
+                            '-Wno-missing-field-initializers'],
                     target='pebble-app.elf')
 
     js_target = ctx.concat_javascript(js=ctx.path.ant_glob('src/js/**/*.js'))

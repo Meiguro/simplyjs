@@ -123,7 +123,7 @@ simply.countHandlers = function(type, subtype) {
 
 var checkEventType = function(type) {
   if (eventTypes.indexOf(type) === -1) {
-    throw Error('Invalid event type: ' + type);
+    throw new Error('Invalid event type: ' + type);
   }
 };
 
@@ -491,13 +491,16 @@ simply.buttonAutoConfig = function() {
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.text = function(textDef, clear) {
-  if (!textDef) {
+  if (typeof textDef === 'undefined') {
     return simply.state.text;
-  }
-  if (clear) {
-    simply.state.text = textDef;
+  } else if (typeof textDef === 'object') {
+    if (clear) {
+      simply.state.text = textDef;
+    } else {
+      util2.copy(textDef, simply.state.text);
+    }
   } else {
-    util2.copy(textDef, simply.state.text);
+    throw new Error('simply.text takes a textDef object');
   }
   return simply.impl.text.apply(this, arguments);
 };
@@ -505,7 +508,7 @@ simply.text = function(textDef, clear) {
 simply.setText = simply.text;
 
 var textfield = function(field, text, clear) {
-  if (!text) {
+  if (typeof text === 'undefined') {
     return simply.state.text[field];
   }
   if (clear) {
@@ -566,7 +569,7 @@ simply.vibe = function() {
  */
 
 simply.scrollable = function(scrollable) {
-  if (scrollable === null) {
+  if (typeof scrollable === 'undefined') {
     return simply.state.scrollable === true;
   }
   simply.state.scrollable = scrollable;
@@ -581,7 +584,7 @@ simply.scrollable = function(scrollable) {
  */
 
 simply.fullscreen = function(fullscreen) {
-  if (fullscreen === null) {
+  if (typeof fullscreen === 'undefined') {
     return simply.state.fullscreen === true;
   }
   simply.state.fullscreen = fullscreen;
@@ -664,7 +667,7 @@ simply.accelConfig = function(opt, auto) {
  */
 simply.accelPeek = function(callback) {
   if (simply.state.accel.subscribe) {
-    throw Error('Cannot use accelPeek when listening to accelData events');
+    throw new Error('Cannot use accelPeek when listening to accelData events');
   }
   return simply.impl.accelPeek.apply(this, arguments);
 };

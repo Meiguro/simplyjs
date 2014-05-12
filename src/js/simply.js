@@ -685,6 +685,11 @@ simply.onMenuSelect = function(e) {
         return item.longSelect(e);
       }
       break;
+    case 'menuExit':
+      if (typeof item.exit === 'function') {
+        return item.exit(e);
+      }
+      break;
   }
 };
 

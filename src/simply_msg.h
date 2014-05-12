@@ -25,3 +25,6 @@ bool simply_msg_menu_get_item(uint16_t section, uint16_t index);
 bool simply_msg_menu_select_click(uint16_t section, uint16_t index);
 
 bool simply_msg_menu_select_long_click(uint16_t section, uint16_t index);
+
+bool simply_msg_menu_exit(uint16_t section, uint16_t index);
+

@@ -137,6 +137,13 @@ var commands = [{
   }, {
     name: 'item',
   }],
+}, {
+  name: 'menuExit',
+  params: [{
+    name: 'section',
+  }, {
+    name: 'item',
+  }],
 }];
 
 var commandMap = {};
@@ -520,6 +527,7 @@ SimplyPebble.onAppMessage = function(e) {
       break;
     case 'menuSelect':
     case 'menuLongSelect':
+    case 'menuExit':
       simply.emitMenuSelect(command.name, payload[1], payload[2]);
       break;
   }

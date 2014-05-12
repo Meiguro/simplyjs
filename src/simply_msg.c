@@ -33,6 +33,7 @@ enum SimplyACmd {
   SimplyACmd_getMenuItem,
   SimplyACmd_menuSelect,
   SimplyACmd_menuLongSelect,
+  SimplyACmd_menuExit,
 };
 
 typedef enum VibeType VibeType;
@@ -354,3 +355,8 @@ bool simply_msg_menu_select_click(uint16_t section, uint16_t index) {
 bool simply_msg_menu_select_long_click(uint16_t section, uint16_t index) {
   return send_menu_item(SimplyACmd_menuLongSelect, section, index);
 }
+
+bool simply_msg_menu_exit(uint16_t section, uint16_t index) {
+  return send_menu_item(SimplyACmd_menuExit, section, index);
+}
+

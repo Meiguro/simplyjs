@@ -18,8 +18,14 @@ var buttons = [
 var eventTypes = [
   'singleClick',
   'longClick',
+  'textExit',
   'accelTap',
   'accelData',
+  'menuSection',
+  'menuItem',
+  'menuSelect',
+  'menuLongSelect',
+  'menuExit',
 ];
 
 simply.state = {};
@@ -58,6 +64,8 @@ simply.reset = function() {
   simply.state = {};
   simply.state.run = true;
   simply.state.numPackages = 0;
+
+  simply.state.text = {};
 
   simply.state.button = {
     config: {},
@@ -115,7 +123,7 @@ simply.countHandlers = function(type, subtype) {
 
 var checkEventType = function(type) {
   if (eventTypes.indexOf(type) === -1) {
-    throw Error('Invalid event type: ' + type);
+    throw new Error('Invalid event type: ' + type);
   }
 };
 
@@ -228,6 +236,10 @@ simply.emit = function(type, subtype, e) {
   if (!e) {
     e = subtype;
     subtype = null;
+  }
+  e.type = type;
+  if (subtype) {
+    e.subtype = subtype;
   }
   var typeMap = simply.listeners;
   var subtypeMap = typeMap[type];
@@ -479,10 +491,32 @@ simply.buttonAutoConfig = function() {
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.text = function(textDef, clear) {
+  if (typeof textDef === 'undefined') {
+    return simply.state.text;
+  } else if (typeof textDef === 'object') {
+    if (clear) {
+      simply.state.text = textDef;
+    } else {
+      util2.copy(textDef, simply.state.text);
+    }
+  } else {
+    throw new Error('simply.text takes a textDef object');
+  }
   return simply.impl.text.apply(this, arguments);
 };
 
 simply.setText = simply.text;
+
+var textfield = function(field, text, clear) {
+  if (typeof text === 'undefined') {
+    return simply.state.text[field];
+  }
+  if (clear) {
+    simply.state.text = {};
+  }
+  simply.state.text[field] = text;
+  return simply.impl.textfield(field, text, clear);
+};
 
 /**
  * Sets the title field. The title field is the first and largest text field available.
@@ -491,7 +525,7 @@ simply.setText = simply.text;
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.title = function(text, clear) {
-  return simply.impl.textfield('title', text, clear);
+  return textfield('title', text, clear);
 };
 
 /**
@@ -501,7 +535,7 @@ simply.title = function(text, clear) {
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.subtitle = function(text, clear) {
-  return simply.impl.textfield('subtitle', text, clear);
+  return textfield('subtitle', text, clear);
 };
 
 /**
@@ -513,7 +547,7 @@ simply.subtitle = function(text, clear) {
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.body = function(text, clear) {
-  return simply.impl.textfield('body', text, clear);
+  return textfield('body', text, clear);
 };
 
 /**
@@ -535,6 +569,10 @@ simply.vibe = function() {
  */
 
 simply.scrollable = function(scrollable) {
+  if (typeof scrollable === 'undefined') {
+    return simply.state.scrollable === true;
+  }
+  simply.state.scrollable = scrollable;
   return simply.impl.scrollable.apply(this, arguments);
 };
 
@@ -546,6 +584,10 @@ simply.scrollable = function(scrollable) {
  */
 
 simply.fullscreen = function(fullscreen) {
+  if (typeof fullscreen === 'undefined') {
+    return simply.state.fullscreen === true;
+  }
+  simply.state.fullscreen = fullscreen;
   return simply.impl.fullscreen.apply(this, arguments);
 };
 
@@ -625,9 +667,91 @@ simply.accelConfig = function(opt, auto) {
  */
 simply.accelPeek = function(callback) {
   if (simply.state.accel.subscribe) {
-    throw Error('Cannot use accelPeek when listening to accelData events');
+    throw new Error('Cannot use accelPeek when listening to accelData events');
   }
   return simply.impl.accelPeek.apply(this, arguments);
+};
+
+var getMenuSection = function(e) {
+  var menu = e.menu || simply.state.menu;
+  if (!menu) { return; }
+  if (!(menu.sections instanceof Array)) { return; }
+  return menu.sections[e.section];
+};
+
+var getMenuItem = function(e) {
+  var section = getMenuSection(e);
+  if (!section) { return; }
+  if (!(section.items instanceof Array)) { return; }
+  return section.items[e.item];
+};
+
+simply.onMenuSection = function(e) {
+  var section = getMenuSection(e);
+  if (!section) { return; }
+  simply.menuSection(e.section, section);
+};
+
+simply.onMenuItem = function(e) {
+  var item = getMenuItem(e);
+  if (!item) { return; }
+  simply.menuItem(e.section, e.item, item);
+};
+
+simply.onMenuSelect = function(e) {
+  var menu = e.menu;
+  var item = getMenuItem(e);
+  if (!item) { return; }
+  switch (e.type) {
+    case 'menuSelect':
+      if (typeof item.select === 'function') {
+        if (item.select(e) === false) {
+          return false;
+        }
+      }
+      break;
+    case 'menuLongSelect':
+      if (typeof item.longSelect === 'function') {
+        if (item.longSelect(e) === false) {
+          return false;
+        }
+      }
+      break;
+    case 'menuExit':
+      if (typeof item.exit === 'function') {
+        if (item.exit(e) === false) {
+          return false;
+        }
+      }
+      if (typeof menu.exit === 'function') {
+        if (menu.exit(e) === false) {
+          return false;
+        }
+      }
+      break;
+  }
+};
+
+simply.menu = function(menuDef) {
+  if (!menuDef) {
+    return simply.state.menu;
+  }
+  simply.state.menu = menuDef;
+  return simply.impl.menu.apply(this, arguments);
+};
+
+simply.menuSection = function(sectionIndex, sectionDef) {
+  if (typeof sectionIndex === 'undefined') {
+    return getMenuSection({ section: sectionIndex });
+  }
+  return simply.impl.menuSection.apply(this, arguments);
+};
+
+simply.menuItem = function(sectionIndex, itemIndex, itemDef) {
+  if (typeof sectionIndex === 'undefined') {
+    return getMenuItem({ section: sectionIndex, item: itemIndex });
+  }
+  return simply.impl.menuItem.apply(this, arguments);
 };
 
 /**
@@ -649,6 +773,13 @@ simply.emitClick = function(type, button) {
   simply.emit(type, button, {
     button: button,
   });
+};
+
+simply.emitTextExit = function() {
+  var textDef = simply.state.text;
+  simply.emit('textExit', util2.copy(textDef, {
+    text: textDef
+  }));
 };
 
 /**
@@ -696,6 +827,35 @@ simply.emitAccelData = function(accels, callback) {
     return callback(e);
   }
   simply.emit('accelData', e);
+};
+
+simply.emitMenuSection = function(section) {
+  var e = {
+    menu: simply.state.menu,
+    section: section
+  };
+  if (simply.emit('menuSection', e)) { return; }
+  simply.onMenuSection(e);
+};
+
+simply.emitMenuItem = function(section, item) {
+  var e = {
+    menu: simply.state.menu,
+    section: section,
+    item: item,
+  };
+  if (simply.emit('menuItem', e)) { return; }
+  simply.onMenuItem(e);
+};
+
+simply.emitMenuSelect = function(type, section, item) {
+  var e = {
+    menu: simply.state.menu,
+    section: section,
+    item: item,
+  };
+  if (simply.emit(type, e)) { return; }
+  simply.onMenuSelect(e);
 };
 
 return simply;

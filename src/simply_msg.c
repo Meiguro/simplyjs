@@ -1,9 +1,12 @@
 #include "simply_msg.h"
 
 #include "simply_accel.h"
+#include "simply_menu.h"
 #include "simply_ui.h"
 
 #include "simplyjs.h"
+
+#include "util/string.h"
 
 #include <pebble.h>
 
@@ -22,6 +25,16 @@ enum SimplyACmd {
   SimplyACmd_getAccelData,
   SimplyACmd_configAccelData,
   SimplyACmd_configButtons,
+  SimplyACmd_showUi,
+  SimplyACmd_uiExit,
+  SimplyACmd_showMenu,
+  SimplyACmd_setMenuSection,
+  SimplyACmd_getMenuSection,
+  SimplyACmd_setMenuItem,
+  SimplyACmd_getMenuItem,
+  SimplyACmd_menuSelect,
+  SimplyACmd_menuLongSelect,
+  SimplyACmd_menuExit,
 };
 
 typedef enum VibeType VibeType;
@@ -126,6 +139,69 @@ static void handle_set_accel_config(DictionaryIterator *iter, Simply *simply) {
   }
 }
 
+static void handle_show_ui(DictionaryIterator *iter, Simply *simply) {
+  simply_ui_show(simply->ui);
+}
+
+static void handle_show_menu(DictionaryIterator *iter, Simply *simply) {
+  Tuple *tuple;
+  if ((tuple = dict_find(iter, 1))) {
+    simply_menu_set_num_sections(simply->menu, tuple->value->int32);
+  }
+  simply_menu_show(simply->menu);
+}
+
+static void handle_set_menu_section(DictionaryIterator *iter, Simply *simply) {
+  Tuple *tuple;
+  uint16_t section_index = 0;
+  uint16_t num_items = 1;
+  char *title = "Section";
+  if ((tuple = dict_find(iter, 1))) {
+    section_index = tuple->value->uint16;
+  }
+  if ((tuple = dict_find(iter, 2))) {
+    num_items = tuple->value->uint16;
+  }
+  if ((tuple = dict_find(iter, 3))) {
+    title = tuple->value->cstring;
+  }
+  SimplyMenuSection *section = malloc(sizeof(*section));
+  *section = (SimplyMenuSection) {
+    .index = section_index,
+    .num_items = num_items,
+    .title = strdup2(title),
+  };
+  simply_menu_add_section(simply->menu, section);
+}
+
+static void handle_set_menu_item(DictionaryIterator *iter, Simply *simply) {
+  Tuple *tuple;
+  uint16_t section_index = 0;
+  uint16_t row = 0;
+  char *title = NULL;
+  char *subtitle = NULL;
+  if ((tuple = dict_find(iter, 1))) {
+    section_index = tuple->value->uint16;
+  }
+  if ((tuple = dict_find(iter, 2))) {
+    row = tuple->value->uint16;
+  }
+  if ((tuple = dict_find(iter, 3))) {
+    title = tuple->value->cstring;
+  }
+  if ((tuple = dict_find(iter, 4))) {
+    subtitle = tuple->value->cstring;
+  }
+  SimplyMenuItem *item = malloc(sizeof(*item));
+  *item = (SimplyMenuItem) {
+    .section = section_index,
+    .index = row,
+    .title = strdup2(title),
+    .subtitle = strdup2(subtitle),
+  };
+  simply_menu_add_item(simply->menu, item);
+}
+
 static void received_callback(DictionaryIterator *iter, void *context) {
   Tuple *tuple = dict_find(iter, 0);
   if (!tuple) {
@@ -156,6 +232,18 @@ static void received_callback(DictionaryIterator *iter, void *context) {
       break;
     case SimplyACmd_configButtons:
       handle_config_buttons(iter, context);
+      break;
+    case SimplyACmd_showUi:
+      handle_show_ui(iter, context);
+      break;
+    case SimplyACmd_showMenu:
+      handle_show_menu(iter, context);
+      break;
+    case SimplyACmd_setMenuSection:
+      handle_set_menu_section(iter, context);
+      break;
+    case SimplyACmd_setMenuItem:
+      handle_set_menu_item(iter, context);
       break;
   }
 }
@@ -193,23 +281,30 @@ void simply_msg_deinit() {
   app_message_deregister_callbacks();
 }
 
-bool simply_msg_single_click(ButtonId button) {
+static bool send_click(SimplyACmd type, ButtonId button) {
   DictionaryIterator *iter = NULL;
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
   }
-  dict_write_uint8(iter, 0, SimplyACmd_singleClick);
+  dict_write_uint8(iter, 0, type);
   dict_write_uint8(iter, 1, button);
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
+bool simply_msg_single_click(ButtonId button) {
+  return send_click(SimplyACmd_singleClick, button);
+}
+
 bool simply_msg_long_click(ButtonId button) {
+  return send_click(SimplyACmd_longClick, button);
+}
+
+bool simply_msg_ui_exit() {
   DictionaryIterator *iter = NULL;
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
   }
-  dict_write_uint8(iter, 0, SimplyACmd_longClick);
-  dict_write_uint8(iter, 1, button);
+  dict_write_uint8(iter, 0, SimplyACmd_uiExit);
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
@@ -237,3 +332,41 @@ bool simply_msg_accel_data(AccelData *data, uint32_t num_samples, int32_t transa
   dict_write_data(iter, 3, (uint8_t*) data, sizeof(*data) * num_samples);
   return (app_message_outbox_send() == APP_MSG_OK);
 }
+
+bool simply_msg_menu_get_section(uint16_t index) {
+  DictionaryIterator *iter = NULL;
+  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+    return false;
+  }
+  dict_write_uint8(iter, 0, SimplyACmd_getMenuSection);
+  dict_write_uint16(iter, 1, index);
+  return (app_message_outbox_send() == APP_MSG_OK);
+}
+
+static bool send_menu_item(SimplyACmd type, uint16_t section, uint16_t index) {
+  DictionaryIterator *iter = NULL;
+  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+    return false;
+  }
+  dict_write_uint8(iter, 0, type);
+  dict_write_uint16(iter, 1, section);
+  dict_write_uint16(iter, 2, index);
+  return (app_message_outbox_send() == APP_MSG_OK);
+}
+
+bool simply_msg_menu_get_item(uint16_t section, uint16_t index) {
+  return send_menu_item(SimplyACmd_getMenuItem, section, index);
+}
+
+bool simply_msg_menu_select_click(uint16_t section, uint16_t index) {
+  return send_menu_item(SimplyACmd_menuSelect, section, index);
+}
+
+bool simply_msg_menu_select_long_click(uint16_t section, uint16_t index) {
+  return send_menu_item(SimplyACmd_menuLongSelect, section, index);
+}
+
+bool simply_msg_menu_exit(uint16_t section, uint16_t index) {
+  return send_menu_item(SimplyACmd_menuExit, section, index);
+}
+

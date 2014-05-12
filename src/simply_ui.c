@@ -1,8 +1,11 @@
 #include "simply_ui.h"
 
 #include "simply_msg.h"
+#include "simply_menu.h"
 
 #include "simplyjs.h"
+
+#include "util/string.h"
 
 #include <pebble.h>
 
@@ -11,7 +14,6 @@ struct SimplyStyle {
   const char* subtitle_font;
   const char* body_font;
   int custom_body_font_id;
-  GFont custom_body_font;
 };
 
 static SimplyStyle STYLES[] = {
@@ -37,7 +39,14 @@ SimplyUi *s_ui = NULL;
 static void click_config_provider(SimplyUi *self);
 
 void simply_ui_set_style(SimplyUi *self, int style_index) {
+  if (self->custom_body_font) {
+    fonts_unload_custom_font(self->custom_body_font);
+    self->custom_body_font = NULL;
+  }
   self->style = &STYLES[style_index];
+  if (self->style->custom_body_font_id) {
+    self->custom_body_font = fonts_load_custom_font(self->custom_body_font);
+  }
   layer_mark_dirty(self->display_layer);
 }
 
@@ -85,26 +94,20 @@ void simply_ui_set_button(SimplyUi *self, ButtonId button, bool enable) {
 static void set_text(char **str_field, const char *str) {
   free(*str_field);
 
-  if (!str || !str[0]) {
+  if (!is_string(str)) {
     *str_field = NULL;
     return;
   }
 
-  size_t size = strlen(str) + 1;
-  char *buffer = malloc(size);
-  strncpy(buffer, str, size);
-  buffer[size - 1] = '\0';
-
-  *str_field = buffer;
+  *str_field = strdup2(str);
 }
 
 void simply_ui_set_text(SimplyUi *self, char **str_field, const char *str) {
   set_text(str_field, str);
-  layer_mark_dirty(self->display_layer);
-}
-
-static bool is_string(const char *str) {
-  return str && str[0];
+  if (self->display_layer) {
+    layer_mark_dirty(self->display_layer);
+  }
+  simply_ui_show(self);
 }
 
 void display_layer_update_callback(Layer *layer, GContext *ctx) {
@@ -116,7 +119,7 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
   const SimplyStyle *style = self->style;
   GFont title_font = fonts_get_system_font(style->title_font);
   GFont subtitle_font = fonts_get_system_font(style->subtitle_font);
-  GFont body_font = style->custom_body_font ? style->custom_body_font : fonts_get_system_font(style->body_font);
+  GFont body_font = self->custom_body_font ? self->custom_body_font : fonts_get_system_font(style->body_font);
 
   const int16_t x_margin = 5;
   const int16_t y_margin = 2;
@@ -165,7 +168,7 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
       bounds.size.h = window_bounds.size.h > new_height ? window_bounds.size.h : new_height;
       layer_set_frame(layer, bounds);
       scroll_layer_set_content_size(self->scroll_layer, bounds.size);
-    } else if (!style->custom_body_font && body_size.h > body_rect.size.h) {
+    } else if (!self->custom_body_font && body_size.h > body_rect.size.h) {
       body_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
     }
   }
@@ -226,6 +229,9 @@ static void show_welcome_text(SimplyUi *self) {
   if (self->title_text || self->subtitle_text || self->body_text) {
     return;
   }
+  if (self->simply->menu->menu_layer) {
+    return;
+  }
 
   simply_ui_set_text(self, &self->title_text, "Simply.js");
   simply_ui_set_text(self, &self->subtitle_text, "Write apps with JS!");
@@ -238,14 +244,14 @@ static void window_load(Window *window) {
   SimplyUi *self = window_get_user_data(window);
 
   Layer *window_layer = window_get_root_layer(window);
-  GRect bounds = layer_get_bounds(window_layer);
-  bounds.origin = GPointZero;
+  GRect frame = layer_get_frame(window_layer);
+  frame.origin = GPointZero;
 
-  ScrollLayer *scroll_layer = self->scroll_layer = scroll_layer_create(bounds);
+  ScrollLayer *scroll_layer = self->scroll_layer = scroll_layer_create(frame);
   Layer *scroll_base_layer = scroll_layer_get_layer(scroll_layer);
   layer_add_child(window_layer, scroll_base_layer);
 
-  Layer *display_layer = self->display_layer = layer_create(bounds);
+  Layer *display_layer = self->display_layer = layer_create(frame);
   layer_set_update_proc(display_layer, display_layer_update_callback);
   scroll_layer_add_child(scroll_layer, display_layer);
 
@@ -256,39 +262,38 @@ static void window_load(Window *window) {
   scroll_layer_set_click_config_onto_window(scroll_layer, window);
 
   simply_ui_set_style(self, 1);
-
-  app_timer_register(10000, (AppTimerCallback) show_welcome_text, self);
 }
 
 static void window_unload(Window *window) {
   SimplyUi *self = window_get_user_data(window);
 
   layer_destroy(self->display_layer);
+  self->display_layer = NULL;
   scroll_layer_destroy(self->scroll_layer);
-  window_destroy(window);
+  self->scroll_layer = NULL;
+}
+
+static void window_disappear(Window *window) {
+  simply_msg_ui_exit();
 }
 
 void simply_ui_show(SimplyUi *self) {
+  if (!self->window) {
+    return;
+  }
   if (!window_stack_contains_window(self->window)) {
     bool animated = true;
     window_stack_push(self->window, animated);
   }
 }
 
-SimplyUi *simply_ui_create(void) {
+SimplyUi *simply_ui_create(Simply *simply) {
   if (s_ui) {
     return s_ui;
   }
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH(STYLES); ++i) {
-    SimplyStyle *style = &STYLES[i];
-    if (style->custom_body_font_id) {
-      style->custom_body_font = fonts_load_custom_font(resource_get_handle(style->custom_body_font_id));
-    }
-  }
-
   SimplyUi *self = malloc(sizeof(*self));
-  *self = (SimplyUi) { .window = NULL };
+  *self = (SimplyUi) { .simply = simply };
   s_ui = self;
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {
@@ -302,22 +307,30 @@ SimplyUi *simply_ui_create(void) {
   window_set_background_color(window, GColorBlack);
   window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
   window_set_window_handlers(window, (WindowHandlers) {
+    .load = window_load,
+    .disappear = window_disappear,
     .unload = window_unload,
   });
 
-  window_load(self->window);
+  app_timer_register(10000, (AppTimerCallback) show_welcome_text, self);
 
   return self;
 }
 
 void simply_ui_destroy(SimplyUi *self) {
-  if (!s_ui) {
+  if (!self) {
     return;
   }
+
+  window_destroy(self->window);
+  self->window = NULL;
 
   simply_ui_set_text(self, &self->title_text, NULL);
   simply_ui_set_text(self, &self->subtitle_text, NULL);
   simply_ui_set_text(self, &self->body_text, NULL);
+
+  fonts_unload_custom_font(self->custom_body_font);
+  self->custom_body_font = NULL;
 
   free(self);
 

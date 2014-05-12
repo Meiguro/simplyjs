@@ -2,6 +2,7 @@
 
 #include "simply_accel.h"
 #include "simply_splash.h"
+#include "simply_menu.h"
 #include "simply_ui.h"
 #include "simply_msg.h"
 
@@ -11,7 +12,8 @@ static Simply *init(void) {
   Simply *simply = malloc(sizeof(*simply));
   simply->accel = simply_accel_create();
   simply->splash = simply_splash_create(simply);
-  simply->ui = simply_ui_create();
+  simply->menu = simply_menu_create();
+  simply->ui = simply_ui_create(simply);
 
   bool animated = true;
   window_stack_push(simply->splash->window, animated);
@@ -23,6 +25,7 @@ static Simply *init(void) {
 static void deinit(Simply *simply) {
   simply_msg_deinit();
   simply_ui_destroy(simply->ui);
+  simply_menu_destroy(simply->menu);
   simply_accel_destroy(simply->accel);
 }
 
@@ -30,4 +33,5 @@ int main(void) {
   Simply *simply = init();
   app_event_loop();
   deinit(simply);
+  free(simply);
 }

@@ -7,6 +7,7 @@ typedef struct Simply Simply;
 struct Simply {
   struct SimplyAccel *accel;
   struct SimplySplash *splash;
+  struct SimplyMenu *menu;
   struct SimplyUi *ui;
 };
 

@@ -249,6 +249,9 @@ static void window_unload(Window *window) {
 }
 
 void simply_menu_show(SimplyMenu *self) {
+  if (!self->window) {
+    return;
+  }
   if (!window_stack_contains_window(self->window)) {
     bool animated = true;
     window_stack_push(self->window, animated);

@@ -1,6 +1,7 @@
 #include "simply_ui.h"
 
 #include "simply_msg.h"
+#include "simply_menu.h"
 
 #include "simplyjs.h"
 
@@ -222,6 +223,9 @@ static void show_welcome_text(SimplyUi *self) {
   if (self->title_text || self->subtitle_text || self->body_text) {
     return;
   }
+  if (self->simply->menu->menu_layer) {
+    return;
+  }
 
   simply_ui_set_text(self, &self->title_text, "Simply.js");
   simply_ui_set_text(self, &self->subtitle_text, "Write apps with JS!");
@@ -264,13 +268,16 @@ static void window_unload(Window *window) {
 }
 
 void simply_ui_show(SimplyUi *self) {
+  if (!self->window) {
+    return;
+  }
   if (!window_stack_contains_window(self->window)) {
     bool animated = true;
     window_stack_push(self->window, animated);
   }
 }
 
-SimplyUi *simply_ui_create(void) {
+SimplyUi *simply_ui_create(Simply *simply) {
   if (s_ui) {
     return s_ui;
   }
@@ -283,7 +290,7 @@ SimplyUi *simply_ui_create(void) {
   }
 
   SimplyUi *self = malloc(sizeof(*self));
-  *self = (SimplyUi) { .window = NULL };
+  *self = (SimplyUi) { .simply = simply };
   s_ui = self;
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {

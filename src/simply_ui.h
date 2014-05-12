@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplyjs.h"
+
 #include <pebble.h>
 
 typedef struct SimplyStyle SimplyStyle;
@@ -7,6 +9,7 @@ typedef struct SimplyStyle SimplyStyle;
 typedef struct SimplyUi SimplyUi;
 
 struct SimplyUi {
+  Simply *simply;
   Window *window;
   const SimplyStyle *style;
   char *title_text;
@@ -18,7 +21,7 @@ struct SimplyUi {
   uint32_t button_mask;
 };
 
-SimplyUi *simply_ui_create(void);
+SimplyUi *simply_ui_create(Simply *simply);
 
 void simply_ui_destroy(SimplyUi *self);
 

@@ -13,7 +13,7 @@ static Simply *init(void) {
   simply->accel = simply_accel_create();
   simply->splash = simply_splash_create(simply);
   simply->menu = simply_menu_create();
-  simply->ui = simply_ui_create();
+  simply->ui = simply_ui_create(simply);
 
   bool animated = true;
   window_stack_push(simply->splash->window, animated);

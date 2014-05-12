@@ -239,6 +239,14 @@ static void window_disappear(Window *window) {
 
   MenuIndex cell_index = menu_layer_get_selected_index(self->menu_layer);
   simply_msg_menu_exit(cell_index.section, cell_index.row);
+
+  while (self->sections) {
+    destroy_section(self, (SimplyMenuSection*) self->sections);
+  }
+
+  while (self->items) {
+    destroy_item(self, (SimplyMenuItem*) self->items);
+  }
 }
 
 static void window_unload(Window *window) {
@@ -285,14 +293,6 @@ SimplyMenu *simply_menu_create(void) {
 void simply_menu_destroy(SimplyMenu *self) {
   if (!self) {
     return;
-  }
-
-  while (self->sections) {
-    destroy_section(self, (SimplyMenuSection*) self->sections);
-  }
-
-  while (self->items) {
-    destroy_item(self, (SimplyMenuItem*) self->items);
   }
 
   window_destroy(self->window);

@@ -273,6 +273,10 @@ static void window_unload(Window *window) {
   self->scroll_layer = NULL;
 }
 
+static void window_disappear(Window *window) {
+  simply_msg_ui_exit();
+}
+
 void simply_ui_show(SimplyUi *self) {
   if (!self->window) {
     return;
@@ -304,6 +308,7 @@ SimplyUi *simply_ui_create(Simply *simply) {
   window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
   window_set_window_handlers(window, (WindowHandlers) {
     .load = window_load,
+    .disappear = window_disappear,
     .unload = window_unload,
   });
 

@@ -26,6 +26,7 @@ enum SimplyACmd {
   SimplyACmd_configAccelData,
   SimplyACmd_configButtons,
   SimplyACmd_showUi,
+  SimplyACmd_uiExit,
   SimplyACmd_showMenu,
   SimplyACmd_setMenuSection,
   SimplyACmd_getMenuSection,
@@ -296,6 +297,15 @@ bool simply_msg_single_click(ButtonId button) {
 
 bool simply_msg_long_click(ButtonId button) {
   return send_click(SimplyACmd_longClick, button);
+}
+
+bool simply_msg_ui_exit() {
+  DictionaryIterator *iter = NULL;
+  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+    return false;
+  }
+  dict_write_uint8(iter, 0, SimplyACmd_uiExit);
+  return (app_message_outbox_send() == APP_MSG_OK);
 }
 
 bool simply_msg_accel_tap(AccelAxisType axis, int32_t direction) {

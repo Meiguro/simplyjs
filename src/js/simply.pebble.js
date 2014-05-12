@@ -85,7 +85,9 @@ var commands = [{
     name: 'down',
   }],
 }, {
-  name: 'showUi',
+  name: 'showText',
+}, {
+  name: 'textExit',
 }, {
   name: 'showMenu',
   params: [{
@@ -331,8 +333,8 @@ SimplyPebble.sendPacket = function(packet) {
   send();
 };
 
-SimplyPebble.showUi = function() {
-  SimplyPebble.sendPacket(makePacket(commandMap.showUi));
+SimplyPebble.showText = function() {
+  SimplyPebble.sendPacket(makePacket(commandMap.showText));
 };
 
 SimplyPebble.showMenu = function() {
@@ -489,6 +491,8 @@ SimplyPebble.onAppMessage = function(e) {
       var button = buttons[payload[1]];
       simply.emitClick(command.name, button);
       break;
+    case 'textExit':
+      simply.emitTextExit();
     case 'accelTap':
       var axis = accelAxes[payload[1]];
       simply.emitAccelTap(axis, payload[2]);

@@ -18,12 +18,14 @@ var buttons = [
 var eventTypes = [
   'singleClick',
   'longClick',
+  'textExit',
   'accelTap',
   'accelData',
   'menuSection',
   'menuItem',
   'menuSelect',
   'menuLongSelect',
+  'menuExit',
 ];
 
 simply.state = {};
@@ -236,7 +238,9 @@ simply.emit = function(type, subtype, e) {
     subtype = null;
   }
   e.type = type;
-  e.subtype = subtype;
+  if (subtype) {
+    e.subtype = subtype;
+  }
   var typeMap = simply.listeners;
   var subtypeMap = typeMap[type];
   if (!subtypeMap) {
@@ -737,6 +741,10 @@ simply.emitClick = function(type, button) {
   simply.emit(type, button, {
     button: button,
   });
+};
+
+simply.emitTextExit = function() {
+  simply.emit('textExit', {});
 };
 
 /**

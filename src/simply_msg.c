@@ -142,6 +142,10 @@ static void handle_show_ui(DictionaryIterator *iter, Simply *simply) {
 }
 
 static void handle_show_menu(DictionaryIterator *iter, Simply *simply) {
+  Tuple *tuple;
+  if ((tuple = dict_find(iter, 1))) {
+    simply_menu_set_num_sections(simply->menu, tuple->value->int32);
+  }
   simply_menu_show(simply->menu);
 }
 
@@ -184,7 +188,7 @@ static void handle_set_menu_item(DictionaryIterator *iter, Simply *simply) {
     title = tuple->value->cstring;
   }
   if ((tuple = dict_find(iter, 4))) {
-    title = tuple->value->cstring;
+    subtitle = tuple->value->cstring;
   }
   SimplyMenuItem *item = malloc(sizeof(*item));
   *item = (SimplyMenuItem) {

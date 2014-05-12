@@ -634,11 +634,15 @@ simply.accelPeek = function(callback) {
   return simply.impl.accelPeek.apply(this, arguments);
 };
 
-simply.menuSection = function(sectionDef) {
+simply.menu = function(menuDef) {
+  return simply.impl.menu.apply(this, arguments);
+};
+
+simply.menuSection = function(sectionIndex, sectionDef) {
   return simply.impl.menuSection.apply(this, arguments);
 };
 
-simply.menuItem = function(itemDef) {
+simply.menuItem = function(sectionIndex, itemIndex, itemDef) {
   return simply.impl.menuItem.apply(this, arguments);
 };
 
@@ -716,17 +720,17 @@ simply.emitMenuSection = function(section) {
   });
 };
 
-simply.emitMenuItem = function(section, row) {
+simply.emitMenuItem = function(section, item) {
   simply.emit('menuItem', {
     section: section,
-    row: row,
+    item: item,
   });
 };
 
-simply.emitMenuSelect = function(type, section, row) {
+simply.emitMenuSelect = function(type, section, item) {
   simply.emit(type, {
     section: section,
-    row: row,
+    item: item,
   });
 };
 

@@ -139,6 +139,13 @@ static void mark_dirty(SimplyMenu *self) {
   self->request_delay_ms = REQUEST_DELAY_MS;
 }
 
+void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections) {
+  if (num_sections == 0) {
+    num_sections = 1;
+  }
+  self->num_sections = num_sections;
+}
+
 void simply_menu_add_section(SimplyMenu *self, SimplyMenuSection *section) {
   add_section(self, section);
   mark_dirty(self);

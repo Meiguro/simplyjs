@@ -88,12 +88,15 @@ var commands = [{
   name: 'showUi',
 }, {
   name: 'showMenu',
+  params: [{
+    name: 'sections',
+  }],
 }, {
   name: 'setMenuSection',
   params: [{
     name: 'section',
   }, {
-    name: 'count',
+    name: 'items',
   }, {
     name: 'title',
   }],
@@ -107,7 +110,7 @@ var commands = [{
   params: [{
     name: 'section',
   }, {
-    name: 'row',
+    name: 'item',
   }, {
     name: 'title',
   }, {
@@ -414,9 +417,23 @@ SimplyPebble.accelPeek = function(callback) {
   SimplyPebble.sendPacket(packet);
 };
 
-SimplyPebble.menuSection = function(sectionDef) {
+SimplyPebble.menu = function(menuDef) {
+  var command = commandMap.showMenu;
+  var packetDef = util2.copy(menuDef);
+  if (packetDef.sections instanceof Array) {
+    packetDef.sections = packetDef.sections.length;
+  }
+  var packet = makePacket(command, packetDef);
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.menuSection = function(sectionIndex, sectionDef) {
   var command = commandMap.setMenuSection;
   var packetDef = util2.copy(sectionDef);
+  packetDef.section = sectionIndex;
+  if (packetDef.items instanceof Array) {
+    packetDef.items = packetDef.items.length;
+  }
   if ('title' in packetDef) {
     packetDef.title = packetDef.title.toString();
   }
@@ -424,9 +441,11 @@ SimplyPebble.menuSection = function(sectionDef) {
   SimplyPebble.sendPacket(packet);
 };
 
-SimplyPebble.menuItem = function(itemDef) {
+SimplyPebble.menuItem = function(sectionIndex, itemIndex, itemDef) {
   var command = commandMap.setMenuItem;
   var packetDef = util2.copy(itemDef);
+  packetDef.section = sectionIndex;
+  packetDef.item = itemIndex;
   if ('title' in packetDef) {
     packetDef.title = packetDef.title.toString();
   }

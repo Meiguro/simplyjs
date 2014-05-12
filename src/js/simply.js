@@ -75,6 +75,8 @@ simply.reset = function() {
   }
 
   simply.accelInit();
+
+  simply.menuInit();
 };
 
 /**
@@ -636,7 +638,58 @@ simply.accelPeek = function(callback) {
   return simply.impl.accelPeek.apply(this, arguments);
 };
 
+simply.menuInit = function() {
+  simply.on('menuSection', simply.onMenuSection);
+  simply.on('menuItem', simply.onMenuItem);
+  simply.on('menuSelect', simply.onMenuSelect);
+  simply.on('menuLongSelect', simply.onMenuSelect);
+};
+
+var getMenuSection = function(e) {
+  var menu = e.menu;
+  if (!menu) { return; }
+  if (!(menu.sections instanceof Array)) { return; }
+  return menu.sections[e.section];
+};
+
+var getMenuItem = function(e) {
+  var section = getMenuSection(e);
+  if (!section) { return; }
+  if (!(section.items instanceof Array)) { return; }
+  return section.items[e.item];
+};
+
+simply.onMenuSection = function(e) {
+  var section = getMenuSection(e);
+  if (!section) { return; }
+  simply.menuSection(e.section, section);
+};
+
+simply.onMenuItem = function(e) {
+  var item = getMenuItem(e);
+  if (!item) { return; }
+  simply.menuItem(e.section, e.item, item);
+};
+
+simply.onMenuSelect = function(e) {
+  var item = getMenuItem(e);
+  if (!item) { return; }
+  switch (e.type) {
+    case 'menuSelect':
+      if (typeof item.select === 'function') {
+        return item.select(e);
+      }
+      break;
+    case 'menuLongSelect':
+      if (typeof item.longSelect === 'function') {
+        return item.longSelect(e);
+      }
+      break;
+  }
+};
+
 simply.menu = function(menuDef) {
+  simply.state.menu = menuDef;
   return simply.impl.menu.apply(this, arguments);
 };
 
@@ -718,12 +771,14 @@ simply.emitAccelData = function(accels, callback) {
 
 simply.emitMenuSection = function(section) {
   simply.emit('menuSection', {
+    menu: simply.state.menu,
     section: section
   });
 };
 
 simply.emitMenuItem = function(section, item) {
   simply.emit('menuItem', {
+    menu: simply.state.menu,
     section: section,
     item: item,
   });
@@ -731,6 +786,7 @@ simply.emitMenuItem = function(section, item) {
 
 simply.emitMenuSelect = function(type, section, item) {
   simply.emit(type, {
+    menu: simply.state.menu,
     section: section,
     item: item,
   });

@@ -235,6 +235,7 @@ static void window_unload(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
 
   menu_layer_destroy(self->menu_layer);
+  self->menu_layer = NULL;
 }
 
 void simply_menu_show(SimplyMenu *self) {

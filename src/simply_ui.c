@@ -84,10 +84,14 @@ void simply_ui_set_button(SimplyUi *self, ButtonId button, bool enable) {
   }
 }
 
+static bool is_string(const char *str) {
+  return str && str[0];
+}
+
 static void set_text(char **str_field, const char *str) {
   free(*str_field);
 
-  if (!str || !str[0]) {
+  if (!is_string(str)) {
     *str_field = NULL;
     return;
   }
@@ -97,11 +101,10 @@ static void set_text(char **str_field, const char *str) {
 
 void simply_ui_set_text(SimplyUi *self, char **str_field, const char *str) {
   set_text(str_field, str);
-  layer_mark_dirty(self->display_layer);
-}
-
-static bool is_string(const char *str) {
-  return str && str[0];
+  if (self->display_layer) {
+    layer_mark_dirty(self->display_layer);
+  }
+  simply_ui_show(self);
 }
 
 void display_layer_update_callback(Layer *layer, GContext *ctx) {
@@ -253,16 +256,15 @@ static void window_load(Window *window) {
   scroll_layer_set_click_config_onto_window(scroll_layer, window);
 
   simply_ui_set_style(self, 1);
-
-  app_timer_register(10000, (AppTimerCallback) show_welcome_text, self);
 }
 
 static void window_unload(Window *window) {
   SimplyUi *self = window_get_user_data(window);
 
   layer_destroy(self->display_layer);
+  self->display_layer = NULL;
   scroll_layer_destroy(self->scroll_layer);
-  window_destroy(window);
+  self->scroll_layer = NULL;
 }
 
 void simply_ui_show(SimplyUi *self) {
@@ -299,10 +301,11 @@ SimplyUi *simply_ui_create(void) {
   window_set_background_color(window, GColorBlack);
   window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
   window_set_window_handlers(window, (WindowHandlers) {
+    .load = window_load,
     .unload = window_unload,
   });
 
-  window_load(self->window);
+  app_timer_register(10000, (AppTimerCallback) show_welcome_text, self);
 
   return self;
 }

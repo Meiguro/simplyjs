@@ -679,7 +679,7 @@ simply.menuInit = function() {
 };
 
 var getMenuSection = function(e) {
-  var menu = e.menu;
+  var menu = e.menu || simply.state.menu;
   if (!menu) { return; }
   if (!(menu.sections instanceof Array)) { return; }
   return menu.sections[e.section];
@@ -739,15 +739,24 @@ simply.onMenuSelect = function(e) {
 };
 
 simply.menu = function(menuDef) {
+  if (!menuDef) {
+    return simply.state.menu;
+  }
   simply.state.menu = menuDef;
   return simply.impl.menu.apply(this, arguments);
 };
 
 simply.menuSection = function(sectionIndex, sectionDef) {
+  if (typeof sectionIndex === 'undefined') {
+    return getMenuSection({ section: sectionIndex });
+  }
   return simply.impl.menuSection.apply(this, arguments);
 };
 
 simply.menuItem = function(sectionIndex, itemIndex, itemDef) {
+  if (typeof sectionIndex === 'undefined') {
+    return getMenuItem({ section: sectionIndex, item: itemIndex });
+  }
   return simply.impl.menuItem.apply(this, arguments);
 };
 

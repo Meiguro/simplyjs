@@ -318,12 +318,19 @@ void simply_ui_destroy(SimplyUi *self) {
     return;
   }
 
+  window_destroy(self->window);
+  self->window = NULL;
+
   simply_ui_set_text(self, &self->title_text, NULL);
   simply_ui_set_text(self, &self->subtitle_text, NULL);
   simply_ui_set_text(self, &self->body_text, NULL);
 
-  window_destroy(self->window);
-  self->window = NULL;
+  for (unsigned int i = 0; i < ARRAY_LENGTH(STYLES); ++i) {
+    SimplyStyle *style = &STYLES[i];
+    if (style->custom_body_font_id) {
+      fonts_unload_custom_font(style->custom_body_font);
+    }
+  }
 
   free(self);
 

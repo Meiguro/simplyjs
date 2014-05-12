@@ -25,6 +25,7 @@ static Simply *init(void) {
 static void deinit(Simply *simply) {
   simply_msg_deinit();
   simply_ui_destroy(simply->ui);
+  simply_menu_destroy(simply->menu);
   simply_accel_destroy(simply->accel);
 }
 
@@ -32,4 +33,5 @@ int main(void) {
   Simply *simply = init();
   app_event_loop();
   deinit(simply);
+  free(simply);
 }

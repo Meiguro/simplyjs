@@ -311,13 +311,16 @@ SimplyUi *simply_ui_create(void) {
 }
 
 void simply_ui_destroy(SimplyUi *self) {
-  if (!s_ui) {
+  if (!self) {
     return;
   }
 
   simply_ui_set_text(self, &self->title_text, NULL);
   simply_ui_set_text(self, &self->subtitle_text, NULL);
   simply_ui_set_text(self, &self->body_text, NULL);
+
+  window_destroy(self->window);
+  self->window = NULL;
 
   free(self);
 

@@ -233,6 +233,8 @@ simply.emit = function(type, subtype, e) {
     e = subtype;
     subtype = null;
   }
+  e.type = type;
+  e.subtype = subtype;
   var typeMap = simply.listeners;
   var subtypeMap = typeMap[type];
   if (!subtypeMap) {

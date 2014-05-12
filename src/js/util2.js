@@ -20,6 +20,10 @@ util2.toNumber = function (x) {
   if (!isNaN(x = parseFloat(x))) { return x; }
 };
 
+util2.toString = function (x) {
+  return typeof x === 'object' ? JSON.stringify.apply(this, arguments) : '' + x;
+};
+
 util2.toArray = function (x) {
   if (x instanceof Array) { return x; }
   return [x];

@@ -17,8 +17,9 @@ struct SimplyUi {
   char *body_text;
   ScrollLayer *scroll_layer;
   Layer *display_layer;
-  bool is_scrollable;
+  GFont custom_body_font;
   uint32_t button_mask;
+  bool is_scrollable;
 };
 
 SimplyUi *simply_ui_create(Simply *simply);

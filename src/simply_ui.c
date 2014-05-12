@@ -14,7 +14,6 @@ struct SimplyStyle {
   const char* subtitle_font;
   const char* body_font;
   int custom_body_font_id;
-  GFont custom_body_font;
 };
 
 static SimplyStyle STYLES[] = {
@@ -40,7 +39,14 @@ SimplyUi *s_ui = NULL;
 static void click_config_provider(SimplyUi *self);
 
 void simply_ui_set_style(SimplyUi *self, int style_index) {
+  if (self->custom_body_font) {
+    fonts_unload_custom_font(self->custom_body_font);
+    self->custom_body_font = NULL;
+  }
   self->style = &STYLES[style_index];
+  if (self->style->custom_body_font_id) {
+    self->custom_body_font = fonts_load_custom_font(self->custom_body_font);
+  }
   layer_mark_dirty(self->display_layer);
 }
 
@@ -113,7 +119,7 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
   const SimplyStyle *style = self->style;
   GFont title_font = fonts_get_system_font(style->title_font);
   GFont subtitle_font = fonts_get_system_font(style->subtitle_font);
-  GFont body_font = style->custom_body_font ? style->custom_body_font : fonts_get_system_font(style->body_font);
+  GFont body_font = self->custom_body_font ? self->custom_body_font : fonts_get_system_font(style->body_font);
 
   const int16_t x_margin = 5;
   const int16_t y_margin = 2;
@@ -162,7 +168,7 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
       bounds.size.h = window_bounds.size.h > new_height ? window_bounds.size.h : new_height;
       layer_set_frame(layer, bounds);
       scroll_layer_set_content_size(self->scroll_layer, bounds.size);
-    } else if (!style->custom_body_font && body_size.h > body_rect.size.h) {
+    } else if (!self->custom_body_font && body_size.h > body_rect.size.h) {
       body_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
     }
   }
@@ -282,13 +288,6 @@ SimplyUi *simply_ui_create(Simply *simply) {
     return s_ui;
   }
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH(STYLES); ++i) {
-    SimplyStyle *style = &STYLES[i];
-    if (style->custom_body_font_id) {
-      style->custom_body_font = fonts_load_custom_font(resource_get_handle(style->custom_body_font_id));
-    }
-  }
-
   SimplyUi *self = malloc(sizeof(*self));
   *self = (SimplyUi) { .simply = simply };
   s_ui = self;
@@ -325,12 +324,8 @@ void simply_ui_destroy(SimplyUi *self) {
   simply_ui_set_text(self, &self->subtitle_text, NULL);
   simply_ui_set_text(self, &self->body_text, NULL);
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH(STYLES); ++i) {
-    SimplyStyle *style = &STYLES[i];
-    if (style->custom_body_font_id) {
-      fonts_unload_custom_font(style->custom_body_font);
-    }
-  }
+  fonts_unload_custom_font(self->custom_body_font);
+  self->custom_body_font = NULL;
 
   free(self);
 

@@ -22,8 +22,8 @@ var eventTypes = [
   'accelData',
   'menuSection',
   'menuItem',
-  'menuSelectClick',
-  'menuSelectLongClick',
+  'menuSelect',
+  'menuLongSelect',
 ];
 
 simply.state = {};

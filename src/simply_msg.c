@@ -31,8 +31,8 @@ enum SimplyACmd {
   SimplyACmd_getMenuSection,
   SimplyACmd_setMenuItem,
   SimplyACmd_getMenuItem,
-  SimplyACmd_menuSelectClick,
-  SimplyACmd_menuSelectLongClick,
+  SimplyACmd_menuSelect,
+  SimplyACmd_menuLongSelect,
 };
 
 typedef enum VibeType VibeType;
@@ -348,9 +348,9 @@ bool simply_msg_menu_get_item(uint16_t section, uint16_t index) {
 }
 
 bool simply_msg_menu_select_click(uint16_t section, uint16_t index) {
-  return send_menu_item(SimplyACmd_menuSelectClick, section, index);
+  return send_menu_item(SimplyACmd_menuSelect, section, index);
 }
 
 bool simply_msg_menu_select_long_click(uint16_t section, uint16_t index) {
-  return send_menu_item(SimplyACmd_menuSelectLongClick, section, index);
+  return send_menu_item(SimplyACmd_menuLongSelect, section, index);
 }

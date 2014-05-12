@@ -65,6 +65,8 @@ simply.reset = function() {
   simply.state.run = true;
   simply.state.numPackages = 0;
 
+  simply.state.text = {};
+
   simply.state.button = {
     config: {},
     configMode: 'auto',
@@ -491,10 +493,29 @@ simply.buttonAutoConfig = function() {
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.text = function(textDef, clear) {
+  if (!textDef) {
+    return simply.state.text;
+  }
+  if (clear) {
+    simply.state.text = textDef;
+  } else {
+    util2.copy(textDef, simply.state.text);
+  }
   return simply.impl.text.apply(this, arguments);
 };
 
 simply.setText = simply.text;
+
+var textfield = function(field, text, clear) {
+  if (!text) {
+    return simply.state.text[field];
+  }
+  if (clear) {
+    simply.state.text = {};
+  }
+  simply.state.text[field] = text;
+  return simply.impl.textfield(field, text, clear);
+};
 
 /**
  * Sets the title field. The title field is the first and largest text field available.
@@ -503,7 +524,7 @@ simply.setText = simply.text;
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.title = function(text, clear) {
-  return simply.impl.textfield('title', text, clear);
+  return textfield('title', text, clear);
 };
 
 /**
@@ -513,7 +534,7 @@ simply.title = function(text, clear) {
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.subtitle = function(text, clear) {
-  return simply.impl.textfield('subtitle', text, clear);
+  return textfield('subtitle', text, clear);
 };
 
 /**
@@ -525,7 +546,7 @@ simply.subtitle = function(text, clear) {
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
 simply.body = function(text, clear) {
-  return simply.impl.textfield('body', text, clear);
+  return textfield('body', text, clear);
 };
 
 /**
@@ -547,6 +568,10 @@ simply.vibe = function() {
  */
 
 simply.scrollable = function(scrollable) {
+  if (scrollable === null) {
+    return simply.state.scrollable === true;
+  }
+  simply.state.scrollable = scrollable;
   return simply.impl.scrollable.apply(this, arguments);
 };
 
@@ -558,6 +583,10 @@ simply.scrollable = function(scrollable) {
  */
 
 simply.fullscreen = function(fullscreen) {
+  if (fullscreen === null) {
+    return simply.state.fullscreen === true;
+  }
+  simply.state.fullscreen = fullscreen;
   return simply.impl.fullscreen.apply(this, arguments);
 };
 
@@ -744,7 +773,10 @@ simply.emitClick = function(type, button) {
 };
 
 simply.emitTextExit = function() {
-  simply.emit('textExit', {});
+  var textDef = simply.state.text;
+  simply.emit('textExit', util2.copy(textDef, {
+    text: textDef
+  }));
 };
 
 /**

@@ -382,11 +382,6 @@ SimplyPebble.vibe = function(type) {
 };
 
 SimplyPebble.scrollable = function(scrollable) {
-  if (scrollable === null) {
-    return simply.state.scrollable === true;
-  }
-  simply.state.scrollable = scrollable;
-
   var command = commandMap.setScrollable;
   var packet = makePacket(command);
   packet[command.paramMap.scrollable.id] = scrollable ? 1 : 0;
@@ -394,11 +389,6 @@ SimplyPebble.scrollable = function(scrollable) {
 };
 
 SimplyPebble.fullscreen = function(fullscreen) {
-  if (fullscreen === null) {
-    return simply.state.fullscreen === true;
-  }
-  simply.state.fullscreen = fullscreen;
-
   var command = commandMap.setFullscreen;
   var packet = makePacket(command);
   packet[command.paramMap.fullscreen.id] = fullscreen ? 1 : 0;

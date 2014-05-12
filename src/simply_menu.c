@@ -2,6 +2,10 @@
 
 #include "simply_msg.h"
 
+#define MAX_CACHED_SECTIONS 10
+
+#define MAX_CACHED_ITEMS 6
+
 #define REQUEST_DELAY_MS 10
 
 SimplyMenu *s_menu = NULL;
@@ -93,12 +97,20 @@ static void schedule_get_timer(SimplyMenu *self) {
 }
 
 static void add_section(SimplyMenu *self, SimplyMenuSection *section) {
+  if (list1_size(self->sections) >= MAX_CACHED_SECTIONS) {
+    SimplyMenuSection *old_section = (SimplyMenuSection*) list1_last(self->sections);
+    remove_menu_section(&self->sections, old_section->index);
+  }
   remove_menu_section(&self->sections, section->index);
   section->node.next = self->sections;
   self->sections = &section->node;
 }
 
 static void add_item(SimplyMenu *self, SimplyMenuItem *item) {
+  if (list1_size(self->items) >= MAX_CACHED_ITEMS) {
+    SimplyMenuItem *old_item = (SimplyMenuItem*) list1_last(self->items);
+    remove_menu_item(&self->items, old_item->section, old_item->index);
+  }
   remove_menu_item(&self->items, item->section, item->index);
   item->node.next = self->items;
   self->items = &item->node;
@@ -124,7 +136,7 @@ static void request_menu_item(SimplyMenu *self, uint16_t section_index, uint16_t
 }
 
 static void mark_dirty(SimplyMenu *self) {
-  layer_mark_dirty(window_get_root_layer(self->window));
+  menu_layer_reload_data(self->menu_layer);
   request_menu_node(self);
   self->request_delay_ms = REQUEST_DELAY_MS;
 }
@@ -228,6 +240,7 @@ SimplyMenu *simply_menu_create(void) {
 
   SimplyMenu *self = malloc(sizeof(*self));
   *self = (SimplyMenu) {
+    .num_sections = 1,
     .request_delay_ms = REQUEST_DELAY_MS,
   };
   s_menu = self;

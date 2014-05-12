@@ -672,22 +672,34 @@ simply.onMenuItem = function(e) {
 };
 
 simply.onMenuSelect = function(e) {
+  var menu = e.menu;
   var item = getMenuItem(e);
   if (!item) { return; }
   switch (e.type) {
     case 'menuSelect':
       if (typeof item.select === 'function') {
-        return item.select(e);
+        if (item.select(e) === false) {
+          return false;
+        }
       }
       break;
     case 'menuLongSelect':
       if (typeof item.longSelect === 'function') {
-        return item.longSelect(e);
+        if (item.longSelect(e) === false) {
+          return false;
+        }
       }
       break;
     case 'menuExit':
       if (typeof item.exit === 'function') {
-        return item.exit(e);
+        if (item.exit(e) === false) {
+          return false;
+        }
+      }
+      if (typeof menu.exit === 'function') {
+        if (menu.exit(e) === false) {
+          return false;
+        }
       }
       break;
   }

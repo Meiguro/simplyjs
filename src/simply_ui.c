@@ -84,10 +84,6 @@ void simply_ui_set_button(SimplyUi *self, ButtonId button, bool enable) {
   }
 }
 
-static bool is_string(const char *str) {
-  return str && str[0];
-}
-
 static void set_text(char **str_field, const char *str) {
   free(*str_field);
 

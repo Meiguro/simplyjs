@@ -180,6 +180,7 @@ static void handle_set_menu_item(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   uint16_t section_index = 0;
   uint16_t row = 0;
+  uint32_t image = 0;
   char *title = NULL;
   char *subtitle = NULL;
   if ((tuple = dict_find(iter, 1))) {

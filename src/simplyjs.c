@@ -14,7 +14,7 @@ static Simply *init(void) {
   simply->accel = simply_accel_create();
   simply->res = simply_res_create();
   simply->splash = simply_splash_create(simply);
-  simply->menu = simply_menu_create();
+  simply->menu = simply_menu_create(simply);
   simply->ui = simply_ui_create(simply);
 
   bool animated = true;

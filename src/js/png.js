@@ -359,8 +359,6 @@
 
     scratchCanvas = document.createElement('canvas');
 
-    scratchCtx = scratchCanvas.getContext('2d');
-
     makeImage = function(imageData) {
       var img;
       scratchCtx.width = imageData.width;

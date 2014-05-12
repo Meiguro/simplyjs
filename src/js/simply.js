@@ -291,6 +291,14 @@ simply.defun = function(fn, fargs, fbody) {
   return new Function('return function ' + fn + '(' + fargs.join(', ') + ') {' + fbody + '}')();
 };
 
+var slog = function() {
+  var args = [];
+  for (var i = 0, ii = arguments.length; i < ii; ++i) {
+    args[i] = util2.toString(arguments[i]);
+  }
+  return args.join(' ');
+};
+
 simply.fexecPackage = function(script, pkg) {
   // console shim for Android
   var console2 = {};
@@ -299,11 +307,7 @@ simply.fexecPackage = function(script, pkg) {
   }
 
   console2.log = function() {
-    var args = [];
-    for (var i = 0, ii = arguments.length; i < ii; ++i) {
-      args[i] = arguments[i].toString();
-    }
-    var msg = pkg.name + ': ' + args.join(' ');
+    var msg = pkg.name + ': ' + slog.apply(this, arguments);
     var width = 45;
     var prefix = (new Array(width + 1)).join('\b'); // erase Simply.js source line
     var suffix = msg.length < width ? (new Array(width - msg.length + 1)).join(' ') : 0;

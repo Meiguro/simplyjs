@@ -28,6 +28,31 @@ static inline List1Node *list1_last(List1Node *node) {
   return NULL;
 }
 
+static inline List1Node *list1_prev(List1Node *head, List1Node *node) {
+  for (List1Node *walk = head, *prev = NULL; walk; walk = walk->next) {
+    if (walk == node) {
+      return prev;
+    }
+    prev = walk;
+  }
+  return NULL;
+}
+
+static inline List1Node *list1_prepend(List1Node **head, List1Node *node) {
+  node->next = *head;
+  *head = node;
+  return node;
+}
+
+static inline List1Node *list1_append(List1Node **head, List1Node *node) {
+  if (*head) {
+    list1_last(*head)->next = node;
+  } else {
+    *head = node;
+  }
+  return node;
+}
+
 static inline List1Node *list1_find_prev(List1Node *node,
     List1FilterCallback callback, void *data, List1Node **prev_out) {
   for (List1Node *prev = NULL; node; node = node->next) {
@@ -46,17 +71,24 @@ static inline List1Node *list1_find(List1Node *node, List1FilterCallback callbac
   return list1_find_prev(node, callback, data, NULL);
 }
 
+static inline List1Node *list1_remove_prev(List1Node **head, List1Node *node, List1Node *prev) {
+  if (!node) { return NULL; }
+  if (*head == node) {
+    *head = node->next;
+  }
+  if (prev) {
+    prev->next = node->next;
+  }
+  node->next = NULL;
+  return node;
+}
+
+static inline List1Node *list1_remove(List1Node **head, List1Node *node) {
+  return list1_remove_prev(head, node, list1_prev(*head, node));
+}
+
 static inline List1Node *list1_remove_one(List1Node **head, List1FilterCallback callback, void *data) {
   List1Node *prev = NULL;
-  List1Node *node = *head;
-  node = list1_find_prev(node, callback, data, &prev);
-  if (node) {
-    if (head && *head == node) {
-      *head = node->next;
-    }
-    if (prev) {
-      prev->next = node->next;
-    }
-  }
-  return node;
+  List1Node *node = list1_find_prev(*head, callback, data, &prev);
+  return list1_remove_prev(head, node, prev);
 }

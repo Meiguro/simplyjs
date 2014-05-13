@@ -65,6 +65,9 @@ simply.reset = function() {
   simply.state.run = true;
   simply.state.numPackages = 0;
 
+  simply.state.images = {};
+  simply.state.nextImageId = 1;
+
   simply.state.text = {};
 
   simply.state.button = {
@@ -605,6 +608,76 @@ simply.fullscreen = function(fullscreen) {
 
 simply.style = function(type) {
   return simply.impl.style.apply(this, arguments);
+};
+
+var toGbitmap = function(png) {
+  var pixels = png.decodePixels();
+  var pixelBytes = png.pixelBitlength / 8;
+  var rowBytes = png.width * pixelBytes;
+
+  var gpixels = [];
+  var growBytes = Math.ceil(png.width / 32) * 4;
+  for (var i = 0, ii = png.height * growBytes; i < ii; ++i) {
+    gpixels[i] = 0;
+  }
+
+  for (var x = 0, xx = png.width; x < xx; ++x) {
+    for (var y = 0, yy = png.height; y < yy; ++y) {
+      var pos = y * rowBytes + x * pixelBytes;
+      var gbytePos = y * growBytes + Math.floor(x / 8);
+      var grey = 0;
+      for (var i = 0; i < pixelBytes - 1; ++i) {
+        grey += pixels[pos + i];
+      }
+      grey /= pixelBytes - 1;
+      if (grey >= 128) {
+        gpixels[gbytePos] += 1 << (x % 8);
+      }
+    }
+  }
+
+  var gbitmap = {
+    width: png.width,
+    height: png.height,
+    pixels: gpixels,
+  };
+
+  return gbitmap;
+};
+
+simply.loadImage = function(image, callback) {
+  PNG.load(image.path, function(png) {
+    image.gbitmap = toGbitmap(png);
+    simply.impl.image(image.id, image.gbitmap);
+    if (callback) {
+      var e = {
+        type: 'image',
+        image: image.id,
+        path: image.path,
+      };
+      callback(e);
+    }
+  });
+  return image;
+};
+
+simply.image = function(path, reset, callback) {
+  if (typeof reset === 'function') {
+    callback = reset;
+    reset = null;
+  }
+  path = simply.basepath() + path;
+  var image = simply.state.images[path];
+  if (image && reset !== true) {
+    return image.id;
+  }
+  var image = {
+    id: simply.state.nextImageId++,
+    path: path,
+  };
+  simply.state.images[path] = image;
+  simply.loadImage(image, callback);
+  return image.id;
 };
 
 simply.accelInit = function() {

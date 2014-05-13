@@ -612,8 +612,9 @@ simply.style = function(type) {
 
 var toGbitmap = function(png) {
   var pixels = png.decodePixels();
-  var pixelBytes = png.pixelBitlength / 8;
-  var rowBytes = png.width * pixelBytes;
+  var bitDepth = png.pixelBitlength;
+  var byteDepth = bitDepth / 8;
+  var rowBytes = png.width * byteDepth;
 
   var gpixels = [];
   var growBytes = Math.ceil(png.width / 32) * 4;
@@ -621,16 +622,26 @@ var toGbitmap = function(png) {
     gpixels[i] = 0;
   }
 
-  for (var x = 0, xx = png.width; x < xx; ++x) {
-    for (var y = 0, yy = png.height; y < yy; ++y) {
-      var pos = y * rowBytes + x * pixelBytes;
-      var gbytePos = y * growBytes + Math.floor(x / 8);
+  for (var y = 0, yy = png.height; y < yy; ++y) {
+    for (var x = 0, xx = png.width; x < xx; ++x) {
       var grey = 0;
-      for (var i = 0; i < pixelBytes - 1; ++i) {
-        grey += pixels[pos + i];
+      if (bitDepth < 8) {
+        var bitPos = y * png.width * bitDepth + x * bitDepth;
+        var pos = parseInt(bitPos / 8);
+        var mask = (1 << bitDepth) - 1;
+        var j = bitPos % (8 / bitDepth);
+        grey = (pixels[pos] >> (7 - j * bitDepth)) & mask;
+        grey /= mask;
+      } else {
+        var pos = y * rowBytes + parseInt(x * byteDepth);
+        var numColors = byteDepth - (png.hasAlphaChannel ? 1 : 0);
+        for (var i = 0; i < numColors; ++i) {
+          grey += pixels[pos + i];
+        }
+        grey /= numColors * 255;
       }
-      grey /= pixelBytes - 1;
-      if (grey >= 128) {
+      if (grey >= 0.5) {
+        var gbytePos = y * growBytes + parseInt(x / 8);
         gpixels[gbytePos] += 1 << (x % 8);
       }
     }

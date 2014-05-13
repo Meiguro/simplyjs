@@ -26,6 +26,7 @@ util2.toString = function (x) {
 
 util2.toArray = function (x) {
   if (x instanceof Array) { return x; }
+  if (x[0]) { return util2.copy(x, []); }
   return [x];
 };
 

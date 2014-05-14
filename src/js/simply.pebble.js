@@ -1,17 +1,27 @@
-/* global simply */
+/* global simply, util2 */
 
 var SimplyPebble = (function() {
 
 var commands = [{
-  name: 'setText',
+  name: 'setCard',
   params: [{
+    name: 'clear',
+    type: Boolean,
+  }, {
     name: 'title',
+    type: String,
   }, {
     name: 'subtitle',
+    type: String,
   }, {
     name: 'body',
+    type: String,
   }, {
-    name: 'clear',
+    name: 'icon',
+  }, {
+    name: 'subicon',
+  }, {
+    name: 'banner',
   }],
 }, {
   name: 'singleClick',
@@ -85,8 +95,6 @@ var commands = [{
     name: 'down',
   }],
 }, {
-  name: 'showText',
-}, {
   name: 'textExit',
 }, {
   name: 'showMenu',
@@ -101,6 +109,7 @@ var commands = [{
     name: 'items',
   }, {
     name: 'title',
+    type: String,
   }],
 }, {
   name: 'getMenuSection',
@@ -115,8 +124,10 @@ var commands = [{
     name: 'item',
   }, {
     name: 'title',
+    type: String,
   }, {
     name: 'subtitle',
+    type: String,
   }, {
     name: 'image',
   }],
@@ -328,7 +339,13 @@ function makePacket(command, def) {
     for (var k in def) {
       var param = paramMap[k];
       if (param) {
-        packet[param.id] = def[k];
+        var v = def[k];
+        if (param.type === String) {
+          v = v.toString();
+        } else if (param.type === Boolean) {
+          v = v ? 1 : 0;
+        }
+        packet[param.id] = v;
       }
     }
   }
@@ -360,28 +377,21 @@ SimplyPebble.buttonConfig = function(buttonConf) {
   SimplyPebble.sendPacket(packet);
 };
 
-SimplyPebble.text = function(textDef, clear) {
-  var command = commandMap.setText;
-  var packetDef = {};
-  for (var k in textDef) {
-    packetDef[k] = textDef[k].toString();
-  }
-  var packet = makePacket(command, packetDef);
-  if (clear) {
-    packet[command.paramMap.clear.id] = 1;
-  }
+SimplyPebble.card = function(cardDef, clear) {
+  var command = commandMap.setCard;
+  var packet = makePacket(command, cardDef);
   SimplyPebble.sendPacket(packet);
 };
 
 SimplyPebble.textfield = function(field, text, clear) {
-  var command = commandMap.setText;
+  var command = commandMap.setCard;
   var packet = makePacket(command);
   var param = command.paramMap[field];
   if (param) {
     packet[param.id] = text.toString();
   }
   if (clear) {
-    packet[command.paramMap.clear.id] = 1;
+    packet[command.paramMap.clear.id] = true;
   }
   SimplyPebble.sendPacket(packet);
 };

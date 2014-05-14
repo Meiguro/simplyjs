@@ -122,13 +122,14 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
   GFont subtitle_font = fonts_get_system_font(style->subtitle_font);
   GFont body_font = self->custom_body_font ? self->custom_body_font : fonts_get_system_font(style->body_font);
 
-  const int16_t x_margin = 5;
-  const int16_t y_margin = 2;
+  const int16_t margin_x = 5;
+  const int16_t margin_y = 2;
+  const int16_t image_offset_y = 3;
 
   GRect text_frame = frame;
-  text_frame.size.w -= 2 * x_margin;
+  text_frame.size.w -= 2 * margin_x;
   text_frame.size.h += 1000;
-  GPoint cursor = { x_margin, y_margin };
+  GPoint cursor = { margin_x, margin_y };
 
   graphics_context_set_text_color(ctx, GColorBlack);
 
@@ -137,11 +138,12 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
   bool has_body = is_string(self->body_text);
 
   GSize title_size, subtitle_size;
-  GPoint title_pos, subtitle_pos;
+  GPoint title_pos, subtitle_pos, image_pos = GPointZero;
   GRect body_rect;
 
   GBitmap *title_icon = simply_res_get_image(self->simply->res, self->title_icon);
   GBitmap *subtitle_icon = simply_res_get_image(self->simply->res, self->subtitle_icon);
+  GBitmap *body_image = simply_res_get_image(self->simply->res, self->image);
 
   if (has_title) {
     GRect title_frame = text_frame;
@@ -175,16 +177,21 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
     cursor.y += subtitle_size.h;
   }
 
+  if (body_image) {
+    image_pos = cursor;
+    cursor.y += body_image->bounds.size.h;
+  }
+
   if (has_body) {
     body_rect = frame;
     body_rect.origin = cursor;
-    body_rect.size.w -= 2 * x_margin;
-    body_rect.size.h -= 2 * y_margin + cursor.y;
+    body_rect.size.w -= 2 * margin_x;
+    body_rect.size.h -= 2 * margin_y + cursor.y;
     GSize body_size = graphics_text_layout_get_content_size(self->body_text,
         body_font, text_frame, GTextOverflowModeWordWrap, GTextAlignmentLeft);
     if (self->is_scrollable) {
       body_rect.size = body_size;
-      int16_t new_height = cursor.y + 2 * y_margin + body_size.h;
+      int16_t new_height = cursor.y + 2 * margin_y + body_size.h;
       frame.size.h = window_frame.size.h > new_height ? window_frame.size.h : new_height;
       layer_set_frame(layer, frame);
       scroll_layer_set_content_size(self->scroll_layer, frame.size);
@@ -198,7 +205,7 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
 
   if (title_icon) {
     GRect icon_frame = (GRect) {
-      .origin = { x_margin, title_pos.y + 3 },
+      .origin = { margin_x, title_pos.y + image_offset_y },
       .size = { title_icon->bounds.size.w, title_size.h }
     };
     graphics_draw_bitmap_centered(ctx, title_icon, icon_frame);
@@ -211,7 +218,7 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
 
   if (subtitle_icon) {
     GRect subicon_frame = (GRect) {
-      .origin = { x_margin, subtitle_pos.y + 3 },
+      .origin = { margin_x, subtitle_pos.y + image_offset_y },
       .size = { subtitle_icon->bounds.size.w, subtitle_size.h }
     };
     graphics_draw_bitmap_centered(ctx, subtitle_icon, subicon_frame);
@@ -222,6 +229,13 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
         GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
   }
 
+  if (body_image) {
+    GRect image_frame = (GRect) {
+      .origin = { 0, image_pos.y + image_offset_y },
+      .size = { window_frame.size.w, body_image->bounds.size.h }
+    };
+    graphics_draw_bitmap_centered(ctx, body_image, image_frame);
+  }
   if (has_body) {
     graphics_draw_text(ctx, self->body_text, body_font, body_rect,
         GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);

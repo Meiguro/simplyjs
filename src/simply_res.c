@@ -47,6 +47,9 @@ void simply_res_remove_image(SimplyRes *self, uint32_t id) {
 }
 
 GBitmap *simply_res_get_image(SimplyRes *self, uint32_t id) {
+  if (!id) {
+    return NULL;
+  }
   SimplyImage *image = (SimplyImage*) list1_find(self->images, id_filter, (void*)(uintptr_t) id);
   return image ? &image->bitmap : NULL;
 }

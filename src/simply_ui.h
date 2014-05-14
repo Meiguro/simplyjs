@@ -15,6 +15,9 @@ struct SimplyUi {
   char *title_text;
   char *subtitle_text;
   char *body_text;
+  uint32_t title_icon;
+  uint32_t subtitle_icon;
+  uint32_t image;
   ScrollLayer *scroll_layer;
   Layer *display_layer;
   GFont custom_body_font;

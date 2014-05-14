@@ -14,7 +14,7 @@
 typedef enum SimplyACmd SimplyACmd;
 
 enum SimplyACmd {
-  SimplyACmd_setText = 0,
+  SimplyACmd_setUi = 0,
   SimplyACmd_singleClick,
   SimplyACmd_longClick,
   SimplyACmd_accelTap,
@@ -26,9 +26,8 @@ enum SimplyACmd {
   SimplyACmd_getAccelData,
   SimplyACmd_configAccelData,
   SimplyACmd_configButtons,
-  SimplyACmd_showUi,
   SimplyACmd_uiExit,
-  SimplyACmd_showMenu,
+  SimplyACmd_setMenu,
   SimplyACmd_setMenuSection,
   SimplyACmd_getMenuSection,
   SimplyACmd_setMenuItem,
@@ -53,24 +52,32 @@ static void check_splash(Simply *simply) {
   }
 }
 
-static void handle_set_text(DictionaryIterator *iter, Simply *simply) {
+static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
   SimplyUi *ui = simply->ui;
   Tuple *tuple;
   bool clear = false;
-  if ((tuple = dict_find(iter, 4))) {
+  if ((tuple = dict_find(iter, 1))) {
     clear = true;
   }
-  if ((tuple = dict_find(iter, 1)) || clear) {
+  if ((tuple = dict_find(iter, 2)) || clear) {
     simply_ui_set_text(ui, &ui->title_text, tuple ? tuple->value->cstring : NULL);
   }
-  if ((tuple = dict_find(iter, 2)) || clear) {
+  if ((tuple = dict_find(iter, 3)) || clear) {
     simply_ui_set_text(ui, &ui->subtitle_text, tuple ? tuple->value->cstring : NULL);
   }
-  if ((tuple = dict_find(iter, 3)) || clear) {
+  if ((tuple = dict_find(iter, 4)) || clear) {
     simply_ui_set_text(ui, &ui->body_text, tuple ? tuple->value->cstring : NULL);
   }
-
-  check_splash(simply);
+  if ((tuple = dict_find(iter, 5)) || clear) {
+    ui->title_icon = tuple ? tuple->value->uint32 : 0;
+  }
+  if ((tuple = dict_find(iter, 6)) || clear) {
+    ui->subtitle_icon = tuple ? tuple->value->uint32 : 0;
+  }
+  if ((tuple = dict_find(iter, 7)) || clear) {
+    ui->image = tuple ? tuple->value->uint32 : 0;
+  }
+  simply_ui_show(simply->ui);
 }
 
 static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
@@ -141,11 +148,7 @@ static void handle_set_accel_config(DictionaryIterator *iter, Simply *simply) {
   }
 }
 
-static void handle_show_ui(DictionaryIterator *iter, Simply *simply) {
-  simply_ui_show(simply->ui);
-}
-
-static void handle_show_menu(DictionaryIterator *iter, Simply *simply) {
+static void handle_set_menu(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
     simply_menu_set_num_sections(simply->menu, tuple->value->int32);
@@ -180,7 +183,7 @@ static void handle_set_menu_item(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   uint16_t section_index = 0;
   uint16_t row = 0;
-  uint32_t image = 0;
+  uint32_t icon = 0;
   char *title = NULL;
   char *subtitle = NULL;
   if ((tuple = dict_find(iter, 1))) {
@@ -196,7 +199,7 @@ static void handle_set_menu_item(DictionaryIterator *iter, Simply *simply) {
     subtitle = tuple->value->cstring;
   }
   if ((tuple = dict_find(iter, 5))) {
-    image = tuple->value->uint32;
+    icon = tuple->value->uint32;
   }
   SimplyMenuItem *item = malloc(sizeof(*item));
   *item = (SimplyMenuItem) {
@@ -204,7 +207,7 @@ static void handle_set_menu_item(DictionaryIterator *iter, Simply *simply) {
     .index = row,
     .title = strdup2(title),
     .subtitle = strdup2(subtitle),
-    .image = image,
+    .icon = icon,
   };
   simply_menu_add_item(simply->menu, item);
 }
@@ -237,8 +240,8 @@ static void received_callback(DictionaryIterator *iter, void *context) {
   }
 
   switch (tuple->value->uint8) {
-    case SimplyACmd_setText:
-      handle_set_text(iter, context);
+    case SimplyACmd_setUi:
+      handle_set_ui(iter, context);
       break;
     case SimplyACmd_vibe:
       handle_vibe(iter, context);
@@ -261,11 +264,8 @@ static void received_callback(DictionaryIterator *iter, void *context) {
     case SimplyACmd_configButtons:
       handle_config_buttons(iter, context);
       break;
-    case SimplyACmd_showUi:
-      handle_show_ui(iter, context);
-      break;
-    case SimplyACmd_showMenu:
-      handle_show_menu(iter, context);
+    case SimplyACmd_setMenu:
+      handle_set_menu(iter, context);
       break;
     case SimplyACmd_setMenuSection:
       handle_set_menu_section(iter, context);

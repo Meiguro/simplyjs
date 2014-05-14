@@ -2,6 +2,8 @@
 
 var SimplyPebble = (function() {
 
+var Image = 'Image';
+
 var commands = [{
   name: 'setCard',
   params: [{
@@ -18,10 +20,13 @@ var commands = [{
     type: String,
   }, {
     name: 'icon',
+    type: Image,
   }, {
     name: 'subicon',
+    type: Image,
   }, {
     name: 'banner',
+    type: Image,
   }],
 }, {
   name: 'singleClick',
@@ -130,6 +135,7 @@ var commands = [{
     type: String,
   }, {
     name: 'image',
+    type: Image,
   }],
 }, {
   name: 'getMenuItem',
@@ -344,6 +350,8 @@ function makePacket(command, def) {
           v = v.toString();
         } else if (param.type === Boolean) {
           v = v ? 1 : 0;
+        } else if (param.type === Image && typeof v === 'string') {
+          v = simply.image(v);
         }
         packet[param.id] = v;
       }

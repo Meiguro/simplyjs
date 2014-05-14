@@ -55,7 +55,7 @@ struct SimplyMenuSection {
 struct SimplyMenuItem {
   SimplyMenuCommonMember;
   char *subtitle;
-  uint32_t image;
+  uint32_t icon;
   uint16_t section;
   uint16_t index;
 };

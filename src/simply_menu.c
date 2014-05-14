@@ -205,7 +205,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   list1_remove(&self->items, &item->node);
   list1_prepend(&self->items, &item->node);
 
-  GBitmap *bitmap = simply_res_get_image(self->simply->res, item->image);
+  GBitmap *bitmap = simply_res_get_image(self->simply->res, item->icon);
   menu_cell_basic_draw(ctx, cell_layer, item->title, item->subtitle, bitmap);
 }
 

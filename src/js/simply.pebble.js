@@ -95,9 +95,9 @@ var commands = [{
     name: 'down',
   }],
 }, {
-  name: 'textExit',
+  name: 'cardExit',
 }, {
-  name: 'showMenu',
+  name: 'setMenu',
   params: [{
     name: 'sections',
   }],
@@ -363,12 +363,8 @@ SimplyPebble.sendPacket = function(packet) {
   send();
 };
 
-SimplyPebble.showText = function() {
-  SimplyPebble.sendPacket(makePacket(commandMap.showText));
-};
-
-SimplyPebble.showMenu = function() {
-  SimplyPebble.sendPacket(makePacket(commandMap.showMenu));
+SimplyPebble.setMenu = function() {
+  SimplyPebble.sendPacket(makePacket(commandMap.setMenu));
 };
 
 SimplyPebble.buttonConfig = function(buttonConf) {
@@ -416,7 +412,7 @@ SimplyPebble.fullscreen = function(fullscreen) {
   var packet = makePacket(command);
   packet[command.paramMap.fullscreen.id] = fullscreen ? 1 : 0;
   SimplyPebble.sendPacket(packet);
-}
+};
 
 SimplyPebble.style = function(type) {
   var command = commandMap.setStyle;
@@ -440,7 +436,7 @@ SimplyPebble.accelPeek = function(callback) {
 };
 
 SimplyPebble.menu = function(menuDef) {
-  var command = commandMap.showMenu;
+  var command = commandMap.setMenu;
   var packetDef = util2.copy(menuDef);
   if (packetDef.sections instanceof Array) {
     packetDef.sections = packetDef.sections.length;
@@ -456,9 +452,6 @@ SimplyPebble.menuSection = function(sectionIndex, sectionDef) {
   if (packetDef.items instanceof Array) {
     packetDef.items = packetDef.items.length;
   }
-  if ('title' in packetDef) {
-    packetDef.title = packetDef.title.toString();
-  }
   var packet = makePacket(command, packetDef);
   SimplyPebble.sendPacket(packet);
 };
@@ -468,12 +461,6 @@ SimplyPebble.menuItem = function(sectionIndex, itemIndex, itemDef) {
   var packetDef = util2.copy(itemDef);
   packetDef.section = sectionIndex;
   packetDef.item = itemIndex;
-  if ('title' in packetDef) {
-    packetDef.title = packetDef.title.toString();
-  }
-  if ('subtitle' in packetDef) {
-    packetDef.subtitle = packetDef.subtitle.toString();
-  }
   var packet = makePacket(command, packetDef);
   SimplyPebble.sendPacket(packet);
 };
@@ -512,8 +499,9 @@ SimplyPebble.onAppMessage = function(e) {
       var button = buttons[payload[1]];
       simply.emitClick(command.name, button);
       break;
-    case 'textExit':
-      simply.emitTextExit();
+    case 'cardExit':
+      simply.emitCardExit();
+      break;
     case 'accelTap':
       var axis = accelAxes[payload[1]];
       simply.emitAccelTap(axis, payload[2]);
@@ -539,8 +527,8 @@ SimplyPebble.onAppMessage = function(e) {
       } else {
         var handlers = simply.state.accel.listeners;
         simply.state.accel.listeners = [];
-        for (var i = 0, ii = handlers.length; i < ii; ++i) {
-          simply.emitAccelData(accels, handlers[i]);
+        for (var j = 0, jj = handlers.length; j < jj; ++j) {
+          simply.emitAccelData(accels, handlers[j]);
         }
       }
       break;

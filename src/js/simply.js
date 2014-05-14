@@ -2,6 +2,7 @@
  * Simply.js
  * @namespace simply
  */
+/* global util2, PNG */
 var simply = (function() {
 
 var noop = typeof util2 !== 'undefined' ? util2.noop : function() {};
@@ -18,7 +19,7 @@ var buttons = [
 var eventTypes = [
   'singleClick',
   'longClick',
-  'textExit',
+  'cardExit',
   'accelTap',
   'accelData',
   'menuSection',
@@ -448,8 +449,8 @@ simply.buttonConfig = function(buttonConf, auto) {
   if (typeof buttonConf === 'undefined') {
     var config = {};
     for (var i = 0, ii = buttons.length; i < ii; ++i) {
-      var k = buttons[i];
-      config[k] = buttonConf.config[k];
+      var name = buttons[i];
+      config[name] = buttonConf.config[name];
     }
     return config;
   }
@@ -627,18 +628,19 @@ var toGbitmap = function(png) {
   for (var y = 0, yy = png.height; y < yy; ++y) {
     for (var x = 0, xx = png.width; x < xx; ++x) {
       var grey = 0;
+      var pos;
       if (bitDepth < 8) {
         var bitPos = y * png.width * bitDepth + x * bitDepth;
-        var pos = parseInt(bitPos / 8);
+        pos = parseInt(bitPos / 8);
         var mask = (1 << bitDepth) - 1;
-        var j = bitPos % (8 / bitDepth);
-        grey = (pixels[pos] >> (7 - j * bitDepth)) & mask;
+        var s = bitPos % (8 / bitDepth);
+        grey = (pixels[pos] >> (7 - s * bitDepth)) & mask;
         grey /= mask;
       } else {
-        var pos = y * rowBytes + parseInt(x * byteDepth);
+        pos = y * rowBytes + parseInt(x * byteDepth);
         var numColors = byteDepth - (png.hasAlphaChannel ? 1 : 0);
-        for (var i = 0; i < numColors; ++i) {
-          grey += pixels[pos + i];
+        for (var j = 0; j < numColors; ++j) {
+          grey += pixels[pos + j];
         }
         grey /= numColors * 255;
       }
@@ -684,7 +686,7 @@ simply.image = function(path, reset, callback) {
   if (image && reset !== true) {
     return image.id;
   }
-  var image = {
+  image = {
     id: simply.state.nextImageId++,
     path: path,
   };
@@ -865,10 +867,10 @@ simply.emitClick = function(type, button) {
   });
 };
 
-simply.emitTextExit = function() {
-  var textDef = simply.state.text;
-  simply.emit('textExit', util2.copy(textDef, {
-    text: textDef
+simply.emitCardExit = function() {
+  var cardDef = simply.state.card;
+  simply.emit('cardExit', util2.copy(cardDef, {
+    text: cardDef
   }));
 };
 
@@ -953,4 +955,4 @@ return simply;
 })();
 
 Pebble.require = require;
-var require = simply.require;
+window.require = simply.require;

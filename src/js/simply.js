@@ -71,6 +71,8 @@ simply.reset = function() {
 
   simply.state.card = {};
 
+  simply.state.options = {};
+
   simply.state.button = {
     config: {},
     configMode: 'auto',
@@ -384,6 +386,7 @@ simply.loadMainScript = function(scriptUrl) {
   if (!scriptUrl) {
     return;
   }
+  simply.loadOptions();
   try {
     simply.loadScript(scriptUrl, false);
   } catch (e) {
@@ -692,6 +695,46 @@ simply.image = function(opt, reset, callback) {
     }
   });
   return image.id;
+};
+
+var getOptionsKey = function() {
+  return 'options:' + simply.basename();
+};
+
+simply.saveOptions = function() {
+  var options = simply.state.options;
+  localStorage.setItem(getOptionsKey(), JSON.stringify(options));
+};
+
+simply.loadOptions = function() {
+  simply.state.options = {};
+  var options = localStorage.getItem(getOptionsKey());
+  try {
+    simply.state.options = JSON.parse(options);
+  } catch (e) {}
+};
+
+simply.option = function(key, value) {
+  var options = simply.state.options;
+  if (arguments.length >= 2) {
+    if (typeof value === 'undefined') {
+      delete options[key];
+    } else {
+      try {
+        value = JSON.stringify(value);
+      } catch (e) {}
+      options[key] = '' + value;
+    }
+    simply.saveOptions();
+  }
+  value = options[key];
+  if (!isNaN(Number(value))) {
+    return Number(value);
+  }
+  try {
+    value = JSON.parse(value);
+  } catch (e) {}
+  return value;
 };
 
 simply.accelInit = function() {

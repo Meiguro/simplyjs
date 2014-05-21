@@ -869,7 +869,7 @@ simply.emitClick = function(type, button) {
 simply.emitCardExit = function() {
   var cardDef = simply.state.card;
   simply.emit('cardExit', util2.copy(cardDef, {
-    text: cardDef
+    card: cardDef
   }));
 };
 

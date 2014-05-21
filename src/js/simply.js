@@ -37,7 +37,7 @@ simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
 
 simply.init = function() {
   if (!simply.inited) {
-    simply.inited = true;
+    simply.inited = new Date().getTime();
     ajax.onHandler = function(type, handler) {
       return simply.wrapHandler(handler, 2);
     };
@@ -65,11 +65,8 @@ simply.reset = function() {
   simply.state = {};
   simply.state.run = true;
   simply.state.numPackages = 0;
-
-  simply.state.images = {};
-  simply.state.nextImageId = 1;
-
   simply.state.card = {};
+  simply.state.options = {};
 
   simply.state.button = {
     config: {},
@@ -81,6 +78,15 @@ simply.reset = function() {
       simply.state.button.config[buttons[i]] = true;
     }
   }
+
+  simply.state.image = {
+    cache: {},
+    nextId: 1,
+  };
+
+  simply.state.webview = {
+    listeners: [],
+  };
 
   simply.accelInit();
 };
@@ -384,6 +390,7 @@ simply.loadMainScript = function(scriptUrl) {
   if (!scriptUrl) {
     return;
   }
+  simply.loadOptions();
   try {
     simply.loadScript(scriptUrl, false);
   } catch (e) {
@@ -661,7 +668,7 @@ simply.image = function(opt, reset, callback) {
   }
   var url = simply.basepath() + opt.url;
   var hash = makeImageHash(opt);
-  var image = simply.state.images[hash];
+  var image = simply.state.image.cache[hash];
   if (image) {
     if ((opt.width && image.width !== opt.width) ||
         (opt.height && image.height !== opt.height) ||
@@ -673,13 +680,13 @@ simply.image = function(opt, reset, callback) {
     }
   }
   image = {
-    id: simply.state.nextImageId++,
+    id: simply.state.image.nextId++,
     url: url,
     width: opt.width,
     height: opt.height,
     dither: opt.dither,
   };
-  simply.state.images[hash] = image;
+  simply.state.image.cache[hash] = image;
   SimplyImage.load(image, function() {
     simply.impl.image(image.id, image.gbitmap);
     if (callback) {
@@ -692,6 +699,108 @@ simply.image = function(opt, reset, callback) {
     }
   });
   return image.id;
+};
+
+var getOptionsKey = function() {
+  return 'options:' + simply.basename();
+};
+
+simply.saveOptions = function() {
+  var options = simply.state.options;
+  localStorage.setItem(getOptionsKey(), JSON.stringify(options));
+};
+
+simply.loadOptions = function() {
+  simply.state.options = {};
+  var options = localStorage.getItem(getOptionsKey());
+  try {
+    simply.state.options = JSON.parse(options);
+  } catch (e) {}
+};
+
+simply.option = function(key, value) {
+  var options = simply.state.options;
+  if (arguments.length >= 2) {
+    if (typeof value === 'undefined') {
+      delete options[key];
+    } else {
+      try {
+        value = JSON.stringify(value);
+      } catch (e) {}
+      options[key] = '' + value;
+    }
+    simply.saveOptions();
+  }
+  value = options[key];
+  if (!isNaN(Number(value))) {
+    return Number(value);
+  }
+  try {
+    value = JSON.parse(value);
+  } catch (e) {}
+  return value;
+};
+
+simply.getBaseOptions = function() {
+  return {
+    scriptUrl: localStorage.getItem('mainJsUrl'),
+  };
+};
+
+simply.settings = function(opt, open, close) {
+  if (typeof opt === 'string') {
+    opt = { url: opt };
+  }
+  if (typeof close === 'undefined') {
+    close = open;
+    open = util2.noop;
+  }
+  var listener = {
+    params: opt,
+    open: open,
+    close: close,
+  };
+  simply.state.webview.listeners.push(listener);
+};
+
+simply.openSettings = function(e) {
+  var options;
+  var url;
+  var listener = util2.last(simply.state.webview.listeners);
+  if (listener && (new Date().getTime() - simply.inited) > 2000) {
+    url = listener.params.url;
+    options = simply.state.options;
+    e = {
+      originalEvent: e,
+      options: options,
+      url: listener.params.url,
+    };
+    listener.open(e);
+  } else {
+    url = simply.settingsUrl;
+    options = simply.getBaseOptions();
+  }
+  var hash = encodeURIComponent(JSON.stringify(options));
+  Pebble.openURL(url + '#' + hash);
+};
+
+simply.closeSettings = function(e) {
+  var listener = util2.last(simply.state.webview.listeners);
+  var options = {};
+  if (e.response) {
+    options = JSON.parse(decodeURIComponent(e.response));
+  }
+  if (listener) {
+    e = {
+      originalEvent: e,
+      options: options,
+      url: listener.params.url,
+    };
+    return listener.close(e);
+  }
+  if (options.scriptUrl) {
+    simply.loadMainScript(options.scriptUrl);
+  }
 };
 
 simply.accelInit = function() {
@@ -869,7 +978,7 @@ simply.emitClick = function(type, button) {
 simply.emitCardExit = function() {
   var cardDef = simply.state.card;
   simply.emit('cardExit', util2.copy(cardDef, {
-    text: cardDef
+    card: cardDef
   }));
 };
 

@@ -317,24 +317,12 @@ SimplyPebble.loadPackage = function(pkg, loader) {
   return SimplyPebble.papply(loader, null, pkg.name);
 };
 
-SimplyPebble.onWebViewClosed = function(e) {
-  if (!e.response) {
-    return;
-  }
-
-  var options = JSON.parse(decodeURIComponent(e.response));
-  simply.loadMainScript(options.scriptUrl);
-};
-
-SimplyPebble.getOptions = function() {
-  return {
-    scriptUrl: localStorage.getItem('mainJsUrl'),
-  };
-};
-
 SimplyPebble.onShowConfiguration = function(e) {
-  var options = encodeURIComponent(JSON.stringify(SimplyPebble.getOptions()));
-  Pebble.openURL(simply.settingsUrl + '#' + options);
+  simply.openSettings(e);
+};
+
+SimplyPebble.onWebViewClosed = function(e) {
+  simply.closeSettings(e);
 };
 
 function makePacket(command, def) {

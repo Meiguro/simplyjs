@@ -6,32 +6,36 @@ var util2 = (function(util2){
 
 util2.noop = function() {};
 
-util2.copy = function (a, b) {
+util2.copy = function(a, b) {
   b = b || (a instanceof Array ? [] : {});
   for (var k in a) { b[k] = a[k]; }
   return b;
 };
 
-util2.toInteger = function (x) {
+util2.toInteger = function(x) {
   if (!isNaN(x = parseInt(x))) { return x; }
 };
 
-util2.toNumber = function (x) {
+util2.toNumber = function(x) {
   if (!isNaN(x = parseFloat(x))) { return x; }
 };
 
-util2.toString = function (x) {
+util2.toString = function(x) {
   return typeof x === 'object' ? JSON.stringify.apply(this, arguments) : '' + x;
 };
 
-util2.toArray = function (x) {
+util2.toArray = function(x) {
   if (x instanceof Array) { return x; }
   if (x[0]) { return util2.copy(x, []); }
   return [x];
 };
 
-util2.trim = function (s) {
+util2.trim = function(s) {
   return s ? s.toString().trim() : s;
+};
+
+util2.last = function(a) {
+  return a[a.length-1];
 };
 
 var chunkSize = 128;
@@ -44,7 +48,7 @@ var randomBytes = function(chunkSize) {
   return z.join('');
 };
 
-util2.randomString = function (regex, size, acc) {
+util2.randomString = function(regex, size, acc) {
   if (!size) {
     return '';
   }
@@ -65,7 +69,7 @@ util2.randomString = function (regex, size, acc) {
 
 var varpat = new RegExp("^([\\s\\S]*?)\\$([_a-zA-Z0-9]+)", "m");
 
-util2.format = function (text, table) {
+util2.format = function(text, table) {
   var m, z = '';
   while ((m = text.match(varpat))) {
     var subtext = m[0], value = table[m[2]];

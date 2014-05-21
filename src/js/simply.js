@@ -613,7 +613,7 @@ simply.style = function(type) {
   return simply.impl.style.apply(this, arguments);
 };
 
-var getImageHash = function(image) {
+var makeImageHash = function(image) {
   var url = image.url;
   var hashPart = '';
   if (image.width) {
@@ -631,16 +631,36 @@ var getImageHash = function(image) {
   return url;
 };
 
+var parseImageHash = function(hash) {
+  var image = {};
+  hash = hash.split('#');
+  image.url = hash[0];
+  hash = hash[1];
+  if (!hash) { return image; }
+  var args = hash.split(',');
+  for (var i = 0, ii = args.length; i < ii; ++i) {
+    var arg = args[i];
+    if (arg.match(':')) {
+      arg = arg.split(':');
+      var v = arg[1];
+      image[arg[0]] = !isNaN(Number(v)) ? Number(v) : v;
+    } else {
+      image[arg] = true;
+    }
+  }
+  return image;
+};
+
 simply.image = function(opt, reset, callback) {
   if (typeof opt === 'string') {
-    opt = { url: opt };
+    opt = parseImageHash(opt);
   }
   if (typeof reset === 'function') {
     callback = reset;
     reset = null;
   }
   var url = simply.basepath() + opt.url;
-  var hash = getImageHash(opt);
+  var hash = makeImageHash(opt);
   var image = simply.state.images[hash];
   if (image) {
     if ((opt.width && image.width !== opt.width) ||

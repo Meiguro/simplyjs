@@ -350,7 +350,7 @@ function makePacket(command, def) {
           v = v.toString();
         } else if (param.type === Boolean) {
           v = v ? 1 : 0;
-        } else if (param.type === Image && typeof v === 'string') {
+        } else if (param.type === Image && typeof v !== 'number') {
           v = simply.image(v);
         }
         packet[param.id] = v;

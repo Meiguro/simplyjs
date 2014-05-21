@@ -614,10 +614,21 @@ simply.style = function(type) {
 };
 
 var getImageHash = function(image) {
-  return image.url + '#' +
-      '/w' + (image.width || 0) +
-      '/h' + (image.height || 0) +
-      '/d' + (image.dither || 0);
+  var url = image.url;
+  var hashPart = '';
+  if (image.width) {
+    hashPart += ',width:' + image.width;
+  }
+  if (image.height) {
+    hashPart += ',height:' + image.height;
+  }
+  if (image.dither) {
+    hashPart += ',dither:' + image.dither;
+  }
+  if (hashPart) {
+    url += '#' + hashPart.substr(1);
+  }
+  return url;
 };
 
 simply.image = function(opt, reset, callback) {

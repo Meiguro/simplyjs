@@ -2,7 +2,7 @@
  * Simply.js
  * @namespace simply
  */
-/* global util2, PNG */
+/* global util2, PNG, SimplyImage */
 var simply = (function() {
 
 var noop = typeof util2 !== 'undefined' ? util2.noop : function() {};
@@ -613,85 +613,50 @@ simply.style = function(type) {
   return simply.impl.style.apply(this, arguments);
 };
 
-var toGbitmap = function(png) {
-  var pixels = png.decodePixels();
-  var bitDepth = png.pixelBitlength;
-  var byteDepth = bitDepth / 8;
-  var rowBytes = png.width * byteDepth;
-
-  var gpixels = [];
-  var growBytes = Math.ceil(png.width / 32) * 4;
-  for (var i = 0, ii = png.height * growBytes; i < ii; ++i) {
-    gpixels[i] = 0;
-  }
-
-  for (var y = 0, yy = png.height; y < yy; ++y) {
-    for (var x = 0, xx = png.width; x < xx; ++x) {
-      var grey = 0;
-      var pos;
-      if (bitDepth < 8) {
-        var bitPos = y * png.width * bitDepth + x * bitDepth;
-        pos = parseInt(bitPos / 8);
-        var mask = (1 << bitDepth) - 1;
-        var s = bitPos % (8 / bitDepth);
-        grey = (pixels[pos] >> (7 - s * bitDepth)) & mask;
-        grey /= mask;
-      } else {
-        pos = y * rowBytes + parseInt(x * byteDepth);
-        var numColors = byteDepth - (png.hasAlphaChannel ? 1 : 0);
-        for (var j = 0; j < numColors; ++j) {
-          grey += pixels[pos + j];
-        }
-        grey /= numColors * 255;
-      }
-      if (grey >= 0.5) {
-        var gbytePos = y * growBytes + parseInt(x / 8);
-        gpixels[gbytePos] += 1 << (x % 8);
-      }
-    }
-  }
-
-  var gbitmap = {
-    width: png.width,
-    height: png.height,
-    pixels: gpixels,
-  };
-
-  return gbitmap;
+var getImageHash = function(image) {
+  return image.url + '#' +
+      '/w' + (image.width || 0) +
+      '/h' + (image.height || 0);
 };
 
-simply.loadImage = function(image, callback) {
-  PNG.load(image.path, function(png) {
-    image.gbitmap = toGbitmap(png);
+simply.image = function(opt, reset, callback) {
+  if (typeof opt === 'string') {
+    opt = { url: opt };
+  }
+  if (typeof reset === 'function') {
+    callback = reset;
+    reset = null;
+  }
+  var url = simply.basepath() + opt.url;
+  var hash = getImageHash(opt);
+  var image = simply.state.images[hash];
+  if (image) {
+    if ((opt.width && image.width !== opt.width) ||
+        (opt.height && image.height !== opt.height)) {
+      reset = true;
+    }
+    if (reset !== true) {
+      return image.id;
+    }
+  }
+  image = {
+    id: simply.state.nextImageId++,
+    url: url,
+    width: opt.width,
+    height: opt.height,
+  };
+  simply.state.images[hash] = image;
+  SimplyImage.load(image, function() {
     simply.impl.image(image.id, image.gbitmap);
     if (callback) {
       var e = {
         type: 'image',
         image: image.id,
-        path: image.path,
+        url: image.url,
       };
       callback(e);
     }
   });
-  return image;
-};
-
-simply.image = function(path, reset, callback) {
-  if (typeof reset === 'function') {
-    callback = reset;
-    reset = null;
-  }
-  path = simply.basepath() + path;
-  var image = simply.state.images[path];
-  if (image && reset !== true) {
-    return image.id;
-  }
-  image = {
-    id: simply.state.nextImageId++,
-    path: path,
-  };
-  simply.state.images[path] = image;
-  simply.loadImage(image, callback);
   return image.id;
 };
 

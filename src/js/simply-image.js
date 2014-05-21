@@ -24,7 +24,45 @@ SimplyImage.greyscale = function(pixels, width, height) {
   }
 };
 
-SimplyImage.dither = function(pixels, width, height) {
+SimplyImage.Dithers = {};
+
+SimplyImage.Dithers['floyd-steinberg'] = [
+  [ 1, 0, 7/16],
+  [-1, 1, 3/16],
+  [ 0, 1, 5/16],
+  [ 1, 1, 1/16]];
+
+SimplyImage.Dithers['jarvis-judice-ninke'] = [
+  [ 1, 0, 7/48],
+  [ 2, 0, 5/48],
+  [-2, 1, 3/48],
+  [-1, 1, 5/48],
+  [ 0, 1, 7/48],
+  [ 1, 1, 5/48],
+  [ 2, 1, 3/48],
+  [-2, 2, 1/48],
+  [-1, 2, 3/48],
+  [ 0, 2, 5/48],
+  [ 1, 2, 3/48],
+  [ 2, 2, 1/48]];
+
+SimplyImage.Dithers.sierra = [
+  [ 1, 0, 5/32],
+  [ 2, 0, 3/32],
+  [-2, 1, 2/32],
+  [-1, 1, 4/32],
+  [ 0, 1, 5/32],
+  [ 1, 1, 4/32],
+  [ 2, 1, 2/32],
+  [-1, 2, 2/32],
+  [ 0, 2, 3/32],
+  [ 1, 2, 2/32]];
+
+SimplyImage.Dithers['default'] = SimplyImage.Dithers.sierra;
+
+SimplyImage.dither = function(pixels, width, height, dithers) {
+  dithers = dithers || SimplyImage.Dithers['default'];
+  var numDithers = dithers.length;
   for (var y = 0, yy = height; y < yy; ++y) {
     for (var x = 0, xx = width; x < xx; ++x) {
       var pos = getPos(width, x, y);
@@ -32,20 +70,15 @@ SimplyImage.dither = function(pixels, width, height) {
       var newColor = oldColor >= 128 ? 255 : 0;
       var error = oldColor - newColor;
       pixels[pos] = newColor;
-      if (x + 1 < width) {
-        pixels[getPos(width, x+1, y  )] += parseInt(error * 7/16);
+      for (var i = 0; i < numDithers; ++i) {
+        var dither = dithers[i];
+        var x2 = x + dither[0], y2 = y + dither[1];
+        if (x2 >= 0 && x2 < width && y < height) {
+          pixels[getPos(width, x2, y2)] += parseInt(error * dither[2]);
+        }
       }
-      if (x - 1 >= 0 && y + 1 < height) {
-        pixels[getPos(width, x-1, y+1)] += parseInt(error * 3/16);
-      }
-      if (y + 1 < height) {
-        pixels[getPos(width, x  , y+1)] += parseInt(error * 5/16);
-      }
-      if (x + 1 < width && y + 1 < height) {
-        pixels[getPos(width, x+1, y+1)] += parseInt(error * 1/16);
-      }
-      for (var i = 1; i < 3; ++i) {
-        pixels[pos + i] = newColor;
+      for (var j = 1; j < 3; ++j) {
+        pixels[pos + j] = newColor;
       }
     }
   }
@@ -154,7 +187,8 @@ SimplyImage.load = function(image, callback) {
       height = image.height;
     }
     if (image.dither) {
-      SimplyImage.dither(pixels, width, height);
+      var dithers = SimplyImage.Dithers[image.dither];
+      SimplyImage.dither(pixels, width, height, dithers);
     }
     image.gbitmap = SimplyImage.toGbitmap(pixels, width, height);
     if (callback) {

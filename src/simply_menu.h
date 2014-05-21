@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplyjs.h"
+
 #include "util/list1.h"
 
 #include <pebble.h>
@@ -19,6 +21,7 @@ enum SimplyMenuType {
 };
 
 struct SimplyMenu {
+  Simply *simply;
   Window *window;
   MenuLayer *menu_layer;
   List1Node *sections;
@@ -52,11 +55,12 @@ struct SimplyMenuSection {
 struct SimplyMenuItem {
   SimplyMenuCommonMember;
   char *subtitle;
+  uint32_t icon;
   uint16_t section;
   uint16_t index;
 };
 
-SimplyMenu *simply_menu_create(void);
+SimplyMenu *simply_menu_create(Simply *simply);
 
 void simply_menu_destroy(SimplyMenu *self);
 

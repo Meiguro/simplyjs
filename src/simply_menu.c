@@ -1,6 +1,12 @@
 #include "simply_menu.h"
 
+#include "simply_res.h"
+
 #include "simply_msg.h"
+
+#include "simplyjs.h"
+
+#include <pebble.h>
 
 #define MAX_CACHED_SECTIONS 10
 
@@ -199,7 +205,8 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   list1_remove(&self->items, &item->node);
   list1_prepend(&self->items, &item->node);
 
-  menu_cell_basic_draw(ctx, cell_layer, item->title, item->subtitle, NULL);
+  GBitmap *bitmap = simply_res_get_image(self->simply->res, item->icon);
+  menu_cell_basic_draw(ctx, cell_layer, item->title, item->subtitle, bitmap);
 }
 
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
@@ -266,13 +273,14 @@ void simply_menu_show(SimplyMenu *self) {
   }
 }
 
-SimplyMenu *simply_menu_create(void) {
+SimplyMenu *simply_menu_create(Simply *simply) {
   if (s_menu) {
     return s_menu;
   }
 
   SimplyMenu *self = malloc(sizeof(*self));
   *self = (SimplyMenu) {
+    .simply = simply,
     .num_sections = 1,
     .request_delay_ms = REQUEST_DELAY_MS,
   };

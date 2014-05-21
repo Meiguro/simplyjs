@@ -2,6 +2,7 @@
  * Simply.js
  * @namespace simply
  */
+/* global util2, PNG, SimplyImage */
 var simply = (function() {
 
 var noop = typeof util2 !== 'undefined' ? util2.noop : function() {};
@@ -18,7 +19,7 @@ var buttons = [
 var eventTypes = [
   'singleClick',
   'longClick',
-  'textExit',
+  'cardExit',
   'accelTap',
   'accelData',
   'menuSection',
@@ -65,7 +66,10 @@ simply.reset = function() {
   simply.state.run = true;
   simply.state.numPackages = 0;
 
-  simply.state.text = {};
+  simply.state.images = {};
+  simply.state.nextImageId = 1;
+
+  simply.state.card = {};
 
   simply.state.button = {
     config: {},
@@ -445,8 +449,8 @@ simply.buttonConfig = function(buttonConf, auto) {
   if (typeof buttonConf === 'undefined') {
     var config = {};
     for (var i = 0, ii = buttons.length; i < ii; ++i) {
-      var k = buttons[i];
-      config[k] = buttonConf.config[k];
+      var name = buttons[i];
+      config[name] = buttonConf.config[name];
     }
     return config;
   }
@@ -477,6 +481,21 @@ simply.buttonAutoConfig = function() {
   }
 };
 
+simply.card = function(cardDef, clear) {
+  if (typeof cardDef === 'undefined') {
+    return simply.state.card;
+  } else if (typeof cardDef === 'object') {
+    if (clear) {
+      simply.state.card = cardDef;
+    } else {
+      util2.copy(cardDef, simply.state.card);
+    }
+  } else {
+    throw new Error('simply.text takes a cardDef object');
+  }
+  return simply.impl.card.apply(this, arguments);
+};
+
 /**
  * The text definition parameter for {@link simply.text}.
  * @typedef {object} simply.textDef
@@ -494,31 +513,18 @@ simply.buttonAutoConfig = function() {
  * @param {simply.textDef} textDef - An object defining new text values.
  * @param {boolean} [clear] - If true, all other text fields will be cleared.
  */
-simply.text = function(textDef, clear) {
-  if (typeof textDef === 'undefined') {
-    return simply.state.text;
-  } else if (typeof textDef === 'object') {
-    if (clear) {
-      simply.state.text = textDef;
-    } else {
-      util2.copy(textDef, simply.state.text);
-    }
-  } else {
-    throw new Error('simply.text takes a textDef object');
-  }
-  return simply.impl.text.apply(this, arguments);
-};
+simply.text = simply.card;
 
 simply.setText = simply.text;
 
 var textfield = function(field, text, clear) {
   if (typeof text === 'undefined') {
-    return simply.state.text[field];
+    return simply.state.card[field];
   }
   if (clear) {
-    simply.state.text = {};
+    simply.state.card = {};
   }
-  simply.state.text[field] = text;
+  simply.state.card[field] = text;
   return simply.impl.textfield(field, text, clear);
 };
 
@@ -605,6 +611,87 @@ simply.fullscreen = function(fullscreen) {
 
 simply.style = function(type) {
   return simply.impl.style.apply(this, arguments);
+};
+
+var makeImageHash = function(image) {
+  var url = image.url;
+  var hashPart = '';
+  if (image.width) {
+    hashPart += ',width:' + image.width;
+  }
+  if (image.height) {
+    hashPart += ',height:' + image.height;
+  }
+  if (image.dither) {
+    hashPart += ',dither:' + image.dither;
+  }
+  if (hashPart) {
+    url += '#' + hashPart.substr(1);
+  }
+  return url;
+};
+
+var parseImageHash = function(hash) {
+  var image = {};
+  hash = hash.split('#');
+  image.url = hash[0];
+  hash = hash[1];
+  if (!hash) { return image; }
+  var args = hash.split(',');
+  for (var i = 0, ii = args.length; i < ii; ++i) {
+    var arg = args[i];
+    if (arg.match(':')) {
+      arg = arg.split(':');
+      var v = arg[1];
+      image[arg[0]] = !isNaN(Number(v)) ? Number(v) : v;
+    } else {
+      image[arg] = true;
+    }
+  }
+  return image;
+};
+
+simply.image = function(opt, reset, callback) {
+  if (typeof opt === 'string') {
+    opt = parseImageHash(opt);
+  }
+  if (typeof reset === 'function') {
+    callback = reset;
+    reset = null;
+  }
+  var url = simply.basepath() + opt.url;
+  var hash = makeImageHash(opt);
+  var image = simply.state.images[hash];
+  if (image) {
+    if ((opt.width && image.width !== opt.width) ||
+        (opt.height && image.height !== opt.height) ||
+        (opt.dither && image.dither !== opt.dither)) {
+      reset = true;
+    }
+    if (reset !== true) {
+      return image.id;
+    }
+  }
+  image = {
+    id: simply.state.nextImageId++,
+    url: url,
+    width: opt.width,
+    height: opt.height,
+    dither: opt.dither,
+  };
+  simply.state.images[hash] = image;
+  SimplyImage.load(image, function() {
+    simply.impl.image(image.id, image.gbitmap);
+    if (callback) {
+      var e = {
+        type: 'image',
+        image: image.id,
+        url: image.url,
+      };
+      callback(e);
+    }
+  });
+  return image.id;
 };
 
 simply.accelInit = function() {
@@ -779,10 +866,10 @@ simply.emitClick = function(type, button) {
   });
 };
 
-simply.emitTextExit = function() {
-  var textDef = simply.state.text;
-  simply.emit('textExit', util2.copy(textDef, {
-    text: textDef
+simply.emitCardExit = function() {
+  var cardDef = simply.state.card;
+  simply.emit('cardExit', util2.copy(cardDef, {
+    text: cardDef
   }));
 };
 
@@ -867,4 +954,4 @@ return simply;
 })();
 
 Pebble.require = require;
-var require = simply.require;
+window.require = simply.require;

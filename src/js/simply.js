@@ -616,7 +616,8 @@ simply.style = function(type) {
 var getImageHash = function(image) {
   return image.url + '#' +
       '/w' + (image.width || 0) +
-      '/h' + (image.height || 0);
+      '/h' + (image.height || 0) +
+      '/d' + (image.dither || 0);
 };
 
 simply.image = function(opt, reset, callback) {
@@ -632,7 +633,8 @@ simply.image = function(opt, reset, callback) {
   var image = simply.state.images[hash];
   if (image) {
     if ((opt.width && image.width !== opt.width) ||
-        (opt.height && image.height !== opt.height)) {
+        (opt.height && image.height !== opt.height) ||
+        (opt.dither && image.dither !== opt.dither)) {
       reset = true;
     }
     if (reset !== true) {
@@ -644,6 +646,7 @@ simply.image = function(opt, reset, callback) {
     url: url,
     width: opt.width,
     height: opt.height,
+    dither: opt.dither,
   };
   simply.state.images[hash] = image;
   SimplyImage.load(image, function() {

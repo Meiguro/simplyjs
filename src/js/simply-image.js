@@ -8,6 +8,49 @@ var getPos = function(width, x, y) {
   return y * width * 4 + x * 4;
 };
 
+var getPixelGrey = function(pixels, pos) {
+  return ((pixels[pos] + pixels[pos + 1] + pixels[pos + 2]) / 3) & 0xFF;
+};
+
+SimplyImage.greyscale = function(pixels, width, height) {
+  for (var y = 0, yy = height; y < yy; ++y) {
+    for (var x = 0, xx = width; x < xx; ++x) {
+      var pos = getPos(width, x, y);
+      var newColor = getPixelGrey(pixels, pos);
+      for (var i = 0; i < 3; ++i) {
+        pixels[pos + i] = newColor;
+      }
+    }
+  }
+};
+
+SimplyImage.dither = function(pixels, width, height) {
+  for (var y = 0, yy = height; y < yy; ++y) {
+    for (var x = 0, xx = width; x < xx; ++x) {
+      var pos = getPos(width, x, y);
+      var oldColor = pixels[pos];
+      var newColor = oldColor >= 128 ? 255 : 0;
+      var error = oldColor - newColor;
+      pixels[pos] = newColor;
+      if (x + 1 < width) {
+        pixels[getPos(width, x+1, y  )] += parseInt(error * 7/16);
+      }
+      if (x - 1 >= 0 && y + 1 < height) {
+        pixels[getPos(width, x-1, y+1)] += parseInt(error * 3/16);
+      }
+      if (y + 1 < height) {
+        pixels[getPos(width, x  , y+1)] += parseInt(error * 5/16);
+      }
+      if (x + 1 < width && y + 1 < height) {
+        pixels[getPos(width, x+1, y+1)] += parseInt(error * 1/16);
+      }
+      for (var i = 1; i < 3; ++i) {
+        pixels[pos + i] = newColor;
+      }
+    }
+  }
+};
+
 SimplyImage.resizeNearest = function(pixels, width, height, newWidth, newHeight) {
   var newPixels = new Array(newWidth * newHeight * 4);
   var widthRatio = width / newWidth;
@@ -92,6 +135,7 @@ SimplyImage.load = function(image, callback) {
     var pixels = png.decode();
     var width = png.width;
     var height = png.height;
+    SimplyImage.greyscale(pixels, width, height);
     if (image.width) {
       if (!image.height) {
         image.height = parseInt(height * (image.width / width));
@@ -108,6 +152,9 @@ SimplyImage.load = function(image, callback) {
       pixels = SimplyImage.resize(pixels, width, height, image.width, image.height);
       width = image.width;
       height = image.height;
+    }
+    if (image.dither) {
+      SimplyImage.dither(pixels, width, height);
     }
     image.gbitmap = SimplyImage.toGbitmap(pixels, width, height);
     if (callback) {

@@ -27,6 +27,26 @@ var commands = [{
   }, {
     name: 'banner',
     type: Image,
+  }, {
+    name: 'action',
+    type: Boolean,
+  }, {
+    name: 'actionUp',
+    type: Image,
+  }, {
+    name: 'actionSelect',
+    type: Image,
+  }, {
+    name: 'actionDown',
+    type: Image,
+  }, {
+    name: 'fullscreen',
+    type: Boolean,
+  }, {
+    name: 'style',
+  }, {
+    name: 'scrollable',
+    type: Boolean,
   }],
 }, {
   name: 'singleClick',
@@ -49,21 +69,6 @@ var commands = [{
   name: 'vibe',
   params: [{
     name: 'type',
-  }],
-}, {
-  name: 'setScrollable',
-  params: [{
-    name: 'scrollable',
-  }],
-}, {
-  name: 'setStyle',
-  params: [{
-    name: 'type',
-  }],
-}, {
-  name: 'setFullscreen',
-  params: [{
-    name: 'fullscreen',
   }],
 }, {
   name: 'accelData',
@@ -223,6 +228,18 @@ var styleTypes = [
   'mono',
 ];
 
+var clearFlagMap = {
+  text: (1 << 0),
+  image: (1 << 1),
+  action: (1 << 2),
+};
+
+var actionBarTypeMap = {
+  up: 'actionUp',
+  select: 'actionSelect',
+  down: 'actionDown',
+};
+
 var SimplyPebble = {};
 
 SimplyPebble.init = function() {
@@ -325,28 +342,38 @@ SimplyPebble.onWebViewClosed = function(e) {
   simply.closeSettings(e);
 };
 
-function makePacket(command, def) {
-  var packet = {};
-  packet[0] = command.id;
-  if (def) {
-    var paramMap = command.paramMap;
-    for (var k in def) {
-      var param = paramMap[k];
-      if (param) {
-        var v = def[k];
-        if (param.type === String) {
-          v = v.toString();
-        } else if (param.type === Boolean) {
-          v = v ? 1 : 0;
-        } else if (param.type === Image && typeof v !== 'number') {
-          v = simply.image(v);
-        }
-        packet[param.id] = v;
-      }
+var toParam = function(param, v) {
+  if (param.type === String) {
+    v = v.toString();
+  } else if (param.type === Boolean) {
+    v = v ? 1 : 0;
+  } else if (param.type === Image && typeof v !== 'number') {
+    v = simply.image(v);
+  }
+  return v;
+};
+
+var setPacket = function(packet, command, def, typeMap) {
+  var paramMap = command.paramMap;
+  for (var k in def) {
+    var paramName = typeMap && typeMap[k] || k;
+    if (!paramName) { continue; }
+    var param = paramMap[paramName];
+    if (param) {
+      packet[param.id] = toParam(param, def[k]);
     }
   }
   return packet;
-}
+};
+
+var makePacket = function(command, def) {
+  var packet = {};
+  packet[0] = command.id;
+  if (def) {
+    setPacket(packet, command, def);
+  }
+  return packet;
+};
 
 SimplyPebble.sendPacket = function(packet) {
   if (!simply.state.run) {
@@ -370,8 +397,31 @@ SimplyPebble.buttonConfig = function(buttonConf) {
 };
 
 SimplyPebble.card = function(cardDef, clear) {
+  if (clear === 'all') {
+    clear = ~0;
+  } else if (typeof clear === 'string') {
+    clear = clearFlagMap[clear];
+  } else if (typeof clear === 'object') {
+    var flags = 0;
+    for (var k in clear) {
+      if (clear[k] === true) {
+        flags |= clearFlagMap[k];
+      }
+    }
+    clear = flags;
+  }
   var command = commandMap.setCard;
   var packet = makePacket(command, cardDef);
+  if (clear) {
+    packet[command.paramMap.clear.id] = clear;
+  }
+  var actionDef = cardDef.action;
+  if (actionDef) {
+    if (typeof actionDef === 'boolean') {
+      actionDef = { action: actionDef };
+    }
+    setPacket(packet, command, actionDef, actionBarTypeMap);
+  }
   SimplyPebble.sendPacket(packet);
 };
 
@@ -397,21 +447,21 @@ SimplyPebble.vibe = function(type) {
 };
 
 SimplyPebble.scrollable = function(scrollable) {
-  var command = commandMap.setScrollable;
+  var command = commandMap.card;
   var packet = makePacket(command);
   packet[command.paramMap.scrollable.id] = scrollable ? 1 : 0;
   SimplyPebble.sendPacket(packet);
 };
 
 SimplyPebble.fullscreen = function(fullscreen) {
-  var command = commandMap.setFullscreen;
+  var command = commandMap.card;
   var packet = makePacket(command);
   packet[command.paramMap.fullscreen.id] = fullscreen ? 1 : 0;
   SimplyPebble.sendPacket(packet);
 };
 
 SimplyPebble.style = function(type) {
-  var command = commandMap.setStyle;
+  var command = commandMap.card;
   var packet = makePacket(command);
   var styleIndex = styleTypes.indexOf(type);
   packet[command.paramMap.type.id] = styleIndex !== -1 ? styleIndex : 1;

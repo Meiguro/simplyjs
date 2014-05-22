@@ -29,6 +29,26 @@ var eventTypes = [
   'menuExit',
 ];
 
+var textParams = [
+  'title',
+  'subtitle',
+  'body',
+];
+
+var imageParams = [
+  'icon',
+  'subicon',
+  'banner',
+];
+
+var actionParams = [
+  'up',
+  'select',
+  'back',
+];
+
+var cardParams = textParams.concat(imageParams).concat(actionParams);
+
 simply.state = {};
 simply.packages = {};
 simply.listeners = {};
@@ -38,6 +58,7 @@ simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
 simply.init = function() {
   if (!simply.inited) {
     simply.inited = new Date().getTime();
+
     ajax.onHandler = function(type, handler) {
       return simply.wrapHandler(handler, 2);
     };
@@ -310,8 +331,8 @@ var slog = function() {
 };
 
 simply.fexecPackage = function(script, pkg) {
-  // console shim for Android
-  var console2 = {};
+  // console shim
+  var console2 = simply.console2 = {};
   for (var k in console) {
     console2[k] = console[k];
   }
@@ -488,19 +509,29 @@ simply.buttonAutoConfig = function() {
   }
 };
 
-simply.card = function(cardDef, clear) {
-  if (typeof cardDef === 'undefined') {
+simply.card = function(field, value, clear) {
+  if (arguments.length === 0) {
     return simply.state.card;
-  } else if (typeof cardDef === 'object') {
-    if (clear) {
-      simply.state.card = cardDef;
-    } else {
-      util2.copy(cardDef, simply.state.card);
-    }
-  } else {
-    throw new Error('simply.text takes a cardDef object');
   }
-  return simply.impl.card.apply(this, arguments);
+  var cardDef;
+  if (typeof field === 'string') {
+    if (arguments.length === 1) {
+      return simply.state.card[field];
+    }
+    cardDef = {};
+    cardDef[field] = value;
+  } else {
+    cardDef = field;
+    clear = value;
+    value = null;
+  }
+  clear = clear === true ? 'all' : clear;
+  if (clear === 'all') {
+    simply.state.card = cardDef;
+  } else {
+    util2.copy(cardDef, simply.state.card);
+  }
+  return simply.impl.card(cardDef, clear);
 };
 
 /**
@@ -525,7 +556,7 @@ simply.text = simply.card;
 simply.setText = simply.text;
 
 var textfield = function(field, text, clear) {
-  if (typeof text === 'undefined') {
+  if (arguments.length <= 1) {
     return simply.state.card[field];
   }
   if (clear) {
@@ -565,6 +596,34 @@ simply.subtitle = function(text, clear) {
  */
 simply.body = function(text, clear) {
   return textfield('body', text, clear);
+};
+
+simply.action = function(field, image, clear) {
+  if (!simply.state.card.action) {
+    simply.state.card.action = {};
+  }
+  if (arguments.length === 0) {
+    return simply.state.card.action;
+  }
+  var actionDef;
+  if (typeof field === 'string') {
+    if (arguments.length === 1) {
+      return simply.state.card.action[field];
+    }
+    actionDef = {};
+    actionDef[field] = image;
+  } else {
+    actionDef = field;
+    clear = image;
+    image = null;
+  }
+  clear = clear === true ? 'action' : clear;
+  if (clear === 'all' || clear === 'action') {
+    simply.state.card.action = actionDef;
+  } else {
+    util2.copy(actionDef, simply.state.card.action);
+  }
+  return simply.impl.card({ action: actionDef }, clear);
 };
 
 /**

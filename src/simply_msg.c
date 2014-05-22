@@ -19,9 +19,6 @@ enum SimplyACmd {
   SimplyACmd_longClick,
   SimplyACmd_accelTap,
   SimplyACmd_vibe,
-  SimplyACmd_setScrollable,
-  SimplyACmd_setStyle,
-  SimplyACmd_setFullscreen,
   SimplyACmd_accelData,
   SimplyACmd_getAccelData,
   SimplyACmd_configAccelData,
@@ -36,6 +33,25 @@ enum SimplyACmd {
   SimplyACmd_menuLongSelect,
   SimplyACmd_menuExit,
   SimplyACmd_image,
+};
+
+typedef enum SimplySetUiParam SimplySetUiParam;
+
+enum SimplySetUiParam {
+  SetUi_clear = 1,
+  SetUi_title,
+  SetUi_subtitle,
+  SetUi_body,
+  SetUi_icon,
+  SetUi_subicon,
+  SetUi_banner,
+  SetUi_action,
+  SetUi_actionUp,
+  SetUi_actionSelect,
+  SetUi_actionDown,
+  SetUi_fullscreen,
+  SetUi_style,
+  SetUi_scrollable,
 };
 
 typedef enum VibeType VibeType;
@@ -55,27 +71,47 @@ static void check_splash(Simply *simply) {
 static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
   SimplyUi *ui = simply->ui;
   Tuple *tuple;
-  bool clear = false;
-  if ((tuple = dict_find(iter, 1))) {
-    clear = true;
+  if ((tuple = dict_find(iter, SetUi_clear))) {
+    simply_ui_clear(ui, tuple->value->uint32);
   }
-  if ((tuple = dict_find(iter, 2)) || clear) {
-    simply_ui_set_text(ui, &ui->title_text, tuple ? tuple->value->cstring : NULL);
-  }
-  if ((tuple = dict_find(iter, 3)) || clear) {
-    simply_ui_set_text(ui, &ui->subtitle_text, tuple ? tuple->value->cstring : NULL);
-  }
-  if ((tuple = dict_find(iter, 4)) || clear) {
-    simply_ui_set_text(ui, &ui->body_text, tuple ? tuple->value->cstring : NULL);
-  }
-  if ((tuple = dict_find(iter, 5)) || clear) {
-    ui->title_icon = tuple ? tuple->value->uint32 : 0;
-  }
-  if ((tuple = dict_find(iter, 6)) || clear) {
-    ui->subtitle_icon = tuple ? tuple->value->uint32 : 0;
-  }
-  if ((tuple = dict_find(iter, 7)) || clear) {
-    ui->image = tuple ? tuple->value->uint32 : 0;
+  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
+    switch (tuple->key) {
+      case SetUi_title:
+        simply_ui_set_text(ui, &ui->title_text, tuple->value->cstring);
+        break;
+      case SetUi_subtitle:
+        simply_ui_set_text(ui, &ui->subtitle_text, tuple->value->cstring);
+        break;
+      case SetUi_body:
+        simply_ui_set_text(ui, &ui->body_text, tuple->value->cstring);
+        break;
+      case SetUi_icon:
+        ui->title_icon = tuple->value->uint32;
+        break;
+      case SetUi_subicon:
+        ui->title_icon = tuple->value->uint32;
+        break;
+      case SetUi_banner:
+        ui->image = tuple->value->uint32;
+        break;
+      case SetUi_action:
+        simply_ui_set_action_bar(simply->ui, tuple->value->int32);
+        break;
+      case SetUi_actionUp:
+      case SetUi_actionSelect:
+      case SetUi_actionDown:
+        simply_ui_set_action_bar_icon(simply->ui, tuple->key - SetUi_action, tuple->value->int32);
+        break;
+      case SetUi_style:
+        simply_ui_set_style(simply->ui, tuple->value->int32);
+        break;
+      case SetUi_fullscreen:
+        simply_ui_set_fullscreen(simply->ui, tuple->value->int32);
+        break;
+      case SetUi_scrollable:
+        simply_ui_set_scrollable(simply->ui, tuple->value->int32);
+        break;
+    }
   }
   simply_ui_show(simply->ui);
 }
@@ -88,27 +124,6 @@ static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
       case VibeLong: vibes_short_pulse(); break;
       case VibeDouble: vibes_double_pulse(); break;
     }
-  }
-}
-
-static void handle_set_scrollable(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  if ((tuple = dict_find(iter, 1))) {
-    simply_ui_set_scrollable(simply->ui, tuple->value->int32);
-  }
-}
-
-static void handle_set_style(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  if ((tuple = dict_find(iter, 1))) {
-    simply_ui_set_style(simply->ui, tuple->value->int32);
-  }
-}
-
-static void handle_set_fullscreen(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  if ((tuple = dict_find(iter, 1))) {
-    simply_ui_set_fullscreen(simply->ui, tuple->value->int32);
   }
 }
 
@@ -245,15 +260,6 @@ static void received_callback(DictionaryIterator *iter, void *context) {
       break;
     case SimplyACmd_vibe:
       handle_vibe(iter, context);
-      break;
-    case SimplyACmd_setScrollable:
-      handle_set_scrollable(iter, context);
-      break;
-    case SimplyACmd_setStyle:
-      handle_set_style(iter, context);
-      break;
-    case SimplyACmd_setFullscreen:
-      handle_set_fullscreen(iter, context);
       break;
     case SimplyACmd_getAccelData:
       handle_get_accel_data(iter, context);

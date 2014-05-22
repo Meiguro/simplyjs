@@ -89,6 +89,10 @@ void simply_ui_set_scrollable(SimplyUi *self, bool is_scrollable) {
 void simply_ui_set_fullscreen(SimplyUi *self, bool is_fullscreen) {
   window_set_fullscreen(self->window, is_fullscreen);
 
+  if (!self->display_layer) {
+    return;
+  }
+
   GRect frame = layer_get_frame(window_get_root_layer(self->window));
   scroll_layer_set_frame(self->scroll_layer, frame);
   layer_set_frame(self->display_layer, frame);

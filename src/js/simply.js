@@ -509,19 +509,29 @@ simply.buttonAutoConfig = function() {
   }
 };
 
-simply.card = function(cardDef, clear) {
+simply.card = function(field, value, clear) {
   if (arguments.length === 0) {
     return simply.state.card;
-  } else if (typeof cardDef === 'object') {
-    if (clear) {
-      simply.state.card = cardDef;
-    } else {
-      util2.copy(cardDef, simply.state.card);
-    }
-  } else {
-    throw new Error('simply.card takes a cardDef object');
   }
-  return simply.impl.card.apply(this, arguments);
+  var cardDef;
+  if (typeof field === 'string') {
+    if (arguments.length === 1) {
+      return simply.state.card[field];
+    }
+    cardDef = {};
+    cardDef[field] = value;
+  } else {
+    cardDef = field;
+    clear = value;
+    value = null;
+  }
+  clear = clear === true ? 'all' : clear;
+  if (clear === 'all') {
+    simply.state.card = cardDef;
+  } else {
+    util2.copy(cardDef, simply.state.card);
+  }
+  return simply.impl.card(cardDef, clear);
 };
 
 /**
@@ -589,8 +599,17 @@ simply.body = function(text, clear) {
 };
 
 simply.action = function(field, image, clear) {
+  if (!simply.state.card.action) {
+    simply.state.card.action = {};
+  }
+  if (arguments.length === 0) {
+    return simply.state.card.action;
+  }
   var actionDef;
   if (typeof field === 'string') {
+    if (arguments.length === 1) {
+      return simply.state.card.action[field];
+    }
     actionDef = {};
     actionDef[field] = image;
   } else {
@@ -599,19 +618,10 @@ simply.action = function(field, image, clear) {
     image = null;
   }
   clear = clear === true ? 'action' : clear;
-  if (!simply.state.card.action) {
-    simply.state.card.action = {};
-  }
-  if (arguments.length === 0) {
-    return simply.state.card.action;
-  } else if (typeof actionDef === 'object') {
-    if (clear === 'all' || clear === 'action') {
-      simply.state.card.action = actionDef;
-    } else {
-      util2.copy(actionDef, simply.state.card.action);
-    }
+  if (clear === 'all' || clear === 'action') {
+    simply.state.card.action = actionDef;
   } else {
-    throw new Error('simply.action takes a actionDef object');
+    util2.copy(actionDef, simply.state.card.action);
   }
   return simply.impl.card({ action: actionDef }, clear);
 };

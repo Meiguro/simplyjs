@@ -46,12 +46,18 @@ void simply_res_remove_image(SimplyRes *self, uint32_t id) {
   }
 }
 
-GBitmap *simply_res_get_image(SimplyRes *self, uint32_t id) {
+GBitmap *simply_res_auto_image(SimplyRes *self, uint32_t id, bool is_placeholder) {
   if (!id) {
     return NULL;
   }
   SimplyImage *image = (SimplyImage*) list1_find(self->images, id_filter, (void*)(uintptr_t) id);
-  return image ? &image->bitmap : NULL;
+  if (image) {
+    return &image->bitmap;
+  }
+  if (!image && is_placeholder) {
+    return simply_res_add_image(self, id, 0, 0, NULL);
+  }
+  return NULL;
 }
 
 void simply_res_clear(SimplyRes *self) {

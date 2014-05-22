@@ -4,6 +4,8 @@
 
 #include <pebble.h>
 
+#define simply_res_get_image(self, id) simply_res_auto_image(self, id, false)
+
 typedef struct SimplyRes SimplyRes;
 
 typedef struct SimplyImage SimplyImage;
@@ -28,5 +30,5 @@ GBitmap *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, int16
 
 void simply_res_remove_image(SimplyRes *self, uint32_t id);
 
-GBitmap *simply_res_get_image(SimplyRes *self, uint32_t id);
+GBitmap *simply_res_auto_image(SimplyRes *self, uint32_t id, bool is_placeholder);
 

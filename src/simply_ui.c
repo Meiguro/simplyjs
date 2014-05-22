@@ -171,6 +171,10 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
   text_frame.size.h += 1000;
   GPoint cursor = { margin_x, margin_y };
 
+  if (self->is_action_bar) {
+    text_frame.size.w -= ACTION_BAR_WIDTH;
+  }
+
   graphics_context_set_text_color(ctx, GColorBlack);
 
   bool has_title = is_string(self->title_text);
@@ -225,7 +229,7 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
   if (has_body) {
     body_rect = frame;
     body_rect.origin = cursor;
-    body_rect.size.w -= 2 * margin_x;
+    body_rect.size.w = text_frame.size.w;
     body_rect.size.h -= 2 * margin_y + cursor.y;
     GSize body_size = graphics_text_layout_get_content_size(self->body_text,
         body_font, text_frame, GTextOverflowModeWordWrap, GTextAlignmentLeft);

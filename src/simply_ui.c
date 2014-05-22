@@ -38,7 +38,26 @@ static SimplyStyle STYLES[] = {
 
 SimplyUi *s_ui = NULL;
 
-static void click_config_provider(SimplyUi *self);
+static void click_config_provider(void *data);
+
+void simply_ui_clear(SimplyUi *self, uint32_t clear_mask) {
+  if (clear_mask & (1 << 0)) {
+    simply_ui_set_text(self, &self->title_text, NULL);
+    simply_ui_set_text(self, &self->subtitle_text, NULL);
+    simply_ui_set_text(self, &self->body_text, NULL);
+  }
+  if (clear_mask & (1 << 1)) {
+    self->title_icon = 0;
+    self->subtitle_icon = 0;
+    self->image = 0;
+  }
+  if (clear_mask & (1 << 2)) {
+    simply_ui_set_action_bar(self, false);
+    for (ButtonId button = BUTTON_ID_UP; button <= BUTTON_ID_DOWN; ++button) {
+      action_bar_layer_clear_icon(self->action_bar_layer, button);
+    }
+  }
+}
 
 void simply_ui_set_style(SimplyUi *self, int style_index) {
   if (self->custom_body_font) {
@@ -83,6 +102,27 @@ void simply_ui_set_fullscreen(SimplyUi *self, bool is_fullscreen) {
   window_stack_push(window, false);
   window_stack_remove(window, false);
   window_destroy(window);
+}
+
+void simply_ui_set_action_bar(SimplyUi *self, bool is_action_bar) {
+  self->is_action_bar = is_action_bar;
+  action_bar_layer_remove_from_window(self->action_bar_layer);
+  if (is_action_bar) {
+    action_bar_layer_add_to_window(self->action_bar_layer, self->window);
+    action_bar_layer_set_click_config_provider(self->action_bar_layer, click_config_provider);
+  } else {
+    window_set_click_config_provider(self->window, click_config_provider);
+  }
+}
+
+void simply_ui_set_action_bar_icon(SimplyUi *self, ButtonId button, uint32_t id) {
+  if (id) {
+    GBitmap *icon = simply_res_auto_image(self->simply->res, id, true);
+    action_bar_layer_set_icon(self->action_bar_layer, button, icon);
+    simply_ui_set_action_bar(self, true);
+  } else {
+    action_bar_layer_clear_icon(self->action_bar_layer, button);
+  }
 }
 
 void simply_ui_set_button(SimplyUi *self, ButtonId button, bool enable) {
@@ -264,7 +304,8 @@ static void long_click_handler(ClickRecognizerRef recognizer, void *context) {
   }
 }
 
-static void click_config_provider(SimplyUi *self) {
+static void click_config_provider(void *data) {
+  SimplyUi *self = data;
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     if (!self->is_scrollable || (i != BUTTON_ID_UP && i != BUTTON_ID_DOWN)) {
       window_single_click_subscribe(i, (ClickHandler) single_click_handler);
@@ -305,9 +346,13 @@ static void window_load(Window *window) {
 
   scroll_layer_set_context(scroll_layer, self);
   scroll_layer_set_callbacks(scroll_layer, (ScrollLayerCallbacks) {
-    .click_config_provider = (ClickConfigProvider) click_config_provider,
+    .click_config_provider = click_config_provider,
   });
   scroll_layer_set_click_config_onto_window(scroll_layer, window);
+
+  if (self->is_action_bar) {
+    simply_ui_set_action_bar(self, true);
+  }
 
   simply_ui_set_style(self, 1);
 }
@@ -353,12 +398,15 @@ SimplyUi *simply_ui_create(Simply *simply) {
   Window *window = self->window = window_create();
   window_set_user_data(window, self);
   window_set_background_color(window, GColorBlack);
-  window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
+  window_set_click_config_provider(window, click_config_provider);
   window_set_window_handlers(window, (WindowHandlers) {
     .load = window_load,
     .disappear = window_disappear,
     .unload = window_unload,
   });
+
+  ActionBarLayer *action_bar_layer = self->action_bar_layer = action_bar_layer_create();
+  action_bar_layer_set_context(action_bar_layer, self);
 
   app_timer_register(10000, (AppTimerCallback) show_welcome_text, self);
 
@@ -369,6 +417,9 @@ void simply_ui_destroy(SimplyUi *self) {
   if (!self) {
     return;
   }
+
+  action_bar_layer_destroy(self->action_bar_layer);
+  self->action_bar_layer = NULL;
 
   window_destroy(self->window);
   self->window = NULL;

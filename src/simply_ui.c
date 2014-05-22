@@ -173,6 +173,7 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
 
   if (self->is_action_bar) {
     text_frame.size.w -= ACTION_BAR_WIDTH;
+    window_frame.size.w -= ACTION_BAR_WIDTH;
   }
 
   graphics_context_set_text_color(ctx, GColorBlack);

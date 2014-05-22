@@ -77,39 +77,31 @@ static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {
       case SetUi_title:
-        simply_ui_set_text(ui, &ui->title_text, tuple->value->cstring);
-        break;
       case SetUi_subtitle:
-        simply_ui_set_text(ui, &ui->subtitle_text, tuple->value->cstring);
-        break;
       case SetUi_body:
-        simply_ui_set_text(ui, &ui->body_text, tuple->value->cstring);
+        simply_ui_set_text(ui, tuple->key - SetUi_title, tuple->value->cstring);
         break;
       case SetUi_icon:
-        ui->title_icon = tuple->value->uint32;
-        break;
       case SetUi_subicon:
-        ui->title_icon = tuple->value->uint32;
-        break;
       case SetUi_banner:
-        ui->image = tuple->value->uint32;
+        ui->ui_layer.imagefields[tuple->key - SetUi_icon] = tuple->value->uint32;
         break;
       case SetUi_action:
-        simply_ui_set_action_bar(simply->ui, tuple->value->int32);
+        simply_window_set_action_bar(&ui->window, tuple->value->int32);
         break;
       case SetUi_actionUp:
       case SetUi_actionSelect:
       case SetUi_actionDown:
-        simply_ui_set_action_bar_icon(simply->ui, tuple->key - SetUi_action, tuple->value->int32);
+        simply_window_set_action_bar_icon(&ui->window, tuple->key - SetUi_action, tuple->value->int32);
         break;
       case SetUi_style:
         simply_ui_set_style(simply->ui, tuple->value->int32);
         break;
       case SetUi_fullscreen:
-        simply_ui_set_fullscreen(simply->ui, tuple->value->int32);
+        simply_window_set_fullscreen(&ui->window, tuple->value->int32);
         break;
       case SetUi_scrollable:
-        simply_ui_set_scrollable(simply->ui, tuple->value->int32);
+        simply_window_set_scrollable(&ui->window, tuple->value->int32);
         break;
     }
   }
@@ -132,7 +124,7 @@ static void handle_config_buttons(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     if ((tuple = dict_find(iter, i + 1))) {
-      simply_ui_set_button(ui, i, tuple->value->int32);
+      simply_window_set_button(&ui->window, i, tuple->value->int32);
     }
   }
 }
@@ -294,8 +286,8 @@ static void sent_callback(DictionaryIterator *iter, void *context) {
 static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, Simply *simply) {
   SimplyUi *ui = simply->ui;
   if (reason == APP_MSG_NOT_CONNECTED) {
-    simply_ui_set_text(ui, &ui->subtitle_text, "Disconnected");
-    simply_ui_set_text(ui, &ui->body_text, "Run the Pebble Phone App");
+    simply_ui_set_text(ui, UiSubtitle, "Disconnected");
+    simply_ui_set_text(ui, UiBody, "Run the Pebble Phone App");
 
     check_splash(simply);
   }

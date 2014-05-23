@@ -14,7 +14,9 @@ bool simply_msg_single_click(ButtonId button);
 
 bool simply_msg_long_click(ButtonId button);
 
-bool simply_msg_ui_hide();
+bool simply_msg_window_show(uint32_t id);
+
+bool simply_msg_window_hide(uint32_t id);
 
 bool simply_msg_accel_tap(AccelAxisType axis, int32_t direction);
 

@@ -242,11 +242,14 @@ static void window_load(Window *window) {
   menu_layer_set_click_config_onto_window(menu_layer, window);
 }
 
+static void window_appear(Window *window) {
+  SimplyMenu *self = window_get_user_data(window);
+  simply_msg_window_show(self->window.id);
+}
+
 static void window_disappear(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
-
-  MenuIndex cell_index = menu_layer_get_selected_index(self->menu_layer.menu_layer);
-  simply_msg_menu_hide(cell_index.section, cell_index.row);
+  simply_msg_window_hide(self->window.id);
 
   while (self->menu_layer.sections) {
     destroy_section(self, (SimplyMenuSection*) self->menu_layer.sections);
@@ -290,6 +293,7 @@ SimplyMenu *simply_menu_create(Simply *simply) {
   window_set_background_color(self->window.window, GColorWhite);
   window_set_window_handlers(self->window.window, (WindowHandlers) {
     .load = window_load,
+    .appear = window_appear,
     .disappear = window_disappear,
     .unload = window_unload,
   });

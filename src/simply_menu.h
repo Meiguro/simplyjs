@@ -1,10 +1,14 @@
 #pragma once
 
+#include "simply_window.h"
+
 #include "simplyjs.h"
 
 #include "util/list1.h"
 
 #include <pebble.h>
+
+typedef struct SimplyMenuLayer SimplyMenuLayer;
 
 typedef struct SimplyMenu SimplyMenu;
 
@@ -20,15 +24,18 @@ enum SimplyMenuType {
   SimplyMenuTypeItem,
 };
 
-struct SimplyMenu {
-  Simply *simply;
-  Window *window;
+struct SimplyMenuLayer {
   MenuLayer *menu_layer;
   List1Node *sections;
   List1Node *items;
   AppTimer *get_timer;
   uint32_t request_delay_ms;
   uint16_t num_sections;
+};
+
+struct SimplyMenu {
+  SimplyWindow window;
+  SimplyMenuLayer menu_layer;
 };
 
 typedef struct SimplyMenuCommon SimplyMenuCommon;

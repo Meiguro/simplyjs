@@ -233,7 +233,7 @@ static void show_welcome_text(SimplyUi *self) {
   if (title_text || subtitle_text || body_text) {
     return;
   }
-  if (self->window.simply->menu->menu_layer) {
+  if (self->window.simply->menu->menu_layer.menu_layer) {
     return;
   }
 
@@ -258,6 +258,7 @@ static void window_load(Window *window) {
   *(void**) layer_get_data(layer) = self;
   layer_set_update_proc(layer, layer_update_callback);
   scroll_layer_add_child(self->window.scroll_layer, layer);
+  scroll_layer_set_click_config_onto_window(self->window.scroll_layer, window);
 
   simply_ui_set_style(self, 1);
 }

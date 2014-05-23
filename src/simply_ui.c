@@ -263,7 +263,7 @@ static void window_load(Window *window) {
 }
 
 static void window_disappear(Window *window) {
-  simply_msg_ui_exit();
+  simply_msg_ui_hide();
 }
 
 static void window_unload(Window *window) {

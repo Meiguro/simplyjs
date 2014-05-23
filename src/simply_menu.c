@@ -245,7 +245,7 @@ static void window_disappear(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
 
   MenuIndex cell_index = menu_layer_get_selected_index(self->menu_layer);
-  simply_msg_menu_exit(cell_index.section, cell_index.row);
+  simply_msg_menu_hide(cell_index.section, cell_index.row);
 
   while (self->sections) {
     destroy_section(self, (SimplyMenuSection*) self->sections);

@@ -23,7 +23,7 @@ enum SimplyACmd {
   SimplyACmd_getAccelData,
   SimplyACmd_configAccelData,
   SimplyACmd_configButtons,
-  SimplyACmd_uiExit,
+  SimplyACmd_uiHide,
   SimplyACmd_setMenu,
   SimplyACmd_setMenuSection,
   SimplyACmd_getMenuSection,
@@ -31,7 +31,7 @@ enum SimplyACmd {
   SimplyACmd_getMenuItem,
   SimplyACmd_menuSelect,
   SimplyACmd_menuLongSelect,
-  SimplyACmd_menuExit,
+  SimplyACmd_menuHide,
   SimplyACmd_image,
 };
 
@@ -328,12 +328,12 @@ bool simply_msg_long_click(ButtonId button) {
   return send_click(SimplyACmd_longClick, button);
 }
 
-bool simply_msg_ui_exit() {
+bool simply_msg_ui_hide() {
   DictionaryIterator *iter = NULL;
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
   }
-  dict_write_uint8(iter, 0, SimplyACmd_uiExit);
+  dict_write_uint8(iter, 0, SimplyACmd_uiHide);
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
@@ -395,7 +395,7 @@ bool simply_msg_menu_select_long_click(uint16_t section, uint16_t index) {
   return send_menu_item(SimplyACmd_menuLongSelect, section, index);
 }
 
-bool simply_msg_menu_exit(uint16_t section, uint16_t index) {
-  return send_menu_item(SimplyACmd_menuExit, section, index);
+bool simply_msg_menu_hide(uint16_t section, uint16_t index) {
+  return send_menu_item(SimplyACmd_menuHide, section, index);
 }
 

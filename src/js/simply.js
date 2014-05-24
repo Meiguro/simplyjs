@@ -373,7 +373,14 @@ simply.require = function(path) {
     return package.value;
   }
   var basepath = simply.basepath();
-  return simply.loadScript(basepath + path, false);
+  if (path.match(/^\/\//)) {
+    var m = basepath.match(/^(\w+:)\/\//);
+    path = (m ? m[1] : 'http:') + path;
+  }
+  if (!path.match(/^\w+:\/\//)) {
+    path = basepath + path;
+  }
+  return simply.loadScript(path, false);
 };
 
 /**

@@ -21,7 +21,7 @@ def build(ctx):
                             '-Wno-missing-field-initializers'],
                     target='pebble-app.elf')
 
-    js_target = ctx.concat_javascript(js_path='lib')
+    js_target = ctx.concat_javascript(js_path='src/js')
 
     ctx.pbl_bundle(elf='pebble-app.elf',
                    js=js_target)
@@ -53,7 +53,7 @@ def concat_javascript(self, *k, **kw):
         with open(task.outputs[0].abspath(), 'w') as f:
             f.write('\n'.join(sources))
 
-    js_target = self.path.make_node('src/js/pebble-js-app.js')
+    js_target = self.path.make_node('build/src/js/pebble-js-app.js')
 
     self(rule=concat_javascript_task,
         source=js_nodes,

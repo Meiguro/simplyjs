@@ -757,7 +757,7 @@ simply.openSettings = function(e) {
   var options;
   var url;
   var listener = util2.last(state.webview.listeners);
-  if (listener && (new Date().getTime() - simply.inited) > 2000) {
+  if (listener) {
     url = listener.params.url;
     options = state.options;
     e = {

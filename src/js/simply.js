@@ -372,8 +372,8 @@ simply.require = function(path) {
   if (package) {
     return package.value;
   }
-  var basepath = simply.basepath();
-  return simply.loadScript(basepath + path, false);
+  path = baseTransformPath(path);
+  return simply.loadScript(path, false);
 };
 
 /**
@@ -648,6 +648,18 @@ var parseImageHash = function(hash) {
   return image;
 };
 
+var baseTransformPath = function(path) {
+  var basepath = simply.basepath();
+  if (path.match(/^\/\//)) {
+    var m = basepath.match(/^(\w+:)\/\//);
+    path = (m ? m[1] : 'http:') + path;
+  }
+  if (!path.match(/^\w+:\/\//)) {
+    path = basepath + path;
+  }
+  return path;
+};
+
 simply.image = function(opt, reset, callback) {
   if (typeof opt === 'string') {
     opt = parseImageHash(opt);
@@ -656,7 +668,7 @@ simply.image = function(opt, reset, callback) {
     callback = reset;
     reset = null;
   }
-  var url = simply.basepath() + opt.url;
+  var url = baseTransformPath(opt.url);
   var hash = makeImageHash(opt);
   var image = state.image.cache[hash];
   if (image) {

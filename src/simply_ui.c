@@ -18,6 +18,12 @@ struct SimplyStyle {
   int custom_body_font_id;
 };
 
+enum ClearIndex {
+  ClearAction = 0,
+  ClearText,
+  ClearImage,
+};
+
 static SimplyStyle STYLES[] = {
   {
     .title_font = FONT_KEY_GOTHIC_24_BOLD,
@@ -37,17 +43,13 @@ static SimplyStyle STYLES[] = {
 };
 
 void simply_ui_clear(SimplyUi *self, uint32_t clear_mask) {
-  if (clear_mask & (1 << 0)) {
+  if (clear_mask & (1 << ClearText)) {
     for (SimplyUiTextfield textfield = 0; textfield < NumUiTextfields; ++textfield) {
       simply_ui_set_text(self, textfield, NULL);
     }
   }
-  if (clear_mask & (1 << 1)) {
+  if (clear_mask & (1 << ClearImage)) {
     memset(self->ui_layer.imagefields, 0, sizeof(self->ui_layer.imagefields));
-  }
-  if (clear_mask & (1 << 2)) {
-    simply_window_set_action_bar(&self->window, false);
-    simply_window_action_bar_clear(&self->window);
   }
 }
 
@@ -233,7 +235,7 @@ static void show_welcome_text(SimplyUi *self) {
   if (title_text || subtitle_text || body_text) {
     return;
   }
-  if (self->window.simply->menu->menu_layer) {
+  if (self->window.simply->menu->menu_layer.menu_layer) {
     return;
   }
 
@@ -258,12 +260,19 @@ static void window_load(Window *window) {
   *(void**) layer_get_data(layer) = self;
   layer_set_update_proc(layer, layer_update_callback);
   scroll_layer_add_child(self->window.scroll_layer, layer);
+  scroll_layer_set_click_config_onto_window(self->window.scroll_layer, window);
 
   simply_ui_set_style(self, 1);
 }
 
+static void window_appear(Window *window) {
+  SimplyUi *self = window_get_user_data(window);
+  simply_msg_window_show(self->window.id);
+}
+
 static void window_disappear(Window *window) {
-  simply_msg_ui_exit();
+  SimplyUi *self = window_get_user_data(window);
+  simply_msg_window_hide(self->window.id);
 }
 
 static void window_unload(Window *window) {
@@ -294,6 +303,7 @@ SimplyUi *simply_ui_create(Simply *simply) {
   window_set_user_data(self->window.window, self);
   window_set_window_handlers(self->window.window, (WindowHandlers) {
     .load = window_load,
+    .appear = window_appear,
     .disappear = window_disappear,
     .unload = window_unload,
   });

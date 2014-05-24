@@ -14,7 +14,10 @@
 typedef enum SimplyACmd SimplyACmd;
 
 enum SimplyACmd {
-  SimplyACmd_setUi = 0,
+  SimplyACmd_setWindow = 0,
+  SimplyACmd_windowShow,
+  SimplyACmd_windowHide,
+  SimplyACmd_setUi,
   SimplyACmd_singleClick,
   SimplyACmd_longClick,
   SimplyACmd_accelTap,
@@ -23,7 +26,6 @@ enum SimplyACmd {
   SimplyACmd_getAccelData,
   SimplyACmd_configAccelData,
   SimplyACmd_configButtons,
-  SimplyACmd_uiExit,
   SimplyACmd_setMenu,
   SimplyACmd_setMenuSection,
   SimplyACmd_getMenuSection,
@@ -31,27 +33,33 @@ enum SimplyACmd {
   SimplyACmd_getMenuItem,
   SimplyACmd_menuSelect,
   SimplyACmd_menuLongSelect,
-  SimplyACmd_menuExit,
   SimplyACmd_image,
 };
 
 typedef enum SimplySetUiParam SimplySetUiParam;
 
+enum SimplySetWindowParam {
+  SetWindow_clear = 1,
+  SetWindow_id,
+  SetWindow_action,
+  SetWindow_actionUp,
+  SetWindow_actionSelect,
+  SetWindow_actionDown,
+  SetWindow_fullscreen,
+  SetWindow_scrollable,
+  SetWindowLast,
+};
+
 enum SimplySetUiParam {
-  SetUi_clear = 1,
-  SetUi_title,
+  SetUi_clear = SetWindow_clear,
+  SetUi_id,
+  SetUi_title = SetWindowLast,
   SetUi_subtitle,
   SetUi_body,
   SetUi_icon,
   SetUi_subicon,
   SetUi_banner,
-  SetUi_action,
-  SetUi_actionUp,
-  SetUi_actionSelect,
-  SetUi_actionDown,
-  SetUi_fullscreen,
   SetUi_style,
-  SetUi_scrollable,
 };
 
 typedef enum VibeType VibeType;
@@ -68,6 +76,39 @@ static void check_splash(Simply *simply) {
   }
 }
 
+static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
+  Window *base_window = window_stack_get_top_window();
+  SimplyWindow *window = window_get_user_data(base_window);
+  if (!window || (void*) window == simply->splash) {
+    return;
+  }
+  Tuple *tuple;
+  if ((tuple = dict_find(iter, SetWindow_clear))) {
+    simply_window_set_action_bar(window, false);
+    simply_window_action_bar_clear(window);
+  }
+  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
+    switch (tuple->key) {
+      case SetWindow_id:
+        window->id = tuple->value->uint32;
+      case SetWindow_action:
+        simply_window_set_action_bar(window, tuple->value->int32);
+        break;
+      case SetWindow_actionUp:
+      case SetWindow_actionSelect:
+      case SetWindow_actionDown:
+        simply_window_set_action_bar_icon(window, tuple->key - SetWindow_action, tuple->value->int32);
+        break;
+      case SetWindow_fullscreen:
+        simply_window_set_fullscreen(window, tuple->value->int32);
+        break;
+      case SetWindow_scrollable:
+        simply_window_set_scrollable(window, tuple->value->int32);
+        break;
+    }
+  }
+}
+
 static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
   SimplyUi *ui = simply->ui;
   Tuple *tuple;
@@ -76,6 +117,8 @@ static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
   }
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {
+      case SetUi_id:
+        ui->window.id = tuple->value->uint32;
       case SetUi_title:
       case SetUi_subtitle:
       case SetUi_body:
@@ -86,26 +129,13 @@ static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
       case SetUi_banner:
         ui->ui_layer.imagefields[tuple->key - SetUi_icon] = tuple->value->uint32;
         break;
-      case SetUi_action:
-        simply_window_set_action_bar(&ui->window, tuple->value->int32);
-        break;
-      case SetUi_actionUp:
-      case SetUi_actionSelect:
-      case SetUi_actionDown:
-        simply_window_set_action_bar_icon(&ui->window, tuple->key - SetUi_action, tuple->value->int32);
-        break;
       case SetUi_style:
         simply_ui_set_style(simply->ui, tuple->value->int32);
-        break;
-      case SetUi_fullscreen:
-        simply_window_set_fullscreen(&ui->window, tuple->value->int32);
-        break;
-      case SetUi_scrollable:
-        simply_window_set_scrollable(&ui->window, tuple->value->int32);
         break;
     }
   }
   simply_ui_show(simply->ui);
+  handle_set_window(iter, simply);
 }
 
 static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
@@ -156,11 +186,15 @@ static void handle_set_accel_config(DictionaryIterator *iter, Simply *simply) {
 }
 
 static void handle_set_menu(DictionaryIterator *iter, Simply *simply) {
+  SimplyMenu *menu = simply->menu;
   Tuple *tuple;
   if ((tuple = dict_find(iter, 1))) {
-    simply_menu_set_num_sections(simply->menu, tuple->value->int32);
+    menu->window.id = tuple->value->uint32;
   }
-  simply_menu_show(simply->menu);
+  if ((tuple = dict_find(iter, 2))) {
+    simply_menu_set_num_sections(menu, tuple->value->int32);
+  }
+  simply_menu_show(menu);
 }
 
 static void handle_set_menu_section(DictionaryIterator *iter, Simply *simply) {
@@ -247,6 +281,9 @@ static void received_callback(DictionaryIterator *iter, void *context) {
   }
 
   switch (tuple->value->uint8) {
+    case SimplyACmd_setWindow:
+      handle_set_window(iter, context);
+      break;
     case SimplyACmd_setUi:
       handle_set_ui(iter, context);
       break;
@@ -328,12 +365,23 @@ bool simply_msg_long_click(ButtonId button) {
   return send_click(SimplyACmd_longClick, button);
 }
 
-bool simply_msg_ui_exit() {
+bool simply_msg_window_show(uint32_t id) {
   DictionaryIterator *iter = NULL;
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
   }
-  dict_write_uint8(iter, 0, SimplyACmd_uiExit);
+  dict_write_uint8(iter, 0, SimplyACmd_windowShow);
+  dict_write_uint32(iter, 1, id);
+  return (app_message_outbox_send() == APP_MSG_OK);
+}
+
+bool simply_msg_window_hide(uint32_t id) {
+  DictionaryIterator *iter = NULL;
+  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+    return false;
+  }
+  dict_write_uint8(iter, 0, SimplyACmd_windowHide);
+  dict_write_uint32(iter, 1, id);
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
@@ -394,8 +442,3 @@ bool simply_msg_menu_select_click(uint16_t section, uint16_t index) {
 bool simply_msg_menu_select_long_click(uint16_t section, uint16_t index) {
   return send_menu_item(SimplyACmd_menuLongSelect, section, index);
 }
-
-bool simply_msg_menu_exit(uint16_t section, uint16_t index) {
-  return send_menu_item(SimplyACmd_menuExit, section, index);
-}
-

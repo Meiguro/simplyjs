@@ -141,7 +141,6 @@ void simply_window_load(SimplyWindow *self) {
   scroll_layer_set_callbacks(scroll_layer, (ScrollLayerCallbacks) {
     .click_config_provider = click_config_provider,
   });
-  scroll_layer_set_click_config_onto_window(scroll_layer, window);
 
   if (self->is_action_bar) {
     simply_window_set_action_bar(self, true);

@@ -99,7 +99,7 @@ var emitToHandlers = function(type, handlers, e) {
   if (!handlers) { return; }
   for (var i = 0, ii = handlers.length; i < ii; ++i) {
     var handler = handlers[i].handler;
-    if (handler(e, type, i) === false) {
+    if (handler.call(this, e, type, i) === false) {
       return false;
     }
   }
@@ -119,11 +119,11 @@ Emitter.prototype.emit = function(type, subtype, e) {
   if (!typeMap) { return; }
   var subtypeMap = typeMap[type];
   if (!subtypeMap) { return; }
-  var hadSubtype = emitToHandlers(type, subtypeMap[subtype], e);
+  var hadSubtype = emitToHandlers.call(this, type, subtypeMap[subtype], e);
   if (hadSubtype === false) {
     return false;
   }
-  var hadAll = emitToHandlers(type, subtypeMap.all, e);
+  var hadAll = emitToHandlers.call(this, type, subtypeMap.all, e);
   if (hadAll === false) {
     return false;
   }

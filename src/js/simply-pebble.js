@@ -1,5 +1,5 @@
 var util2 = require('lib/util2');
-
+var ImageService = require('base/image');
 var simply = require('simply');
 
 var SimplyPebble = {};
@@ -283,7 +283,7 @@ var toParam = function(param, v) {
   } else if (param.type === Boolean) {
     v = v ? 1 : 0;
   } else if (param.type === Image && typeof v !== 'number') {
-    v = simply.image(v);
+    v = ImageService.load(v);
   }
   return v;
 };

@@ -5,11 +5,11 @@
 
 var ajax = require('lib/ajax');
 var util2 = require('lib/util2');
-var imagelib = require('lib/image');
 
 var myutil = require('base/myutil');
 var package = require('base/package');
 var Emitter = require('base/emitter');
+var ImageService = require('base/image');
 
 var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
@@ -27,11 +27,7 @@ var eventTypes = [
   'accelData',
 ];
 
-var state = {};
-
-simply.state = state;
-simply.packages = {};
-simply.listeners = {};
+var state = simply.state = {};
 
 simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
 
@@ -60,7 +56,6 @@ simply.reset = function() {
   }
 
   simply.state = state = {};
-  simply.packages = {};
 
   state.run = true;
   state.options = {};
@@ -74,14 +69,11 @@ simply.reset = function() {
   windowStack.on('hide', simply.onHideWindow);
   state.windowStack = windowStack;
 
-  state.image = {
-    cache: {},
-    nextId: 1,
-  };
-
   state.webview = {
     listeners: [],
   };
+
+  ImageService.init();
 
   simply.accelInit();
 };
@@ -280,87 +272,6 @@ simply.action = function(actionDef) {
  */
 simply.vibe = function() {
   return simply.impl.vibe.apply(this, arguments);
-};
-
-var makeImageHash = function(image) {
-  var url = image.url;
-  var hashPart = '';
-  if (image.width) {
-    hashPart += ',width:' + image.width;
-  }
-  if (image.height) {
-    hashPart += ',height:' + image.height;
-  }
-  if (image.dither) {
-    hashPart += ',dither:' + image.dither;
-  }
-  if (hashPart) {
-    url += '#' + hashPart.substr(1);
-  }
-  return url;
-};
-
-var parseImageHash = function(hash) {
-  var image = {};
-  hash = hash.split('#');
-  image.url = hash[0];
-  hash = hash[1];
-  if (!hash) { return image; }
-  var args = hash.split(',');
-  for (var i = 0, ii = args.length; i < ii; ++i) {
-    var arg = args[i];
-    if (arg.match(':')) {
-      arg = arg.split(':');
-      var v = arg[1];
-      image[arg[0]] = !isNaN(Number(v)) ? Number(v) : v;
-    } else {
-      image[arg] = true;
-    }
-  }
-  return image;
-};
-
-simply.image = function(opt, reset, callback) {
-  if (typeof opt === 'string') {
-    opt = parseImageHash(opt);
-  }
-  if (typeof reset === 'function') {
-    callback = reset;
-    reset = null;
-  }
-  var url = package.abspath(opt.url);
-  var hash = makeImageHash(opt);
-  var image = state.image.cache[hash];
-  if (image) {
-    if ((opt.width && image.width !== opt.width) ||
-        (opt.height && image.height !== opt.height) ||
-        (opt.dither && image.dither !== opt.dither)) {
-      reset = true;
-    }
-    if (reset !== true) {
-      return image.id;
-    }
-  }
-  image = {
-    id: state.image.nextId++,
-    url: url,
-    width: opt.width,
-    height: opt.height,
-    dither: opt.dither,
-  };
-  state.image.cache[hash] = image;
-  imagelib.load(image, function() {
-    simply.impl.image(image.id, image.gbitmap);
-    if (callback) {
-      var e = {
-        type: 'image',
-        image: image.id,
-        url: image.url,
-      };
-      callback(e);
-    }
-  });
-  return image.id;
 };
 
 var getOptionsKey = function(path) {

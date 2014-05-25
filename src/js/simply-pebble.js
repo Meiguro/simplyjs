@@ -1,4 +1,5 @@
 var util2 = require('lib/util2');
+var Settings = require('base/settings');
 var Accel = require('base/accel');
 var ImageService = require('base/image');
 var simply = require('simply');
@@ -271,11 +272,11 @@ SimplyPebble.init = function() {
 };
 
 SimplyPebble.onShowConfiguration = function(e) {
-  simply.openSettings(e);
+  Settings.onOpenConfig(e);
 };
 
 SimplyPebble.onWebViewClosed = function(e) {
-  simply.closeSettings(e);
+  Settings.onCloseConfig(e);
 };
 
 var toParam = function(param, v) {

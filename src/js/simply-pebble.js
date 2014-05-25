@@ -1,4 +1,5 @@
 var util2 = require('lib/util2');
+var Accel = require('base/accel');
 var ImageService = require('base/image');
 var simply = require('simply');
 
@@ -475,7 +476,7 @@ SimplyPebble.onAppMessage = function(e) {
       break;
     case 'accelTap':
       var axis = accelAxes[payload[1]];
-      simply.emitAccelTap(axis, payload[2]);
+      Accel.emitAccelTap(axis, payload[2]);
       break;
     case 'accelData':
       var transactionId = payload[1];
@@ -494,12 +495,12 @@ SimplyPebble.onAppMessage = function(e) {
         accels[i] = accel;
       }
       if (typeof transactionId === 'undefined') {
-        simply.emitAccelData(accels);
+        Accel.emitAccelData(accels);
       } else {
         var handlers = simply.state.accel.listeners;
         simply.state.accel.listeners = [];
         for (var j = 0, jj = handlers.length; j < jj; ++j) {
-          simply.emitAccelData(accels, handlers[j]);
+          Accel.emitAccelData(accels, handlers[j]);
         }
       }
       break;

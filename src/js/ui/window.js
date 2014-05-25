@@ -1,6 +1,7 @@
 var util2 = require('lib/util2');
 var myutil = require('base/myutil');
 var Emitter = require('base/emitter');
+var Accel = require('base/accel');
 var simply = require('simply');
 
 var buttons = [
@@ -146,11 +147,17 @@ Window.prototype.onAddHandler = function(type, subtype) {
   if (isBackEvent(type, subtype)) {
     this._buttonAutoConfig();
   }
+  if (type === 'accelData') {
+    Accel.autoSubscribe();
+  }
 };
 
 Window.prototype.onRemoveHandler = function(type, subtype) {
   if (!type || isBackEvent(type, subtype)) {
     this._buttonAutoConfig();
+  }
+  if (!type || type === 'accelData') {
+    Accel.autoSubscribe();
   }
 };
 

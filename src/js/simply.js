@@ -26,20 +26,9 @@ var buttons = [
 ];
 
 var eventTypes = [
-  'singleClick',
-  'longClick',
-  'cardShow',
-  'cardHide',
   'accelTap',
   'accelData',
-  'menuSection',
-  'menuItem',
-  'menuSelect',
-  'menuLongSelect',
-  'menuShow',
-  'menuHide',
 ];
-
 
 var state = {};
 
@@ -982,7 +971,9 @@ simply.emitCard = function(type, subtype, e, globalType) {
   if (card && card.emit(type, subtype, e) === false) {
     return false;
   }
-  return simply.emit(globalType || type, subtype, e);
+  if (globalType) {
+    return simply.emit(globalType, subtype, e);
+  }
 };
 
 simply.emitClick = function(type, button) {
@@ -993,11 +984,11 @@ simply.emitClick = function(type, button) {
 };
 
 simply.emitCardShow = function() {
-  return simply.emitCard('show', null, {}, 'cardShow');
+  return simply.emitCard('show', null, {});
 };
 
 simply.emitCardHide = function() {
-  return simply.emitCard('hide', null, {}, 'cardHide');
+  return simply.emitCard('hide', null, {});
 };
 
 /**
@@ -1013,7 +1004,7 @@ simply.emitAccelTap = function(axis, direction) {
     axis: axis,
     direction: direction,
   };
-  return simply.emitCard('accelTap', axis, e);
+  return simply.emitCard('accelTap', axis, e, 'accelTap');
 };
 
 /**
@@ -1045,7 +1036,7 @@ simply.emitAccelData = function(accels, callback) {
   if (callback) {
     return callback(e);
   }
-  return simply.emitCard('accelData', null, e);
+  return simply.emitCard('accelData', null, e, 'accelData');
 };
 
 simply.emitMenu = function(type, subtype, e, globalType) {
@@ -1053,7 +1044,9 @@ simply.emitMenu = function(type, subtype, e, globalType) {
   if (menu && menu.emit(type, subtype, e) === false) {
     return false;
   }
-  return simply.emit(globalType || type, subtype, e);
+  if (globalType) {
+    return simply.emit(globalType, subtype, e);
+  }
 };
 
 simply.emitMenuSection = function(section) {
@@ -1085,6 +1078,10 @@ simply.emitMenuSelect = function(type, section, item) {
     section: section,
     item: item,
   };
+  switch (type) {
+    case 'menuSelect': type = 'select'; break;
+    case 'menuLongSelect': type = 'longSelect'; break;
+  }
   if (simply.emitMenu(type, null, e) === false) {
     return false;
   }

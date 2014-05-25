@@ -835,6 +835,3 @@ simply.emitMenuSelect = function(type, section, item) {
     menu._emitSelect(e);
   }
 };
-
-Pebble.require = require;
-window.require = simply.require;

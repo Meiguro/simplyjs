@@ -35,35 +35,34 @@ WindowStack.prototype._show = function(item) {
   item._show();
 };
 
-WindowStack.prototype._hide = function(item) {
+WindowStack.prototype._hide = function(item, broadcast) {
   if (!item) { return; }
   this._emitHide(item);
-  item._hide();
+  item._hide(broadcast);
 };
 
 WindowStack.prototype.push = function(item) {
   if (item === this.top()) { return; }
   this.remove(item);
-  this._hide(this.top());
+  var prevTop = this.top();
   this.state.items.push(item);
   this._show(item);
+  this._hide(prevTop, false);
 };
 
-WindowStack.prototype.pop = function(item) {
-  this.remove(this.top());
+WindowStack.prototype.pop = function(broadcast) {
+  this.remove(this.top(), broadcast);
 };
 
-WindowStack.prototype.remove = function(item) {
+WindowStack.prototype.remove = function(item, broadcast) {
   if (!item) { return; }
   var index = this.state.items.indexOf(item);
   if (index === -1) { return; }
   var wasTop = (item === this.top());
-  if (wasTop) {
-    this._hide(item);
-  }
   this.state.items.splice(index, 1);
   if (wasTop) {
     this._show(this.top());
+    this._hide(item, broadcast);
   }
 };
 

@@ -443,6 +443,13 @@ SimplyPebble.window = function(windowDef, clear) {
   SimplyPebble.sendPacket(packet);
 };
 
+SimplyPebble.windowHide = function(windowId) {
+  var command = commandMap.windowHide;
+  var packet = makePacket(command);
+  packet[command.paramMap.id.id] = windowId;
+  SimplyPebble.sendPacket(packet);
+};
+
 SimplyPebble.card = function(cardDef, clear) {
   clear = toClearFlags(clear);
   var command = commandMap.setCard;
@@ -541,7 +548,7 @@ SimplyPebble.onAppMessage = function(e) {
 
   switch (command.name) {
     case 'windowHide':
-      simply.hideWindowById(payload[1]);
+      simply.hideWindowById(payload[1], false);
       break;
     case 'singleClick':
     case 'longClick':

@@ -137,14 +137,14 @@ simply.showWindow = function(wind) {
   state.windowStack.push(wind);
 };
 
-simply.hideWindow = function(wind) {
-  state.windowStack.remove(wind);
+simply.hideWindow = function(wind, broadcast) {
+  state.windowStack.remove(wind, broadcast);
 };
 
-simply.hideWindowById = function(windowId) {
+simply.hideWindowById = function(windowId, broadcast) {
   var wind = simply.getWindow(windowId);
   if (wind) {
-    simply.hideWindow(wind);
+    simply.hideWindow(wind, broadcast);
   }
 };
 

@@ -61,14 +61,16 @@ Window.prototype._id = function() {
 };
 
 Window.prototype._prop = function() {
-  return simply.window.apply(this, arguments);
+  simply.window.apply(this, arguments);
 };
 
-Window.prototype._hide = function() {
+Window.prototype._hide = function(broadcast) {
+  if (broadcast === false) { return; }
+  simply.impl.windowHide(this.state.id);
 };
 
 Window.prototype.hide = function() {
-  simply.hideWindow(this);
+  simply.hideWindow(this, true);
   return this;
 };
 

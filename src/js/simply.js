@@ -98,7 +98,7 @@ simply.onRemoveHandler = function(type, subtype) {
   }
 };
 
-simply.countHandlers = function(type, subtype) {
+simply.listenerCount = function(type, subtype) {
   var count = 0;
   var listeners = state.emitter.listeners(type, subtype);
   count += (listeners ? listeners.length : 0);
@@ -623,7 +623,7 @@ simply.accelAutoSubscribe = function() {
   if (!accelState || accelState.subscribeMode !== 'auto') {
     return;
   }
-  var subscribe = simply.countHandlers('accelData') > 0;
+  var subscribe = simply.listenerCount('accelData') > 0;
   if (subscribe !== state.accel.subscribe) {
     return simply.accelConfig(subscribe, true);
   }

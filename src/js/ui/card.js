@@ -1,9 +1,8 @@
-var util2 = require('util2');
-var myutil = require('myutil');
-var simply = require('simply');
-
-var Emitter = require('emitter');
+var util2 = require('lib/util2');
+var myutil = require('base/myutil');
+var Emitter = require('base/emitter');
 var Window = require('ui/window');
+var simply = require('simply');
 
 /**
  * Sets the title field. The title field is the first and largest text field available.

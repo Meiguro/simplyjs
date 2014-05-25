@@ -1,8 +1,6 @@
-
-var simply = require('simply');
-var myutil = require('myutil');
-
+var myutil = require('base/myutil');
 var package = require('base/package');
+var simply = require('simply');
 
 var packageImpl = module.exports;
 

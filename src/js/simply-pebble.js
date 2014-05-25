@@ -1,5 +1,6 @@
+var util2 = require('lib/util2');
+
 var simply = require('simply');
-var util2 = require('util2');
 
 var SimplyPebble = {};
 

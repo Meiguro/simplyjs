@@ -3,24 +3,24 @@
  * @namespace simply
  */
 
-var ajax = require('ajax');
-var util2 = require('util2');
-var myutil = require('myutil');
-var imagelib = require('image');
+var ajax = require('lib/ajax');
+var util2 = require('lib/util2');
+var imagelib = require('lib/image');
 
-var Emitter = require('emitter');
+var myutil = require('base/myutil');
+var package = require('base/package');
+var Emitter = require('base/emitter');
+
+var WindowStack = require('ui/windowstack');
+var Window = require('ui/window');
+var Card = require('ui/card');
+var Menu = require('ui/menu');
 
 var simply = module.exports;
 
 simply.ui = {};
-
-var package = require('base/package');
-
-var WindowStack = require('ui/windowstack');
-
-var Window = require('ui/window');
-var Card = simply.ui.Card = require('ui/card');
-var Menu = simply.ui.Menu = require('ui/menu');
+simply.ui.Card = Card;
+simply.ui.Menu = Menu;
 
 var eventTypes = [
   'accelTap',

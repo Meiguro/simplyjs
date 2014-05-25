@@ -55,6 +55,11 @@ var setCardParams = setWindowParams.concat([{
   type: Boolean,
 }]);
 
+var setMenuParams = setWindowParams.concat([{
+  name: 'sections',
+  type: Number,
+}]);
+
 var commands = [{
   name: 'setWindow',
   params: setWindowParams,
@@ -129,11 +134,7 @@ var commands = [{
   }],
 }, {
   name: 'setMenu',
-  params: [{
-    name: 'id',
-  }, {
-    name: 'sections',
-  }],
+  params: setMenuParams,
 }, {
   name: 'setMenuSection',
   params: [{
@@ -400,10 +401,6 @@ SimplyPebble.sendPacket = function(packet) {
     Pebble.sendAppMessage(packet, util2.noop, send);
   };
   send();
-};
-
-SimplyPebble.setMenu = function() {
-  SimplyPebble.sendPacket(makePacket(commandMap.setMenu));
 };
 
 SimplyPebble.buttonConfig = function(buttonConf) {

@@ -11,6 +11,21 @@ var buttons = [
   'down',
 ];
 
+/**
+ * Enable fullscreen in the Pebble UI.
+ * Fullscreen removes the Pebble status bar, giving slightly more vertical display height.
+ * @memberOf simply
+ * @param {boolean} fullscreen - Whether to enable fullscreen mode.
+ */
+
+/**
+ * Enable scrolling in the Pebble UI.
+ * When scrolling is enabled, up and down button presses are no longer forwarded to JavaScript handlers.
+ * Single select, long select, and accel tap events are still available to you however.
+ * @memberOf simply
+ * @param {boolean} scrollable - Whether to enable a scrollable view.
+ */
+
 var configProps = [
   'fullscreen',
   'style',

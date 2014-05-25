@@ -394,70 +394,6 @@ simply.card = function(field, value, clear) {
   return result;
 };
 
-/**
- * The text definition parameter for {@link simply.text}.
- * @typedef {object} simply.textDef
- * @property {string} [title] - A new title for the first and largest text field.
- * @property {string} [subtitle] - A new subtitle for the second large text field.
- * @property {string} [body] - A new body for the last text field meant to display large bodies of text.
- */
-
-/**
- * Sets a group of text fields at once.
- * For example, passing a text definition { title: 'A', subtitle: 'B', body: 'C' }
- * will set the title, subtitle, and body simultaneously. Not all fields need to be specified.
- * When setting a single field, consider using the specific text setters simply.title, simply.subtitle, simply.body.
- * @memberOf simply
- * @param {simply.textDef} textDef - An object defining new text values.
- * @param {boolean} [clear] - If true, all other text fields will be cleared.
- */
-simply.text = simply.card;
-
-simply.setText = simply.text;
-
-var textfield = function(field, text, clear) {
-  if (arguments.length <= 1) {
-    return state.card[field];
-  }
-  if (clear) {
-    state.card = {};
-  }
-  state.card[field] = text;
-  return simply.impl.textfield(field, text, clear);
-};
-
-/**
- * Sets the title field. The title field is the first and largest text field available.
- * @memberOf simply
- * @param {string} text - The desired text to display.
- * @param {boolean} [clear] - If true, all other text fields will be cleared.
- */
-simply.title = function(text, clear) {
-  return textfield('title', text, clear);
-};
-
-/**
- * Sets the subtitle field. The subtitle field is the second large text field available.
- * @memberOf simply
- * @param {string} text - The desired text to display.
- * @param {boolean} [clear] - If true, all other text fields will be cleared.
- */
-simply.subtitle = function(text, clear) {
-  return textfield('subtitle', text, clear);
-};
-
-/**
- * Sets the body field. The body field is the last text field available meant to display large bodies of text.
- * This can be used to display entire text interfaces.
- * You may even clear the title and subtitle fields in order to display more in the body field.
- * @memberOf simply
- * @param {string} text - The desired text to display.
- * @param {boolean} [clear] - If true, all other text fields will be cleared.
- */
-simply.body = function(text, clear) {
-  return textfield('body', text, clear);
-};
-
 simply.action = function(field, image, clear) {
   var card = state.card;
   var result = this instanceof Card ? this : card.action(field, image, clear);
@@ -475,49 +411,6 @@ simply.action = function(field, image, clear) {
  */
 simply.vibe = function() {
   return simply.impl.vibe.apply(this, arguments);
-};
-
-/**
- * Enable scrolling in the Pebble UI.
- * When scrolling is enabled, up and down button presses are no longer forwarded to JavaScript handlers.
- * Single select, long select, and accel tap events are still available to you however.
- * @memberOf simply
- * @param {boolean} scrollable - Whether to enable a scrollable view.
- */
-
-simply.scrollable = function(scrollable) {
-  if (typeof scrollable === 'undefined') {
-    return state.scrollable === true;
-  }
-  state.scrollable = scrollable;
-  return simply.impl.scrollable.apply(this, arguments);
-};
-
-/**
- * Enable fullscreen in the Pebble UI.
- * Fullscreen removes the Pebble status bar, giving slightly more vertical display height.
- * @memberOf simply
- * @param {boolean} fullscreen - Whether to enable fullscreen mode.
- */
-
-simply.fullscreen = function(fullscreen) {
-  if (typeof fullscreen === 'undefined') {
-    return state.fullscreen === true;
-  }
-  state.fullscreen = fullscreen;
-  return simply.impl.fullscreen.apply(this, arguments);
-};
-
-/**
- * Set the Pebble UI style.
- * The available styles are 'small', 'large', and 'mono'. Small and large correspond to the system notification styles.
- * Mono sets a monospace font for the body textfield, enabling more complex text UIs or ASCII art.
- * @memberOf simply
- * @param {string} type - The type of style to set: 'small', 'large', or 'mono'.
- */
-
-simply.style = function(type) {
-  return simply.impl.style.apply(this, arguments);
 };
 
 var makeImageHash = function(image) {

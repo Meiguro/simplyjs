@@ -15,6 +15,9 @@ Emitter.prototype.on = function(type, subtype, handler) {
   if (Emitter.onAddHandler) {
     Emitter.onAddHandler(type, subtype, handler);
   }
+  if (this.onAddHandler) {
+    this.onAddHandler(type, subtype, handler);
+  }
   var typeMap = this._events || ( this._events = {} );
   var subtypeMap = typeMap[type] || ( typeMap[type] = {} );
   (subtypeMap[subtype] || ( subtypeMap[subtype] = [] )).push({
@@ -30,6 +33,9 @@ Emitter.prototype.off = function(type, subtype, handler) {
   }
   if (Emitter.onRemoveHandler) {
     Emitter.onRemoveHandler(type, subtype, handler);
+  }
+  if (this.onRemoveHandler) {
+    this.onRemoveHandler(type, subtype, handler);
   }
   if (!type) {
     this._events = {};
@@ -68,6 +74,11 @@ Emitter.prototype.listeners = function(type, subtype) {
   var subtypeMap = typeMap[type];
   if (!subtypeMap) { return; }
   return subtypeMap[subtype];
+};
+
+Emitter.prototype.listenerCount = function(type, subtype) {
+  var listeners = this.listeners(type, subtype);
+  return listeners ? listeners.length : 0;
 };
 
 Emitter.prototype.forEachListener = function(type, subtype, f) {

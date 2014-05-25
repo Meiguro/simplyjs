@@ -18,13 +18,6 @@ var Window = require('ui/window');
 var Card = simply.ui.Card = require('ui/card');
 var Menu = simply.ui.Menu = require('ui/menu');
 
-var buttons = [
-  'back',
-  'up',
-  'select',
-  'down',
-];
-
 var eventTypes = [
   'accelTap',
   'accelData',
@@ -75,17 +68,6 @@ simply.reset = function() {
 
   state.card = new Card();
 
-  state.button = {
-    config: {},
-    configMode: 'auto',
-  };
-  for (var i = 0, ii = buttons.length; i < ii; i++) {
-    var button = buttons[i];
-    if (button !== 'back') {
-      state.button.config[buttons[i]] = true;
-    }
-  }
-
   state.image = {
     cache: {},
     nextId: 1,
@@ -104,22 +86,13 @@ simply.reset = function() {
  * @param {simply.event} event - The event object with event specific information.
  */
 
-var isBackEvent = function(type, subtype) {
-  return ((type === 'singleClick' || type === 'longClick') && subtype === 'back');
-};
-
 simply.onAddHandler = function(type, subtype) {
-  if (isBackEvent(type, subtype)) {
-    simply.buttonAutoConfig();
-  } else if (type === 'accelData') {
+  if (type === 'accelData') {
     simply.accelAutoSubscribe();
   }
 };
 
 simply.onRemoveHandler = function(type, subtype) {
-  if (!type || isBackEvent(type, subtype)) {
-    simply.buttonAutoConfig();
-  }
   if (!type || type === 'accelData') {
     simply.accelAutoSubscribe();
   }
@@ -138,10 +111,12 @@ var setWindow = function(wind, field) {
   field = field || 'window';
   var other = state[field];
   if (other) {
+    other.forEachListener(other.onRemoveHandler);
     other.forEachListener(simply.onRemoveHandler);
   }
   state[field] = wind;
   if (wind) {
+    wind.forEachListener(wind.onAddHandler);
     wind.forEachListener(simply.onAddHandler);
   }
   return wind;
@@ -363,60 +338,6 @@ simply.require = function(path) {
   }
   path = baseTransformPath(path);
   return simply.loadScript(path, false);
-};
-
-/**
- * The button configuration parameter for {@link simply.buttonConfig}.
- * The button configuration allows you to enable to disable buttons without having to register or unregister handlers if that is your preferred style.
- * You may also enable the back button manually as an alternative to registering a click handler with 'back' as its subtype using {@link simply.on}.
- * @typedef {object} simply.buttonConf
- * @property {boolean} [back] - Whether to enable the back button. Initializes as false. Simply.js can also automatically register this for you based on the amount of click handlers with subtype 'back'.
- * @property {boolean} [up] - Whether to enable the up button. Initializes as true. Note that this is disabled when using {@link simply.scrollable}.
- * @property {boolean} [select] - Whether to enable the select button. Initializes as true.
- * @property {boolean} [down] - Whether to enable the down button. Initializes as true. Note that this is disabled when using {@link simply.scrollable}.
- */
-
-/**
- * Changes the button configuration.
- * See {@link simply.buttonConfig}
- * @memberOf simply
- * @param {simply.buttonConfig} buttonConf - An object defining the button configuration.
- */
-simply.buttonConfig = function(buttonConf, auto) {
-  var buttonState = state.button;
-  if (typeof buttonConf === 'undefined') {
-    var config = {};
-    for (var i = 0, ii = buttons.length; i < ii; ++i) {
-      var name = buttons[i];
-      config[name] = buttonConf.config[name];
-    }
-    return config;
-  }
-  for (var k in buttonConf) {
-    if (buttons.indexOf(k) !== -1) {
-      if (k === 'back') {
-        buttonState.configMode = buttonConf.back && !auto ? 'manual' : 'auto';
-      }
-      buttonState.config[k] = buttonConf[k];
-    }
-  }
-  if (simply.impl.buttonConfig) {
-    return simply.impl.buttonConfig(buttonState.config);
-  }
-};
-
-simply.buttonAutoConfig = function() {
-  var buttonState = state.button;
-  if (!buttonState || buttonState.configMode !== 'auto') {
-    return;
-  }
-  var singleBackCount = simply.countHandlers('singleClick', 'back');
-  var longBackCount = simply.countHandlers('longClick', 'back');
-  var useBack = singleBackCount + longBackCount > 0;
-  if (useBack !== buttonState.config.back) {
-    buttonState.config.back = useBack;
-    return simply.buttonConfig(buttonState.config, true);
-  }
 };
 
 simply.window = function(field, value, clear) {

@@ -1,6 +1,7 @@
 var ajax = require('lib/ajax');
 var util2 = require('lib/util2');
 var myutil = require('base/myutil');
+var Settings = require('base/settings');
 var simply = require('simply');
 
 var package = module.exports;
@@ -127,6 +128,25 @@ package.loadScript = function(url, async) {
   );
 
   return package.impl.loadPackage(pkg, loader);
+};
+
+package.loadMainScript = function(scriptUrl) {
+  simply.reset();
+
+  scriptUrl = Settings.mainScriptUrl(scriptUrl);
+  if (!scriptUrl) { return; }
+
+  Settings.loadOptions(scriptUrl);
+
+  try {
+    package.loadScript(scriptUrl, false);
+  } catch (e) {
+    simply.text({
+      title: 'Failed to load',
+      body: scriptUrl,
+    }, true);
+    return;
+  }
 };
 
 /**

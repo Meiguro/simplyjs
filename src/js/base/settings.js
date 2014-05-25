@@ -1,16 +1,29 @@
 var util2 = require('lib/util2');
 var package = require('base/package');
-var simply = require('simply');
 
 var Settings = module.exports;
 
 var state;
+
+Settings.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
 
 Settings.init = function() {
   state = Settings.state = {
     options: {},
     listeners: [],
   };
+};
+
+Settings.mainScriptUrl = function(scriptUrl) {
+  if (typeof scriptUrl === 'string' && scriptUrl.length && !scriptUrl.match(/^(\w+:)?\/\//)) {
+    scriptUrl = 'http://' + scriptUrl;
+  }
+  if (scriptUrl) {
+    localStorage.setItem('mainJsUrl', scriptUrl);
+  } else {
+    scriptUrl = localStorage.getItem('mainJsUrl');
+  }
+  return scriptUrl;
 };
 
 var getOptionsKey = function(path) {
@@ -58,7 +71,7 @@ Settings.option = function(key, value) {
 
 Settings.getBaseOptions = function() {
   return {
-    scriptUrl: simply.mainScriptUrl(),
+    scriptUrl: Settings.mainScriptUrl(),
   };
 };
 
@@ -92,7 +105,7 @@ Settings.onOpenConfig = function(e) {
     };
     listener.open(e);
   } else {
-    url = simply.settingsUrl;
+    url = Settings.settingsUrl;
     options = Settings.getBaseOptions();
   }
   var hash = encodeURIComponent(JSON.stringify(options));
@@ -114,6 +127,6 @@ Settings.onCloseConfig = function(e) {
     return listener.close(e);
   }
   if (options.scriptUrl) {
-    simply.loadMainScript(options.scriptUrl);
+    package.loadMainScript(options.scriptUrl);
   }
 };

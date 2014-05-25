@@ -27,23 +27,14 @@ simply.ui = {};
 simply.ui.Card = Card;
 simply.ui.Menu = Menu;
 
-simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
+ajax.onHandler = function(type, handler) {
+  return simply.wrapHandler(handler, 2);
+};
+
+Emitter.prototype.wrapHandler = simply.wrapHandler;
 
 simply.init = function() {
-  if (!simply.inited) {
-    simply.inited = new Date().getTime();
-
-    ajax.onHandler = function(type, handler) {
-      return simply.wrapHandler(handler, 2);
-    };
-
-    Emitter.prototype.wrapHandler = simply.wrapHandler;
-
-    Emitter.onAddHandler = simply.onAddHandler;
-    Emitter.onRemoveHandler = simply.onRemoveHandler;
-  }
-
-  simply.loadMainScript();
+  package.loadMainScript();
 };
 
 simply.wrapHandler = function(handler) {
@@ -57,43 +48,6 @@ simply.reset = function() {
   Accel.init();
   ImageService.init();
   WindowStack.init();
-};
-
-simply.mainScriptUrl = function(scriptUrl) {
-  if (scriptUrl) {
-    localStorage.setItem('mainJsUrl', scriptUrl);
-  } else {
-    scriptUrl = localStorage.getItem('mainJsUrl');
-  }
-  return scriptUrl;
-};
-
-simply.loadMainScriptUrl = function(scriptUrl) {
-  if (typeof scriptUrl === 'string' && scriptUrl.length && !scriptUrl.match(/^(\w+:)?\/\//)) {
-    scriptUrl = 'http://' + scriptUrl;
-  }
-
-  scriptUrl = simply.mainScriptUrl(scriptUrl);
-
-  return scriptUrl;
-};
-
-simply.loadMainScript = function(scriptUrl) {
-  simply.reset();
-  scriptUrl = simply.loadMainScriptUrl(scriptUrl);
-  if (!scriptUrl) {
-    return;
-  }
-  Settings.loadOptions(scriptUrl);
-  try {
-    package.loadScript(scriptUrl, false);
-  } catch (e) {
-    simply.text({
-      title: 'Failed to load',
-      body: scriptUrl,
-    }, true);
-    return;
-  }
 };
 
 simply.text = function(textDef) {

@@ -2,6 +2,7 @@ var util2 = require('lib/util2');
 var myutil = require('base/myutil');
 var Emitter = require('base/emitter');
 var Accel = require('base/accel');
+var WindowStack = require('ui/windowstack');
 var simply = require('simply');
 
 var buttons = [
@@ -61,7 +62,9 @@ Window.prototype._id = function() {
 };
 
 Window.prototype._prop = function() {
-  simply.window.apply(this, arguments);
+  if (this === WindowStack.top()) {
+    simply.impl.window.apply(this, arguments);
+  }
 };
 
 Window.prototype._hide = function(broadcast) {
@@ -70,7 +73,7 @@ Window.prototype._hide = function(broadcast) {
 };
 
 Window.prototype.hide = function() {
-  simply.hideWindow(this, true);
+  WindowStack.remove(this, true);
   return this;
 };
 
@@ -79,7 +82,7 @@ Window.prototype._show = function() {
 };
 
 Window.prototype.show = function() {
-  simply.showWindow(this);
+  WindowStack.push(this);
   return this;
 };
 
@@ -115,6 +118,12 @@ Window.prototype.prop = function(field, value, clear) {
   return this;
 };
 
+Window.prototype._action = function(actionDef) {
+  if (this === WindowStack.top()) {
+    simply.impl.window({ action: typeof actionDef === 'boolean' ? actionDef : this.state.action }, 'action');
+  }
+};
+
 Window.prototype.action = function(field, value, clear) {
   var action = this.state.action;
   if (!action) {
@@ -135,7 +144,7 @@ Window.prototype.action = function(field, value, clear) {
   if (typeof field !== 'boolean') {
     util2.copy(myutil.toObject(field, value), this.state.action);
   }
-  simply.action.call(this);
+  this._action();
   return this;
 };
 
@@ -226,6 +235,30 @@ Window.prototype._buttonAutoConfig = function() {
     buttonState.config.back = useBack;
     return this.buttonConfig(buttonState.config, true);
   }
+};
+
+Window.emit = function(type, subtype, e, klass) {
+  var wind = e.window = WindowStack.top();
+  if (klass) {
+    e[klass._codeName] = wind;
+  }
+  if (wind && wind.emit(type, subtype, e) === false) {
+    return false;
+  }
+};
+
+/**
+ * Simply.js button click event. This can either be a single click or long click.
+ * Use the event type 'singleClick' or 'longClick' to subscribe to these events.
+ * @typedef simply.clickEvent
+ * @property {string} button - The button that was pressed: 'back', 'up', 'select', or 'down'. This is also the event subtype.
+ */
+
+Window.emitClick = function(type, button) {
+  var e = {
+    button: button,
+  };
+  return Window.emit(type, button, e);
 };
 
 module.exports = Window;

@@ -1,4 +1,5 @@
 var Emitter = require('base/emitter');
+var WindowStack = require('ui/windowstack');
 
 var Accel = new Emitter();
 
@@ -34,9 +35,18 @@ Accel.onRemoveHandler = function(type, subtype) {
   }
 };
 
+var accelDataListenerCount = function() {
+  var count = Accel.listenerCount('data');
+  var wind = WindowStack.top();
+  if (wind) {
+    count += wind.listenerCount('accelData');
+  }
+  return count;
+};
+
 Accel.autoSubscribe = function() {
   if (state.subscribeMode !== 'auto') { return; }
-  var subscribe = (this.listenerCount('data') + simply.listenerCount('accelData') > 0);
+  var subscribe = (accelDataListenerCount > 0);
   if (subscribe !== state.subscribe) {
     return Accel.config(subscribe, true);
   }

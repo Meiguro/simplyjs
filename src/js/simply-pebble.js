@@ -2,6 +2,9 @@ var util2 = require('lib/util2');
 var Settings = require('base/settings');
 var Accel = require('base/accel');
 var ImageService = require('base/image');
+var WindowStack = require('ui/windowstack');
+var Window = require('ui/window');
+var Menu = require('ui/menu');
 var simply = require('simply');
 
 var SimplyPebble = {};
@@ -468,12 +471,12 @@ SimplyPebble.onAppMessage = function(e) {
 
   switch (command.name) {
     case 'windowHide':
-      simply.hideWindowById(payload[1], false);
+      WindowStack.remove(payload[1], false);
       break;
     case 'singleClick':
     case 'longClick':
       var button = buttons[payload[1]];
-      simply.emitClick(command.name, button);
+      Window.emitClick(command.name, button);
       break;
     case 'accelTap':
       var axis = accelAxes[payload[1]];
@@ -506,14 +509,14 @@ SimplyPebble.onAppMessage = function(e) {
       }
       break;
     case 'getMenuSection':
-      simply.emitMenuSection(payload[1]);
+      Menu.emitSection(payload[1]);
       break;
     case 'getMenuItem':
-      simply.emitMenuItem(payload[1], payload[2]);
+      Menu.emitItem(payload[1], payload[2]);
       break;
     case 'menuSelect':
     case 'menuLongSelect':
-      simply.emitMenuSelect(command.name, payload[1], payload[2]);
+      Menu.emitSelect(command.name, payload[1], payload[2]);
       break;
   }
 };

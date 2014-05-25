@@ -1,6 +1,7 @@
 var util2 = require('lib/util2');
 var myutil = require('base/myutil');
 var Emitter = require('base/emitter');
+var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
 var simply = require('simply');
 
@@ -75,7 +76,9 @@ accessorProps.forEach(function(k) {
 });
 
 Card.prototype._prop = function() {
-  return simply.card.apply(this, arguments);
+  if (this === WindowStack.top()) {
+    simply.impl.card.apply(this, arguments);
+  }
 };
 
 Card.prototype._clear = function(flags) {

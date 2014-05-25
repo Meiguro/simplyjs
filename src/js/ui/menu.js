@@ -1,6 +1,7 @@
 var util2 = require('lib/util2');
 var myutil = require('base/myutil');
 var Emitter = require('base/emitter');
+var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
 var simply = require('simply');
 
@@ -21,7 +22,9 @@ Menu.prototype._show = function() {
 };
 
 Menu.prototype._prop = function() {
-  return simply.menu.apply(this, arguments);
+  if (this === WindowStack.top()) {
+    simply.impl.menu.apply(this, arguments);
+  }
 };
 
 Menu.prototype.action = function() {
@@ -139,7 +142,9 @@ Menu.prototype._resolveMenu = function() {
     if (typeof sections === 'number') {
       this.state.sections = new Array(sections);
     }
-    return simply.menu.call(this);
+    if (this === WindowStack.top()) {
+      simply.impl.menu.call(this, this.state);
+    }
   }
 };
 
@@ -153,7 +158,9 @@ Menu.prototype._resolveSection = function(e) {
       if (typeof section.items === 'number') {
         section.items = new Array(section.items);
       }
-      return simply.impl.menuSection.call(this, e.section, section);
+      if (this === WindowStack.top()) {
+        simply.impl.menuSection.call(this, e.section, section);
+      }
     }
   }
 };
@@ -161,7 +168,9 @@ Menu.prototype._resolveSection = function(e) {
 Menu.prototype._resolveItem = function(e) {
   var item = getItem.call(this, e);
   if (item) {
-    return simply.impl.menuItem.call(this, e.section, e.item, item);
+    if (this === WindowStack.top()) {
+      simply.impl.menuItem.call(this, e.section, e.item, item);
+    }
   }
 };
 
@@ -261,6 +270,52 @@ Menu.prototype.item = function(sectionIndex, itemIndex, item) {
   }
   this._resolveItem({ section: sectionIndex, item: itemIndex });
   return this;
+};
+
+Menu.emit = function(type, subtype, e) {
+  Window.emit(type, subtype, e, Menu);
+};
+
+Menu.emitSection = function(section) {
+  var menu = WindowStack.top();
+  if (!(menu instanceof Menu)) { return; }
+  var e = {
+    section: section
+  };
+  if (Menu.emit('section', null, e) === false) {
+    return false;
+  }
+  menu._resolveSection(e);
+};
+
+Menu.emitItem = function(section, item) {
+  var menu = WindowStack.top();
+  if (!(menu instanceof Menu)) { return; }
+  var e = {
+    section: section,
+    item: item,
+  };
+  if (Menu.emit('item', null, e) === false) {
+    return false;
+  }
+  menu._resolveItem(e);
+};
+
+Menu.emitSelect = function(type, section, item) {
+  var menu = WindowStack.top();
+  if (!(menu instanceof Menu)) { return; }
+  var e = {
+    section: section,
+    item: item,
+  };
+  switch (type) {
+    case 'menuSelect': type = 'select'; break;
+    case 'menuLongSelect': type = 'longSelect'; break;
+  }
+  if (Menu.emit(type, null, e) === false) {
+    return false;
+  }
+  menu._emitSelect(e);
 };
 
 module.exports = Menu;

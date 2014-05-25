@@ -1,17 +1,27 @@
 var util2 = require('lib/util2');
 var myutil = require('base/myutil');
 var Emitter = require('base/emitter');
-var simply = require('simply');
 
 var WindowStack = function() {
-  this.state = {};
-  this.state.items = [];
+  this.init();
 };
 
 util2.copy(Emitter.prototype, WindowStack.prototype);
 
+WindowStack.prototype.init = function() {
+  this.off();
+  this._items = [];
+
+  this.on('show', function(e) {
+    e.window.forEachListener(e.window.onAddHandler);
+  });
+  this.on('hide', function(e) {
+    e.window.forEachListener(e.window.onRemoveHandler);
+  });
+};
+
 WindowStack.prototype.top = function() {
-  return util2.last(this.state.items);
+  return util2.last(this._items);
 };
 
 WindowStack.prototype._emitShow = function(item) {
@@ -44,29 +54,33 @@ WindowStack.prototype.push = function(item) {
   if (item === this.top()) { return; }
   this.remove(item);
   var prevTop = this.top();
-  this.state.items.push(item);
+  this._items.push(item);
   this._show(item);
   this._hide(prevTop, false);
 };
 
 WindowStack.prototype.pop = function(broadcast) {
-  this.remove(this.top(), broadcast);
+  return this.remove(this.top(), broadcast);
 };
 
 WindowStack.prototype.remove = function(item, broadcast) {
+  if (typeof item === 'number') {
+    item = this.get(item);
+  }
   if (!item) { return; }
-  var index = this.state.items.indexOf(item);
-  if (index === -1) { return; }
+  var index = this._items.indexOf(item);
+  if (index === -1) { return item; }
   var wasTop = (item === this.top());
-  this.state.items.splice(index, 1);
+  this._items.splice(index, 1);
   if (wasTop) {
     this._show(this.top());
     this._hide(item, broadcast);
   }
+  return item;
 };
 
 WindowStack.prototype.get = function(windowId) {
-  var items = this.state.items;
+  var items = this._items;
   for (var i = 0, ii = items.length; i < ii; ++i) {
     var wind = items[i];
     if (wind._id() === windowId) {
@@ -75,4 +89,4 @@ WindowStack.prototype.get = function(windowId) {
   }
 };
 
-module.exports = WindowStack;
+module.exports = new WindowStack();

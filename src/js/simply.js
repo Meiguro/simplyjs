@@ -15,17 +15,10 @@ var ImageService = require('base/image');
 
 var WindowStack = require('ui/windowstack');
 var Card = require('ui/card');
-var Menu = require('ui/menu');
+
+require('exports');
 
 var simply = module.exports;
-
-simply.settings = Settings;
-
-simply.accel = Accel;
-
-simply.ui = {};
-simply.ui.Card = Card;
-simply.ui.Menu = Menu;
 
 ajax.onHandler = function(type, handler) {
   return simply.wrapHandler(handler, 2);

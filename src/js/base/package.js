@@ -83,8 +83,8 @@ package.loader = function(pkg, script) {
   return function() {
     var exports = pkg.exports;
     var result = myutil.defun(pkg.execName,
-      ['module', 'require', 'console', 'Pebble', 'simply'], script)
-      (pkg, package.require, console2, Pebble, simply);
+      ['module', 'require', 'console', 'Pebble'], script)
+      (pkg, package.require, console2, Pebble);
 
     // backwards compatibility for return-style modules
     if (pkg.exports === exports && result) {

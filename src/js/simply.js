@@ -14,9 +14,9 @@ var simply = module.exports;
 
 simply.ui = {};
 
-var Window = require('simply/window');
-var Card = simply.ui.Card = require('simply/card');
-var Menu = simply.ui.Menu = require('simply/menu');
+var Window = require('ui/window');
+var Card = simply.ui.Card = require('ui/card');
+var Menu = simply.ui.Menu = require('ui/menu');
 
 var buttons = [
   'back',

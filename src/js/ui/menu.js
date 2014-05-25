@@ -3,7 +3,7 @@ var myutil = require('myutil');
 var simply = require('simply');
 
 var Emitter = require('emitter');
-var Window = require('simply/window');
+var Window = require('ui/window');
 
 var Menu = function(menuDef) {
   this._sections = {};

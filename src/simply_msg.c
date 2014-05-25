@@ -116,6 +116,22 @@ static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
   }
 }
 
+static void handle_hide_window(DictionaryIterator *iter, Simply *simply) {
+  Window *base_window = window_stack_get_top_window();
+  SimplyWindow *window = window_get_user_data(base_window);
+  if (!window || (void*) window == simply->splash) {
+    return;
+  }
+  Tuple *tuple;
+  uint32_t window_id = 0;
+  if ((tuple = dict_find(iter, 1))) {
+    window_id = tuple->value->uint32;
+  }
+  if (window->id == window_id) {
+    simply_window_hide(window);
+  }
+}
+
 static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
   SimplyUi *ui = simply->ui;
   Tuple *tuple;
@@ -296,6 +312,9 @@ static void received_callback(DictionaryIterator *iter, void *context) {
   switch (tuple->value->uint8) {
     case SimplyACmd_setWindow:
       handle_set_window(iter, context);
+      break;
+    case SimplyACmd_windowHide:
+      handle_hide_window(iter, context);
       break;
     case SimplyACmd_setUi:
       handle_set_ui(iter, context);

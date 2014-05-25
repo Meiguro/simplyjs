@@ -463,46 +463,11 @@ SimplyPebble.card = function(cardDef, clear) {
   SimplyPebble.sendPacket(packet);
 };
 
-SimplyPebble.textfield = function(field, text, clear) {
-  var command = commandMap.setCard;
-  var packet = makePacket(command);
-  var param = command.paramMap[field];
-  if (param) {
-    packet[param.id] = text.toString();
-  }
-  if (clear) {
-    packet[command.paramMap.clear.id] = true;
-  }
-  SimplyPebble.sendPacket(packet);
-};
-
 SimplyPebble.vibe = function(type) {
   var command = commandMap.vibe;
   var packet = makePacket(command);
   var vibeIndex = vibeTypes.indexOf(type);
   packet[command.paramMap.type.id] = vibeIndex !== -1 ? vibeIndex : 0;
-  SimplyPebble.sendPacket(packet);
-};
-
-SimplyPebble.scrollable = function(scrollable) {
-  var command = commandMap.window;
-  var packet = makePacket(command);
-  packet[command.paramMap.scrollable.id] = scrollable ? 1 : 0;
-  SimplyPebble.sendPacket(packet);
-};
-
-SimplyPebble.fullscreen = function(fullscreen) {
-  var command = commandMap.window;
-  var packet = makePacket(command);
-  packet[command.paramMap.fullscreen.id] = fullscreen ? 1 : 0;
-  SimplyPebble.sendPacket(packet);
-};
-
-SimplyPebble.style = function(type) {
-  var command = commandMap.card;
-  var packet = makePacket(command);
-  var styleIndex = styleTypes.indexOf(type);
-  packet[command.paramMap.type.id] = styleIndex !== -1 ? styleIndex : 1;
   SimplyPebble.sendPacket(packet);
 };
 

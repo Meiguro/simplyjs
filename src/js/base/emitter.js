@@ -7,14 +7,7 @@ Emitter.prototype.wrapHandler = function(handler) {
   return handler;
 };
 
-Emitter.prototype.on = function(type, subtype, handler) {
-  if (!handler) {
-    handler = subtype;
-    subtype = 'all';
-  }
-  if (Emitter.onAddHandler) {
-    Emitter.onAddHandler(type, subtype, handler);
-  }
+Emitter.prototype._on = function(type, subtype, handler) {
   var typeMap = this._events || ( this._events = {} );
   var subtypeMap = typeMap[type] || ( typeMap[type] = {} );
   (subtypeMap[subtype] || ( subtypeMap[subtype] = [] )).push({
@@ -23,14 +16,7 @@ Emitter.prototype.on = function(type, subtype, handler) {
   });
 };
 
-Emitter.prototype.off = function(type, subtype, handler) {
-  if (!handler) {
-    handler = subtype;
-    subtype = 'all';
-  }
-  if (Emitter.onRemoveHandler) {
-    Emitter.onRemoveHandler(type, subtype, handler);
-  }
+Emitter.prototype._off = function(type, subtype, handler) {
   if (!type) {
     this._events = {};
     return;
@@ -59,6 +45,34 @@ Emitter.prototype.off = function(type, subtype, handler) {
   handlers.splice(index, 1);
 };
 
+Emitter.prototype.on = function(type, subtype, handler) {
+  if (!handler) {
+    handler = subtype;
+    subtype = 'all';
+  }
+  this._on(type, subtype, handler);
+  if (Emitter.onAddHandler) {
+    Emitter.onAddHandler(type, subtype, handler);
+  }
+  if (this.onAddHandler) {
+    this.onAddHandler(type, subtype, handler);
+  }
+};
+
+Emitter.prototype.off = function(type, subtype, handler) {
+  if (!handler) {
+    handler = subtype;
+    subtype = 'all';
+  }
+  this._off(type, subtype, handler);
+  if (Emitter.onRemoveHandler) {
+    Emitter.onRemoveHandler(type, subtype, handler);
+  }
+  if (this.onRemoveHandler) {
+    this.onRemoveHandler(type, subtype, handler);
+  }
+};
+
 Emitter.prototype.listeners = function(type, subtype) {
   if (!subtype) {
     subtype = 'all';
@@ -70,27 +84,32 @@ Emitter.prototype.listeners = function(type, subtype) {
   return subtypeMap[subtype];
 };
 
-Emitter.prototype.forEachListener = function(type, subtype, f) {
+Emitter.prototype.listenerCount = function(type, subtype) {
+  var listeners = this.listeners(type, subtype);
+  return listeners ? listeners.length : 0;
+};
+
+Emitter.prototype.forEachListener = function(type, subtype, callback) {
   var typeMap = this._events;
   if (!typeMap) { return; }
   var subtypeMap;
-  if (typeof f === 'function') {
+  if (typeof callback === 'function') {
     var handlers = this.listeners(type, subtype);
     if (!handlers) { return; }
     for (var i = 0, ii = handlers.length; i < ii; ++i) {
-      f(type, subtype, handlers[i]);
+      callback.call(this, type, subtype, handlers[i]);
     }
   } else if (typeof subtype === 'function') {
-    f = subtype;
+    callback = subtype;
     subtypeMap = typeMap[type];
     if (!subtypeMap) { return; }
     for (subtype in subtypeMap) {
-      this.forEachListener(type, subtype, f);
+      this.forEachListener(type, subtype, callback);
     }
   } else if (typeof type === 'function') {
-    f = type;
+    callback = type;
     for (type in typeMap) {
-      this.forEachListener(type, f);
+      this.forEachListener(type, callback);
     }
   }
 };

@@ -1,7 +1,22 @@
-
-var myutil = (function(){
+var util2 = require('lib/util2');
 
 var myutil = {};
+
+myutil.defun = function(fn, fargs, fbody) {
+  if (!fbody) {
+    fbody = fargs;
+    fargs = [];
+  }
+  return new Function('return function ' + fn + '(' + fargs.join(', ') + ') {' + fbody + '}')();
+};
+
+myutil.slog = function() {
+  var args = [];
+  for (var i = 0, ii = arguments.length; i < ii; ++i) {
+    args[i] = util2.toString(arguments[i]);
+  }
+  return args.join(' ');
+};
 
 myutil.toObject = function(key, value) {
   if (typeof key === 'object') {
@@ -57,10 +72,4 @@ myutil.makeAccessor = function(k) {
   };
 };
 
-if (typeof module !== 'undefined') {
-  module.exports = myutil;
-}
-
-return myutil;
-
-})();
+module.exports = myutil;

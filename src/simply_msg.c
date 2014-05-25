@@ -62,6 +62,12 @@ enum SimplySetUiParam {
   SetUi_style,
 };
 
+enum SimplySetMenuParam {
+  SetMenu_clear = SetWindow_clear,
+  SetMenu_id,
+  SetMenu_sections = SetWindowLast,
+};
+
 typedef enum VibeType VibeType;
 
 enum VibeType {
@@ -91,6 +97,7 @@ static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
     switch (tuple->key) {
       case SetWindow_id:
         window->id = tuple->value->uint32;
+        break;
       case SetWindow_action:
         simply_window_set_action_bar(window, tuple->value->int32);
         break;
@@ -109,6 +116,22 @@ static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
   }
 }
 
+static void handle_hide_window(DictionaryIterator *iter, Simply *simply) {
+  Window *base_window = window_stack_get_top_window();
+  SimplyWindow *window = window_get_user_data(base_window);
+  if (!window || (void*) window == simply->splash) {
+    return;
+  }
+  Tuple *tuple;
+  uint32_t window_id = 0;
+  if ((tuple = dict_find(iter, 1))) {
+    window_id = tuple->value->uint32;
+  }
+  if (window->id == window_id) {
+    simply_window_hide(window);
+  }
+}
+
 static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
   SimplyUi *ui = simply->ui;
   Tuple *tuple;
@@ -119,6 +142,7 @@ static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
     switch (tuple->key) {
       case SetUi_id:
         ui->window.id = tuple->value->uint32;
+        break;
       case SetUi_title:
       case SetUi_subtitle:
       case SetUi_body:
@@ -188,13 +212,18 @@ static void handle_set_accel_config(DictionaryIterator *iter, Simply *simply) {
 static void handle_set_menu(DictionaryIterator *iter, Simply *simply) {
   SimplyMenu *menu = simply->menu;
   Tuple *tuple;
-  if ((tuple = dict_find(iter, 1))) {
-    menu->window.id = tuple->value->uint32;
-  }
-  if ((tuple = dict_find(iter, 2))) {
-    simply_menu_set_num_sections(menu, tuple->value->int32);
+  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
+    switch (tuple->key) {
+      case SetMenu_id:
+        menu->window.id = tuple->value->uint32;
+        break;
+      case SetMenu_sections:
+        simply_menu_set_num_sections(menu, tuple->value->int32);
+        break;
+    }
   }
   simply_menu_show(menu);
+  handle_set_window(iter, simply);
 }
 
 static void handle_set_menu_section(DictionaryIterator *iter, Simply *simply) {
@@ -283,6 +312,9 @@ static void received_callback(DictionaryIterator *iter, void *context) {
   switch (tuple->value->uint8) {
     case SimplyACmd_setWindow:
       handle_set_window(iter, context);
+      break;
+    case SimplyACmd_windowHide:
+      handle_hide_window(iter, context);
       break;
     case SimplyACmd_setUi:
       handle_set_ui(iter, context);

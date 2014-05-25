@@ -21,6 +21,7 @@ struct SimplyWindow {
 SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply);
 void simply_window_deinit(SimplyWindow *self);
 void simply_window_show(SimplyWindow *self);
+void simply_window_hide(SimplyWindow *self);
 
 void simply_window_load(SimplyWindow *self);
 void simply_window_unload(SimplyWindow *self);

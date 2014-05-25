@@ -152,6 +152,13 @@ void simply_window_unload(SimplyWindow *self) {
   self->scroll_layer = NULL;
 }
 
+void simply_window_hide(SimplyWindow *self) {
+  if (self->window == window_stack_get_top_window()) {
+    bool animated = true;
+    window_stack_pop(animated);
+  }
+}
+
 void simply_window_show(SimplyWindow *self) {
   if (!self->window) {
     return;

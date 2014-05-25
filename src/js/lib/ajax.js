@@ -98,6 +98,8 @@ ajax.formify = formify;
 
 if (typeof module !== 'undefined') {
   module.exports = ajax;
+} else {
+  window.ajax = ajax;
 }
 
 return ajax;

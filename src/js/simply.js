@@ -14,6 +14,8 @@ var simply = module.exports;
 
 simply.ui = {};
 
+var package = require('base/package');
+
 var WindowStack = require('ui/windowstack');
 
 var Window = require('ui/window');
@@ -49,7 +51,7 @@ simply.init = function() {
 };
 
 simply.wrapHandler = function(handler) {
-  return simply.impl.wrapHandler.apply(this, arguments);
+  return package.impl.wrapHandler.apply(this, arguments);
 };
 
 simply.reset = function() {
@@ -61,7 +63,6 @@ simply.reset = function() {
   simply.packages = {};
 
   state.run = true;
-  state.numPackages = 0;
   state.options = {};
 
   var emitter = new Emitter();
@@ -201,108 +202,6 @@ simply.emit = function(type, subtype, handler) {
   state.emitter.emit(type, subtype, handler);
 };
 
-var pathToName = function(path) {
-  var name = path;
-  if (typeof name === 'string') {
-    name = name.replace(simply.basepath(), '');
-  }
-  return name || simply.basename();
-};
-
-simply.getPackageByPath = function(path) {
-  return simply.packages[pathToName(path)];
-};
-
-simply.makePackage = function(path) {
-  var name = pathToName(path);
-  var saveName = 'script:' + path;
-  var pkg = simply.packages[name];
-
-  if (!pkg) {
-    pkg = simply.packages[name] = {
-      name: name,
-      saveName: saveName,
-      filename: path
-    };
-  }
-
-  return pkg;
-};
-
-simply.defun = function(fn, fargs, fbody) {
-  if (!fbody) {
-    fbody = fargs;
-    fargs = [];
-  }
-  return new Function('return function ' + fn + '(' + fargs.join(', ') + ') {' + fbody + '}')();
-};
-
-var slog = function() {
-  var args = [];
-  for (var i = 0, ii = arguments.length; i < ii; ++i) {
-    args[i] = util2.toString(arguments[i]);
-  }
-  return args.join(' ');
-};
-
-simply.fexecPackage = function(script, pkg) {
-  // console shim
-  var console2 = simply.console2 = {};
-  for (var k in console) {
-    console2[k] = console[k];
-  }
-
-  console2.log = function() {
-    var msg = pkg.name + ': ' + slog.apply(this, arguments);
-    var width = 45;
-    var prefix = (new Array(width + 1)).join('\b'); // erase Simply.js source line
-    var suffix = msg.length < width ? (new Array(width - msg.length + 1)).join(' ') : 0;
-    console.log(prefix + msg + suffix);
-  };
-
-  // loader
-  return function() {
-    var exports = pkg.exports;
-    var result = simply.defun(pkg.execName,
-      ['module', 'require', 'console', 'Pebble', 'simply'], script)
-      (pkg, simply.require, console2, Pebble, simply);
-
-    // backwards compatibility for return-style modules
-    if (pkg.exports === exports && result) {
-      pkg.exports = result;
-    }
-
-    return pkg.exports;
-  };
-};
-
-simply.loadScript = function(scriptUrl, async) {
-  console.log('loading: ' + scriptUrl);
-
-  var pkg = simply.makePackage(scriptUrl);
-  pkg.exports = {};
-
-  var loader = util2.noop;
-  var useScript = function(script) {
-    loader = simply.fexecPackage(script, pkg);
-  };
-
-  ajax({ url: scriptUrl, cache: false, async: async }, function(data) {
-    if (data && data.length) {
-      localStorage.setItem(pkg.saveName, data);
-      useScript(data);
-    }
-  }, function(data, status) {
-    data = localStorage.getItem(pkg.saveName);
-    if (data && data.length) {
-      console.log(status + ': failed, loading saved script instead');
-      useScript(data);
-    }
-  });
-
-  return simply.impl.loadPackage.call(this, pkg, loader);
-};
-
 simply.loadMainScriptUrl = function(scriptUrl) {
   if (typeof scriptUrl === 'string' && scriptUrl.length && !scriptUrl.match(/^(\w+:)?\/\//)) {
     scriptUrl = 'http://' + scriptUrl;
@@ -323,9 +222,9 @@ simply.loadMainScript = function(scriptUrl) {
   if (!scriptUrl) {
     return;
   }
-  simply.loadOptions();
+  simply.loadOptions(scriptUrl);
   try {
-    simply.loadScript(scriptUrl, false);
+    package.loadScript(scriptUrl, false);
   } catch (e) {
     simply.text({
       title: 'Failed to load',
@@ -333,37 +232,6 @@ simply.loadMainScript = function(scriptUrl) {
     }, true);
     return;
   }
-};
-
-simply.basepath = function(path) {
-  path = path || localStorage.getItem('mainJsUrl');
-  return path.replace(/[^\/]*$/, '');
-};
-
-simply.basename = function(path) {
-  path = path || localStorage.getItem('mainJsUrl');
-  return path.match(/[^\/]*$/)[0];
-};
-
-/**
- * Loads external dependencies, allowing you to write a multi-file project.
- * Package loading loosely follows the CommonJS format.
- * Exporting is possible by modifying or setting module.exports within the required file.
- * The module path is also available as module.path.
- * This currently only supports a relative path to another JavaScript file.
- * @global
- * @param {string} path - The path to the dependency.
- */
-simply.require = function(path) {
-  if (!path.match(/\.js$/)) {
-    path += '.js';
-  }
-  var package = simply.packages[path];
-  if (package) {
-    return package.value;
-  }
-  path = baseTransformPath(path);
-  return simply.loadScript(path, false);
 };
 
 simply.text = function(textDef) {
@@ -452,18 +320,6 @@ var parseImageHash = function(hash) {
   return image;
 };
 
-var baseTransformPath = function(path) {
-  var basepath = simply.basepath();
-  if (path.match(/^\/\//)) {
-    var m = basepath.match(/^(\w+:)\/\//);
-    path = (m ? m[1] : 'http:') + path;
-  }
-  if (!path.match(/^\w+:\/\//)) {
-    path = basepath + path;
-  }
-  return path;
-};
-
 simply.image = function(opt, reset, callback) {
   if (typeof opt === 'string') {
     opt = parseImageHash(opt);
@@ -472,7 +328,7 @@ simply.image = function(opt, reset, callback) {
     callback = reset;
     reset = null;
   }
-  var url = baseTransformPath(opt.url);
+  var url = package.abspath(opt.url);
   var hash = makeImageHash(opt);
   var image = state.image.cache[hash];
   if (image) {
@@ -507,21 +363,24 @@ simply.image = function(opt, reset, callback) {
   return image.id;
 };
 
-var getOptionsKey = function() {
-  return 'options:' + simply.basename();
+var getOptionsKey = function(path) {
+  return 'options:' + (path || package.module.filename);
 };
 
-simply.saveOptions = function() {
+simply.saveOptions = function(path) {
   var options = state.options;
-  localStorage.setItem(getOptionsKey(), JSON.stringify(options));
+  localStorage.setItem(getOptionsKey(path), JSON.stringify(options));
 };
 
-simply.loadOptions = function() {
+simply.loadOptions = function(path) {
   state.options = {};
-  var options = localStorage.getItem(getOptionsKey());
+  var options = localStorage.getItem(getOptionsKey(path));
   try {
-    state.options = JSON.parse(options);
+    options = JSON.parse(options);
   } catch (e) {}
+  if (typeof options === 'object' && options !== null) {
+    state.options = options;
+  }
 };
 
 simply.option = function(key, value) {

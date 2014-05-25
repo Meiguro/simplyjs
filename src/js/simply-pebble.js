@@ -3,6 +3,10 @@ var util2 = require('util2');
 
 var SimplyPebble = {};
 
+var package = require('base/package');
+var packageImpl = require('base/package-pebble');
+package.impl = packageImpl;
+
 if (typeof Image === 'undefined') {
   window.Image = function(){};
 }
@@ -262,93 +266,6 @@ var SimplyPebble = {};
 SimplyPebble.init = function() {
   simply.impl = SimplyPebble;
   simply.init();
-};
-
-var getExecPackage = function(execName) {
-  var packages = simply.packages;
-  for (var path in packages) {
-    var package = packages[path];
-    if (package && package.execName === execName) {
-      return path;
-    }
-  }
-};
-
-var getExceptionFile = function(e, level) {
-  var stack = e.stack.split('\n');
-  for (var i = level || 0, ii = stack.length; i < ii; ++i) {
-    var line = stack[i];
-    if (line.match(/^\$\d/)) {
-      var path = getExecPackage(line);
-      if (path) {
-        return path;
-      }
-    }
-  }
-  return stack[level];
-};
-
-var getExceptionScope = function(e, level) {
-  var stack = e.stack.split('\n');
-  for (var i = level || 0, ii = stack.length; i < ii; ++i) {
-    var line = stack[i];
-    if (!line || line.match('native code')) { continue; }
-    return line.match(/^\$\d/) && getExecPackage(line) || line;
-  }
-  return stack[level];
-};
-
-var setHandlerPath = function(handler, path, level) {
-  var level0 = 4; // caller -> wrap -> apply -> wrap -> set
-  handler.path = path || getExceptionScope(new Error(), (level || 0) + level0) || simply.basename();
-  return handler;
-};
-
-var papply = function(f, args, path) {
-  try {
-    return f.apply(this, args);
-  } catch (e) {
-    var scope = !path && getExceptionFile(e) || getExecPackage(path) || path;
-    console.log(scope + ':' + e.line + ': ' + e + '\n' + e.stack);
-    simply.text({
-      subtitle: scope,
-      body: e.line + ' ' + e.message,
-    }, true);
-    simply.state.run = false;
-  }
-};
-
-var protect = function(f, path) {
-  return function() {
-    return papply(f, arguments, path);
-  };
-};
-
-SimplyPebble.wrapHandler = function(handler, level) {
-  if (!handler) { return; }
-  setHandlerPath(handler, null, level || 1);
-  var package = simply.packages[handler.path];
-  if (package) {
-    return protect(package.fwrap(handler), handler.path);
-  } else {
-    return protect(handler, handler.path);
-  }
-};
-
-var toSafeName = function(name) {
-  name = name.replace(/[^0-9A-Za-z_$]/g, '_');
-  if (name.match(/^[0-9]/)) {
-    name = '_' + name;
-  }
-  return name;
-};
-
-SimplyPebble.loadPackage = function(pkg, loader) {
-  pkg.execName = '$' + simply.state.numPackages++ + toSafeName(pkg.name);
-  pkg.fapply = simply.defun(pkg.execName, ['f', 'args'], 'return f.apply(this, args)');
-  pkg.fwrap = function(f) { return function() { return pkg.fapply(f, arguments); }; };
-
-  return papply(loader, null, pkg.name);
 };
 
 SimplyPebble.onShowConfiguration = function(e) {

@@ -677,59 +677,6 @@ simply.accelPeek = function(callback) {
   return simply.impl.accelPeek.apply(this, arguments);
 };
 
-var getMenuSection = function(e) {
-  var menu = e.menu || state.menu;
-  if (!menu) { return; }
-  return menu._section(e);
-};
-
-var getMenuItem = function(e) {
-  var menu = e.menu || state.menu;
-  if (!menu) { return; }
-  return menu._item(e);
-};
-
-simply.onMenuSection = function(e) {
-  var section = getMenuSection(e);
-  if (!section) { return; }
-  simply.menuSection(e.section, section);
-};
-
-simply.onMenuItem = function(e) {
-  var item = getMenuItem(e);
-  if (!item) { return; }
-  simply.menuItem(e.section, e.item, item);
-};
-
-simply.onMenuSelect = function(e) {
-  var menu = e.menu;
-  var item = getMenuItem(e);
-  if (!item) { return; }
-  switch (e.type) {
-    case 'menuSelect':
-      if (typeof item.select === 'function') {
-        if (item.select(e) === false) {
-          return false;
-        }
-      }
-      break;
-    case 'menuLongSelect':
-      if (typeof item.longSelect === 'function') {
-        if (item.longSelect(e) === false) {
-          return false;
-        }
-      }
-      break;
-    case 'menuHide':
-      if (typeof item.hide === 'function') {
-        if (item.hide(e) === false) {
-          return false;
-        }
-      }
-      break;
-  }
-};
-
 simply.menu = function(menuDef) {
   var menu = state.menu;
   if (arguments.length === 0) {
@@ -746,23 +693,9 @@ simply.menu = function(menuDef) {
     menu = setWindow(menu, 'menu');
     util2.copy(menu.state, menuDef);
   }
-  menu._menu();
+  menu._resolveMenu();
   state.menu = menu;
   return simply.impl.menu(menu.state);
-};
-
-simply.menuSection = function(sectionIndex, sectionDef) {
-  if (typeof sectionIndex === 'undefined') {
-    return getMenuSection({ section: sectionIndex });
-  }
-  return simply.impl.menuSection.apply(this, arguments);
-};
-
-simply.menuItem = function(sectionIndex, itemIndex, itemDef) {
-  if (typeof sectionIndex === 'undefined') {
-    return getMenuItem({ section: sectionIndex, item: itemIndex });
-  }
-  return simply.impl.menuItem.apply(this, arguments);
 };
 
 /**
@@ -795,14 +728,6 @@ simply.emitClick = function(type, button) {
     button: button,
   };
   return simply.emitCard(type, button, e);
-};
-
-simply.emitCardShow = function() {
-  return simply.emitCard('show', null, {});
-};
-
-simply.emitCardHide = function() {
-  return simply.emitCard('hide', null, {});
 };
 
 /**
@@ -864,31 +789,38 @@ simply.emitMenu = function(type, subtype, e, globalType) {
 };
 
 simply.emitMenuSection = function(section) {
+  var menu = state.menu;
   var e = {
-    menu: state.menu,
+    menu: menu,
     section: section
   };
-  if (simply.emitMenu('section', null, e, 'menuSection') === false) {
+  if (simply.emitMenu('section', null, e) === false) {
     return false;
   }
-  simply.onMenuSection(e);
+  if (menu) {
+    menu._resolveSection(e);
+  }
 };
 
 simply.emitMenuItem = function(section, item) {
+  var menu = state.menu;
   var e = {
-    menu: state.menu,
+    menu: menu,
     section: section,
     item: item,
   };
-  if (simply.emitMenu('item', null, e, 'menuItem') === false) {
+  if (simply.emitMenu('item', null, e) === false) {
     return false;
   }
-  simply.onMenuItem(e);
+  if (menu) {
+    menu._resolveItem(e);
+  }
 };
 
 simply.emitMenuSelect = function(type, section, item) {
+  var menu = state.menu;
   var e = {
-    menu: state.menu,
+    menu: menu,
     section: section,
     item: item,
   };
@@ -899,7 +831,9 @@ simply.emitMenuSelect = function(type, section, item) {
   if (simply.emitMenu(type, null, e) === false) {
     return false;
   }
-  simply.onMenuSelect(e);
+  if (menu) {
+    menu._emitSelect(e);
+  }
 };
 
 Pebble.require = require;

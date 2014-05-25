@@ -126,7 +126,7 @@ var getItem = function(e) {
   }
 };
 
-Menu.prototype._menu = function() {
+Menu.prototype._resolveMenu = function() {
   var sections = getSections.call(this, targetType.menu);
   this.state.sections = sections;
   if (isEnumerable(sections)) {
@@ -137,7 +137,7 @@ Menu.prototype._menu = function() {
   }
 };
 
-Menu.prototype._section = function(e) {
+Menu.prototype._resolveSection = function(e) {
   var section = getSection.call(this, e);
   if (section) {
     if (!(section.items instanceof Array)) {
@@ -147,15 +147,36 @@ Menu.prototype._section = function(e) {
       if (typeof section.items === 'number') {
         section.items = new Array(section.items);
       }
-      return simply.menuSection.call(this, e.section, section);
+      return simply.impl.menuSection.call(this, e.section, section);
     }
   }
 };
 
-Menu.prototype._item = function(e) {
+Menu.prototype._resolveItem = function(e) {
   var item = getItem.call(this, e);
   if (item) {
-    return simply.menuItem.call(this, e.section, e.item, item);
+    return simply.impl.menuItem.call(this, e.section, e.item, item);
+  }
+};
+
+Menu.prototype._emitSelect = function(e) {
+  var item = getItem.call(this, e);
+  if (!item) { return; }
+  switch (e.type) {
+    case 'select':
+      if (typeof item.select === 'function') {
+        if (item.select(e) === false) {
+          return false;
+        }
+      }
+      break;
+    case 'longSelect':
+      if (typeof item.longSelect === 'function') {
+        if (item.longSelect(e) === false) {
+          return false;
+        }
+      }
+      break;
   }
 };
 
@@ -165,7 +186,7 @@ Menu.prototype.sections = function(sections) {
     return this;
   }
   this.state.sections = sections;
-  this._menu();
+  this._resolveMenu();
   return this;
 };
 
@@ -180,7 +201,7 @@ Menu.prototype.section = function(sectionIndex, section) {
   if (sections instanceof Array) {
     sections[sectionIndex] = section;
   }
-  this._section({ section: sectionIndex });
+  this._resolveSection({ section: sectionIndex });
   return this;
 };
 
@@ -203,7 +224,7 @@ Menu.prototype.items = function(sectionIndex, items) {
       return section.items;
     }
   }
-  this._section({ section: sectionIndex });
+  this._resolveSection({ section: sectionIndex });
   return this;
 };
 
@@ -232,7 +253,7 @@ Menu.prototype.item = function(sectionIndex, itemIndex, item) {
   } else {
     return getItem.call(this, { section: sectionIndex, item: itemIndex });
   }
-  this._item({ section: sectionIndex, item: itemIndex });
+  this._resolveItem({ section: sectionIndex, item: itemIndex });
   return this;
 };
 

@@ -316,7 +316,7 @@ var makePacket = function(command, def) {
 };
 
 SimplyPebble.sendPacket = function(packet) {
-  if (!simply.state.run) {
+  if (!simply.run) {
     return;
   }
   var send;

@@ -27,8 +27,6 @@ simply.ui = {};
 simply.ui.Card = Card;
 simply.ui.Menu = Menu;
 
-var state = simply.state = {};
-
 simply.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
 
 simply.init = function() {
@@ -53,17 +51,12 @@ simply.wrapHandler = function(handler) {
 };
 
 simply.reset = function() {
-  simply.state = state = {};
-
-  state.run = true;
-
-  WindowStack.init();
+  simply.run = true;
 
   Settings.init();
-
   Accel.init();
-
   ImageService.init();
+  WindowStack.init();
 };
 
 simply.mainScriptUrl = function(scriptUrl) {

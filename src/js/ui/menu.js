@@ -6,15 +6,22 @@ var Emitter = require('emitter');
 var Window = require('ui/window');
 
 var Menu = function(menuDef) {
+  Window.call(this, menuDef);
   this._sections = {};
-  this.state = menuDef || {};
 };
+
+Menu.prototype._codeName = 'menu';
 
 util2.inherit(Menu, Window);
 
 util2.copy(Emitter.prototype, Menu.prototype);
 
-Menu.prototype_prop = function() {
+Menu.prototype._show = function() {
+  this._resolveMenu();
+  return Window.prototype._show.apply(this, arguments);
+};
+
+Menu.prototype._prop = function() {
   return simply.menu.apply(this, arguments);
 };
 

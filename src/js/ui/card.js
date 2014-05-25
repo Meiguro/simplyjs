@@ -62,8 +62,10 @@ var accessorProps = textProps.concat(imageProps).concat(configProps);
 var clearableProps = textProps.concat(imageProps);
 
 var Card = function(cardDef) {
-  this.state = cardDef || {};
+  Window.call(this, cardDef);
 };
+
+Card._codeName = 'card';
 
 util2.inherit(Card, Window);
 

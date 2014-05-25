@@ -44,9 +44,11 @@ var nextId = 1;
 
 var Window = function(windowDef) {
   this.state = windowDef || {};
-  this._id = nextId++;
+  this.state.id = nextId++;
   this._buttonInit();
 };
+
+Window._codeName = 'window';
 
 util2.copy(Emitter.prototype, Window.prototype);
 
@@ -54,12 +56,28 @@ accessorProps.forEach(function(k) {
   Window.prototype[k] = myutil.makeAccessor(k);
 });
 
+Window.prototype._id = function() {
+  return this.state.id;
+};
+
 Window.prototype._prop = function() {
   return simply.window.apply(this, arguments);
 };
 
+Window.prototype._hide = function() {
+};
+
+Window.prototype.hide = function() {
+  simply.hideWindow(this);
+  return this;
+};
+
+Window.prototype._show = function() {
+  this._prop(this.state);
+};
+
 Window.prototype.show = function() {
-  this._prop({});
+  simply.showWindow(this);
   return this;
 };
 
@@ -81,7 +99,7 @@ Window.prototype.prop = function(field, value, clear) {
   if (arguments.length === 1 && typeof field !== 'object') {
     return this.state[field];
   }
-  if (typeof clear === 'undefined') {
+  if (typeof field === 'object') {
     clear = value;
   }
   if (clear) {
@@ -106,7 +124,7 @@ Window.prototype.action = function(field, value, clear) {
   if (arguments.length === 1 && typeof field !== 'object') {
     return action[field];
   }
-  if (typeof clear === 'undefined') {
+  if (typeof field !== 'string') {
     clear = value;
   }
   if (clear) {

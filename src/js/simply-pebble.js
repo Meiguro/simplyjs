@@ -540,6 +540,9 @@ SimplyPebble.onAppMessage = function(e) {
   var command = commands[code];
 
   switch (command.name) {
+    case 'windowHide':
+      simply.hideWindowById(payload[1]);
+      break;
     case 'singleClick':
     case 'longClick':
       var button = buttons[payload[1]];

@@ -14,6 +14,8 @@ var simply = module.exports;
 
 simply.ui = {};
 
+var WindowStack = require('ui/windowstack');
+
 var Window = require('ui/window');
 var Card = simply.ui.Card = require('ui/card');
 var Menu = simply.ui.Menu = require('ui/menu');
@@ -66,7 +68,10 @@ simply.reset = function() {
   emitter.wrapHandler = simply.wrapHandler;
   state.emitter = emitter;
 
-  state.card = new Card();
+  var windowStack = new WindowStack();
+  windowStack.on('show', simply.onShowWindow);
+  windowStack.on('hide', simply.onHideWindow);
+  state.windowStack = windowStack;
 
   state.image = {
     cache: {},
@@ -102,24 +107,45 @@ simply.listenerCount = function(type, subtype) {
   var count = 0;
   var listeners = state.emitter.listeners(type, subtype);
   count += (listeners ? listeners.length : 0);
-  listeners = state.card && state.card.emitter.listeners(type, subtype);
+  var wind = simply.topWindow();
+  listeners = wind && wind.emitter.listeners(type, subtype);
   count += (listeners ? listeners.length : 0);
   return count;
 };
 
-var setWindow = function(wind, field) {
-  field = field || 'window';
-  var other = state[field];
-  if (other) {
-    other.forEachListener(other.onRemoveHandler);
-    other.forEachListener(simply.onRemoveHandler);
-  }
-  state[field] = wind;
+simply.onShowWindow = function(e) {
+  var wind = e.window;
+  wind.forEachListener(wind.onAddHandler);
+  wind.forEachListener(simply.onAddHandler);
+};
+
+simply.onHideWindow = function(e) {
+  var wind = e.window;
+  wind.forEachListener(wind.onAddHandler);
+  wind.forEachListener(simply.onRemoveHandler);
+};
+
+simply.topWindow = function() {
+  return state.windowStack.top();
+};
+
+simply.getWindow = function(windowId) {
+  return state.windowStack.get(windowId);
+};
+
+simply.showWindow = function(wind) {
+  state.windowStack.push(wind);
+};
+
+simply.hideWindow = function(wind) {
+  state.windowStack.remove(wind);
+};
+
+simply.hideWindowById = function(windowId) {
+  var wind = simply.getWindow(windowId);
   if (wind) {
-    wind.forEachListener(wind.onAddHandler);
-    wind.forEachListener(simply.onAddHandler);
+    simply.hideWindow(wind);
   }
-  return wind;
 };
 
 var checkEventType = function(type) {
@@ -340,67 +366,42 @@ simply.require = function(path) {
   return simply.loadScript(path, false);
 };
 
-simply.window = function(field, value, clear) {
-  var wind = state.window;
-  var result;
-  var windowDef = myutil.toObject(field, value);
-  if (typeof clear === 'undefined') {
-    clear = value;
-  }
-  clear = clear ? 'all' : clear;
-  if (this instanceof Window) {
-    result = this;
-    if (wind !== this) {
-      wind = this;
-    }
+simply.text = function(textDef) {
+  var wind = simply.topWindow();
+  if (!wind || !(wind instanceof Card)) {
+    wind = new Card(textDef);
+    wind.show();
   } else {
-    result = wind.prop(windowDef, clear);
+    wind.prop(textDef, true);
   }
-  if (wind !== state.window) {
-    wind = setWindow(wind);
-    util2.copy(wind.state, windowDef);
-    clear = 'all';
-  }
-  if (wind === result) {
-    simply.impl.window(windowDef, clear);
-  }
-  return result;
 };
 
-simply.card = function(field, value, clear) {
-  var card = state.card;
-  var result;
-  var cardDef = myutil.toObject(field, value);
-  if (typeof clear === 'undefined') {
-    clear = value;
+simply.window = function(windowDef) {
+  var wind = simply.topWindow();
+  if (wind === this) {
+    simply.impl.window.apply(this, arguments);
   }
-  clear = clear ? 'all' : clear;
-  if (this instanceof Card) {
-    result = this;
-    if (card !== this) {
-      card = this;
-    }
-  } else {
-    result = card.prop(cardDef, clear);
-  }
-  if (card !== state.card) {
-    card = setWindow(card, 'card');
-    util2.copy(card.state, cardDef);
-    clear = 'all';
-  }
-  if (card === result) {
-    simply.impl.card(cardDef, clear);
-  }
-  return result;
 };
 
-simply.action = function(field, image, clear) {
-  var card = state.card;
-  var result = this instanceof Card ? this : card.action(field, image, clear);
-  if (card === result) {
-    simply.impl.card({ action: typeof field === 'boolean' ? field : card.state.action }, 'action');
+simply.card = function(windowDef) {
+  var wind = simply.topWindow();
+  if (wind === this) {
+    simply.impl.card.apply(this, arguments);
   }
-  return result;
+};
+
+simply.menu = function(menuDef) {
+  var wind = simply.topWindow();
+  if (wind === this) {
+    simply.impl.menu.apply(this, arguments);
+  }
+};
+
+simply.action = function(actionDef) {
+  var wind = simply.topWindow();
+  if (wind === this) {
+    simply.impl.window({ action: typeof actionDef === 'boolean' ? actionDef : this.state.action }, 'action');
+  }
 };
 
 /**
@@ -677,27 +678,6 @@ simply.accelPeek = function(callback) {
   return simply.impl.accelPeek.apply(this, arguments);
 };
 
-simply.menu = function(menuDef) {
-  var menu = state.menu;
-  if (arguments.length === 0) {
-    return menu;
-  }
-  if (this instanceof Menu) {
-    menu = this;
-  } else if (menuDef instanceof Menu) {
-    menu = menuDef;
-  } else {
-    menu = new Menu(menuDef);
-  }
-  if (menu !== state.menu) {
-    menu = setWindow(menu, 'menu');
-    util2.copy(menu.state, menuDef);
-  }
-  menu._resolveMenu();
-  state.menu = menu;
-  return simply.impl.menu(menu.state);
-};
-
 /**
  * Simply.js event. See all the possible event types. Subscribe to events using {@link simply.on}.
  * @typedef simply.event
@@ -713,9 +693,12 @@ simply.menu = function(menuDef) {
  * @property {string} button - The button that was pressed: 'back', 'up', 'select', or 'down'. This is also the event subtype.
  */
 
-simply.emitCard = function(type, subtype, e, globalType) {
-  var card = e.card = state.card;
-  if (card && card.emit(type, subtype, e) === false) {
+simply.emitWindow = function(type, subtype, e, globalType, klass) {
+  var wind = e.window = simply.topWindow();
+  if (klass) {
+    e[klass._codeName] = wind;
+  }
+  if (wind && wind.emit(type, subtype, e) === false) {
     return false;
   }
   if (globalType) {
@@ -727,7 +710,7 @@ simply.emitClick = function(type, button) {
   var e = {
     button: button,
   };
-  return simply.emitCard(type, button, e);
+  return simply.emitWindow(type, button, e);
 };
 
 /**
@@ -743,7 +726,7 @@ simply.emitAccelTap = function(axis, direction) {
     axis: axis,
     direction: direction,
   };
-  return simply.emitCard('accelTap', axis, e, 'accelTap');
+  return simply.emitWindow('accelTap', axis, e, 'accelTap');
 };
 
 /**
@@ -775,52 +758,42 @@ simply.emitAccelData = function(accels, callback) {
   if (callback) {
     return callback(e);
   }
-  return simply.emitCard('accelData', null, e, 'accelData');
+  return simply.emitWindow('accelData', null, e, 'accelData');
 };
 
 simply.emitMenu = function(type, subtype, e, globalType) {
-  var menu = e.menu = state.menu;
-  if (menu && menu.emit(type, subtype, e) === false) {
-    return false;
-  }
-  if (globalType) {
-    return simply.emit(globalType, subtype, e);
-  }
+  simply.emitWindow(type, subtype, e, globalType, Menu);
 };
 
 simply.emitMenuSection = function(section) {
-  var menu = state.menu;
+  var menu = simply.topWindow();
+  if (!(menu instanceof Menu)) { return; }
   var e = {
-    menu: menu,
     section: section
   };
   if (simply.emitMenu('section', null, e) === false) {
     return false;
   }
-  if (menu) {
-    menu._resolveSection(e);
-  }
+  menu._resolveSection(e);
 };
 
 simply.emitMenuItem = function(section, item) {
-  var menu = state.menu;
+  var menu = simply.topWindow();
+  if (!(menu instanceof Menu)) { return; }
   var e = {
-    menu: menu,
     section: section,
     item: item,
   };
   if (simply.emitMenu('item', null, e) === false) {
     return false;
   }
-  if (menu) {
-    menu._resolveItem(e);
-  }
+  menu._resolveItem(e);
 };
 
 simply.emitMenuSelect = function(type, section, item) {
-  var menu = state.menu;
+  var menu = simply.topWindow();
+  if (!(menu instanceof Menu)) { return; }
   var e = {
-    menu: menu,
     section: section,
     item: item,
   };
@@ -831,7 +804,5 @@ simply.emitMenuSelect = function(type, section, item) {
   if (simply.emitMenu(type, null, e) === false) {
     return false;
   }
-  if (menu) {
-    menu._emitSelect(e);
-  }
+  menu._emitSelect(e);
 };

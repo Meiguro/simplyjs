@@ -1,15 +1,15 @@
-var Settings = require('base/settings');
-var Accel = require('base/accel');
-var Card = require('ui/card');
-var Menu = require('ui/menu');
 
-Pebble.Settings = Settings;
+Pebble.Settings = require('base/settings');
 
-Pebble.Accel = Accel;
+Pebble.Accel = require('base/accel');
 
 var UI = {};
-UI.Card = Card;
-UI.Menu = Menu;
+
+UI.Vector2 = require('lib/vector2');
+UI.Card = require('ui/card');
+UI.Menu = require('ui/menu');
+UI.Stage = require('ui/stage');
+UI.Rect = require('ui/rect');
 
 Pebble.UI = UI;
 

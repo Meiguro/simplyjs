@@ -393,6 +393,21 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
   simply_stage_update(stage);
 }
 
+static void handle_remove_stage_element(DictionaryIterator *iter, Simply *simply) {
+  SimplyStage *stage = simply->stage;
+  Tuple *tuple;
+  uint32_t id = 0;
+  if ((tuple = dict_find(iter, ElementId))) {
+    id = tuple->value->uint32;
+  }
+  SimplyElementCommon *element = simply_stage_get_element(stage, id);
+  if (!element) {
+    return;
+  }
+  simply_stage_remove_element(stage, element);
+  simply_stage_update(stage);
+}
+
 static void received_callback(DictionaryIterator *iter, void *context) {
   Tuple *tuple = dict_find(iter, 0);
   if (!tuple) {
@@ -438,6 +453,9 @@ static void received_callback(DictionaryIterator *iter, void *context) {
       break;
     case SimplyACmd_stageElement:
       handle_set_stage_element(iter, context);
+      break;
+    case SimplyACmd_stageRemove:
+      handle_remove_stage_element(iter, context);
       break;
   }
 }

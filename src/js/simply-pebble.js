@@ -247,6 +247,11 @@ var commands = [{
   }, {
     name: 'radius',
   }],
+}, {
+  name: 'stageRemove',
+  params: [{
+    name: 'id',
+  }],
 }];
 
 var commandMap = {};
@@ -513,6 +518,14 @@ SimplyPebble.stageElement = function(elementDef, index) {
     packetDef.height = size.y;
   }
   var packet = makePacket(command, packetDef);
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.stageRemove = function(elementId) {
+  console.log('stageRemove');
+  var command = commandMap.stageRemove;
+  var packet = makePacket(command);
+  packet[command.paramMap.id.id] = elementId;
   SimplyPebble.sendPacket(packet);
 };
 

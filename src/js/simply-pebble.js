@@ -17,6 +17,15 @@ if (typeof Image === 'undefined') {
   window.Image = function(){};
 }
 
+var Color = function(x) {
+  switch (x) {
+    case 'clear': return ~0;
+    case 'black': return 0;
+    case 'white': return 1;
+  }
+  return Number(x);
+};
+
 var setWindowParams = [{
   name: 'clear',
   type: Boolean,
@@ -69,6 +78,8 @@ var setMenuParams = setWindowParams.concat([{
   name: 'sections',
   type: Number,
 }]);
+
+var setStageParams = setWindowParams;
 
 var commands = [{
   name: 'setWindow',
@@ -208,6 +219,34 @@ var commands = [{
   }, {
     name: 'pixels',
   }],
+}, {
+  name: 'setStage',
+  params: setStageParams,
+}, {
+  name: 'stageElement',
+  params: [{
+    name: 'id',
+  }, {
+    name: 'type',
+  }, {
+    name: 'index',
+  }, {
+    name: 'x',
+  }, {
+    name: 'y',
+  }, {
+    name: 'width',
+  }, {
+    name: 'height',
+  }, {
+    name: 'backgroundColor',
+    type: Color,
+  }, {
+    name: 'borderColor',
+    type: Color,
+  }, {
+    name: 'radius',
+  }],
 }];
 
 var commandMap = {};
@@ -289,6 +328,8 @@ var toParam = function(param, v) {
     v = v ? 1 : 0;
   } else if (param.type === Image && typeof v !== 'number') {
     v = ImageService.load(v);
+  } else if (param.type === Color) {
+    v = Color(v);
   }
   return v;
 };
@@ -445,6 +486,32 @@ SimplyPebble.image = function(id, gbitmap) {
   var command = commandMap.image;
   var packetDef = util2.copy(gbitmap);
   packetDef.id = id;
+  var packet = makePacket(command, packetDef);
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.stage = function(stageDef) {
+  var command = commandMap.setStage;
+  var packet = makePacket(command, stageDef);
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.stageElement = function(elementDef, index) {
+  var command = commandMap.stageElement;
+  var packetDef = util2.copy(elementDef);
+  packetDef.index = index;
+  if (packetDef.position) {
+    var position = packetDef.position;
+    delete packetDef.position;
+    packetDef.x = position.x;
+    packetDef.y = position.y;
+  }
+  if (packetDef.size) {
+    var size = packetDef.size;
+    delete packetDef.size;
+    packetDef.width = size.x;
+    packetDef.height = size.y;
+  }
   var packet = makePacket(command, packetDef);
   SimplyPebble.sendPacket(packet);
 };

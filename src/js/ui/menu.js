@@ -18,7 +18,7 @@ util2.copy(Emitter.prototype, Menu.prototype);
 
 Menu.prototype._show = function() {
   this._resolveMenu();
-  return Window.prototype._show.apply(this, arguments);
+  Window.prototype._show.apply(this, arguments);
 };
 
 Menu.prototype._prop = function() {

@@ -38,6 +38,7 @@ enum SimplyACmd {
   SimplyACmd_setStage,
   SimplyACmd_stageElement,
   SimplyACmd_stageRemove,
+  SimplyACmd_stageAnimate,
 };
 
 typedef enum SimplySetWindowParam SimplySetWindowParam;
@@ -436,7 +437,7 @@ static void handle_remove_stage_element(DictionaryIterator *iter, Simply *simply
   SimplyStage *stage = simply->stage;
   Tuple *tuple;
   uint32_t id = 0;
-  if ((tuple = dict_find(iter, ElementId))) {
+  if ((tuple = dict_find(iter, 1))) {
     id = tuple->value->uint32;
   }
   SimplyElementCommon *element = simply_stage_get_element(stage, id);
@@ -445,6 +446,43 @@ static void handle_remove_stage_element(DictionaryIterator *iter, Simply *simply
   }
   simply_stage_remove_element(stage, element);
   simply_stage_update(stage);
+}
+
+static void handle_animate_stage_element(DictionaryIterator *iter, Simply *simply) {
+  SimplyStage *stage = simply->stage;
+  Tuple *tuple;
+  uint32_t id = 0;
+  if ((tuple = dict_find(iter, 1))) {
+    id = tuple->value->uint32;
+  }
+  SimplyElementCommon *element = simply_stage_get_element(stage, id);
+  if (!element) {
+    return;
+  }
+  GRect to_frame = element->frame;
+  SimplyAnimation *animation = malloc(sizeof(*animation));
+  if (!animation) {
+    return;
+  }
+  if ((tuple = dict_find(iter, 2))) {
+    to_frame.origin.x = tuple->value->int16;
+  }
+  if ((tuple = dict_find(iter, 3))) {
+    to_frame.origin.y = tuple->value->int16;
+  }
+  if ((tuple = dict_find(iter, 4))) {
+    to_frame.size.w = tuple->value->int16;
+  }
+  if ((tuple = dict_find(iter, 5))) {
+    to_frame.size.h = tuple->value->int16;
+  }
+  if ((tuple = dict_find(iter, 6))) {
+    animation->duration = tuple->value->uint32;
+  }
+  if ((tuple = dict_find(iter, 7))) {
+    animation->curve = tuple->value->uint8;
+  }
+  simply_stage_animate_element(stage, element, animation, to_frame);
 }
 
 static void received_callback(DictionaryIterator *iter, void *context) {
@@ -495,6 +533,9 @@ static void received_callback(DictionaryIterator *iter, void *context) {
       break;
     case SimplyACmd_stageRemove:
       handle_remove_stage_element(iter, context);
+      break;
+    case SimplyACmd_stageAnimate:
+      handle_animate_stage_element(iter, context);
       break;
   }
 }

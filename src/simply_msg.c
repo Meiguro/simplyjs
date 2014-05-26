@@ -109,6 +109,8 @@ enum ElementParam {
   ElementTextColor,
   ElementTextOverflow,
   ElementTextAlignment,
+  ElementImage,
+  ElementCompositing,
 };
 
 static void check_splash(Simply *simply) {
@@ -418,6 +420,12 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
         break;
       case ElementTextAlignment:
         ((SimplyElementText*) element)->alignment = tuple->value->uint8;
+        break;
+      case ElementImage:
+        ((SimplyElementImage*) element)->image = tuple->value->uint32;
+        break;
+      case ElementCompositing:
+        ((SimplyElementImage*) element)->compositing = tuple->value->uint8;
         break;
     }
   }

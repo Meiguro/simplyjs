@@ -22,6 +22,7 @@ enum SimplyElementType {
   SimplyElementTypeNone = 0,
   SimplyElementTypeRect = 1,
   SimplyElementTypeCircle = 2,
+  SimplyElementTypeText = 3,
 };
 
 struct SimplyStageLayer {
@@ -61,6 +62,20 @@ struct SimplyElementRect {
 };
 
 typedef struct SimplyElementRect SimplyElementCircle;
+
+typedef struct SimplyElementText SimplyElementText;
+
+struct SimplyElementText {
+  union {
+    struct SimplyElementRect common;
+    struct SimplyElementCommonDef;
+  };
+  char *text;
+  GFont font;
+  GColor text_color:2;
+  GTextOverflowMode overflow_mode;
+  GTextAlignment alignment;
+};
 
 SimplyStage *simply_stage_create(Simply *simply);
 

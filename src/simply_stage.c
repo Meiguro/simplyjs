@@ -18,7 +18,7 @@ static void destroy_element(SimplyStage *self, SimplyElementCommon *element) {
   free(element);
 }
 
-static void rect_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRect* element) {
+static void rect_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
   if (element->background_color != GColorClear) {
     graphics_context_set_fill_color(ctx, element->background_color);
     graphics_fill_rect(ctx, element->frame, element->radius, GCornersAll);
@@ -29,7 +29,7 @@ static void rect_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRec
   }
 }
 
-static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementCircle* element) {
+static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementCircle *element) {
   if (element->background_color != GColorClear) {
     graphics_context_set_fill_color(ctx, element->background_color);
     graphics_fill_circle(ctx, element->frame.origin, element->radius);
@@ -37,6 +37,15 @@ static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementC
   if (element->border_color != GColorClear) {
     graphics_context_set_stroke_color(ctx, element->border_color);
     graphics_draw_circle(ctx, element->frame.origin, element->radius);
+  }
+}
+
+static void text_element_draw(GContext *ctx, SimplyStage *self, SimplyElementText *element) {
+  rect_element_draw(ctx, self, (SimplyElementRect*) element);
+  if (element->text_color != GColorClear && element->text) {
+    graphics_context_set_text_color(ctx, element->text_color);
+    graphics_draw_text(ctx, element->text, element->font, element->frame,
+        element->overflow_mode, element->alignment, NULL);
   }
 }
 
@@ -54,6 +63,9 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       case SimplyElementTypeCircle:
         circle_element_draw(ctx, self, (SimplyElementCircle*) element);
         break;
+      case SimplyElementTypeText:
+        text_element_draw(ctx, self, (SimplyElementText*) element);
+        break;
     }
     element = (SimplyElementCommon*) element->node.next;
   }
@@ -70,6 +82,7 @@ static SimplyElementCommon* alloc_element(SimplyElementType type) {
     case SimplyElementTypeNone: return NULL;
     case SimplyElementTypeRect: return malloc0(sizeof(SimplyElementRect));
     case SimplyElementTypeCircle: return malloc0(sizeof(SimplyElementCircle));
+    case SimplyElementTypeText: return malloc0(sizeof(SimplyElementText));
   }
   return NULL;
 }

@@ -48,28 +48,4 @@ myutil.toFlags = function(flags) {
   return flags;
 };
 
-myutil.unset = function(obj, k) {
-  if (typeof k === 'undefined') {
-    k = obj;
-    obj = this.state;
-  }
-  if (typeof obj === 'object') {
-    delete obj[k];
-  }
-};
-
-myutil.makeAccessor = function(k) {
-  return function(value) {
-    if (arguments.length === 0) {
-      return this.state[k];
-    } else {
-      this.state[k] = value;
-      if (this._prop() === this) {
-        this._prop(k, value);
-      }
-      return this;
-    }
-  };
-};
-
 module.exports = myutil;

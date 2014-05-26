@@ -3,6 +3,7 @@ var myutil = require('base/myutil');
 var Emitter = require('base/emitter');
 var Accel = require('base/accel');
 var WindowStack = require('ui/windowstack');
+var Propable = require('ui/propable');
 var simply = require('simply');
 
 var buttons = [
@@ -53,9 +54,9 @@ Window._codeName = 'window';
 
 util2.copy(Emitter.prototype, Window.prototype);
 
-accessorProps.forEach(function(k) {
-  Window.prototype[k] = myutil.makeAccessor(k);
-});
+util2.copy(Propable.prototype, Window.prototype);
+
+Propable.makeAccessors(accessorProps, Window.prototype);
 
 Window.prototype._id = function() {
   return this.state.id;
@@ -69,7 +70,7 @@ Window.prototype._prop = function() {
 
 Window.prototype._hide = function(broadcast) {
   if (broadcast === false) { return; }
-  simply.impl.windowHide(this.state.id);
+  simply.impl.windowHide(this._id());
 };
 
 Window.prototype.hide = function() {
@@ -112,9 +113,7 @@ Window.prototype.prop = function(field, value, clear) {
   }
   var windowDef = myutil.toObject(field, value);
   util2.copy(windowDef, this.state);
-  if (this._prop() === this) {
-    this._prop(windowDef);
-  }
+  this._prop(windowDef);
   return this;
 };
 

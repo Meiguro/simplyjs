@@ -2,6 +2,7 @@ var util2 = require('lib/util2');
 var myutil = require('base/myutil');
 var Emitter = require('base/emitter');
 var WindowStack = require('ui/windowstack');
+var Propable = require('ui/propable');
 var Window = require('ui/window');
 var simply = require('simply');
 
@@ -71,9 +72,7 @@ util2.inherit(Card, Window);
 
 util2.copy(Emitter.prototype, Card.prototype);
 
-accessorProps.forEach(function(k) {
-  Card.prototype[k] = myutil.makeAccessor(k);
-});
+Propable.makeAccessors(accessorProps, Card.prototype);
 
 Card.prototype._prop = function() {
   if (this === WindowStack.top()) {

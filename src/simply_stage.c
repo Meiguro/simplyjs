@@ -18,6 +18,12 @@ static bool id_filter(List1Node *node, void *data) {
 static void destroy_element(SimplyStage *self, SimplyElementCommon *element) {
   if (!element) { return; }
   list1_remove(&self->stage_layer.elements, &element->node);
+  switch (element->type) {
+    default: break;
+    case SimplyElementTypeText:
+      free(((SimplyElementText*) element)->text);
+      break;
+  }
   free(element);
 }
 

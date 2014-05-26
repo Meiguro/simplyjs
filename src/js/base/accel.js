@@ -1,5 +1,6 @@
 var Emitter = require('base/emitter');
 var WindowStack = require('ui/windowstack');
+var Window = require('ui/window');
 
 var Accel = new Emitter();
 
@@ -112,7 +113,7 @@ Accel.emitAccelTap = function(axis, direction) {
     axis: axis,
     direction: direction,
   };
-  if (simply.emitWindow('accelTap', axis, e) === false) {
+  if (Window.emit('accelTap', axis, e) === false) {
     return false;
   }
   Accel.emit('tap', axis, e);
@@ -147,7 +148,7 @@ Accel.emitAccelData = function(accels, callback) {
   if (callback) {
     return callback(e);
   }
-  if (simply.emitWindow('accelData', null, e) === false) {
+  if (Window.emit('accelData', null, e) === false) {
     return false;
   }
   Accel.emit('data', e);

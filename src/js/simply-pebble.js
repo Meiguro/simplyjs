@@ -54,6 +54,20 @@ var TextAlignment = function(x) {
   return Number(x);
 };
 
+var CompositingOp = function(x) {
+  switch (x) {
+    case 'assign':
+    case 'normal': return 0;
+    case 'assignInverted':
+    case 'invert': return 1;
+    case 'or'    : return 2;
+    case 'and'   : return 3;
+    case 'clear' : return 4;
+    case 'set'   : return 5;
+  }
+  return Number(x);
+};
+
 var setWindowParams = [{
   name: 'clear',
   type: Boolean,
@@ -289,6 +303,12 @@ var commands = [{
   }, {
     name: 'textAlign',
     type: TextAlignment,
+  }, {
+    name: 'image',
+    type: Image,
+  }, {
+    name: 'compositing',
+    type: CompositingOp,
   }],
 }, {
   name: 'stageRemove',

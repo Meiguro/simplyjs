@@ -15,6 +15,10 @@ static bool id_filter(List1Node *node, void *data) {
   return (((SimplyElementCommon*) node)->id == (uint32_t)(uintptr_t) data);
 }
 
+static bool animation_filter(List1Node *node, void *data) {
+  return (((SimplyAnimation*) node)->animation == (PropertyAnimation*) data);
+}
+
 static void destroy_element(SimplyStage *self, SimplyElementCommon *element) {
   if (!element) { return; }
   list1_remove(&self->stage_layer.elements, &element->node);
@@ -25,6 +29,13 @@ static void destroy_element(SimplyStage *self, SimplyElementCommon *element) {
       break;
   }
   free(element);
+}
+
+static void destroy_animation(SimplyStage *self, SimplyAnimation *animation) {
+  if (!animation) { return; }
+  list1_remove(&self->stage_layer.animations, &animation->node);
+  property_animation_destroy(animation->animation);
+  free(animation);
 }
 
 static void rect_element_draw_background(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
@@ -108,7 +119,7 @@ static void *malloc0(size_t size) {
   return buf;
 }
 
-static SimplyElementCommon* alloc_element(SimplyElementType type) {
+static SimplyElementCommon *alloc_element(SimplyElementType type) {
   switch (type) {
     case SimplyElementTypeNone: return NULL;
     case SimplyElementTypeRect: return malloc0(sizeof(SimplyElementRect));
@@ -119,11 +130,11 @@ static SimplyElementCommon* alloc_element(SimplyElementType type) {
   return NULL;
 }
 
-SimplyElementCommon* simply_stage_auto_element(SimplyStage *self, uint32_t id, SimplyElementType type) {
+SimplyElementCommon *simply_stage_auto_element(SimplyStage *self, uint32_t id, SimplyElementType type) {
   if (!id) {
     return NULL;
   }
-  SimplyElementCommon* element = (SimplyElementCommon*) list1_find(
+  SimplyElementCommon *element = (SimplyElementCommon*) list1_find(
       self->stage_layer.elements, id_filter, (void*)(uintptr_t) id);
   if (element) {
     return element;
@@ -137,13 +148,76 @@ SimplyElementCommon* simply_stage_auto_element(SimplyStage *self, uint32_t id, S
   return element;
 }
 
-SimplyElementCommon* simply_stage_insert_element(SimplyStage *self, int index, SimplyElementCommon *element) {
+SimplyElementCommon *simply_stage_insert_element(SimplyStage *self, int index, SimplyElementCommon *element) {
   simply_stage_remove_element(self, element);
   return (SimplyElementCommon*) list1_insert(&self->stage_layer.elements, index, &element->node);
 }
 
-SimplyElementCommon* simply_stage_remove_element(SimplyStage *self, SimplyElementCommon *element) {
+SimplyElementCommon *simply_stage_remove_element(SimplyStage *self, SimplyElementCommon *element) {
   return (SimplyElementCommon*) list1_remove(&self->stage_layer.elements, &element->node);
+}
+
+static void element_frame_setter(void *subject, GRect frame) {
+  SimplyAnimation *animation = subject;
+  animation->element->frame = frame;
+  simply_stage_update(animation->stage);
+}
+
+static GRect element_frame_getter(void *subject) {
+  SimplyAnimation *animation = subject;
+  return animation->element->frame;
+}
+
+static void animation_stopped(Animation *base_animation, bool finished, void *context) {
+  SimplyStage *self = context;
+  SimplyAnimation *animation = (SimplyAnimation*) list1_find(
+      self->stage_layer.animations, animation_filter, base_animation);
+  if (animation) {
+    destroy_animation(self, animation);
+  }
+}
+
+SimplyAnimation *simply_stage_animate_element(SimplyStage *self,
+    SimplyElementCommon *element, SimplyAnimation* animation, GRect to_frame) {
+  if (!animation) {
+    return NULL;
+  }
+
+  animation->stage = self;
+  animation->element = element;
+
+  static const PropertyAnimationImplementation implementation = {
+    .base = {
+      .update = (AnimationUpdateImplementation) property_animation_update_grect,
+    },
+    .accessors = {
+      .setter = { .grect = (const GRectSetter) element_frame_setter },
+      .getter = { .grect = (const GRectGetter) element_frame_getter },
+    },
+  };
+
+  PropertyAnimation *property_animation = property_animation_create(&implementation, animation, NULL, NULL);
+  if (!property_animation) {
+    free(animation);
+    return NULL;
+  }
+
+  property_animation->values.from.grect = element->frame;
+  property_animation->values.to.grect = to_frame;
+
+  animation->animation = property_animation;
+  list1_append(&self->stage_layer.animations, &animation->node);
+
+  Animation *base_animation = (Animation*) property_animation;
+  animation_set_duration(base_animation, animation->duration);
+  animation_set_curve(base_animation, animation->curve);
+  animation_set_handlers(base_animation, (AnimationHandlers) {
+    .stopped = animation_stopped,
+  }, self);
+
+  animation_schedule(base_animation);
+
+  return animation;
 }
 
 static void window_load(Window *window) {
@@ -174,6 +248,10 @@ static void window_disappear(Window *window) {
 
   while (self->stage_layer.elements) {
     destroy_element(self, (SimplyElementCommon*) self->stage_layer.elements);
+  }
+
+  while (self->stage_layer.animations) {
+    destroy_animation(self, (SimplyAnimation*) self->stage_layer.animations);
   }
 }
 

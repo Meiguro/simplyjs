@@ -29,6 +29,7 @@ enum SimplyElementType {
 struct SimplyStageLayer {
   Layer *layer;
   List1Node *elements;
+  List1Node *animations;
 };
 
 struct SimplyStage {
@@ -89,6 +90,17 @@ struct SimplyElementImage {
   GCompOp compositing;
 };
 
+typedef struct SimplyAnimation SimplyAnimation;
+
+struct SimplyAnimation {
+  List1Node node;
+  SimplyStage *stage;
+  SimplyElementCommon *element;
+  PropertyAnimation *animation;
+  uint32_t duration;
+  AnimationCurve curve;
+};
+
 SimplyStage *simply_stage_create(Simply *simply);
 
 void simply_stage_destroy(SimplyStage *self);
@@ -102,3 +114,6 @@ SimplyElementCommon* simply_stage_auto_element(SimplyStage *self, uint32_t id, S
 SimplyElementCommon* simply_stage_insert_element(SimplyStage *self, int index, SimplyElementCommon *element);
 
 SimplyElementCommon* simply_stage_remove_element(SimplyStage *self, SimplyElementCommon *element);
+
+SimplyAnimation *simply_stage_animate_element(SimplyStage *self,
+    SimplyElementCommon *element, SimplyAnimation* animation, GRect to_frame);

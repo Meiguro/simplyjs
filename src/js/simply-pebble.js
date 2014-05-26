@@ -1,4 +1,5 @@
 var util2 = require('lib/util2');
+var myutil = require('base/myutil');
 var Settings = require('base/settings');
 var Accel = require('base/accel');
 var ImageService = require('base/image');
@@ -52,6 +53,22 @@ var TextAlignment = function(x) {
     case 'right' : return 2;
   }
   return Number(x);
+};
+
+var TimeUnits = function(x) {
+  var z = 0;
+  x = myutil.toObject(x, true);
+  for (var k in x) {
+    switch (k) {
+      case 'seconds': z |= (1 << 0); break;
+      case 'minutes': z |= (1 << 1); break;
+      case 'hours'  : z |= (1 << 2); break;
+      case 'days'   : z |= (1 << 3); break;
+      case 'months' : z |= (1 << 4); break;
+      case 'years'  : z |= (1 << 5); break;
+    }
+  }
+  return z;
 };
 
 var CompositingOp = function(x) {
@@ -313,6 +330,12 @@ var commands = [{
   }, {
     name: 'textAlign',
     type: TextAlignment,
+  }, {
+    name: 'time',
+    type: Boolean,
+  }, {
+    name: 'timeUnits',
+    type: TimeUnits,
   }, {
     name: 'image',
     type: Image,

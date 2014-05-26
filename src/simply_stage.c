@@ -68,11 +68,23 @@ static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementC
   }
 }
 
+static char *format_time(char *format) {
+  time_t now = time(NULL);
+  struct tm* tm = localtime(&now);
+  static char time_text[256];
+  strftime(time_text, sizeof(time_text), format, tm);
+  return time_text;
+}
+
 static void text_element_draw(GContext *ctx, SimplyStage *self, SimplyElementText *element) {
   rect_element_draw(ctx, self, (SimplyElementRect*) element);
-  if (element->text_color != GColorClear && is_string(element->text)) {
+  char *text = element->text;
+  if (element->text_color != GColorClear && is_string(text)) {
+    if (element->is_time) {
+      text = format_time(text);
+    }
     graphics_context_set_text_color(ctx, element->text_color);
-    graphics_draw_text(ctx, element->text, element->font, element->frame,
+    graphics_draw_text(ctx, text, element->font, element->frame,
         element->overflow_mode, element->alignment, NULL);
   }
 }
@@ -240,6 +252,8 @@ static void window_load(Window *window) {
 static void window_appear(Window *window) {
   SimplyStage *self = window_get_user_data(window);
   simply_msg_window_show(self->window.id);
+
+  simply_stage_update_ticker(self);
 }
 
 static void window_disappear(Window *window) {
@@ -253,6 +267,8 @@ static void window_disappear(Window *window) {
   while (self->stage_layer.animations) {
     destroy_animation(self, (SimplyAnimation*) self->stage_layer.animations);
   }
+
+  simply_stage_update_ticker(self);
 }
 
 static void window_unload(Window *window) {
@@ -276,6 +292,31 @@ void simply_stage_show(SimplyStage *self) {
 
 void simply_stage_update(SimplyStage *self) {
   layer_mark_dirty(self->stage_layer.layer);
+}
+
+void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
+  layer_mark_dirty(window_get_root_layer(window_stack_get_top_window()));
+}
+
+void simply_stage_update_ticker(SimplyStage *self) {
+  TimeUnits units = 0;
+
+  SimplyElementCommon *element = (SimplyElementCommon*) self->stage_layer.elements;
+  while (element) {
+    if (element->type == SimplyElementTypeText) {
+      SimplyElementText *text = (SimplyElementText*) element;
+      if (text->is_time) {
+        units |= text->time_units;
+      }
+    }
+    element = (SimplyElementCommon*) element->node.next;
+  }
+
+  if (units) {
+    tick_timer_service_subscribe(units, handle_tick);
+  } else {
+    tick_timer_service_unsubscribe();
+  }
 }
 
 SimplyStage *simply_stage_create(Simply *simply) {

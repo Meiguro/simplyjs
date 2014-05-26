@@ -110,6 +110,8 @@ enum ElementParam {
   ElementTextColor,
   ElementTextOverflow,
   ElementTextAlignment,
+  ElementTextIsTime,
+  ElementTextTimeUnits,
   ElementImage,
   ElementCompositing,
 };
@@ -381,6 +383,7 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
   if (!element || element->type != type) {
     return;
   }
+  bool update_ticker = false;
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {
       case ElementIndex:
@@ -422,6 +425,14 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
       case ElementTextAlignment:
         ((SimplyElementText*) element)->alignment = tuple->value->uint8;
         break;
+      case ElementTextIsTime:
+        ((SimplyElementText*) element)->is_time = tuple->value->uint8;
+        update_ticker = true;
+        break;
+      case ElementTextTimeUnits:
+        ((SimplyElementText*) element)->time_units = tuple->value->uint8;
+        update_ticker = true;
+        break;
       case ElementImage:
         ((SimplyElementImage*) element)->image = tuple->value->uint32;
         break;
@@ -429,6 +440,9 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
         ((SimplyElementImage*) element)->compositing = tuple->value->uint8;
         break;
     }
+  }
+  if (update_ticker) {
+    simply_stage_update_ticker(stage);
   }
   simply_stage_update(stage);
 }

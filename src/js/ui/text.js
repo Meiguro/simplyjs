@@ -8,6 +8,8 @@ var textProps = [
   'color',
   'textOverflow',
   'textAlign',
+  'time',
+  'timeUnits',
 ];
 
 var Text = function(elementDef) {

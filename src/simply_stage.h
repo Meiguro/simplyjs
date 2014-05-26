@@ -74,9 +74,11 @@ struct SimplyElementText {
   };
   char *text;
   GFont font;
+  TimeUnits time_units:8;
   GColor text_color:2;
-  GTextOverflowMode overflow_mode;
-  GTextAlignment alignment;
+  GTextOverflowMode overflow_mode:2;
+  GTextAlignment alignment:2;
+  bool is_time:1;
 };
 
 typedef struct SimplyElementImage SimplyElementImage;
@@ -108,6 +110,8 @@ void simply_stage_destroy(SimplyStage *self);
 void simply_stage_show(SimplyStage *self);
 
 void simply_stage_update(SimplyStage *self);
+
+void simply_stage_update_ticker(SimplyStage *self);
 
 SimplyElementCommon* simply_stage_auto_element(SimplyStage *self, uint32_t id, SimplyElementType type);
 

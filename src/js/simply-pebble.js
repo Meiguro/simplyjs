@@ -68,6 +68,16 @@ var CompositingOp = function(x) {
   return Number(x);
 };
 
+var AnimationCurve = function(x) {
+  switch (x) {
+    case 'linear'   : return 0;
+    case 'easeIn'   : return 1;
+    case 'easeOut'  : return 2;
+    case 'easeInOut': return 3;
+  }
+  return Number(x);
+};
+
 var setWindowParams = [{
   name: 'clear',
   type: Boolean,
@@ -314,6 +324,24 @@ var commands = [{
   name: 'stageRemove',
   params: [{
     name: 'id',
+  }],
+}, {
+  name: 'stageAnimate',
+  params: [{
+    name: 'id',
+  }, {
+    name: 'x',
+  }, {
+    name: 'y',
+  }, {
+    name: 'width',
+  }, {
+    name: 'height',
+  }, {
+    name: 'duration',
+  }, {
+    name: 'easing',
+    type: AnimationCurve,
   }],
 }];
 
@@ -564,10 +592,7 @@ SimplyPebble.stage = function(stageDef) {
   SimplyPebble.sendPacket(packet);
 };
 
-SimplyPebble.stageElement = function(elementDef, index) {
-  var command = commandMap.stageElement;
-  var packetDef = util2.copy(elementDef);
-  packetDef.index = index;
+var toFramePacket = function(packetDef) {
   if (packetDef.position) {
     var position = packetDef.position;
     delete packetDef.position;
@@ -580,15 +605,39 @@ SimplyPebble.stageElement = function(elementDef, index) {
     packetDef.width = size.x;
     packetDef.height = size.y;
   }
+  return packetDef;
+};
+
+SimplyPebble.stageElement = function(elementId, elementType, elementDef, index) {
+  var command = commandMap.stageElement;
+  var packetDef = util2.copy(elementDef);
+  packetDef.id = elementId;
+  packetDef.type = elementType;
+  packetDef.index = index;
+  packetDef = toFramePacket(packetDef);
   var packet = makePacket(command, packetDef);
   SimplyPebble.sendPacket(packet);
 };
 
 SimplyPebble.stageRemove = function(elementId) {
-  console.log('stageRemove');
   var command = commandMap.stageRemove;
   var packet = makePacket(command);
   packet[command.paramMap.id.id] = elementId;
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.stageAnimate = function(elementId, animateDef, duration, easing) {
+  var command = commandMap.stageAnimate;
+  var packetDef = util2.copy(animateDef);
+  packetDef.id = elementId;
+  if (duration) {
+    packetDef.duration = duration;
+  }
+  if (easing) {
+    packetDef.easing = easing;
+  }
+  packetDef = toFramePacket(packetDef);
+  var packet = makePacket(command, packetDef);
   SimplyPebble.sendPacket(packet);
 };
 

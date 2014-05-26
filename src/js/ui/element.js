@@ -1,5 +1,6 @@
 var util2 = require('lib/util2');
 var Vector2 = require('lib/vector2');
+var myutil = require('base/myutil');
 var WindowStack = require('ui/windowstack');
 var Propable = require('ui/propable');
 var simply = require('simply');
@@ -40,9 +41,7 @@ StageElement.prototype._prop = function(elementDef) {
     this.state.size = new Vector2();
   }
   if (this.parent === WindowStack.top()) {
-    elementDef.id = this._id();
-    elementDef.type = this._type();
-    simply.impl.stageElement.apply(this, arguments);
+    simply.impl.stageElement(this._id(), this._type(), elementDef);
   }
 };
 
@@ -54,6 +53,22 @@ StageElement.prototype.index = function() {
 StageElement.prototype.remove = function(broadcast) {
   if (!this.parent) { return this; }
   this.parent.remove(this, broadcast);
+  return this;
+};
+
+StageElement.prototype._animate = function(animateDef, duration) {
+  if (this.parent === WindowStack.top()) {
+    simply.impl.stageAnimate(this._id(), animateDef, duration || 400, animateDef.easing || 'easeInOut');
+  }
+};
+
+StageElement.prototype.animate = function(field, value, duration) {
+  if (typeof field === 'object') {
+    duration = value;
+  }
+  var animateDef = myutil.toObject(field, value);
+  util2.copy(animateDef, this.state);
+  this._animate(animateDef, duration);
   return this;
 };
 

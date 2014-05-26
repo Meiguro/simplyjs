@@ -37,7 +37,7 @@ Stage.prototype.index = function(element) {
 
 Stage.prototype._insert = function(index, element) {
   if (this === WindowStack.top()) {
-    simply.impl.stageElement(element.state, index);
+    simply.impl.stageElement(element._id(), element._type(), element.state, index);
   }
 };
 

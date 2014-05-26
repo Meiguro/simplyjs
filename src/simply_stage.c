@@ -6,6 +6,9 @@
 
 #include "simplyjs.h"
 
+#include "util/graphics.h"
+#include "util/string.h"
+
 #include <pebble.h>
 
 static bool id_filter(List1Node *node, void *data) {
@@ -18,15 +21,23 @@ static void destroy_element(SimplyStage *self, SimplyElementCommon *element) {
   free(element);
 }
 
-static void rect_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
+static void rect_element_draw_background(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
   if (element->background_color != GColorClear) {
     graphics_context_set_fill_color(ctx, element->background_color);
     graphics_fill_rect(ctx, element->frame, element->radius, GCornersAll);
   }
+}
+
+static void rect_element_draw_border(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
   if (element->border_color != GColorClear) {
     graphics_context_set_stroke_color(ctx, element->border_color);
     graphics_draw_round_rect(ctx, element->frame, element->radius);
   }
+}
+
+static void rect_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
+  rect_element_draw_background(ctx, self, element);
+  rect_element_draw_border(ctx, self, element);
 }
 
 static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementCircle *element) {
@@ -42,11 +53,22 @@ static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementC
 
 static void text_element_draw(GContext *ctx, SimplyStage *self, SimplyElementText *element) {
   rect_element_draw(ctx, self, (SimplyElementRect*) element);
-  if (element->text_color != GColorClear && element->text) {
+  if (element->text_color != GColorClear && is_string(element->text)) {
     graphics_context_set_text_color(ctx, element->text_color);
     graphics_draw_text(ctx, element->text, element->font, element->frame,
         element->overflow_mode, element->alignment, NULL);
   }
+}
+
+static void image_element_draw(GContext *ctx, SimplyStage *self, SimplyElementImage *element) {
+  graphics_context_set_compositing_mode(ctx, element->compositing);
+  rect_element_draw_background(ctx, self, (SimplyElementRect*) element);
+  GBitmap *bitmap = simply_res_get_image(self->window.simply->res, element->image);
+  if (bitmap) {
+    graphics_draw_bitmap_centered(ctx, bitmap, element->frame);
+  }
+  rect_element_draw_border(ctx, self, (SimplyElementRect*) element);
+  graphics_context_set_compositing_mode(ctx, GCompOpAssign);
 }
 
 static void layer_update_callback(Layer *layer, GContext *ctx) {
@@ -66,6 +88,9 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       case SimplyElementTypeText:
         text_element_draw(ctx, self, (SimplyElementText*) element);
         break;
+      case SimplyElementTypeImage:
+        image_element_draw(ctx, self, (SimplyElementImage*) element);
+        break;
     }
     element = (SimplyElementCommon*) element->node.next;
   }
@@ -83,6 +108,7 @@ static SimplyElementCommon* alloc_element(SimplyElementType type) {
     case SimplyElementTypeRect: return malloc0(sizeof(SimplyElementRect));
     case SimplyElementTypeCircle: return malloc0(sizeof(SimplyElementCircle));
     case SimplyElementTypeText: return malloc0(sizeof(SimplyElementText));
+    case SimplyElementTypeImage: return malloc0(sizeof(SimplyElementImage));
   }
   return NULL;
 }

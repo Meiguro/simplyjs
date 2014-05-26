@@ -23,6 +23,7 @@ enum SimplyElementType {
   SimplyElementTypeRect = 1,
   SimplyElementTypeCircle = 2,
   SimplyElementTypeText = 3,
+  SimplyElementTypeImage = 4,
 };
 
 struct SimplyStageLayer {
@@ -75,6 +76,17 @@ struct SimplyElementText {
   GColor text_color:2;
   GTextOverflowMode overflow_mode;
   GTextAlignment alignment;
+};
+
+typedef struct SimplyElementImage SimplyElementImage;
+
+struct SimplyElementImage {
+  union {
+    struct SimplyElementRect common;
+    struct SimplyElementCommonDef;
+  };
+  uint32_t image;
+  GCompOp compositing;
 };
 
 SimplyStage *simply_stage_create(Simply *simply);

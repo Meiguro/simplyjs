@@ -28,7 +28,11 @@ StageElement.prototype._id = function() {
   return this.state.id;
 };
 
-StageElement.prototype._prop = function() {
+StageElement.prototype._type = function() {
+  return this.state.type;
+};
+
+StageElement.prototype._prop = function(elementDef) {
   if (!this.state.position) {
     this.state.position = new Vector2();
   }
@@ -36,6 +40,8 @@ StageElement.prototype._prop = function() {
     this.state.size = new Vector2();
   }
   if (this.parent === WindowStack.top()) {
+    elementDef.id = this._id();
+    elementDef.type = this._type();
     simply.impl.stageElement.apply(this, arguments);
   }
 };

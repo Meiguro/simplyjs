@@ -104,6 +104,11 @@ enum ElementParam {
   ElementBackgroundColor,
   ElementBorderColor,
   ElementRadius,
+  ElementText,
+  ElementTextFont,
+  ElementTextColor,
+  ElementTextOverflow,
+  ElementTextAlignment,
 };
 
 static void check_splash(Simply *simply) {
@@ -359,7 +364,7 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
     type = tuple->value->int32;
   }
   SimplyElementCommon *element = simply_stage_auto_element(stage, id, type);
-  if (!element) {
+  if (!element || element->type != type) {
     return;
   }
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
@@ -387,6 +392,21 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
         break;
       case ElementRadius:
         ((SimplyElementRect*) element)->radius = tuple->value->uint16;
+        break;
+      case ElementText:
+        strset(&((SimplyElementText*) element)->text, tuple->value->cstring);
+        break;
+      case ElementTextFont:
+        ((SimplyElementText*) element)->font = fonts_get_system_font(tuple->value->cstring);
+        break;
+      case ElementTextColor:
+        ((SimplyElementText*) element)->text_color = tuple->value->uint8;
+        break;
+      case ElementTextOverflow:
+        ((SimplyElementText*) element)->overflow_mode = tuple->value->uint8;
+        break;
+      case ElementTextAlignment:
+        ((SimplyElementText*) element)->alignment = tuple->value->uint8;
         break;
     }
   }

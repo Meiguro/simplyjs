@@ -26,6 +26,34 @@ var Color = function(x) {
   return Number(x);
 };
 
+var Font = function(x) {
+  x = x.toUpperCase();
+  x = x.replace(/[- ]/g, '_');
+  if (!x.match(/^RESOURCE_ID/)) {
+    x = 'RESOURCE_ID_' + x;
+  }
+  x = x.replace(/_+/g, '_');
+  return x;
+};
+
+var TextOverflowMode = function(x) {
+  switch (x) {
+    case 'wrap'    : return 0;
+    case 'ellipsis': return 1;
+    case 'fill'    : return 2;
+  }
+  return Number(x);
+};
+
+var TextAlignment = function(x) {
+  switch (x) {
+    case 'left'  : return 0;
+    case 'center': return 1;
+    case 'right' : return 2;
+  }
+  return Number(x);
+};
+
 var setWindowParams = [{
   name: 'clear',
   type: Boolean,
@@ -246,6 +274,21 @@ var commands = [{
     type: Color,
   }, {
     name: 'radius',
+  }, {
+    name: 'text',
+    type: String,
+  }, {
+    name: 'font',
+    type: Font,
+  }, {
+    name: 'color',
+    type: Color,
+  }, {
+    name: 'textOverflow',
+    type: TextOverflowMode,
+  }, {
+    name: 'textAlign',
+    type: TextAlignment,
   }],
 }, {
   name: 'stageRemove',
@@ -333,8 +376,8 @@ var toParam = function(param, v) {
     v = v ? 1 : 0;
   } else if (param.type === Image && typeof v !== 'number') {
     v = ImageService.load(v);
-  } else if (param.type === Color) {
-    v = Color(v);
+  } else if (typeof param.type === 'function') {
+    v = param.type(v);
   }
   return v;
 };

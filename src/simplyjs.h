@@ -8,6 +8,7 @@ struct Simply {
   struct SimplyAccel *accel;
   struct SimplyRes *res;
   struct SimplySplash *splash;
+  struct SimplyStage *stage;
   struct SimplyMenu *menu;
   struct SimplyUi *ui;
 };

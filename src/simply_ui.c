@@ -84,7 +84,7 @@ void simply_ui_set_text(SimplyUi *self, SimplyUiTextfield textfield, const char 
   }
 }
 
-void layer_update_callback(Layer *layer, GContext *ctx) {
+static void layer_update_callback(Layer *layer, GContext *ctx) {
   SimplyUi *self = *(void**) layer_get_data(layer);
 
   GRect window_frame = layer_get_frame(window_get_root_layer(self->window.window));

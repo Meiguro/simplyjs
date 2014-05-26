@@ -1,4 +1,5 @@
 var util2 = require('lib/util2');
+var myutil = require('base/myutil');
 var Propable = require('ui/propable');
 var StageElement = require('ui/element');
 
@@ -12,8 +13,15 @@ var textProps = [
   'timeUnits',
 ];
 
+var defaults = {
+  backgroundColor: 'clear',
+  borderColor: 'clear',
+  color: 'white',
+};
+
 var Text = function(elementDef) {
   StageElement.call(this, elementDef);
+  myutil.shadow(defaults, this.state);
   this.state.type = 3;
 };
 

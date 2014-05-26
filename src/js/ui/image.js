@@ -1,4 +1,5 @@
 var util2 = require('lib/util2');
+var myutil = require('base/myutil');
 var Propable = require('ui/propable');
 var StageElement = require('ui/element');
 
@@ -7,8 +8,14 @@ var imageProps = [
   'compositing',
 ];
 
+var defaults = {
+  backgroundColor: 'clear',
+  borderColor: 'clear',
+};
+
 var ImageElement = function(elementDef) {
   StageElement.call(this, elementDef);
+  myutil.shadow(defaults, this.state);
   this.state.type = 4;
 };
 

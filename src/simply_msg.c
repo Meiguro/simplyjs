@@ -117,10 +117,18 @@ static void check_splash(Simply *simply) {
   }
 }
 
-static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
+static SimplyWindow *get_top_simply_window(Simply *simply) {
   Window *base_window = window_stack_get_top_window();
   SimplyWindow *window = window_get_user_data(base_window);
   if (!window || (void*) window == simply->splash) {
+    return NULL;
+  }
+  return window;
+}
+
+static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
+  SimplyWindow *window = get_top_simply_window(simply);
+  if (!window) {
     return;
   }
   Tuple *tuple;
@@ -209,11 +217,14 @@ static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
 }
 
 static void handle_config_buttons(DictionaryIterator *iter, Simply *simply) {
-  SimplyUi *ui = simply->ui;
+  SimplyWindow *window = get_top_simply_window(simply);
+  if (!window) {
+    return;
+  }
   Tuple *tuple;
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     if ((tuple = dict_find(iter, i + 1))) {
-      simply_window_set_button(&ui->window, i, tuple->value->int32);
+      simply_window_set_button(window, i, tuple->value->int32);
     }
   }
 }

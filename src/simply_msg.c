@@ -116,6 +116,12 @@ enum ElementParam {
   ElementCompositing,
 };
 
+static bool s_has_communicated = false;
+
+bool simply_msg_has_communicated() {
+  return s_has_communicated;
+}
+
 static void check_splash(Simply *simply) {
   if (simply->splash) {
     simply_ui_show(simply->ui);
@@ -504,6 +510,8 @@ static void received_callback(DictionaryIterator *iter, void *context) {
   if (!tuple) {
     return;
   }
+
+  s_has_communicated = true;
 
   switch (tuple->value->uint8) {
     case SimplyACmd_setWindow:

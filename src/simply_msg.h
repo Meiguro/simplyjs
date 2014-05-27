@@ -8,6 +8,7 @@
 
 void simply_msg_init(Simply *simply);
 void simply_msg_deinit();
+bool simply_msg_has_communicated();
 
 bool simply_msg_single_click(ButtonId button);
 bool simply_msg_long_click(ButtonId button);

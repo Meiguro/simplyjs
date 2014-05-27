@@ -217,14 +217,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
 }
 
 static void show_welcome_text(SimplyUi *self) {
-  const char *title_text = self->ui_layer.textfields[UiTitle];
-  const char *subtitle_text = self->ui_layer.textfields[UiSubtitle];
-  const char *body_text = self->ui_layer.textfields[UiBody];
-
-  if (title_text || subtitle_text || body_text) {
-    return;
-  }
-  if (self->window.simply->menu->menu_layer.menu_layer) {
+  if (simply_msg_has_communicated()) {
     return;
   }
 

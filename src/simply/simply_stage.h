@@ -111,6 +111,8 @@ void simply_stage_destroy(SimplyStage *self);
 
 void simply_stage_show(SimplyStage *self);
 
+void simply_stage_clear(SimplyStage *self);
+
 void simply_stage_update(SimplyStage *self);
 
 void simply_stage_update_ticker(SimplyStage *self);

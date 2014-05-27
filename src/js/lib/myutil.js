@@ -4,7 +4,7 @@ var myutil = {};
 
 myutil.shadow = function(a, b) {
   for (var k in a) {
-    if (typeof b === 'undefined') {
+    if (typeof b[k] === 'undefined') {
       b[k] = a[k];
     }
   }

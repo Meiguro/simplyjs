@@ -1,22 +1,27 @@
 var util2 = require('lib/util2');
-var myutil = require('base/myutil');
-var Settings = require('base/settings');
-var Accel = require('base/accel');
-var ImageService = require('base/image');
+var myutil = require('lib/myutil');
+var Accel = require('ui/accel');
+var ImageService = require('ui/imageservice');
 var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
 var Menu = require('ui/menu');
-var simply = require('simply');
 
-var SimplyPebble = {};
+var simply = require('ui/simply');
 
-var package = require('base/package');
-var packageImpl = require('base/package-pebble');
-package.impl = packageImpl;
+/** 
+ * This package provides the underlying implementation for the ui/* classes.
+ *
+ * This implementation uses PebbleKit JS AppMessage to send commands to a Pebble Watch.
+ */
 
+/* Make JSHint happy */
 if (typeof Image === 'undefined') {
   window.Image = function(){};
 }
+
+/* 
+ * First part of this file is defining the commands and types that we will use later.
+ */
 
 var Color = function(x) {
   switch (x) {
@@ -368,6 +373,8 @@ var commands = [{
   }],
 }];
 
+// Build the commandMap and map each command to an integer.
+
 var commandMap = {};
 
 for (var i = 0, ii = commands.length; i < ii; ++i) {
@@ -425,20 +432,23 @@ var actionBarTypeMap = {
   down: 'actionDown',
 };
 
+
+/*
+ * SimplyPebble object provides the actual methods to communicate with Pebble.
+ *
+ * It's an implementation of an abstract interface used by all the other classes.
+ */
+
 var SimplyPebble = {};
 
 SimplyPebble.init = function() {
+  // Register listeners for app message communication
+  Pebble.addEventListener('appmessage', SimplyPebble.onAppMessage);
+
+  // Register this implementation as the one currently in use
   simply.impl = SimplyPebble;
-  simply.init();
 };
 
-SimplyPebble.onShowConfiguration = function(e) {
-  Settings.onOpenConfig(e);
-};
-
-SimplyPebble.onWebViewClosed = function(e) {
-  Settings.onCloseConfig(e);
-};
 
 var toParam = function(param, v) {
   if (param.type === String) {
@@ -476,9 +486,6 @@ var makePacket = function(command, def) {
 };
 
 SimplyPebble.sendPacket = function(packet) {
-  if (!simply.run) {
-    return;
-  }
   var send;
   send = function() {
     Pebble.sendAppMessage(packet, util2.noop, send);
@@ -564,8 +571,10 @@ SimplyPebble.accelConfig = function(configDef) {
   SimplyPebble.sendPacket(packet);
 };
 
+var accelListeners = [];
+
 SimplyPebble.accelPeek = function(callback) {
-  simply.state.accel.listeners.push(callback);
+  accelListeners.push(callback);
   var command = commandMap.getAccelData;
   var packet = makePacket(command);
   SimplyPebble.sendPacket(packet);
@@ -716,8 +725,8 @@ SimplyPebble.onAppMessage = function(e) {
       if (typeof transactionId === 'undefined') {
         Accel.emitAccelData(accels);
       } else {
-        var handlers = simply.state.accel.listeners;
-        simply.state.accel.listeners = [];
+        var handlers = accelListeners;
+        accelListeners = [];
         for (var j = 0, jj = handlers.length; j < jj; ++j) {
           Accel.emitAccelData(accels, handlers[j]);
         }
@@ -735,9 +744,5 @@ SimplyPebble.onAppMessage = function(e) {
       break;
   }
 };
-
-Pebble.addEventListener('showConfiguration', SimplyPebble.onShowConfiguration);
-Pebble.addEventListener('webviewclosed', SimplyPebble.onWebViewClosed);
-Pebble.addEventListener('appmessage', SimplyPebble.onAppMessage);
 
 module.exports = SimplyPebble;

@@ -1,6 +1,6 @@
 var imagelib = require('lib/image');
-var package = require('base/package');
-var simply = require('simply');
+var myutil = require('lib/myutil');
+var simply = require('ui/simply');
 
 var ImageService = module.exports;
 
@@ -10,6 +10,7 @@ ImageService.init = function() {
   state = Image.state = {
     cache: {},
     nextId: 1,
+    rootURL: null
   };
 };
 
@@ -59,7 +60,7 @@ ImageService.load = function(opt, reset, callback) {
     callback = reset;
     reset = null;
   }
-  var url = package.abspath(opt.url);
+  var url = myutil.abspath(state.rootURL, opt.url);
   var hash = makeImageHash(opt);
   var image = state.cache[hash];
   if (image) {
@@ -93,3 +94,8 @@ ImageService.load = function(opt, reset, callback) {
   });
   return image.id;
 };
+
+ImageService.setRootURL = function(url) {
+  state.rootURL = url;
+};
+

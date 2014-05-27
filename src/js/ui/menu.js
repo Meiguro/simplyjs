@@ -1,9 +1,9 @@
 var util2 = require('lib/util2');
-var myutil = require('base/myutil');
-var Emitter = require('base/emitter');
+var myutil = require('lib/myutil');
+var Emitter = require('lib/emitter');
 var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
-var simply = require('simply');
+var simply = require('ui/simply');
 
 var Menu = function(menuDef) {
   Window.call(this, menuDef);

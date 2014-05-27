@@ -1,5 +1,4 @@
 var util2 = require('lib/util2');
-var package = require('base/package');
 
 var Settings = module.exports;
 
@@ -12,6 +11,9 @@ Settings.init = function() {
     options: {},
     listeners: [],
   };
+  // Register listeners for the Settings
+  Pebble.addEventListener('showConfiguration', Settings.onOpenConfig);
+  Pebble.addEventListener('webviewclosed', Settings.onCloseConfig);
 };
 
 Settings.mainScriptUrl = function(scriptUrl) {
@@ -27,7 +29,7 @@ Settings.mainScriptUrl = function(scriptUrl) {
 };
 
 var getOptionsKey = function(path) {
-  return 'options:' + (path || package.module.filename);
+  return 'options:' + path;
 };
 
 Settings.saveOptions = function(path) {
@@ -92,6 +94,7 @@ Settings.config = function(opt, open, close) {
 };
 
 Settings.onOpenConfig = function(e) {
+  console.log("Settings.onOpenConfig");
   var options;
   var url;
   var listener = util2.last(state.listeners);
@@ -125,8 +128,5 @@ Settings.onCloseConfig = function(e) {
       url: listener.params.url,
     };
     return listener.close(e);
-  }
-  if (options.scriptUrl) {
-    package.loadMainScript(options.scriptUrl);
   }
 };

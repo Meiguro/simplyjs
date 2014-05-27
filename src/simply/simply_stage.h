@@ -2,7 +2,7 @@
 
 #include "simply_window.h"
 
-#include "simplyjs.h"
+#include "simply/simply.h"
 
 #include "util/list1.h"
 
@@ -104,6 +104,8 @@ struct SimplyAnimation {
 };
 
 SimplyStage *simply_stage_create(Simply *simply);
+
+void simply_stage_clear(SimplyStage *self);
 
 void simply_stage_destroy(SimplyStage *self);
 

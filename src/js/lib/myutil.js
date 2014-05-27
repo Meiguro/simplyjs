@@ -57,4 +57,21 @@ myutil.toFlags = function(flags) {
   return flags;
 };
 
+/**
+ * Returns an absolute path based on a root path and a relative path.
+ */
+myutil.abspath = function(root, path) {
+  if (!path) {
+    path = root;
+  }
+  if (path.match(/^\/\//)) {
+    var m = root && root.match(/^(\w+:)\/\//);
+    path = (m ? m[1] : 'http:') + path;
+  }
+  if (root && !path.match(/^\w+:\/\//)) {
+    path = root + path;
+  }
+  return path;
+};
+
 module.exports = myutil;

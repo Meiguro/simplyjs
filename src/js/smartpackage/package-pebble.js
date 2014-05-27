@@ -1,6 +1,6 @@
-var myutil = require('base/myutil');
-var package = require('base/package');
-var simply = require('simply');
+var myutil = require('lib/myutil');
+var package = require('smartpackage/package');
+var simply = require('simply/simply');
 
 var packageImpl = module.exports;
 
@@ -56,7 +56,6 @@ var papply = packageImpl.papply = function(f, args, path) {
       subtitle: scope,
       body: e.line + ' ' + e.message,
     }, true);
-    simply.state.run = false;
   }
 };
 

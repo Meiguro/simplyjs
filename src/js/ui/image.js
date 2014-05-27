@@ -1,5 +1,5 @@
 var util2 = require('lib/util2');
-var myutil = require('base/myutil');
+var myutil = require('lib/myutil');
 var Propable = require('ui/propable');
 var StageElement = require('ui/element');
 

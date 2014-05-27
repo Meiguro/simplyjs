@@ -1,7 +1,7 @@
 var ajax = require('lib/ajax');
 var util2 = require('lib/util2');
-var myutil = require('base/myutil');
-var Settings = require('base/settings');
+var myutil = require('lib/myutil');
+var Settings = require('settings/settings');
 var simply = require('simply');
 
 var package = module.exports;
@@ -16,26 +16,28 @@ package.basename = function(path) {
   return path.match(/[^\/]*$/)[0];
 };
 
+/**
+ * Converts a relative path to an absolute path
+ * using the path of the currently running script
+ * (package.module) or optionaly, the given root.
+ *
+ * The first argument is optional:
+ *   abspath(path);
+ *   abspath(root, path);
+ */
 package.abspath = function(root, path) {
+  // Handle optional first argument
   if (!path) {
     path = root;
     root = null;
   }
+  // Use the package root if no root provided.
   if (!root && package.module) {
     root = package.basepath(package.module.filename);
   }
-  if (!path) {
-    path = root;
-  }
-  if (path.match(/^\/\//)) {
-    var m = root && root.match(/^(\w+:)\/\//);
-    path = (m ? m[1] : 'http:') + path;
-  }
-  if (root && !path.match(/^\w+:\/\//)) {
-    path = root + path;
-  }
-  return path;
-};
+  return myutil.abspath(root, path);
+}
+
 
 package.name = function(rootfile, path) {
   if (!path) {

@@ -1,9 +1,9 @@
 var util2 = require('lib/util2');
 var Vector2 = require('lib/vector2');
-var myutil = require('base/myutil');
+var myutil = require('lib/myutil');
 var WindowStack = require('ui/windowstack');
 var Propable = require('ui/propable');
-var simply = require('simply');
+var simply = require('ui/simply');
 
 var elementProps = [
   'position',

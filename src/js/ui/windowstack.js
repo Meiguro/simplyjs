@@ -1,6 +1,6 @@
 var util2 = require('lib/util2');
-var myutil = require('base/myutil');
-var Emitter = require('base/emitter');
+var myutil = require('lib/myutil');
+var Emitter = require('lib/emitter');
 
 var WindowStack = function() {
   this.init();

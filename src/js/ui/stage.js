@@ -1,8 +1,8 @@
 var util2 = require('lib/util2');
-var Emitter = require('base/emitter');
+var Emitter = require('lib/emitter');
 var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
-var simply = require('simply');
+var simply = require('ui/simply');
 
 var Stage = function(stageDef) {
   Window.call(this, stageDef);

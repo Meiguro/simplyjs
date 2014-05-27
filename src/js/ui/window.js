@@ -1,10 +1,10 @@
 var util2 = require('lib/util2');
-var myutil = require('base/myutil');
-var Emitter = require('base/emitter');
-var Accel = require('base/accel');
+var myutil = require('lib/myutil');
+var Emitter = require('lib/emitter');
+var Accel = require('ui/accel');
 var WindowStack = require('ui/windowstack');
 var Propable = require('ui/propable');
-var simply = require('simply');
+var simply = require('ui/simply');
 
 var buttons = [
   'back',

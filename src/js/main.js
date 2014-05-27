@@ -1,4 +1,10 @@
-console.log("Running main.js ...");
+/*
+ * This is the main PebbleJS file. You do not need to modify this file unless
+ * you want to change the way PebbleJS starts, the script it runs or the libraries
+ * it loads.
+ *
+ * By default, this will initialize all the libraries and run app.js
+ */
 
 Pebble.Settings = require('settings/settings');
 Pebble.Accel = require('ui/accel');
@@ -16,44 +22,17 @@ Pebble.UI = UI;
 
 //Pebble.SmartPackage = require('pebble/smartpackage');
 
-function dumpError(err) {
-  if (typeof err === 'object') {
-    if (err.message) {
-      console.log('\nMessage: ' + err.message);
-    }
-    if (err.stack) {
-      console.log('\nStacktrace:');
-      console.log('====================');
-      console.log(err.stack);
-    }
-  } else {
-    console.log('dumpError :: argument is not an object');
-  }
-}
-
 Pebble.addEventListener('ready', function(e) {
   try {
     console.log("Running the Pebble.ready event....");
-
     // Load the SimplyJS Pebble implementation
     require('ui/simply-pebble').init();
-
     Pebble.Settings.init();
     Pebble.Accel.init();
-
-    var wind = new UI.Card({ title: "PebbleJS", body: "Saying Hello World" });
-    wind.show();
-
-    wind.on('singleClick', function(e) {
-      var menu = new UI.Menu();
-      menu.items(0, [ { title: 'Hello World!', subtitle: 'text' }, { title: 'item2' } ]);
-      menu.show();
-    });
-
-    console.log("Done running init");
+    console.log("Done loading PebbleJS - Starting app.");
 
     // Load local file
-    //require('app.js');
+    require('app.js');
 
     // Or use Smart Package to load a remote JS file
     //Pebble.SmartPackage.init('http://www.sarfata.org/myapp.js');
@@ -68,3 +47,18 @@ Pebble.addEventListener('ready', function(e) {
     dumpError(err);
   }
 });
+
+function dumpError(err) {
+  if (typeof err === 'object') {
+    if (err.message) {
+      console.log('\nMessage: ' + err.message);
+    }
+    if (err.stack) {
+      console.log('\nStacktrace:');
+      console.log('====================');
+      console.log(err.stack);
+    }
+  } else {
+    console.log('dumpError :: argument is not an object');
+  }
+}

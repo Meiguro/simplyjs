@@ -365,6 +365,9 @@ static void handle_set_stage(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {
+      case SetStage_clear:
+        simply_stage_clear(stage);
+        break;
       case SetStage_id:
         stage->window.id = tuple->value->uint32;
         break;

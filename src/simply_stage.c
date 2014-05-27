@@ -38,6 +38,18 @@ static void destroy_animation(SimplyStage *self, SimplyAnimation *animation) {
   free(animation);
 }
 
+void simply_stage_clear(SimplyStage *self) {
+  while (self->stage_layer.elements) {
+    destroy_element(self, (SimplyElementCommon*) self->stage_layer.elements);
+  }
+
+  while (self->stage_layer.animations) {
+    destroy_animation(self, (SimplyAnimation*) self->stage_layer.animations);
+  }
+
+  simply_stage_update_ticker(self);
+}
+
 static void rect_element_draw_background(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
   if (element->background_color != GColorClear) {
     graphics_context_set_fill_color(ctx, element->background_color);
@@ -260,15 +272,7 @@ static void window_disappear(Window *window) {
   SimplyStage *self = window_get_user_data(window);
   simply_msg_window_hide(self->window.id);
 
-  while (self->stage_layer.elements) {
-    destroy_element(self, (SimplyElementCommon*) self->stage_layer.elements);
-  }
-
-  while (self->stage_layer.animations) {
-    destroy_animation(self, (SimplyAnimation*) self->stage_layer.animations);
-  }
-
-  simply_stage_update_ticker(self);
+  simply_stage_clear(self);
 }
 
 static void window_unload(Window *window) {

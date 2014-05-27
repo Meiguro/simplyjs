@@ -14,13 +14,14 @@ struct SimplyWindow {
   ActionBarLayer *action_bar_layer;
   uint32_t id;
   uint32_t button_mask;
-  bool is_scrollable;
-  bool is_action_bar;
+  bool is_scrollable:1;
+  bool is_action_bar:1;
 };
 
 SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply);
 void simply_window_deinit(SimplyWindow *self);
 void simply_window_show(SimplyWindow *self);
+void simply_window_hide(SimplyWindow *self);
 
 void simply_window_load(SimplyWindow *self);
 void simply_window_unload(SimplyWindow *self);

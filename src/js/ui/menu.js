@@ -1,26 +1,43 @@
-var util2 = require('util2');
-var myutil = require('myutil');
+var util2 = require('lib/util2');
+var myutil = require('base/myutil');
+var Emitter = require('base/emitter');
+var WindowStack = require('ui/windowstack');
+var Window = require('ui/window');
 var simply = require('simply');
 
-var Emitter = require('emitter');
-var Window = require('simply/window');
-
 var Menu = function(menuDef) {
+  Window.call(this, menuDef);
   this._sections = {};
-  this.state = menuDef || {};
 };
+
+Menu.prototype._codeName = 'menu';
 
 util2.inherit(Menu, Window);
 
 util2.copy(Emitter.prototype, Menu.prototype);
 
-Menu.prototype_prop = function() {
-  return simply.menu.apply(this, arguments);
+Menu.prototype._show = function() {
+  this._resolveMenu();
+  Window.prototype._show.apply(this, arguments);
+};
+
+Menu.prototype._prop = function() {
+  if (this === WindowStack.top()) {
+    simply.impl.menu.apply(this, arguments);
+  }
 };
 
 Menu.prototype.action = function() {
   throw new Error("Menus don't support action bars.");
 };
+
+Menu.prototype._buttonInit = function() {};
+
+Menu.prototype.buttonConfig = function() {
+  throw new Error("Menus don't support changing button configurations.");
+};
+
+Menu.prototype._buttonAutoConfig = function() {};
 
 var getMetaSection = function(sectionIndex) {
   return (this._sections[sectionIndex] || ( this._sections[sectionIndex] = {} ));
@@ -118,18 +135,20 @@ var getItem = function(e) {
   }
 };
 
-Menu.prototype._menu = function() {
+Menu.prototype._resolveMenu = function() {
   var sections = getSections.call(this, targetType.menu);
   this.state.sections = sections;
   if (isEnumerable(sections)) {
     if (typeof sections === 'number') {
       this.state.sections = new Array(sections);
     }
-    return simply.menu.call(this);
+    if (this === WindowStack.top()) {
+      simply.impl.menu.call(this, this.state);
+    }
   }
 };
 
-Menu.prototype._section = function(e) {
+Menu.prototype._resolveSection = function(e) {
   var section = getSection.call(this, e);
   if (section) {
     if (!(section.items instanceof Array)) {
@@ -139,15 +158,40 @@ Menu.prototype._section = function(e) {
       if (typeof section.items === 'number') {
         section.items = new Array(section.items);
       }
-      return simply.menuSection.call(this, e.section, section);
+      if (this === WindowStack.top()) {
+        simply.impl.menuSection.call(this, e.section, section);
+      }
     }
   }
 };
 
-Menu.prototype._item = function(e) {
+Menu.prototype._resolveItem = function(e) {
   var item = getItem.call(this, e);
   if (item) {
-    return simply.menuItem.call(this, e.section, e.item, item);
+    if (this === WindowStack.top()) {
+      simply.impl.menuItem.call(this, e.section, e.item, item);
+    }
+  }
+};
+
+Menu.prototype._emitSelect = function(e) {
+  var item = getItem.call(this, e);
+  if (!item) { return; }
+  switch (e.type) {
+    case 'select':
+      if (typeof item.select === 'function') {
+        if (item.select(e) === false) {
+          return false;
+        }
+      }
+      break;
+    case 'longSelect':
+      if (typeof item.longSelect === 'function') {
+        if (item.longSelect(e) === false) {
+          return false;
+        }
+      }
+      break;
   }
 };
 
@@ -157,7 +201,7 @@ Menu.prototype.sections = function(sections) {
     return this;
   }
   this.state.sections = sections;
-  this._menu();
+  this._resolveMenu();
   return this;
 };
 
@@ -172,7 +216,7 @@ Menu.prototype.section = function(sectionIndex, section) {
   if (sections instanceof Array) {
     sections[sectionIndex] = section;
   }
-  this._section({ section: sectionIndex });
+  this._resolveSection({ section: sectionIndex });
   return this;
 };
 
@@ -195,7 +239,7 @@ Menu.prototype.items = function(sectionIndex, items) {
       return section.items;
     }
   }
-  this._section({ section: sectionIndex });
+  this._resolveSection({ section: sectionIndex });
   return this;
 };
 
@@ -224,8 +268,54 @@ Menu.prototype.item = function(sectionIndex, itemIndex, item) {
   } else {
     return getItem.call(this, { section: sectionIndex, item: itemIndex });
   }
-  this._item({ section: sectionIndex, item: itemIndex });
+  this._resolveItem({ section: sectionIndex, item: itemIndex });
   return this;
+};
+
+Menu.emit = function(type, subtype, e) {
+  Window.emit(type, subtype, e, Menu);
+};
+
+Menu.emitSection = function(section) {
+  var menu = WindowStack.top();
+  if (!(menu instanceof Menu)) { return; }
+  var e = {
+    section: section
+  };
+  if (Menu.emit('section', null, e) === false) {
+    return false;
+  }
+  menu._resolveSection(e);
+};
+
+Menu.emitItem = function(section, item) {
+  var menu = WindowStack.top();
+  if (!(menu instanceof Menu)) { return; }
+  var e = {
+    section: section,
+    item: item,
+  };
+  if (Menu.emit('item', null, e) === false) {
+    return false;
+  }
+  menu._resolveItem(e);
+};
+
+Menu.emitSelect = function(type, section, item) {
+  var menu = WindowStack.top();
+  if (!(menu instanceof Menu)) { return; }
+  var e = {
+    section: section,
+    item: item,
+  };
+  switch (type) {
+    case 'menuSelect': type = 'select'; break;
+    case 'menuLongSelect': type = 'longSelect'; break;
+  }
+  if (Menu.emit(type, null, e) === false) {
+    return false;
+  }
+  menu._emitSelect(e);
 };
 
 module.exports = Menu;

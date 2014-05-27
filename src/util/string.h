@@ -17,3 +17,15 @@ static inline char *strdup2(const char *str) {
   strcpy(buffer, str);
   return buffer;
 }
+
+static inline void strset(char **str_field, const char *str) {
+  free(*str_field);
+
+  if (!is_string(str)) {
+    *str_field = NULL;
+    return;
+  }
+
+  *str_field = strdup2(str);
+}
+

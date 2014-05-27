@@ -1,11 +1,99 @@
+var util2 = require('lib/util2');
+var myutil = require('base/myutil');
+var Settings = require('base/settings');
+var Accel = require('base/accel');
+var ImageService = require('base/image');
+var WindowStack = require('ui/windowstack');
+var Window = require('ui/window');
+var Menu = require('ui/menu');
 var simply = require('simply');
-var util2 = require('util2');
 
 var SimplyPebble = {};
+
+var package = require('base/package');
+var packageImpl = require('base/package-pebble');
+package.impl = packageImpl;
 
 if (typeof Image === 'undefined') {
   window.Image = function(){};
 }
+
+var Color = function(x) {
+  switch (x) {
+    case 'clear': return ~0;
+    case 'black': return 0;
+    case 'white': return 1;
+  }
+  return Number(x);
+};
+
+var Font = function(x) {
+  x = x.toUpperCase();
+  x = x.replace(/[- ]/g, '_');
+  if (!x.match(/^RESOURCE_ID/)) {
+    x = 'RESOURCE_ID_' + x;
+  }
+  x = x.replace(/_+/g, '_');
+  return x;
+};
+
+var TextOverflowMode = function(x) {
+  switch (x) {
+    case 'wrap'    : return 0;
+    case 'ellipsis': return 1;
+    case 'fill'    : return 2;
+  }
+  return Number(x);
+};
+
+var TextAlignment = function(x) {
+  switch (x) {
+    case 'left'  : return 0;
+    case 'center': return 1;
+    case 'right' : return 2;
+  }
+  return Number(x);
+};
+
+var TimeUnits = function(x) {
+  var z = 0;
+  x = myutil.toObject(x, true);
+  for (var k in x) {
+    switch (k) {
+      case 'seconds': z |= (1 << 0); break;
+      case 'minutes': z |= (1 << 1); break;
+      case 'hours'  : z |= (1 << 2); break;
+      case 'days'   : z |= (1 << 3); break;
+      case 'months' : z |= (1 << 4); break;
+      case 'years'  : z |= (1 << 5); break;
+    }
+  }
+  return z;
+};
+
+var CompositingOp = function(x) {
+  switch (x) {
+    case 'assign':
+    case 'normal': return 0;
+    case 'assignInverted':
+    case 'invert': return 1;
+    case 'or'    : return 2;
+    case 'and'   : return 3;
+    case 'clear' : return 4;
+    case 'set'   : return 5;
+  }
+  return Number(x);
+};
+
+var AnimationCurve = function(x) {
+  switch (x) {
+    case 'linear'   : return 0;
+    case 'easeIn'   : return 1;
+    case 'easeOut'  : return 2;
+    case 'easeInOut': return 3;
+  }
+  return Number(x);
+};
 
 var setWindowParams = [{
   name: 'clear',
@@ -54,6 +142,13 @@ var setCardParams = setWindowParams.concat([{
   name: 'style',
   type: Boolean,
 }]);
+
+var setMenuParams = setWindowParams.concat([{
+  name: 'sections',
+  type: Number,
+}]);
+
+var setStageParams = setWindowParams;
 
 var commands = [{
   name: 'setWindow',
@@ -129,11 +224,7 @@ var commands = [{
   }],
 }, {
   name: 'setMenu',
-  params: [{
-    name: 'id',
-  }, {
-    name: 'sections',
-  }],
+  params: setMenuParams,
 }, {
   name: 'setMenuSection',
   params: [{
@@ -196,6 +287,84 @@ var commands = [{
     name: 'height',
   }, {
     name: 'pixels',
+  }],
+}, {
+  name: 'setStage',
+  params: setStageParams,
+}, {
+  name: 'stageElement',
+  params: [{
+    name: 'id',
+  }, {
+    name: 'type',
+  }, {
+    name: 'index',
+  }, {
+    name: 'x',
+  }, {
+    name: 'y',
+  }, {
+    name: 'width',
+  }, {
+    name: 'height',
+  }, {
+    name: 'backgroundColor',
+    type: Color,
+  }, {
+    name: 'borderColor',
+    type: Color,
+  }, {
+    name: 'radius',
+  }, {
+    name: 'text',
+    type: String,
+  }, {
+    name: 'font',
+    type: Font,
+  }, {
+    name: 'color',
+    type: Color,
+  }, {
+    name: 'textOverflow',
+    type: TextOverflowMode,
+  }, {
+    name: 'textAlign',
+    type: TextAlignment,
+  }, {
+    name: 'time',
+    type: Boolean,
+  }, {
+    name: 'timeUnits',
+    type: TimeUnits,
+  }, {
+    name: 'image',
+    type: Image,
+  }, {
+    name: 'compositing',
+    type: CompositingOp,
+  }],
+}, {
+  name: 'stageRemove',
+  params: [{
+    name: 'id',
+  }],
+}, {
+  name: 'stageAnimate',
+  params: [{
+    name: 'id',
+  }, {
+    name: 'x',
+  }, {
+    name: 'y',
+  }, {
+    name: 'width',
+  }, {
+    name: 'height',
+  }, {
+    name: 'duration',
+  }, {
+    name: 'easing',
+    type: AnimationCurve,
   }],
 }];
 
@@ -263,99 +432,12 @@ SimplyPebble.init = function() {
   simply.init();
 };
 
-var getExecPackage = function(execName) {
-  var packages = simply.packages;
-  for (var path in packages) {
-    var package = packages[path];
-    if (package && package.execName === execName) {
-      return path;
-    }
-  }
-};
-
-var getExceptionFile = function(e, level) {
-  var stack = e.stack.split('\n');
-  for (var i = level || 0, ii = stack.length; i < ii; ++i) {
-    var line = stack[i];
-    if (line.match(/^\$\d/)) {
-      var path = getExecPackage(line);
-      if (path) {
-        return path;
-      }
-    }
-  }
-  return stack[level];
-};
-
-var getExceptionScope = function(e, level) {
-  var stack = e.stack.split('\n');
-  for (var i = level || 0, ii = stack.length; i < ii; ++i) {
-    var line = stack[i];
-    if (!line || line.match('native code')) { continue; }
-    return line.match(/^\$\d/) && getExecPackage(line) || line;
-  }
-  return stack[level];
-};
-
-var setHandlerPath = function(handler, path, level) {
-  var level0 = 4; // caller -> wrap -> apply -> wrap -> set
-  handler.path = path || getExceptionScope(new Error(), (level || 0) + level0) || simply.basename();
-  return handler;
-};
-
-var papply = function(f, args, path) {
-  try {
-    return f.apply(this, args);
-  } catch (e) {
-    var scope = !path && getExceptionFile(e) || getExecPackage(path) || path;
-    console.log(scope + ':' + e.line + ': ' + e + '\n' + e.stack);
-    simply.text({
-      subtitle: scope,
-      body: e.line + ' ' + e.message,
-    }, true);
-    simply.state.run = false;
-  }
-};
-
-var protect = function(f, path) {
-  return function() {
-    return papply(f, arguments, path);
-  };
-};
-
-SimplyPebble.wrapHandler = function(handler, level) {
-  if (!handler) { return; }
-  setHandlerPath(handler, null, level || 1);
-  var package = simply.packages[handler.path];
-  if (package) {
-    return protect(package.fwrap(handler), handler.path);
-  } else {
-    return protect(handler, handler.path);
-  }
-};
-
-var toSafeName = function(name) {
-  name = name.replace(/[^0-9A-Za-z_$]/g, '_');
-  if (name.match(/^[0-9]/)) {
-    name = '_' + name;
-  }
-  return name;
-};
-
-SimplyPebble.loadPackage = function(pkg, loader) {
-  pkg.execName = '$' + simply.state.numPackages++ + toSafeName(pkg.name);
-  pkg.fapply = simply.defun(pkg.execName, ['f', 'args'], 'return f.apply(this, args)');
-  pkg.fwrap = function(f) { return function() { return pkg.fapply(f, arguments); }; };
-
-  return papply(loader, null, pkg.name);
-};
-
 SimplyPebble.onShowConfiguration = function(e) {
-  simply.openSettings(e);
+  Settings.onOpenConfig(e);
 };
 
 SimplyPebble.onWebViewClosed = function(e) {
-  simply.closeSettings(e);
+  Settings.onCloseConfig(e);
 };
 
 var toParam = function(param, v) {
@@ -364,7 +446,9 @@ var toParam = function(param, v) {
   } else if (param.type === Boolean) {
     v = v ? 1 : 0;
   } else if (param.type === Image && typeof v !== 'number') {
-    v = simply.image(v);
+    v = ImageService.load(v);
+  } else if (typeof param.type === 'function') {
+    v = param.type(v);
   }
   return v;
 };
@@ -392,7 +476,7 @@ var makePacket = function(command, def) {
 };
 
 SimplyPebble.sendPacket = function(packet) {
-  if (!simply.state.run) {
+  if (!simply.run) {
     return;
   }
   var send;
@@ -400,10 +484,6 @@ SimplyPebble.sendPacket = function(packet) {
     Pebble.sendAppMessage(packet, util2.noop, send);
   };
   send();
-};
-
-SimplyPebble.setMenu = function() {
-  SimplyPebble.sendPacket(makePacket(commandMap.setMenu));
 };
 
 SimplyPebble.buttonConfig = function(buttonConf) {
@@ -446,6 +526,13 @@ SimplyPebble.window = function(windowDef, clear) {
   SimplyPebble.sendPacket(packet);
 };
 
+SimplyPebble.windowHide = function(windowId) {
+  var command = commandMap.windowHide;
+  var packet = makePacket(command);
+  packet[command.paramMap.id.id] = windowId;
+  SimplyPebble.sendPacket(packet);
+};
+
 SimplyPebble.card = function(cardDef, clear) {
   clear = toClearFlags(clear);
   var command = commandMap.setCard;
@@ -463,46 +550,11 @@ SimplyPebble.card = function(cardDef, clear) {
   SimplyPebble.sendPacket(packet);
 };
 
-SimplyPebble.textfield = function(field, text, clear) {
-  var command = commandMap.setCard;
-  var packet = makePacket(command);
-  var param = command.paramMap[field];
-  if (param) {
-    packet[param.id] = text.toString();
-  }
-  if (clear) {
-    packet[command.paramMap.clear.id] = true;
-  }
-  SimplyPebble.sendPacket(packet);
-};
-
 SimplyPebble.vibe = function(type) {
   var command = commandMap.vibe;
   var packet = makePacket(command);
   var vibeIndex = vibeTypes.indexOf(type);
   packet[command.paramMap.type.id] = vibeIndex !== -1 ? vibeIndex : 0;
-  SimplyPebble.sendPacket(packet);
-};
-
-SimplyPebble.scrollable = function(scrollable) {
-  var command = commandMap.window;
-  var packet = makePacket(command);
-  packet[command.paramMap.scrollable.id] = scrollable ? 1 : 0;
-  SimplyPebble.sendPacket(packet);
-};
-
-SimplyPebble.fullscreen = function(fullscreen) {
-  var command = commandMap.window;
-  var packet = makePacket(command);
-  packet[command.paramMap.fullscreen.id] = fullscreen ? 1 : 0;
-  SimplyPebble.sendPacket(packet);
-};
-
-SimplyPebble.style = function(type) {
-  var command = commandMap.card;
-  var packet = makePacket(command);
-  var styleIndex = styleTypes.indexOf(type);
-  packet[command.paramMap.type.id] = styleIndex !== -1 ? styleIndex : 1;
   SimplyPebble.sendPacket(packet);
 };
 
@@ -557,6 +609,61 @@ SimplyPebble.image = function(id, gbitmap) {
   SimplyPebble.sendPacket(packet);
 };
 
+SimplyPebble.stage = function(stageDef) {
+  var command = commandMap.setStage;
+  var packet = makePacket(command, stageDef);
+  SimplyPebble.sendPacket(packet);
+};
+
+var toFramePacket = function(packetDef) {
+  if (packetDef.position) {
+    var position = packetDef.position;
+    delete packetDef.position;
+    packetDef.x = position.x;
+    packetDef.y = position.y;
+  }
+  if (packetDef.size) {
+    var size = packetDef.size;
+    delete packetDef.size;
+    packetDef.width = size.x;
+    packetDef.height = size.y;
+  }
+  return packetDef;
+};
+
+SimplyPebble.stageElement = function(elementId, elementType, elementDef, index) {
+  var command = commandMap.stageElement;
+  var packetDef = util2.copy(elementDef);
+  packetDef.id = elementId;
+  packetDef.type = elementType;
+  packetDef.index = index;
+  packetDef = toFramePacket(packetDef);
+  var packet = makePacket(command, packetDef);
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.stageRemove = function(elementId) {
+  var command = commandMap.stageRemove;
+  var packet = makePacket(command);
+  packet[command.paramMap.id.id] = elementId;
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.stageAnimate = function(elementId, animateDef, duration, easing) {
+  var command = commandMap.stageAnimate;
+  var packetDef = util2.copy(animateDef);
+  packetDef.id = elementId;
+  if (duration) {
+    packetDef.duration = duration;
+  }
+  if (easing) {
+    packetDef.easing = easing;
+  }
+  packetDef = toFramePacket(packetDef);
+  var packet = makePacket(command, packetDef);
+  SimplyPebble.sendPacket(packet);
+};
+
 var readInt = function(packet, width, pos, signed) {
   var value = 0;
   pos = pos || 0;
@@ -578,14 +685,17 @@ SimplyPebble.onAppMessage = function(e) {
   var command = commands[code];
 
   switch (command.name) {
+    case 'windowHide':
+      WindowStack.remove(payload[1], false);
+      break;
     case 'singleClick':
     case 'longClick':
       var button = buttons[payload[1]];
-      simply.emitClick(command.name, button);
+      Window.emitClick(command.name, button);
       break;
     case 'accelTap':
       var axis = accelAxes[payload[1]];
-      simply.emitAccelTap(axis, payload[2]);
+      Accel.emitAccelTap(axis, payload[2]);
       break;
     case 'accelData':
       var transactionId = payload[1];
@@ -604,24 +714,24 @@ SimplyPebble.onAppMessage = function(e) {
         accels[i] = accel;
       }
       if (typeof transactionId === 'undefined') {
-        simply.emitAccelData(accels);
+        Accel.emitAccelData(accels);
       } else {
         var handlers = simply.state.accel.listeners;
         simply.state.accel.listeners = [];
         for (var j = 0, jj = handlers.length; j < jj; ++j) {
-          simply.emitAccelData(accels, handlers[j]);
+          Accel.emitAccelData(accels, handlers[j]);
         }
       }
       break;
     case 'getMenuSection':
-      simply.emitMenuSection(payload[1]);
+      Menu.emitSection(payload[1]);
       break;
     case 'getMenuItem':
-      simply.emitMenuItem(payload[1], payload[2]);
+      Menu.emitItem(payload[1], payload[2]);
       break;
     case 'menuSelect':
     case 'menuLongSelect':
-      simply.emitMenuSelect(command.name, payload[1], payload[2]);
+      Menu.emitSelect(command.name, payload[1], payload[2]);
       break;
   }
 };

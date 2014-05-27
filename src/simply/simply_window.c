@@ -120,6 +120,7 @@ static void click_config_provider(void *context) {
   SimplyWindow *self = context;
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     if (!self->is_scrollable || (i != BUTTON_ID_UP && i != BUTTON_ID_DOWN)) {
+      window_set_click_context(i, context);
       window_single_click_subscribe(i, (ClickHandler) single_click_handler);
       window_long_click_subscribe(i, 500, (ClickHandler) long_click_handler, NULL);
     }
@@ -150,6 +151,13 @@ void simply_window_load(SimplyWindow *self) {
 void simply_window_unload(SimplyWindow *self) {
   scroll_layer_destroy(self->scroll_layer);
   self->scroll_layer = NULL;
+}
+
+void simply_window_hide(SimplyWindow *self) {
+  if (self->window == window_stack_get_top_window()) {
+    bool animated = true;
+    window_stack_pop(animated);
+  }
 }
 
 void simply_window_show(SimplyWindow *self) {

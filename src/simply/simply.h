@@ -12,3 +12,5 @@ struct Simply {
   struct SimplyUi *ui;
 };
 
+Simply *simply_init();
+void simply_deinit(Simply *);

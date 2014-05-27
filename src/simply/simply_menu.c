@@ -4,7 +4,7 @@
 
 #include "simply_msg.h"
 
-#include "simplyjs.h"
+#include "simply.h"
 
 #include <pebble.h>
 

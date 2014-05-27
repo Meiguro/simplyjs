@@ -5,7 +5,7 @@
 #include "simply_menu.h"
 #include "simply_ui.h"
 
-#include "simplyjs.h"
+#include "simply.h"
 
 #include "util/string.h"
 

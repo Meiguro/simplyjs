@@ -4,7 +4,7 @@
 #include "simply_res.h"
 #include "simply_menu.h"
 
-#include "simplyjs.h"
+#include "simply.h"
 
 #include "util/graphics.h"
 #include "util/string.h"

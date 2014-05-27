@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplyjs.h"
+#include "simply.h"
 
 #include <pebble.h>
 

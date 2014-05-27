@@ -1,4 +1,4 @@
-#include "simplyjs.h"
+#include "simply.h"
 
 #include "simply_accel.h"
 #include "simply_res.h"
@@ -9,7 +9,7 @@
 
 #include <pebble.h>
 
-static Simply *init(void) {
+Simply *simply_init(void) {
   Simply *simply = malloc(sizeof(*simply));
   simply->accel = simply_accel_create();
   simply->res = simply_res_create();
@@ -24,17 +24,11 @@ static Simply *init(void) {
   return simply;
 }
 
-static void deinit(Simply *simply) {
+void simply_deinit(Simply *simply) {
   simply_msg_deinit();
   simply_ui_destroy(simply->ui);
   simply_menu_destroy(simply->menu);
   simply_res_destroy(simply->res);
   simply_accel_destroy(simply->accel);
-}
-
-int main(void) {
-  Simply *simply = init();
-  app_event_loop();
-  deinit(simply);
   free(simply);
 }

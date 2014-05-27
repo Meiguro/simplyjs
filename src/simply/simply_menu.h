@@ -2,7 +2,7 @@
 
 #include "simply_window.h"
 
-#include "simplyjs.h"
+#include "simply.h"
 
 #include "util/list1.h"
 

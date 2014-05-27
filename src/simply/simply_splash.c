@@ -1,6 +1,6 @@
 #include "simply_splash.h"
 
-#include "simplyjs.h"
+#include "simply.h"
 
 #include <pebble.h>
 

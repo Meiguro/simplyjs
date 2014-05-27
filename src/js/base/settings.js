@@ -88,13 +88,13 @@ Settings.config = function(opt, open, close) {
     open: open,
     close: close,
   };
-  state.webview.listeners.push(listener);
+  state.listeners.push(listener);
 };
 
 Settings.onOpenConfig = function(e) {
   var options;
   var url;
-  var listener = util2.last(state.webview.listeners);
+  var listener = util2.last(state.listeners);
   if (listener) {
     url = listener.params.url;
     options = state.options;
@@ -113,7 +113,7 @@ Settings.onOpenConfig = function(e) {
 };
 
 Settings.onCloseConfig = function(e) {
-  var listener = util2.last(state.webview.listeners);
+  var listener = util2.last(state.listeners);
   var options = {};
   if (e.response) {
     options = JSON.parse(decodeURIComponent(e.response));

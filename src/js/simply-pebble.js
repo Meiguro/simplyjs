@@ -1,4 +1,5 @@
 var util2 = require('lib/util2');
+var myutil = require('base/myutil');
 var Settings = require('base/settings');
 var Accel = require('base/accel');
 var ImageService = require('base/image');
@@ -16,6 +17,83 @@ package.impl = packageImpl;
 if (typeof Image === 'undefined') {
   window.Image = function(){};
 }
+
+var Color = function(x) {
+  switch (x) {
+    case 'clear': return ~0;
+    case 'black': return 0;
+    case 'white': return 1;
+  }
+  return Number(x);
+};
+
+var Font = function(x) {
+  x = x.toUpperCase();
+  x = x.replace(/[- ]/g, '_');
+  if (!x.match(/^RESOURCE_ID/)) {
+    x = 'RESOURCE_ID_' + x;
+  }
+  x = x.replace(/_+/g, '_');
+  return x;
+};
+
+var TextOverflowMode = function(x) {
+  switch (x) {
+    case 'wrap'    : return 0;
+    case 'ellipsis': return 1;
+    case 'fill'    : return 2;
+  }
+  return Number(x);
+};
+
+var TextAlignment = function(x) {
+  switch (x) {
+    case 'left'  : return 0;
+    case 'center': return 1;
+    case 'right' : return 2;
+  }
+  return Number(x);
+};
+
+var TimeUnits = function(x) {
+  var z = 0;
+  x = myutil.toObject(x, true);
+  for (var k in x) {
+    switch (k) {
+      case 'seconds': z |= (1 << 0); break;
+      case 'minutes': z |= (1 << 1); break;
+      case 'hours'  : z |= (1 << 2); break;
+      case 'days'   : z |= (1 << 3); break;
+      case 'months' : z |= (1 << 4); break;
+      case 'years'  : z |= (1 << 5); break;
+    }
+  }
+  return z;
+};
+
+var CompositingOp = function(x) {
+  switch (x) {
+    case 'assign':
+    case 'normal': return 0;
+    case 'assignInverted':
+    case 'invert': return 1;
+    case 'or'    : return 2;
+    case 'and'   : return 3;
+    case 'clear' : return 4;
+    case 'set'   : return 5;
+  }
+  return Number(x);
+};
+
+var AnimationCurve = function(x) {
+  switch (x) {
+    case 'linear'   : return 0;
+    case 'easeIn'   : return 1;
+    case 'easeOut'  : return 2;
+    case 'easeInOut': return 3;
+  }
+  return Number(x);
+};
 
 var setWindowParams = [{
   name: 'clear',
@@ -69,6 +147,8 @@ var setMenuParams = setWindowParams.concat([{
   name: 'sections',
   type: Number,
 }]);
+
+var setStageParams = setWindowParams;
 
 var commands = [{
   name: 'setWindow',
@@ -208,6 +288,84 @@ var commands = [{
   }, {
     name: 'pixels',
   }],
+}, {
+  name: 'setStage',
+  params: setStageParams,
+}, {
+  name: 'stageElement',
+  params: [{
+    name: 'id',
+  }, {
+    name: 'type',
+  }, {
+    name: 'index',
+  }, {
+    name: 'x',
+  }, {
+    name: 'y',
+  }, {
+    name: 'width',
+  }, {
+    name: 'height',
+  }, {
+    name: 'backgroundColor',
+    type: Color,
+  }, {
+    name: 'borderColor',
+    type: Color,
+  }, {
+    name: 'radius',
+  }, {
+    name: 'text',
+    type: String,
+  }, {
+    name: 'font',
+    type: Font,
+  }, {
+    name: 'color',
+    type: Color,
+  }, {
+    name: 'textOverflow',
+    type: TextOverflowMode,
+  }, {
+    name: 'textAlign',
+    type: TextAlignment,
+  }, {
+    name: 'time',
+    type: Boolean,
+  }, {
+    name: 'timeUnits',
+    type: TimeUnits,
+  }, {
+    name: 'image',
+    type: Image,
+  }, {
+    name: 'compositing',
+    type: CompositingOp,
+  }],
+}, {
+  name: 'stageRemove',
+  params: [{
+    name: 'id',
+  }],
+}, {
+  name: 'stageAnimate',
+  params: [{
+    name: 'id',
+  }, {
+    name: 'x',
+  }, {
+    name: 'y',
+  }, {
+    name: 'width',
+  }, {
+    name: 'height',
+  }, {
+    name: 'duration',
+  }, {
+    name: 'easing',
+    type: AnimationCurve,
+  }],
 }];
 
 var commandMap = {};
@@ -289,6 +447,8 @@ var toParam = function(param, v) {
     v = v ? 1 : 0;
   } else if (param.type === Image && typeof v !== 'number') {
     v = ImageService.load(v);
+  } else if (typeof param.type === 'function') {
+    v = param.type(v);
   }
   return v;
 };
@@ -445,6 +605,61 @@ SimplyPebble.image = function(id, gbitmap) {
   var command = commandMap.image;
   var packetDef = util2.copy(gbitmap);
   packetDef.id = id;
+  var packet = makePacket(command, packetDef);
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.stage = function(stageDef) {
+  var command = commandMap.setStage;
+  var packet = makePacket(command, stageDef);
+  SimplyPebble.sendPacket(packet);
+};
+
+var toFramePacket = function(packetDef) {
+  if (packetDef.position) {
+    var position = packetDef.position;
+    delete packetDef.position;
+    packetDef.x = position.x;
+    packetDef.y = position.y;
+  }
+  if (packetDef.size) {
+    var size = packetDef.size;
+    delete packetDef.size;
+    packetDef.width = size.x;
+    packetDef.height = size.y;
+  }
+  return packetDef;
+};
+
+SimplyPebble.stageElement = function(elementId, elementType, elementDef, index) {
+  var command = commandMap.stageElement;
+  var packetDef = util2.copy(elementDef);
+  packetDef.id = elementId;
+  packetDef.type = elementType;
+  packetDef.index = index;
+  packetDef = toFramePacket(packetDef);
+  var packet = makePacket(command, packetDef);
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.stageRemove = function(elementId) {
+  var command = commandMap.stageRemove;
+  var packet = makePacket(command);
+  packet[command.paramMap.id.id] = elementId;
+  SimplyPebble.sendPacket(packet);
+};
+
+SimplyPebble.stageAnimate = function(elementId, animateDef, duration, easing) {
+  var command = commandMap.stageAnimate;
+  var packetDef = util2.copy(animateDef);
+  packetDef.id = elementId;
+  if (duration) {
+    packetDef.duration = duration;
+  }
+  if (easing) {
+    packetDef.easing = easing;
+  }
+  packetDef = toFramePacket(packetDef);
   var packet = makePacket(command, packetDef);
   SimplyPebble.sendPacket(packet);
 };

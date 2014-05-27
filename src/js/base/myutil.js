@@ -2,6 +2,15 @@ var util2 = require('lib/util2');
 
 var myutil = {};
 
+myutil.shadow = function(a, b) {
+  for (var k in a) {
+    if (typeof b === 'undefined') {
+      b[k] = a[k];
+    }
+  }
+  return b;
+};
+
 myutil.defun = function(fn, fargs, fbody) {
   if (!fbody) {
     fbody = fargs;

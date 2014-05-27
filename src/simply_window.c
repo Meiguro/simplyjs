@@ -120,6 +120,7 @@ static void click_config_provider(void *context) {
   SimplyWindow *self = context;
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     if (!self->is_scrollable || (i != BUTTON_ID_UP && i != BUTTON_ID_DOWN)) {
+      window_set_click_context(i, context);
       window_single_click_subscribe(i, (ClickHandler) single_click_handler);
       window_long_click_subscribe(i, 500, (ClickHandler) long_click_handler, NULL);
     }

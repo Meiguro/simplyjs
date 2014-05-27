@@ -53,6 +53,18 @@ static inline List1Node *list1_append(List1Node **head, List1Node *node) {
   return node;
 }
 
+static inline List1Node *list1_insert(List1Node **head, int index, List1Node *node) {
+  List1Node **next_ref = head;
+  List1Node *walk = *head;
+  for (int i = 0; walk && i < index; ++i) {
+    next_ref = &walk->next;
+    walk = walk->next;
+  }
+  node->next = *next_ref;
+  *next_ref = node;
+  return node;
+}
+
 static inline List1Node *list1_find_prev(List1Node *node,
     List1FilterCallback callback, void *data, List1Node **prev_out) {
   for (List1Node *prev = NULL; node; node = node->next) {

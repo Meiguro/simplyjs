@@ -65,26 +65,15 @@ void simply_ui_set_style(SimplyUi *self, int style_index) {
   layer_mark_dirty(self->ui_layer.layer);
 }
 
-static void set_text(char **str_field, const char *str) {
-  free(*str_field);
-
-  if (!is_string(str)) {
-    *str_field = NULL;
-    return;
-  }
-
-  *str_field = strdup2(str);
-}
-
 void simply_ui_set_text(SimplyUi *self, SimplyUiTextfield textfield, const char *str) {
   char **str_field = &self->ui_layer.textfields[textfield];
-  set_text(str_field, str);
+  strset(str_field, str);
   if (self->ui_layer.layer) {
     layer_mark_dirty(self->ui_layer.layer);
   }
 }
 
-void layer_update_callback(Layer *layer, GContext *ctx) {
+static void layer_update_callback(Layer *layer, GContext *ctx) {
   SimplyUi *self = *(void**) layer_get_data(layer);
 
   GRect window_frame = layer_get_frame(window_get_root_layer(self->window.window));
@@ -228,14 +217,7 @@ void layer_update_callback(Layer *layer, GContext *ctx) {
 }
 
 static void show_welcome_text(SimplyUi *self) {
-  const char *title_text = self->ui_layer.textfields[UiTitle];
-  const char *subtitle_text = self->ui_layer.textfields[UiSubtitle];
-  const char *body_text = self->ui_layer.textfields[UiBody];
-
-  if (title_text || subtitle_text || body_text) {
-    return;
-  }
-  if (self->window.simply->menu->menu_layer.menu_layer) {
+  if (simply_msg_has_communicated()) {
     return;
   }
 

@@ -2,6 +2,7 @@
 
 #include "simply_accel.h"
 #include "simply_res.h"
+#include "simply_stage.h"
 #include "simply_menu.h"
 #include "simply_ui.h"
 
@@ -34,9 +35,13 @@ enum SimplyACmd {
   SimplyACmd_menuSelect,
   SimplyACmd_menuLongSelect,
   SimplyACmd_image,
+  SimplyACmd_setStage,
+  SimplyACmd_stageElement,
+  SimplyACmd_stageRemove,
+  SimplyACmd_stageAnimate,
 };
 
-typedef enum SimplySetUiParam SimplySetUiParam;
+typedef enum SimplySetWindowParam SimplySetWindowParam;
 
 enum SimplySetWindowParam {
   SetWindow_clear = 1,
@@ -50,6 +55,8 @@ enum SimplySetWindowParam {
   SetWindowLast,
 };
 
+typedef enum SimplySetUiParam SimplySetUiParam;
+
 enum SimplySetUiParam {
   SetUi_clear = SetWindow_clear,
   SetUi_id,
@@ -62,10 +69,19 @@ enum SimplySetUiParam {
   SetUi_style,
 };
 
+typedef enum SimplySetMenuParam SimplySetMenuParam;
+
 enum SimplySetMenuParam {
   SetMenu_clear = SetWindow_clear,
   SetMenu_id,
   SetMenu_sections = SetWindowLast,
+};
+
+typedef enum SimplySetStageParam SimplySetStageParam;
+
+enum SimplySetStageParam {
+  SetStage_clear = SetWindow_clear,
+  SetStage_id,
 };
 
 typedef enum VibeType VibeType;
@@ -76,16 +92,54 @@ enum VibeType {
   VibeDouble = 2,
 };
 
+typedef enum ElementParam ElementParam;
+
+enum ElementParam {
+  ElementId = 1,
+  ElementType,
+  ElementIndex,
+  ElementX,
+  ElementY,
+  ElementWidth,
+  ElementHeight,
+  ElementBackgroundColor,
+  ElementBorderColor,
+  ElementRadius,
+  ElementText,
+  ElementTextFont,
+  ElementTextColor,
+  ElementTextOverflow,
+  ElementTextAlignment,
+  ElementTextIsTime,
+  ElementTextTimeUnits,
+  ElementImage,
+  ElementCompositing,
+};
+
+static bool s_has_communicated = false;
+
+bool simply_msg_has_communicated() {
+  return s_has_communicated;
+}
+
 static void check_splash(Simply *simply) {
   if (simply->splash) {
     simply_ui_show(simply->ui);
   }
 }
 
-static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
+static SimplyWindow *get_top_simply_window(Simply *simply) {
   Window *base_window = window_stack_get_top_window();
   SimplyWindow *window = window_get_user_data(base_window);
   if (!window || (void*) window == simply->splash) {
+    return NULL;
+  }
+  return window;
+}
+
+static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
+  SimplyWindow *window = get_top_simply_window(simply);
+  if (!window) {
     return;
   }
   Tuple *tuple;
@@ -174,11 +228,14 @@ static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
 }
 
 static void handle_config_buttons(DictionaryIterator *iter, Simply *simply) {
-  SimplyUi *ui = simply->ui;
+  SimplyWindow *window = get_top_simply_window(simply);
+  if (!window) {
+    return;
+  }
   Tuple *tuple;
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     if ((tuple = dict_find(iter, i + 1))) {
-      simply_window_set_button(&ui->window, i, tuple->value->int32);
+      simply_window_set_button(window, i, tuple->value->int32);
     }
   }
 }
@@ -303,11 +360,161 @@ static void handle_set_image(DictionaryIterator *iter, Simply *simply) {
   simply_res_add_image(simply->res, id, width, height, pixels);
 }
 
+static void handle_set_stage(DictionaryIterator *iter, Simply *simply) {
+  SimplyStage *stage = simply->stage;
+  Tuple *tuple;
+  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
+    switch (tuple->key) {
+      case SetStage_clear:
+        simply_stage_clear(stage);
+        break;
+      case SetStage_id:
+        stage->window.id = tuple->value->uint32;
+        break;
+    }
+  }
+  simply_stage_show(stage);
+  handle_set_window(iter, simply);
+}
+
+static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
+  SimplyStage *stage = simply->stage;
+  Tuple *tuple;
+  uint32_t id = 0;
+  SimplyElementType type = SimplyElementTypeNone;
+  if ((tuple = dict_find(iter, ElementId))) {
+    id = tuple->value->uint32;
+  }
+  if ((tuple = dict_find(iter, ElementType))) {
+    type = tuple->value->int32;
+  }
+  SimplyElementCommon *element = simply_stage_auto_element(stage, id, type);
+  if (!element || element->type != type) {
+    return;
+  }
+  bool update_ticker = false;
+  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
+    switch (tuple->key) {
+      case ElementIndex:
+        simply_stage_insert_element(stage, tuple->value->uint16, element);
+        break;
+      case ElementX:
+        element->frame.origin.x = tuple->value->int16;
+        break;
+      case ElementY:
+        element->frame.origin.y = tuple->value->int16;
+        break;
+      case ElementWidth:
+        element->frame.size.w = tuple->value->uint16;
+        break;
+      case ElementHeight:
+        element->frame.size.h = tuple->value->uint16;
+        break;
+      case ElementBackgroundColor:
+        element->background_color = tuple->value->uint8;
+        break;
+      case ElementBorderColor:
+        element->border_color = tuple->value->uint8;
+        break;
+      case ElementRadius:
+        ((SimplyElementRect*) element)->radius = tuple->value->uint16;
+        break;
+      case ElementText:
+        strset(&((SimplyElementText*) element)->text, tuple->value->cstring);
+        break;
+      case ElementTextFont:
+        ((SimplyElementText*) element)->font = fonts_get_system_font(tuple->value->cstring);
+        break;
+      case ElementTextColor:
+        ((SimplyElementText*) element)->text_color = tuple->value->uint8;
+        break;
+      case ElementTextOverflow:
+        ((SimplyElementText*) element)->overflow_mode = tuple->value->uint8;
+        break;
+      case ElementTextAlignment:
+        ((SimplyElementText*) element)->alignment = tuple->value->uint8;
+        break;
+      case ElementTextIsTime:
+        ((SimplyElementText*) element)->is_time = tuple->value->uint8;
+        update_ticker = true;
+        break;
+      case ElementTextTimeUnits:
+        ((SimplyElementText*) element)->time_units = tuple->value->uint8;
+        update_ticker = true;
+        break;
+      case ElementImage:
+        ((SimplyElementImage*) element)->image = tuple->value->uint32;
+        break;
+      case ElementCompositing:
+        ((SimplyElementImage*) element)->compositing = tuple->value->uint8;
+        break;
+    }
+  }
+  if (update_ticker) {
+    simply_stage_update_ticker(stage);
+  }
+  simply_stage_update(stage);
+}
+
+static void handle_remove_stage_element(DictionaryIterator *iter, Simply *simply) {
+  SimplyStage *stage = simply->stage;
+  Tuple *tuple;
+  uint32_t id = 0;
+  if ((tuple = dict_find(iter, 1))) {
+    id = tuple->value->uint32;
+  }
+  SimplyElementCommon *element = simply_stage_get_element(stage, id);
+  if (!element) {
+    return;
+  }
+  simply_stage_remove_element(stage, element);
+  simply_stage_update(stage);
+}
+
+static void handle_animate_stage_element(DictionaryIterator *iter, Simply *simply) {
+  SimplyStage *stage = simply->stage;
+  Tuple *tuple;
+  uint32_t id = 0;
+  if ((tuple = dict_find(iter, 1))) {
+    id = tuple->value->uint32;
+  }
+  SimplyElementCommon *element = simply_stage_get_element(stage, id);
+  if (!element) {
+    return;
+  }
+  GRect to_frame = element->frame;
+  SimplyAnimation *animation = malloc(sizeof(*animation));
+  if (!animation) {
+    return;
+  }
+  if ((tuple = dict_find(iter, 2))) {
+    to_frame.origin.x = tuple->value->int16;
+  }
+  if ((tuple = dict_find(iter, 3))) {
+    to_frame.origin.y = tuple->value->int16;
+  }
+  if ((tuple = dict_find(iter, 4))) {
+    to_frame.size.w = tuple->value->int16;
+  }
+  if ((tuple = dict_find(iter, 5))) {
+    to_frame.size.h = tuple->value->int16;
+  }
+  if ((tuple = dict_find(iter, 6))) {
+    animation->duration = tuple->value->uint32;
+  }
+  if ((tuple = dict_find(iter, 7))) {
+    animation->curve = tuple->value->uint8;
+  }
+  simply_stage_animate_element(stage, element, animation, to_frame);
+}
+
 static void received_callback(DictionaryIterator *iter, void *context) {
   Tuple *tuple = dict_find(iter, 0);
   if (!tuple) {
     return;
   }
+
+  s_has_communicated = true;
 
   switch (tuple->value->uint8) {
     case SimplyACmd_setWindow:
@@ -342,6 +549,18 @@ static void received_callback(DictionaryIterator *iter, void *context) {
       break;
     case SimplyACmd_image:
       handle_set_image(iter, context);
+      break;
+    case SimplyACmd_setStage:
+      handle_set_stage(iter, context);
+      break;
+    case SimplyACmd_stageElement:
+      handle_set_stage_element(iter, context);
+      break;
+    case SimplyACmd_stageRemove:
+      handle_remove_stage_element(iter, context);
+      break;
+    case SimplyACmd_stageAnimate:
+      handle_animate_stage_element(iter, context);
       break;
   }
 }

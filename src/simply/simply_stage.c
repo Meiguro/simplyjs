@@ -295,7 +295,9 @@ void simply_stage_show(SimplyStage *self) {
 }
 
 void simply_stage_update(SimplyStage *self) {
-  layer_mark_dirty(self->stage_layer.layer);
+  if (self->stage_layer.layer) {
+    layer_mark_dirty(self->stage_layer.layer);
+  }
 }
 
 void handle_tick(struct tm *tick_time, TimeUnits units_changed) {

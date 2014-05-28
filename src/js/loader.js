@@ -6,12 +6,16 @@ __loader.packages = {};
 
 __loader.packagesLinenoOrder = [{ filename: 'loader.js', lineno: 0 }];
 
+__loader.extpaths = ['?', '?.js', '?.json', '?/index.js'];
+
 __loader.require = function(path) {
-  if (!path.match(/\.js$/)) {
-    path += '.js';
+  var module;
+  var extpaths = __loader.extpaths;
+  for (var i = 0, ii = extpaths.length; !module && i < ii; ++i) {
+    var filepath = extpaths[i].replace('?', path);
+    module = __loader.packages[filepath];
   }
 
-  var module = __loader.packages[path];
   if (!module) {
     throw new Error("Cannot find module'" + path + "'");
   }

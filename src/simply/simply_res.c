@@ -1,5 +1,7 @@
 #include "simply_res.h"
 
+#include "util/window.h"
+
 #include <pebble.h>
 
 static bool id_filter(List1Node *node, void *data) {
@@ -12,6 +14,26 @@ static void destroy_image(SimplyRes *self, SimplyImage *image) {
   free(image);
 }
 
+GBitmap *simply_res_add_bundled_image(SimplyRes *self, uint32_t id) {
+  SimplyImage *image = malloc(sizeof(*image));
+  if (!image) {
+    return NULL;
+  }
+
+  GBitmap *bitmap = gbitmap_create_with_resource(id);
+  if (!bitmap) {
+    free(image);
+    return NULL;
+  }
+
+  image->bitmap = *bitmap;
+  free(bitmap);
+
+  window_stack_schedule_top_window_render();
+
+  return &image->bitmap;
+}
+
 GBitmap *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, int16_t height, uint32_t *pixels) {
   SimplyImage *image = (SimplyImage*) list1_find(self->images, id_filter, (void*)(uintptr_t) id);
   if (image) {
@@ -19,6 +41,9 @@ GBitmap *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, int16
     image->bitmap.addr = NULL;
   } else {
     image = malloc(sizeof(*image));
+    if (!image) {
+      return NULL;
+    }
     *image = (SimplyImage) { .id = id };
     list1_prepend(&self->images, &image->node);
   }
@@ -33,8 +58,7 @@ GBitmap *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, int16
   image->bitmap.addr = malloc(pixels_size);
   memcpy(image->bitmap.addr, pixels, pixels_size);
 
-  Window *window = window_stack_get_top_window();
-  layer_mark_dirty(window_get_root_layer(window));
+  window_stack_schedule_top_window_render();
 
   return &image->bitmap;
 }
@@ -53,6 +77,9 @@ GBitmap *simply_res_auto_image(SimplyRes *self, uint32_t id, bool is_placeholder
   SimplyImage *image = (SimplyImage*) list1_find(self->images, id_filter, (void*)(uintptr_t) id);
   if (image) {
     return &image->bitmap;
+  }
+  if (id <= ARRAY_LENGTH(resource_crc_table)) {
+    return simply_res_add_bundled_image(self, id);
   }
   if (!image && is_placeholder) {
     return simply_res_add_image(self, id, 0, 0, NULL);

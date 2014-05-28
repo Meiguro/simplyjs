@@ -2,7 +2,11 @@
 //
 // This is where you write your app.
 
-var wind = new Pebble.UI.Card({ title: "PebbleJS", body: "Saying Hello World" });
+var wind = new Pebble.UI.Card({
+  title: "PebbleJS",
+  icon: "images/menu_icon.png",
+  body: "Saying Hello World"
+});
 wind.show();
 
 wind.on('singleClick', function(e) {

@@ -8,6 +8,7 @@
 
 #include "util/graphics.h"
 #include "util/string.h"
+#include "util/window.h"
 
 #include <pebble.h>
 
@@ -301,7 +302,7 @@ void simply_stage_update(SimplyStage *self) {
 }
 
 void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
-  layer_mark_dirty(window_get_root_layer(window_stack_get_top_window()));
+  window_stack_schedule_top_window_render();
 }
 
 void simply_stage_update_ticker(SimplyStage *self) {

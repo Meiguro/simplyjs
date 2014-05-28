@@ -2,6 +2,7 @@
 var tests = {};
 
 tests.setTimeoutErrors = function () {
+  /* global wind */
   var i = 0;
   var interval = setInterval(function() {
     clearInterval(interval);
@@ -11,7 +12,7 @@ tests.setTimeoutErrors = function () {
 
 tests.ajaxErrors = function() {
   var ajax = require('lib/ajax');
-  ajaxCallback = function(reqStatus, reqBody, request) {
+  var ajaxCallback = function(reqStatus, reqBody, request) {
     console.logx('broken call');
   };
   ajax({url: 'http://www.google.fr/' }, ajaxCallback, ajaxCallback);

@@ -149,9 +149,6 @@ static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
   }
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {
-      case SetWindow_id:
-        window->id = tuple->value->uint32;
-        break;
       case SetWindow_action:
         simply_window_set_action_bar(window, tuple->value->int32);
         break;
@@ -626,7 +623,7 @@ bool simply_msg_window_show(uint32_t id) {
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
-bool simply_msg_window_hide(uint32_t id) {
+static bool msg_window_hide(uint32_t id) {
   DictionaryIterator *iter = NULL;
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
@@ -634,6 +631,18 @@ bool simply_msg_window_hide(uint32_t id) {
   dict_write_uint8(iter, 0, SimplyACmd_windowHide);
   dict_write_uint32(iter, 1, id);
   return (app_message_outbox_send() == APP_MSG_OK);
+}
+
+static void window_hide_timer_callback(void *data) {
+  uint32_t id = (uintptr_t)(void*) data;
+  if (!msg_window_hide(id)) {
+    app_timer_register(10, window_hide_timer_callback, data);
+  }
+}
+
+bool simply_msg_window_hide(uint32_t id) {
+  window_hide_timer_callback((void*)(uintptr_t) id);
+  return true;
 }
 
 bool simply_msg_accel_tap(AccelAxisType axis, int32_t direction) {

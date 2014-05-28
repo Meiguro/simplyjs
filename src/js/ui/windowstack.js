@@ -100,7 +100,9 @@ WindowStack.prototype.get = function(windowId) {
 };
 
 WindowStack.prototype.emitHide = function(windowId) {
-  this.remove(this.get(windowId));
+  var wind = this.get(windowId);
+  if (wind !== this.top()) { return; }
+  this.remove(wind);
 };
 
 module.exports = new WindowStack();

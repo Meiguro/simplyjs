@@ -35,23 +35,37 @@ def concat_javascript(self, *k, **kw):
         return []
 
     def concat_javascript_task(task):
-        LOADER_TEMPLATE = "__loader.define({relpath}, function(module, require) {{\n{body}\n}});"
+        LOADER_TEMPLATE = "__loader.define({relpath}, {lineno}, function(module, require) {{\n{body}\n}});"
+
+        def loader_translate(source, lineno):
+            return LOADER_TEMPLATE.format(
+                    relpath=json.dumps(source['relpath']),
+                    lineno=lineno,
+                    body=source['body'])
 
         sources = []
         for node in task.inputs:
             relpath = os.path.relpath(node.abspath(), js_path)
             with open(node.abspath(), 'r') as f:
+                body = f.read()
                 if relpath == 'loader.js':
-                    sources.insert(0, f.read())
+                    sources.insert(0, body)
                 elif relpath.startswith('vendor/'):
-                    sources.append(f.read())
+                    sources.append(body)
                 else:
-                    sources.append(LOADER_TEMPLATE.format(relpath=json.dumps(relpath), body=f.read()))
+                    sources.append({ 'relpath': relpath, 'body': body })
 
         sources.append('__loader.require("main");')
 
         with open(task.outputs[0].abspath(), 'w') as f:
-            f.write('\n'.join(sources))
+            lineno = 1
+            for source in sources:
+                if type(source) is dict:
+                    out = loader_translate(source, lineno)
+                else:
+                    out = source
+                f.write(out + '\n')
+                lineno += out.count('\n') + 1
 
     js_target = self.path.make_node('build/src/js/pebble-js-app.js')
 

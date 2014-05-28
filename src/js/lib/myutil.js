@@ -74,4 +74,13 @@ myutil.abspath = function(root, path) {
   return path;
 };
 
+/**
+ *  Converts a name to a C constant name format of UPPER_CASE_UNDERSCORE.
+ */
+myutil.toCConstantName = function(x) {
+  x = x.toUpperCase();
+  x = x.replace(/[- ]/g, '_');
+  return x;
+};
+
 module.exports = myutil;

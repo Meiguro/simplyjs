@@ -33,8 +33,7 @@ var Color = function(x) {
 };
 
 var Font = function(x) {
-  x = x.toUpperCase();
-  x = x.replace(/[- ]/g, '_');
+  x = myutil.toCConstantName(x);
   if (!x.match(/^RESOURCE_ID/)) {
     x = 'RESOURCE_ID_' + x;
   }
@@ -456,7 +455,7 @@ var toParam = function(param, v) {
   } else if (param.type === Boolean) {
     v = v ? 1 : 0;
   } else if (param.type === Image && typeof v !== 'number') {
-    v = ImageService.load(v);
+    v = ImageService.resolve(v);
   } else if (typeof param.type === 'function') {
     v = param.type(v);
   }

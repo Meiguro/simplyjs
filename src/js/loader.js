@@ -3,7 +3,8 @@ var __loader = (function() {
 var __loader = {};
 
 __loader.packages = {};
-__loader.packagesLinenoOrder = [];
+
+__loader.packagesLinenoOrder = [{ filename: 'loader.js', lineno: 0 }];
 
 __loader.require = function(path) {
   if (!path.match(/\.js$/)) {
@@ -42,8 +43,8 @@ __loader.define = function(path, lineno, loader) {
 
 __loader.getPackageByLineno = function(lineno) {
   var packages = __loader.packagesLinenoOrder;
-  var module = packages[0];
-  for (var i = 1, ii = packages.length; i < ii; ++i) {
+  var module;
+  for (var i = 0, ii = packages.length; i < ii; ++i) {
     var next = packages[i];
     if (next.lineno > lineno) {
       break;

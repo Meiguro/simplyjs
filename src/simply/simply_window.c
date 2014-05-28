@@ -66,7 +66,7 @@ void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
     action_bar_layer_add_to_window(self->action_bar_layer, self->window);
     action_bar_layer_set_click_config_provider(self->action_bar_layer, click_config_provider);
   } else {
-    window_set_click_config_provider(self->window, click_config_provider);
+    scroll_layer_set_click_config_onto_window(self->scroll_layer, self->window);
   }
 }
 

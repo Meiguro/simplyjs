@@ -79,7 +79,7 @@ Window.prototype.hide = function() {
 };
 
 Window.prototype._show = function() {
-  this._prop(this.state);
+  this._prop(this.state, true);
 };
 
 Window.prototype.show = function() {

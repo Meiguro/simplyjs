@@ -118,7 +118,7 @@ Settings.onOpenConfig = function(e) {
 Settings.onCloseConfig = function(e) {
   var listener = util2.last(state.listeners);
   var options = {};
-  if (e.response) {
+  if (e.response && e.response !== 'CANCELLED') {
     options = JSON.parse(decodeURIComponent(e.response));
   }
   if (listener) {

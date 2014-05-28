@@ -3,7 +3,8 @@ var tests = {};
 
 tests.setTimeoutErrors = function () {
   var i = 0;
-  setInterval(function() {
+  var interval = setInterval(function() {
+    clearInterval(interval);
     wind.titlex("i = " + i++);
   }, 1000);
 };

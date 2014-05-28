@@ -10,17 +10,7 @@ require('lib/safe');
 
 Pebble.Settings = require('settings/settings');
 Pebble.Accel = require('ui/accel');
-
-var UI = {};
-UI.Vector2 = require('lib/vector2');
-UI.Card = require('ui/card');
-UI.Menu = require('ui/menu');
-UI.Stage = require('ui/stage');
-UI.Rect = require('ui/rect');
-UI.Circle = require('ui/circle');
-UI.Text = require('ui/text');
-UI.Image = require('ui/image');
-Pebble.UI = UI;
+Pebble.UI = require('ui');
 
 //Pebble.SmartPackage = require('pebble/smartpackage');
 

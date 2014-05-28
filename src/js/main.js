@@ -6,6 +6,8 @@
  * By default, this will initialize all the libraries and run app.js
  */
 
+require('lib/safe');
+
 Pebble.Settings = require('settings/settings');
 Pebble.Accel = require('ui/accel');
 
@@ -23,42 +25,23 @@ Pebble.UI = UI;
 //Pebble.SmartPackage = require('pebble/smartpackage');
 
 Pebble.addEventListener('ready', function(e) {
-  try {
-    console.log("Running the Pebble.ready event....");
-    // Load the SimplyJS Pebble implementation
-    require('ui/simply-pebble').init();
-    Pebble.Settings.init();
-    Pebble.Accel.init();
-    console.log("Done loading PebbleJS - Starting app.");
+  // Load the SimplyJS Pebble implementation
+  require('ui/simply-pebble').init();
+  Pebble.Settings.init();
+  Pebble.Accel.init();
+  console.log("Done loading PebbleJS - Starting app.");
 
-    // Load local file
-    require('app.js');
+  // Load local file
+  //require('app.js');
+  require('ui/tests');
 
-    // Or use Smart Package to load a remote JS file
-    //Pebble.SmartPackage.init('http://www.sarfata.org/myapp.js');
+  // Or use Smart Package to load a remote JS file
+  //Pebble.SmartPackage.init('http://www.sarfata.org/myapp.js');
 
-    // or Ask the user to enter a URL to run in the Settings
-    //Pebble.SmartPackage.initWithSettings();
+  // or Ask the user to enter a URL to run in the Settings
+  //Pebble.SmartPackage.initWithSettings();
 
-    // or Load a list of app and let the user choose in the Settings which one to run.
-    //Pebble.SmartPackage.loadBundle('http://www.sarfata.org/myapps.json');
-  }
-  catch (err) {
-    dumpError(err);
-  }
+  // or Load a list of app and let the user choose in the Settings which one to run.
+  //Pebble.SmartPackage.loadBundle('http://www.sarfata.org/myapps.json');
 });
 
-function dumpError(err) {
-  if (typeof err === 'object') {
-    if (err.message) {
-      console.log('\nMessage: ' + err.message);
-    }
-    if (err.stack) {
-      console.log('\nStacktrace:');
-      console.log('====================');
-      console.log(err.stack);
-    }
-  } else {
-    console.log('dumpError :: argument is not an object');
-  }
-}

@@ -32,8 +32,8 @@ Pebble.addEventListener('ready', function(e) {
   console.log("Done loading PebbleJS - Starting app.");
 
   // Load local file
-  //require('app.js');
-  require('ui/tests');
+  require('app.js');
+  //require('ui/tests');
 
   // Or use Smart Package to load a remote JS file
   //Pebble.SmartPackage.init('http://www.sarfata.org/myapp.js');

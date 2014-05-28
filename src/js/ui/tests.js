@@ -24,6 +24,15 @@ tests.geolocationErrors = function () {
   });
 };
 
+tests.loadAppinfo = function() {
+  console.log('longName: ' + require('appinfo').longName);
+};
+
+tests.resolveBultinImagePath = function() {
+  var ImageService = require('ui/imageservice');
+  console.log('image-logo-splash = resource #' + ImageService.resolve('images/logo_splash.png'));
+};
+
 for (var test in tests) {
   console.log('Running test: ' + test);
   tests[test]();

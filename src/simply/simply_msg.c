@@ -284,7 +284,7 @@ static void handle_set_menu_section(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   uint16_t section_index = 0;
   uint16_t num_items = 1;
-  char *title = "Section";
+  char *title = NULL;
   if ((tuple = dict_find(iter, 1))) {
     section_index = tuple->value->uint16;
   }

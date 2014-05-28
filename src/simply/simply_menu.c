@@ -14,6 +14,8 @@
 
 #define REQUEST_DELAY_MS 10
 
+static char EMPTY_TITLE[] = "";
+
 static bool section_filter(List1Node *node, void *data) {
   SimplyMenuSection *section = (SimplyMenuSection*) node;
   uint16_t section_index = (uint16_t)(uintptr_t) data;
@@ -28,7 +30,7 @@ static bool item_filter(List1Node *node, void *data) {
   return (item->section == section_index && item->index == row);
 }
 
-static bool empty_filter(List1Node *node, void *data) {
+static bool request_filter(List1Node *node, void *data) {
   SimplyMenuCommon *item = (SimplyMenuCommon*) node;
   return (item->title == NULL);
 }
@@ -40,7 +42,7 @@ static SimplyMenuSection *get_menu_section(SimplyMenu *self, int index) {
 static void destroy_section(SimplyMenu *self, SimplyMenuSection *section) {
   if (!section) { return; }
   list1_remove(&self->menu_layer.sections, &section->node);
-  if (section->title) {
+  if (section->title && section->title != EMPTY_TITLE) {
     free(section->title);
     section->title = NULL;
   }
@@ -82,13 +84,13 @@ static void schedule_get_timer(SimplyMenu *self);
 static void request_menu_node(void *data) {
   SimplyMenu *self = data;
   self->menu_layer.get_timer = NULL;
-  SimplyMenuSection *section = (SimplyMenuSection*) list1_find(self->menu_layer.sections, empty_filter, NULL);
+  SimplyMenuSection *section = (SimplyMenuSection*) list1_find(self->menu_layer.sections, request_filter, NULL);
   bool found = false;
   if (section) {
     simply_msg_menu_get_section(section->index);
     found = true;
   }
-  SimplyMenuItem *item = (SimplyMenuItem*) list1_find(self->menu_layer.items, empty_filter, NULL);
+  SimplyMenuItem *item = (SimplyMenuItem*) list1_find(self->menu_layer.items, request_filter, NULL);
   if (item) {
     simply_msg_menu_get_item(item->section, item->index);
     found = true;
@@ -154,11 +156,17 @@ void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections) {
 }
 
 void simply_menu_add_section(SimplyMenu *self, SimplyMenuSection *section) {
+  if (section->title == NULL) {
+    section->title = EMPTY_TITLE;
+  }
   add_section(self, section);
   mark_dirty(self);
 }
 
 void simply_menu_add_item(SimplyMenu *self, SimplyMenuItem *item) {
+  if (item->title == NULL) {
+    item->title = EMPTY_TITLE;
+  }
   add_item(self, item);
   mark_dirty(self);
 }
@@ -175,7 +183,9 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t secti
 }
 
 static int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t section_index, void *data) {
-  return MENU_CELL_BASIC_HEADER_HEIGHT;
+  SimplyMenu *self = data;
+  SimplyMenuSection *section = get_menu_section(self, section_index);
+  return section && section->title && section->title != EMPTY_TITLE ? MENU_CELL_BASIC_HEADER_HEIGHT : 0;
 }
 
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
@@ -194,6 +204,11 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
   SimplyMenu *self = data;
+  SimplyMenuSection *section = get_menu_section(self, cell_index->section);
+  if (!section) {
+    request_menu_section(self, cell_index->section);
+    return;
+  }
   SimplyMenuItem *item = get_menu_item(self, cell_index->section, cell_index->row);
   if (!item) {
     request_menu_item(self, cell_index->section, cell_index->row);

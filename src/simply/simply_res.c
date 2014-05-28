@@ -33,8 +33,7 @@ GBitmap *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, int16
   image->bitmap.addr = malloc(pixels_size);
   memcpy(image->bitmap.addr, pixels, pixels_size);
 
-  Window *window = window_stack_get_top_window();
-  layer_mark_dirty(window_get_root_layer(window));
+  window_stack_schedule_top_window_render();
 
   return &image->bitmap;
 }

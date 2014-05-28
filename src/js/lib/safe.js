@@ -5,14 +5,18 @@
  * console.
  */
 
+/* global __loader */
+
 var ajax = require('lib/ajax');
 
+var safe = {};
+
 /* The name of the concatenated file to translate */
-var translateName = 'pebble-js-app.js';
+safe.translateName = 'pebble-js-app.js';
 
 /* Translates a line of the stack trace to the originating file */
-function translateLine(line, scope, name, lineno, colno) {
-  if (name === translateName) {
+safe.translateLine = function(line, scope, name, lineno, colno) {
+  if (name === safe.translateName) {
     var pkg = __loader.getPackageByLineno(lineno);
     if (pkg) {
       name = pkg.filename;
@@ -20,86 +24,88 @@ function translateLine(line, scope, name, lineno, colno) {
     }
   }
   return (scope || '') + name + ':' + lineno + ':' + colno;
-}
+};
 
 /* Matches (<scope> '@' )? <name> ':' <lineno> ':' <colno> */
 var stackLineRegExp = /([^\s@]+@)?([^\s@:]+):(\d+):(\d+)/;
 
 /* Translates a stack trace to the originating files */
-function translateStack(stack) {
+safe.translateStack = function(stack) {
   var lines = stack.split('\n');
   for (var i = lines.length - 1; i >= 0; --i) {
     var line = lines[i];
     var m = line.match(stackLineRegExp);
     if (m) {
-      line = lines[i] = translateLine.apply(this, m);
+      line = lines[i] = safe.translateLine.apply(this, m);
     }
     if (line.match(module.filename)) {
       lines.splice(--i, 2);
     }
   }
   return lines.join('\n');
-}
+};
 
 /* We use this function to dump error messages to the console. */
-function dumpError(err) {
+safe.dumpError = function(err) {
   if (typeof err === 'object') {
     if (err.message) {
       console.log('Message: ' + err.message);
     }
     if (err.stack) {
       console.log('Stacktrace:');
-      console.log(translateStack(err.stack));
+      console.log(safe.translateStack(err.stack));
     }
   } else {
     console.log('dumpError :: argument is not an object');
   }
-}
+};
 
 /* Takes a function and return a new function with a call to it wrapped in a try/catch statement */
-function protect(fn) {
+safe.protect = function(fn) {
   return function() {
     try {
       return fn.apply(this, arguments);
     }
     catch (err) {
-      dumpError(err);
+      safe.dumpError(err);
     }
   };
-}
+};
 
 /* Wrap event handlers added by Pebble.addEventListener */
 var pblAddEventListener = Pebble.addEventListener;
 Pebble.addEventListener = function(eventName, eventCallback) {
-  pblAddEventListener.call(this, eventName, protect(eventCallback));
+  pblAddEventListener.call(this, eventName, safe.protect(eventCallback));
 };
 
 var pblSendMessage = Pebble.sendAppMessage;
 Pebble.sendAppMessage = function(message, success, failure) {
-  return pblSendMessage.call(this, message, protect(success), protect(failure));
+  return pblSendMessage.call(this, message, safe.protect(success), safe.protect(failure));
 };
 
 /* Wrap setTimeout and setInterval */
 var originalSetTimeout = setTimeout;
-setTimeout = function(callback, delay) {
-  return originalSetTimeout(protect(callback), delay);
+window.setTimeout = function(callback, delay) {
+  return originalSetTimeout(safe.protect(callback), delay);
 };
 var originalSetInterval = setInterval;
-setInterval = function(callback, delay) {
-  return originalSetInterval(protect(callback), delay);
+window.setInterval = function(callback, delay) {
+  return originalSetInterval(safe.protect(callback), delay);
 };
 
 /* Wrap the success and failure callback of the ajax library */
 ajax.onHandler = function(eventName, callback) {
-  return protect(callback);
+  return safe.protect(callback);
 };
 
 /* Wrap the geolocation API Callbacks */
 var watchPosition = navigator.geolocation.watchPosition;
 navigator.geolocation.watchPosition = function(success, error, options) {
-  return watchPosition.call(this, protect(success), protect(error), options);
+  return watchPosition.call(this, safe.protect(success), safe.protect(error), options);
 };
 var getCurrentPosition = navigator.geolocation.getCurrentPosition;
 navigator.geolocation.getCurrentPosition = function(success, error, options) {
-  return getCurrentPosition.call(this, protect(success), protect(error), options);
+  return getCurrentPosition.call(this, safe.protect(success), safe.protect(error), options);
 };
+
+module.exports = safe;

@@ -7,6 +7,40 @@
 
 var ajax = require('lib/ajax');
 
+/* The name of the concatenated file to translate */
+var translateName = 'pebble-js-app.js';
+
+/* Translates a line of the stack trace to the originating file */
+function translateLine(line, scope, name, lineno, colno) {
+  if (name === translateName) {
+    var pkg = __loader.getPackageByLineno(lineno);
+    if (pkg) {
+      name = pkg.filename;
+      lineno -= pkg.lineno;
+    }
+  }
+  return (scope || '') + name + ':' + lineno + ':' + colno;
+}
+
+/* Matches (<scope> '@' )? <name> ':' <lineno> ':' <colno> */
+var stackLineRegExp = /([^\s@]+@)?([^\s@:]+):(\d+):(\d+)/;
+
+/* Translates a stack trace to the originating files */
+function translateStack(stack) {
+  var lines = stack.split('\n');
+  for (var i = lines.length - 1; i >= 0; --i) {
+    var line = lines[i];
+    var m = line.match(stackLineRegExp);
+    if (m) {
+      line = lines[i] = translateLine.apply(this, m);
+    }
+    if (line.match(module.filename)) {
+      lines.splice(--i, 2);
+    }
+  }
+  return lines.join('\n');
+}
+
 /* We use this function to dump error messages to the console. */
 function dumpError(err) {
   if (typeof err === 'object') {
@@ -15,7 +49,7 @@ function dumpError(err) {
     }
     if (err.stack) {
       console.log('Stacktrace:');
-      console.log(err.stack);
+      console.log(translateStack(err.stack));
     }
   } else {
     console.log('dumpError :: argument is not an object');

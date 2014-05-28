@@ -72,6 +72,9 @@ var getSections = function(target) {
       return (this.state.sections = sections);
     }
   }
+  if (!sections) {
+    return (this.state.sections = []);
+  }
 };
 
 var getSection = function(e) {
@@ -91,6 +94,9 @@ var getSection = function(e) {
       }
       return (sections[e.section] = section);
     }
+  }
+  if (sections && !sections[e.section]) {
+    return (sections[e.section] = {});
   }
 };
 

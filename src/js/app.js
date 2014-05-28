@@ -9,7 +9,7 @@ wind.on('singleClick', function(e) {
   console.log("Button pressed: " + JSON.stringify(e));
   if (e.button == 'up') {
     var menu = new Pebble.UI.Menu();
-    menu.section(0, [ { title: 'Hello World!', subtitle: 'text' }, { title: 'item2' } ]);
+    menu.items(0, [ { title: 'Hello World!', subtitle: 'text' }, { title: 'item2' } ]);
     menu.show();
   }
   else if (e.button === 'select') {

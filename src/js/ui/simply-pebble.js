@@ -586,6 +586,9 @@ SimplyPebble.menu = function(menuDef) {
   if (packetDef.sections instanceof Array) {
     packetDef.sections = packetDef.sections.length;
   }
+  if (!packetDef.sections) {
+    packetDef.sections = 1;
+  }
   var packet = makePacket(command, packetDef);
   SimplyPebble.sendPacket(packet);
 };

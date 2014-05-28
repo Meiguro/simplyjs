@@ -698,7 +698,7 @@ SimplyPebble.onAppMessage = function(e) {
 
   switch (command.name) {
     case 'windowHide':
-      WindowStack.remove(payload[1], false);
+      WindowStack.emitHide(payload[1]);
       break;
     case 'singleClick':
     case 'longClick':

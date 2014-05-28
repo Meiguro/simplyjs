@@ -1,6 +1,7 @@
 var util2 = require('lib/util2');
 var myutil = require('lib/myutil');
 var Emitter = require('lib/emitter');
+var simply = require('ui/simply');
 
 var WindowStack = function() {
   this.init();
@@ -50,6 +51,14 @@ WindowStack.prototype._hide = function(item, broadcast) {
   item._hide(broadcast);
 };
 
+WindowStack.prototype.at = function(index) {
+  return this._items[index];
+};
+
+WindowStack.prototype.index = function(item) {
+  return this._items.indexOf(item);
+};
+
 WindowStack.prototype.push = function(item) {
   if (item === this.top()) { return; }
   this.remove(item);
@@ -68,13 +77,14 @@ WindowStack.prototype.remove = function(item, broadcast) {
     item = this.get(item);
   }
   if (!item) { return; }
-  var index = this._items.indexOf(item);
+  var index = this.index(item);
   if (index === -1) { return item; }
   var wasTop = (item === this.top());
   this._items.splice(index, 1);
   if (wasTop) {
-    this._show(this.top());
-    this._hide(item, broadcast);
+    var top = this.top();
+    this._show(top);
+    this._hide(item, top && top.constructor === item.constructor ? false : broadcast);
   }
   return item;
 };
@@ -87,6 +97,10 @@ WindowStack.prototype.get = function(windowId) {
       return wind;
     }
   }
+};
+
+WindowStack.prototype.emitHide = function(windowId) {
+  this.remove(this.get(windowId));
 };
 
 module.exports = new WindowStack();

@@ -53,10 +53,13 @@ void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
   }
 
   // HACK: Refresh app chrome state
+  uint32_t id = self->id;
+  self->id = 0;
   Window *window = window_create();
   window_stack_push(window, false);
   window_stack_remove(window, false);
   window_destroy(window);
+  self->id = id;
 }
 
 void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {

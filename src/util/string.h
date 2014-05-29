@@ -13,8 +13,13 @@ static inline char *strdup2(const char *str) {
     return NULL;
   }
 
-  char *buffer = malloc(strlen(str) + 1);
-  strcpy(buffer, str);
+  size_t n = strlen(str);
+  char *buffer = malloc(n + 1);
+  if (!buffer) {
+    return NULL;
+  }
+
+  strncpy(buffer, str, n + 1);
   return buffer;
 }
 

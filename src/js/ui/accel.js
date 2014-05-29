@@ -1,11 +1,11 @@
 var Emitter = require('lib/emitter');
-var WindowStack = require('ui/windowstack');
-var Window = require('ui/window');
 
 var Accel = new Emitter();
 
 module.exports = Accel;
 
+var WindowStack = require('ui/windowstack');
+var Window = require('ui/window');
 var simply = require('ui/simply');
 
 var state;
@@ -47,7 +47,7 @@ var accelDataListenerCount = function() {
 
 Accel.autoSubscribe = function() {
   if (state.subscribeMode !== 'auto') { return; }
-  var subscribe = (accelDataListenerCount > 0);
+  var subscribe = (accelDataListenerCount() > 0);
   if (subscribe !== state.subscribe) {
     return Accel.config(subscribe, true);
   }

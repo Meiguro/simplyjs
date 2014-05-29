@@ -29,8 +29,7 @@ safe.translateLine = function(line, scope, name, lineno, colno) {
 /* Matches (<scope> '@' )? <name> ':' <lineno> ':' <colno> */
 var stackLineRegExp = /([^\s@]+@)?([^\s@:]+):(\d+):(\d+)/;
 
-/* Translates a stack trace to the originating files */
-safe.translateStack = function(stack) {
+safe.translateStackIOS = function(stack) {
   var lines = stack.split('\n');
   for (var i = lines.length - 1; i >= 0; --i) {
     var line = lines[i];
@@ -43,6 +42,41 @@ safe.translateStack = function(stack) {
     }
   }
   return lines.join('\n');
+};
+
+safe.translateStackAndroid = function(stack) {
+  var lines = stack.split('\n');
+  for (var i = lines.length - 1; i >= 0; --i) {
+    var line = lines[i];
+    var m = line.match(/\?params=(.*):(\d+):(\d+)/);
+    var name, lineno, colno;
+    if (m) {
+      name = JSON.parse(decodeURIComponent(m[1])).loadUrl.replace(/^.*\//, '');
+      lineno = m[2];
+      colno = m[3];
+    } else {
+      m = line.match(/^.*\/(.*?):(\d+):(\d+)/);
+      if (m) {
+        name = m[1];
+        lineno = m[2];
+        colno = m[3];
+      }
+    }
+    if (name) {
+      var pos = safe.translateLine(line, null, name, lineno, colno);
+      line = lines[i] = line.replace(/\(.*\)/, '(' + pos + ')');
+    }
+  }
+  return lines.join('\n');
+};
+
+/* Translates a stack trace to the originating files */
+safe.translateStack = function(stack) {
+  if (stack.match('com.getpebble.android')) {
+    return safe.translateStackAndroid(stack);
+  } else {
+    return safe.translateStackIOS(stack);
+  }
 };
 
 /* We use this function to dump error messages to the console. */

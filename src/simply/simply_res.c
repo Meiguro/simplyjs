@@ -26,8 +26,12 @@ GBitmap *simply_res_add_bundled_image(SimplyRes *self, uint32_t id) {
     return NULL;
   }
 
-  image->bitmap = *bitmap;
-  free(bitmap);
+  *image = (SimplyImage) {
+    .id = id,
+    .bitmap = *bitmap,
+  };
+
+  list1_prepend(&self->images, &image->node);
 
   window_stack_schedule_top_window_render();
 

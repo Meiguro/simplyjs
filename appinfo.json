@@ -4,7 +4,7 @@
   "longName": "Pebble.js",
   "companyName": "Meiguro",
   "versionCode": 1,
-  "versionLabel": "0.3.4",
+  "versionLabel": "0.4.0",
   "capabilities": [ "configurable" ],
   "watchapp": {
     "watchface": false

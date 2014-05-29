@@ -8,7 +8,7 @@
 
 require('lib/safe');
 
-Pebble.Settings = require('settings/settings');
+//Pebble.Settings = require('settings/settings');
 Pebble.Accel = require('ui/accel');
 Pebble.UI = require('ui');
 
@@ -17,7 +17,7 @@ Pebble.UI = require('ui');
 Pebble.addEventListener('ready', function(e) {
   // Load the SimplyJS Pebble implementation
   require('ui/simply-pebble').init();
-  Pebble.Settings.init();
+  //Pebble.Settings.init();
   Pebble.Accel.init();
   console.log("Done loading PebbleJS - Starting app.");
 

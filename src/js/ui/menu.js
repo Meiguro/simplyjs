@@ -203,7 +203,9 @@ Menu.prototype._emitSelect = function(e) {
 
 Menu.prototype.sections = function(sections) {
   if (typeof sections === 'function') {
+    delete this.state.sections;
     this.sectionsProvider = sections;
+    this._resolveMenu();
     return this;
   }
   this.state.sections = sections;

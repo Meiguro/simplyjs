@@ -38,6 +38,7 @@ var actionProps = [
   'up',
   'select',
   'back',
+  'backgroundColor',
 ];
 
 var accessorProps = configProps;

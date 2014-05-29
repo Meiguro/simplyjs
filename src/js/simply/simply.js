@@ -13,6 +13,8 @@ var WindowStack = require('ui/windowstack');
 var Card = require('ui/card');
 var Vibe = require('ui/vibe');
 
+var simply = {};
+
 simply.text = function(textDef) {
   var wind = WindowStack.top();
   if (!wind || !(wind instanceof Card)) {

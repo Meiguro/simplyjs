@@ -8,6 +8,7 @@
 
 #include "simply.h"
 
+#include "util/memory.h"
 #include "util/string.h"
 
 #include <pebble.h>

@@ -7,6 +7,7 @@
 #include "simply.h"
 
 #include "util/graphics.h"
+#include "util/memory.h"
 #include "util/string.h"
 #include "util/window.h"
 
@@ -136,12 +137,6 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
     }
     element = (SimplyElementCommon*) element->node.next;
   }
-}
-
-static void *malloc0(size_t size) {
-  void *buf = malloc(size);
-  memset(buf, 0, size);
-  return buf;
 }
 
 static SimplyElementCommon *alloc_element(SimplyElementType type) {

@@ -19,7 +19,7 @@ if (typeof Image === 'undefined') {
   window.Image = function(){};
 }
 
-/* 
+/**
  * First part of this file is defining the commands and types that we will use later.
  */
 
@@ -116,6 +116,9 @@ var setWindowParams = [{
 }, {
   name: 'actionDown',
   type: Image,
+}, {
+  name: 'actionBackgroundColor',
+  type: Color,
 }, {
   name: 'fullscreen',
   type: Boolean,
@@ -429,10 +432,11 @@ var actionBarTypeMap = {
   up: 'actionUp',
   select: 'actionSelect',
   down: 'actionDown',
+  backgroundColor: 'actionBackgroundColor',
 };
 
 
-/*
+/**
  * SimplyPebble object provides the actual methods to communicate with Pebble.
  *
  * It's an implementation of an abstract interface used by all the other classes.
@@ -518,6 +522,16 @@ var toClearFlags = function(clear) {
   return clear;
 };
 
+var setActionPacket = function(packet, command, actionDef) {
+  if (actionDef) {
+    if (typeof actionDef === 'boolean') {
+      actionDef = { action: actionDef };
+    }
+    setPacket(packet, command, actionDef, actionBarTypeMap);
+  }
+  return packet;
+};
+
 SimplyPebble.window = function(windowDef, clear) {
   clear = toClearFlags(clear);
   var command = commandMap.setWindow;
@@ -525,13 +539,7 @@ SimplyPebble.window = function(windowDef, clear) {
   if (clear) {
     packet[command.paramMap.clear.id] = clear;
   }
-  var actionDef = windowDef.action;
-  if (actionDef) {
-    if (typeof actionDef === 'boolean') {
-      actionDef = { action: actionDef };
-    }
-    setPacket(packet, command, actionDef, actionBarTypeMap);
-  }
+  setActionPacket(packet, command, windowDef.action);
   SimplyPebble.sendPacket(packet);
 };
 
@@ -549,13 +557,7 @@ SimplyPebble.card = function(cardDef, clear) {
   if (clear) {
     packet[command.paramMap.clear.id] = clear;
   }
-  var actionDef = cardDef.action;
-  if (actionDef) {
-    if (typeof actionDef === 'boolean') {
-      actionDef = { action: actionDef };
-    }
-    setPacket(packet, command, actionDef, actionBarTypeMap);
-  }
+  setActionPacket(packet, command, cardDef.action);
   SimplyPebble.sendPacket(packet);
 };
 
@@ -626,6 +628,7 @@ SimplyPebble.image = function(id, gbitmap) {
 SimplyPebble.stage = function(stageDef) {
   var command = commandMap.setStage;
   var packet = makePacket(command, stageDef);
+  setActionPacket(packet, command, stageDef.action);
   SimplyPebble.sendPacket(packet);
 };
 

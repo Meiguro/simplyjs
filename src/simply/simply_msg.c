@@ -51,6 +51,7 @@ enum SimplySetWindowParam {
   SetWindow_actionUp,
   SetWindow_actionSelect,
   SetWindow_actionDown,
+  SetWindow_actionBackgroundColor,
   SetWindow_fullscreen,
   SetWindow_scrollable,
   SetWindowLast,
@@ -157,6 +158,9 @@ static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
       case SetWindow_actionSelect:
       case SetWindow_actionDown:
         simply_window_set_action_bar_icon(window, tuple->key - SetWindow_action, tuple->value->int32);
+        break;
+      case SetWindow_actionBackgroundColor:
+        simply_window_set_action_bar_background_color(window, tuple->value->uint8);
         break;
       case SetWindow_fullscreen:
         simply_window_set_fullscreen(window, tuple->value->int32);

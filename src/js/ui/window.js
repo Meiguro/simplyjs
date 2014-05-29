@@ -38,6 +38,7 @@ var actionProps = [
   'up',
   'select',
   'back',
+  'backgroundColor',
 ];
 
 var accessorProps = configProps;
@@ -117,9 +118,9 @@ Window.prototype.prop = function(field, value, clear) {
   return this;
 };
 
-Window.prototype._action = function(actionDef) {
+Window.prototype._action = function(visible) {
   if (this === WindowStack.top()) {
-    simply.impl.window({ action: typeof actionDef === 'boolean' ? actionDef : this.state.action }, 'action');
+    simply.impl.window({ action: typeof visible === 'boolean' ? visible : this.state.action }, 'action');
   }
 };
 
@@ -131,7 +132,7 @@ Window.prototype.action = function(field, value, clear) {
   if (arguments.length === 0) {
     return action;
   }
-  if (arguments.length === 1 && typeof field !== 'object') {
+  if (arguments.length === 1 && typeof field === 'string') {
     return action[field];
   }
   if (typeof field !== 'string') {
@@ -143,7 +144,7 @@ Window.prototype.action = function(field, value, clear) {
   if (typeof field !== 'boolean') {
     util2.copy(myutil.toObject(field, value), this.state.action);
   }
-  this._action();
+  this._action(field);
   return this;
 };
 

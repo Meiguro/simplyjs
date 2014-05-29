@@ -24,6 +24,7 @@ enum SimplyElementType {
   SimplyElementTypeCircle = 2,
   SimplyElementTypeText = 3,
   SimplyElementTypeImage = 4,
+  SimplyElementTypeInverter = 5,
 };
 
 struct SimplyStageLayer {
@@ -92,6 +93,13 @@ struct SimplyElementImage {
   GCompOp compositing;
 };
 
+typedef struct SimplyElementInverter SimplyElementInverter;
+
+struct SimplyElementInverter {
+  SimplyElementCommonMember;
+  InverterLayer *inverter_layer;
+};
+
 typedef struct SimplyAnimation SimplyAnimation;
 
 struct SimplyAnimation {
@@ -104,24 +112,22 @@ struct SimplyAnimation {
 };
 
 SimplyStage *simply_stage_create(Simply *simply);
-
 void simply_stage_clear(SimplyStage *self);
-
 void simply_stage_destroy(SimplyStage *self);
 
 void simply_stage_show(SimplyStage *self);
+void simply_stage_clear(SimplyStage *self);
 
 void simply_stage_clear(SimplyStage *self);
 
 void simply_stage_update(SimplyStage *self);
-
 void simply_stage_update_ticker(SimplyStage *self);
 
 SimplyElementCommon* simply_stage_auto_element(SimplyStage *self, uint32_t id, SimplyElementType type);
-
 SimplyElementCommon* simply_stage_insert_element(SimplyStage *self, int index, SimplyElementCommon *element);
-
 SimplyElementCommon* simply_stage_remove_element(SimplyStage *self, SimplyElementCommon *element);
+
+void simply_stage_set_element_frame(SimplyStage *self, SimplyElementCommon *element, GRect frame);
 
 SimplyAnimation *simply_stage_animate_element(SimplyStage *self,
     SimplyElementCommon *element, SimplyAnimation* animation, GRect to_frame);

@@ -29,6 +29,9 @@ static void destroy_element(SimplyStage *self, SimplyElementCommon *element) {
     case SimplyElementTypeText:
       free(((SimplyElementText*) element)->text);
       break;
+    case SimplyElementTypeInverter:
+      inverter_layer_destroy(((SimplyElementInverter*) element)->inverter_layer);
+      break;
   }
   free(element);
 }
@@ -134,6 +137,8 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       case SimplyElementTypeImage:
         image_element_draw(ctx, self, (SimplyElementImage*) element);
         break;
+      case SimplyElementTypeInverter:
+        break;
     }
     element = (SimplyElementCommon*) element->node.next;
   }
@@ -146,6 +151,11 @@ static SimplyElementCommon *alloc_element(SimplyElementType type) {
     case SimplyElementTypeCircle: return malloc0(sizeof(SimplyElementCircle));
     case SimplyElementTypeText: return malloc0(sizeof(SimplyElementText));
     case SimplyElementTypeImage: return malloc0(sizeof(SimplyElementImage));
+    case SimplyElementTypeInverter: {
+      SimplyElementInverter *element = malloc0(sizeof(SimplyElementInverter));
+      element->inverter_layer = inverter_layer_create(GRect(0, 0, 0, 0));
+      return &element->common;
+    }
   }
   return NULL;
 }
@@ -170,16 +180,41 @@ SimplyElementCommon *simply_stage_auto_element(SimplyStage *self, uint32_t id, S
 
 SimplyElementCommon *simply_stage_insert_element(SimplyStage *self, int index, SimplyElementCommon *element) {
   simply_stage_remove_element(self, element);
+  switch (element->type) {
+    default: break;
+    case SimplyElementTypeInverter:
+      layer_add_child(self->stage_layer.layer,
+          inverter_layer_get_layer(((SimplyElementInverter*) element)->inverter_layer));
+      break;
+  }
   return (SimplyElementCommon*) list1_insert(&self->stage_layer.elements, index, &element->node);
 }
 
 SimplyElementCommon *simply_stage_remove_element(SimplyStage *self, SimplyElementCommon *element) {
+  switch (element->type) {
+    default: break;
+    case SimplyElementTypeInverter:
+      layer_remove_from_parent(inverter_layer_get_layer(((SimplyElementInverter*) element)->inverter_layer));
+      break;
+  }
   return (SimplyElementCommon*) list1_remove(&self->stage_layer.elements, &element->node);
+}
+
+void simply_stage_set_element_frame(SimplyStage *self, SimplyElementCommon *element, GRect frame) {
+  element->frame = frame;
+  switch (element->type) {
+    default: break;
+    case SimplyElementTypeInverter: {
+      Layer *layer = inverter_layer_get_layer(((SimplyElementInverter*) element)->inverter_layer);
+      layer_set_frame(layer, element->frame);
+      break;
+    }
+  }
 }
 
 static void element_frame_setter(void *subject, GRect frame) {
   SimplyAnimation *animation = subject;
-  animation->element->frame = frame;
+  simply_stage_set_element_frame(animation->stage, animation->element, frame);
   simply_stage_update(animation->stage);
 }
 

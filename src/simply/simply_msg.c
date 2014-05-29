@@ -397,16 +397,20 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
         simply_stage_insert_element(stage, tuple->value->uint16, element);
         break;
       case ElementX:
-        element->frame.origin.x = tuple->value->int16;
+        frame.origin.x = tuple->value->int16;
+        update_frame = true;
         break;
       case ElementY:
-        element->frame.origin.y = tuple->value->int16;
+        frame.origin.y = tuple->value->int16;
+        update_frame = true;
         break;
       case ElementWidth:
-        element->frame.size.w = tuple->value->uint16;
+        frame.size.w = tuple->value->uint16;
+        update_frame = true;
         break;
       case ElementHeight:
-        element->frame.size.h = tuple->value->uint16;
+        frame.size.h = tuple->value->uint16;
+        update_frame = true;
         break;
       case ElementBackgroundColor:
         element->background_color = tuple->value->uint8;
@@ -447,6 +451,9 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
         ((SimplyElementImage*) element)->compositing = tuple->value->uint8;
         break;
     }
+  }
+  if (update_frame) {
+    simply_stage_set_element_frame(stage, element, frame);
   }
   if (update_ticker) {
     simply_stage_update_ticker(stage);
@@ -642,6 +649,7 @@ static void window_hide_timer_callback(void *data) {
 }
 
 bool simply_msg_window_hide(uint32_t id) {
+  if (!id) { return true; }
   window_hide_timer_callback((void*)(uintptr_t) id);
   return true;
 }

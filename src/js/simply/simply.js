@@ -13,6 +13,12 @@ var WindowStack = require('ui/windowstack');
 var Card = require('ui/card');
 var Vibe = require('ui/vibe');
 
+/**
+ * Sets the information to be displayed on the screen.
+ *
+ * @memberOf simply
+ * @param {object} textDef: A structure defining what to display. See {@link textDef}.
+ */
 simply.text = function(textDef) {
   var wind = WindowStack.top();
   if (!wind || !(wind instanceof Card)) {

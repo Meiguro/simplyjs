@@ -21,6 +21,10 @@ static bool animation_filter(List1Node *node, void *data) {
   return (((SimplyAnimation*) node)->animation == (PropertyAnimation*) data);
 }
 
+static bool animation_element_filter(List1Node *node, void *data) {
+  return (((SimplyAnimation*) node)->element == (SimplyElementCommon*) data);
+}
+
 static void destroy_element(SimplyStage *self, SimplyElementCommon *element) {
   if (!element) { return; }
   list1_remove(&self->stage_layer.elements, &element->node);
@@ -236,6 +240,11 @@ SimplyAnimation *simply_stage_animate_element(SimplyStage *self,
     SimplyElementCommon *element, SimplyAnimation* animation, GRect to_frame) {
   if (!animation) {
     return NULL;
+  }
+  SimplyAnimation *prev_animation = (SimplyAnimation*) list1_find(
+      self->stage_layer.animations, animation_element_filter, element);
+  if (prev_animation) {
+    animation_unschedule((Animation*) prev_animation->animation);
   }
 
   animation->stage = self;

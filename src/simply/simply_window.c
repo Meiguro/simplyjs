@@ -64,6 +64,11 @@ void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
 
 void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
   self->is_action_bar = is_action_bar;
+
+  if (!self->action_bar_layer) {
+    return;
+  }
+
   action_bar_layer_remove_from_window(self->action_bar_layer);
   if (is_action_bar) {
     action_bar_layer_add_to_window(self->action_bar_layer, self->window);
@@ -74,6 +79,10 @@ void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
 }
 
 void simply_window_set_action_bar_icon(SimplyWindow *self, ButtonId button, uint32_t id) {
+  if (!self->action_bar_layer) {
+    return;
+  }
+
   if (id) {
     GBitmap *icon = simply_res_auto_image(self->simply->res, id, true);
     action_bar_layer_set_icon(self->action_bar_layer, button, icon);
@@ -81,6 +90,14 @@ void simply_window_set_action_bar_icon(SimplyWindow *self, ButtonId button, uint
   } else {
     action_bar_layer_clear_icon(self->action_bar_layer, button);
   }
+}
+
+void simply_window_set_action_bar_background_color(SimplyWindow *self, GColor background_color) {
+  if (!self->action_bar_layer) {
+    return;
+  }
+
+  action_bar_layer_set_background_color(self->action_bar_layer, background_color);
 }
 
 void simply_window_action_bar_clear(SimplyWindow *self) {

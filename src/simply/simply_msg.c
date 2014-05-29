@@ -481,7 +481,7 @@ static void handle_animate_stage_element(DictionaryIterator *iter, Simply *simpl
     return;
   }
   GRect to_frame = element->frame;
-  SimplyAnimation *animation = malloc(sizeof(*animation));
+  SimplyAnimation *animation = malloc0(sizeof(*animation));
   if (!animation) {
     return;
   }

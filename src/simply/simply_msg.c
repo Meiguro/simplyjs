@@ -390,6 +390,8 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
   if (!element || element->type != type) {
     return;
   }
+  GRect frame = element->frame;
+  bool update_frame = false;
   bool update_ticker = false;
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {

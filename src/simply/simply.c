@@ -19,7 +19,7 @@ Simply *simply_init(void) {
   simply->menu = simply_menu_create(simply);
   simply->ui = simply_ui_create(simply);
 
-  bool animated = true;
+  bool animated = false;
   window_stack_push(simply->splash->window, animated);
 
   simply_msg_init(simply);

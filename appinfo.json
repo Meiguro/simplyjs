@@ -22,6 +22,10 @@
         "name": "IMAGE_LOGO_SPLASH",
         "file": "images/logo_splash.png"
       }, {
+        "type": "png",
+        "name": "IMAGE_TILE_SPLASH",
+        "file": "images/tile_splash.png"
+      }, {
         "type": "font",
         "name": "MONO_FONT_14",
         "file": "fonts/UbuntuMono-Regular.ttf"

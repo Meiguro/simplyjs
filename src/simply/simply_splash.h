@@ -9,8 +9,7 @@ typedef struct SimplySplash SimplySplash;
 struct SimplySplash {
   Simply *simply;
   Window *window;
-  BitmapLayer *logo_layer;
-  GBitmap *logo;
+  GBitmap *image;
 };
 
 SimplySplash *simply_splash_create(Simply *simply);

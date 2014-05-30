@@ -329,7 +329,7 @@ void simply_stage_show(SimplyStage *self) {
     return;
   }
   if (!window_stack_contains_window(self->window.window)) {
-    bool animated = true;
+    bool animated = !self->window.simply->splash;
     window_stack_push(self->window.window, animated);
   }
 }

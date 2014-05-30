@@ -94,10 +94,14 @@ safe.translateStack = function(stack) {
 };
 
 safe.translateError = function(err) {
+  var name = err.name;
   var message = err.message;
   var stack = err.stack;
   var result = ['JavaScript Error:'];
   if (message && (!stack || !stack.match(message))) {
+    if (name && !message.match(message)) {
+      message = name + ': ' + message;
+    }
     result.push(message);
   }
   if (stack) {

@@ -72,7 +72,7 @@ safe.translateStackAndroid = function(stack) {
       lines[i] = line;
     }
   }
-  return 'JavaScript Error:\n' + lines.join('\n');
+  return lines.join('\n');
 };
 
 /* Translates a stack trace to the originating files */
@@ -84,15 +84,23 @@ safe.translateStack = function(stack) {
   }
 };
 
+safe.translateError = function(err) {
+  var message = err.message;
+  var stack = err.stack;
+  var result = ['JavaScript Error:'];
+  if (message && (!stack || !stack.match(message))) {
+    result.push(message);
+  }
+  if (stack) {
+    result.push(safe.translateStack(stack));
+  }
+  return result.join('\n');
+};
+
 /* We use this function to dump error messages to the console. */
 safe.dumpError = function(err) {
   if (typeof err === 'object') {
-    if (err.stack) {
-      console.log(safe.translateStack(err.stack));
-    }
-    else if (err.message) {
-      console.log('JavaScript Error: ' + err.message);
-    }
+      console.log(safe.translateError(err));
   } else {
     console.log('dumpError :: argument is not an object');
   }

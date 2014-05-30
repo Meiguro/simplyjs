@@ -14,8 +14,10 @@ var safe = {};
 /* The name of the concatenated file to translate */
 safe.translateName = 'pebble-js-app.js';
 
-/* Translates a line of the stack trace to the originating file */
-safe.translateLine = function(line, scope, name, lineno, colno) {
+safe.indent = '    ';
+
+/* Translates a source line position to the originating file */
+safe.translatePos = function(name, lineno, colno) {
   if (name === safe.translateName) {
     var pkg = __loader.getPackageByLineno(lineno);
     if (pkg) {
@@ -23,11 +25,18 @@ safe.translateLine = function(line, scope, name, lineno, colno) {
       lineno -= pkg.lineno;
     }
   }
-  return (scope || '') + name + ':' + lineno + ':' + colno;
+  return name + ':' + lineno + ':' + colno;
+};
+
+
+/* Translates an iOS stack tace line to node style */
+safe.translateLineIOS = function(line, scope, name, lineno, colno) {
+  var pos = safe.translatePos(name, lineno, colno);
+  return safe.indent + 'at ' + (scope ? scope  + ' (' + pos + ')' : pos);
 };
 
 /* Matches (<scope> '@' )? <name> ':' <lineno> ':' <colno> */
-var stackLineRegExp = /([^\s@]+@)?([^\s@:]+):(\d+):(\d+)/;
+var stackLineRegExp = /(?:([^\s@]+)@)?([^\s@:]+):(\d+):(\d+)/;
 
 safe.translateStackIOS = function(stack) {
   var lines = stack.split('\n');
@@ -35,7 +44,7 @@ safe.translateStackIOS = function(stack) {
     var line = lines[i];
     var m = line.match(stackLineRegExp);
     if (m) {
-      line = lines[i] = safe.translateLine.apply(this, m);
+      line = lines[i] = safe.translateLineIOS.apply(this, m);
     }
     if (line.match(module.filename)) {
       lines.splice(--i, 2);
@@ -63,7 +72,7 @@ safe.translateStackAndroid = function(stack) {
       }
     }
     if (name) {
-      var pos = safe.translateLine(line, null, name, lineno, colno);
+      var pos = safe.translatePos(name, lineno, colno);
       if (line.match(/\(.*\)/)) {
         line = line.replace(/\(.*\)/, '(' + pos + ')');
       } else {

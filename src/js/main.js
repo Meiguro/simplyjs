@@ -6,7 +6,7 @@
  * By default, this will initialize all the libraries and run app.js
  */
 
-require('lib/safe');
+require('safe');
 
 //Pebble.Settings = require('settings/settings');
 Pebble.Accel = require('ui/accel');

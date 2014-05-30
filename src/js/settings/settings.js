@@ -1,4 +1,4 @@
-var util2 = require('lib/util2');
+var util2 = require('util2');
 
 var Settings = module.exports;
 

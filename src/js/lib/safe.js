@@ -7,7 +7,7 @@
 
 /* global __loader */
 
-var ajax = require('lib/ajax');
+var ajax = require('ajax');
 
 var safe = {};
 

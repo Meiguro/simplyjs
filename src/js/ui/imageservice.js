@@ -1,5 +1,5 @@
-var imagelib = require('lib/image');
-var myutil = require('lib/myutil');
+var myutil = require('myutil');
+var imagelib = require('image');
 var simply = require('ui/simply');
 var appinfo = require('appinfo');
 

@@ -114,7 +114,7 @@ window.icon('IMAGE_CHOOSE_A_UNIQUE_IDENTIFIER');
 You can use any of the Pebble system fonts in your Pebble.js applications. Please refer to [this Pebble Developer's blog post](https://developer.getpebble.com/blog/2013/07/24/Using-Pebble-System-Fonts/) for a list of all the Pebble system fonts.
 
 ````js
-var Vector2 = require('lib/vector2');
+var Vector2 = require('vector2');
 var stage = new UI.Stage();
 
 var text = new UI.Text({ size: Vector2(144, 168), position: Vector2(0, 0), font: 'GOTHIC_18_BOLD', text: "Gothic 18 Bold" });
@@ -440,7 +440,7 @@ They all share some common properties:
 All properties can be initialized by passing an object when creating the Element, and changed with accessors functions who have the name of the properties. Calling an accessor without a parameter will return the current value.
 
 ````js
-var Vector2 = require('lib/vector2');
+var Vector2 = require('vector2');
 var element = new Text({ position: new Vector2(0, 0), size: new Vector2(144, 168) });
 element.borderColor('white');
 console.log("This element background color is: ", element.backgroundColor());
@@ -589,16 +589,16 @@ Vibe.vibrate('long');
 | ---- |:----:|:--------:|---------|-------------|
 | `type` | string | optional | `short` | The duration of the vibration. `short`, `long` or `double`. |
 
-## lib
+## Libraries
 
-The lib module contains some useful classes.
+Pebble.js includes several libraries to help you write applications.
 
 ### ajax
 
 This module gives you a very simple and easy way to make HTTP requests.
 
 ````
-var ajax = require('lib/ajax');
+var ajax = require('ajax');
 
 ajax({
     url: 'api.theysaidso.com/qod.json',
@@ -636,7 +636,7 @@ The `failure` callback is called when an error occurred. The only parameter is a
 A 2 dimensional vector. The constructor takes two parameter for the x and y properties.
 
 ````js
-var Vector2 = require('lib/vector2');
+var Vector2 = require('vector2');
 
 var vec = new Vector2(144, 168);
 ````

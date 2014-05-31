@@ -55,16 +55,13 @@ safe.translateStackIOS = function(stack) {
 
 safe.translateStackAndroid = function(stack) {
   var lines = stack.split('\n');
-  for (var i = lines.length - 1; i >= 0; --i) {
+  for (var i = lines.length - 1; i > 0; --i) {
     var line = lines[i];
-    var m = line.match(/\?params=(.*):(\d+):(\d+)/);
     var name, lineno, colno;
-    if (m) {
-      name = JSON.parse(decodeURIComponent(m[1])).loadUrl.replace(/^.*\//, '');
-      lineno = m[2];
-      colno = m[3];
+    if (line.match(/jskit_startup\.html/)) {
+      lines.splice(i, 1);
     } else {
-      m = line.match(/^.*\/(.*?):(\d+):(\d+)/);
+      var m = line.match(/^.*\/(.*?):(\d+):(\d+)/);
       if (m) {
         name = m[1];
         lineno = m[2];
@@ -73,6 +70,7 @@ safe.translateStackAndroid = function(stack) {
     }
     if (name) {
       var pos = safe.translatePos(name, lineno, colno);
+      console.log(pos, name, lineno, colno);
       if (line.match(/\(.*\)/)) {
         line = line.replace(/\(.*\)/, '(' + pos + ')');
       } else {

@@ -1,5 +1,5 @@
-var util2 = require('lib/util2');
-var Emitter = require('lib/emitter');
+var util2 = require('util2');
+var Emitter = require('emitter');
 var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
 var simply = require('ui/simply');

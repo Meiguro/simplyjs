@@ -1,6 +1,6 @@
-var util2 = require('lib/util2');
-var myutil = require('lib/myutil');
-var Emitter = require('lib/emitter');
+var util2 = require('util2');
+var myutil = require('myutil');
+var Emitter = require('emitter');
 var WindowStack = require('ui/windowstack');
 var Propable = require('ui/propable');
 var Window = require('ui/window');
@@ -38,7 +38,7 @@ var textProps = [
 var imageProps = [
   'icon',
   'subicon',
-  'banner',
+  'image',
 ];
 
 var actionProps = [

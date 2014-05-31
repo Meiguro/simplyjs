@@ -1,4 +1,4 @@
-var myutil = require('lib/myutil');
+var myutil = require('myutil');
 var package = require('smartpackage/package');
 var simply = require('simply/simply');
 

@@ -6,21 +6,21 @@ tests.setTimeoutErrors = function () {
   var i = 0;
   var interval = setInterval(function() {
     clearInterval(interval);
-    wind.titlex("i = " + i++);
+    wind.titlex('i = ' + i++);
   }, 1000);
 };
 
 tests.ajaxErrors = function() {
-  var ajax = require('lib/ajax');
+  var ajax = require('ajax');
   var ajaxCallback = function(reqStatus, reqBody, request) {
     console.logx('broken call');
   };
-  ajax({url: 'http://www.google.fr/' }, ajaxCallback, ajaxCallback);
+  ajax({ url: 'http://www.google.fr/' }, ajaxCallback, ajaxCallback);
 };
 
 tests.geolocationErrors = function () {
   navigator.geolocation.getCurrentPosition(function(coords) {
-    console.logx("Got coords: " + coords);
+    console.logx('Got coords: ' + coords);
   });
 };
 

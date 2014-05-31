@@ -20,7 +20,7 @@ enum SimplyACmd {
   SimplyACmd_windowShow,
   SimplyACmd_windowHide,
   SimplyACmd_setUi,
-  SimplyACmd_singleClick,
+  SimplyACmd_click,
   SimplyACmd_longClick,
   SimplyACmd_accelTap,
   SimplyACmd_vibe,
@@ -615,7 +615,7 @@ static bool send_click(SimplyACmd type, ButtonId button) {
 }
 
 bool simply_msg_single_click(ButtonId button) {
-  return send_click(SimplyACmd_singleClick, button);
+  return send_click(SimplyACmd_click, button);
 }
 
 bool simply_msg_long_click(ButtonId button) {

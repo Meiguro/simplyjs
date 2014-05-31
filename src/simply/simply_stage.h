@@ -75,11 +75,10 @@ struct SimplyElementText {
   };
   char *text;
   GFont font;
-  TimeUnits time_units:8;
+  TimeUnits time_unit:8;
   GColor text_color:2;
   GTextOverflowMode overflow_mode:2;
   GTextAlignment alignment:2;
-  bool is_time:1;
 };
 
 typedef struct SimplyElementImage SimplyElementImage;

@@ -9,8 +9,7 @@ var textProps = [
   'color',
   'textOverflow',
   'textAlign',
-  'time',
-  'timeUnits',
+  'updateTimeUnit',
 ];
 
 var defaults = {

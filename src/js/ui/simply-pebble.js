@@ -1,5 +1,6 @@
 var util2 = require('lib/util2');
 var myutil = require('lib/myutil');
+var Resource = require('ui/resource');
 var Accel = require('ui/accel');
 var ImageService = require('ui/imageservice');
 var WindowStack = require('ui/windowstack');
@@ -33,6 +34,10 @@ var Color = function(x) {
 };
 
 var Font = function(x) {
+  var id = Resource.getId(x);
+  if (id) {
+    return id;
+  }
   x = myutil.toCConstantName(x);
   if (!x.match(/^RESOURCE_ID/)) {
     x = 'RESOURCE_ID_' + x;

@@ -1,21 +1,16 @@
 var imagelib = require('lib/image');
 var myutil = require('lib/myutil');
+var Resource = require('ui/resource');
 var simply = require('ui/simply');
-var appinfo = require('appinfo');
 
 var ImageService = module.exports;
-
-var resources = (function() {
-  var resources = appinfo.resources;
-  return resources && resources.media || [];
-})();
 
 var state;
 
 ImageService.init = function() {
   state = Image.state = {
     cache: {},
-    nextId: resources.length,
+    nextId: Resource.items.length + 1,
     rootURL: null
   };
 };
@@ -110,17 +105,6 @@ ImageService.setRootURL = function(url) {
  * otherwise a new id is generated for dynamic loading.
  */
 ImageService.resolve = function(opt) {
-  var path = opt;
-  if (typeof opt === 'object') {
-    path = opt.url;
-  }
-  path = path.replace(/#.*/, '');
-  var cname = myutil.toCConstantName(path);
-  for (var i = 0, ii = resources.length; i < ii; ++i) {
-    var res = resources[i];
-    if (res.name === cname || res.file === path) {
-      return i + 1;
-    }
-  }
-  return ImageService.load(opt);
+  var id = Resource.getId(opt);
+  return typeof id !== 'undefined' ? id : ImageService.load(opt);
 };

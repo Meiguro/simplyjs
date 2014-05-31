@@ -8,5 +8,6 @@ UI.Rect = require('ui/rect');
 UI.Circle = require('ui/circle');
 UI.Text = require('ui/text');
 UI.Image = require('ui/image');
+UI.Inverter = require('ui/inverter');
 
 module.exports= UI;

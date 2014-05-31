@@ -1,5 +1,5 @@
-var util2 = require('lib/util2');
-var myutil = require('lib/myutil');
+var util2 = require('util2');
+var myutil = require('myutil');
 var Resource = require('ui/resource');
 var Accel = require('ui/accel');
 var ImageService = require('ui/imageservice');

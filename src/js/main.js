@@ -6,7 +6,7 @@
  * By default, this will run app.js
  */
 
-require('lib/safe');
+require('safe');
 
 Pebble.addEventListener('ready', function(e) {
   // Load local file

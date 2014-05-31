@@ -1,6 +1,6 @@
 var UI = {};
 
-UI.Vector2 = require('lib/vector2');
+UI.Vector2 = require('vector2');
 UI.Card = require('ui/card');
 UI.Menu = require('ui/menu');
 UI.Stage = require('ui/stage');

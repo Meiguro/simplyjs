@@ -1,4 +1,4 @@
-var Emitter = require('lib/emitter');
+var Emitter = require('emitter');
 
 var Accel = new Emitter();
 

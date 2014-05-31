@@ -146,8 +146,7 @@ var setCardParams = setWindowParams.concat([{
   name: 'banner',
   type: Image,
 }, {
-  name: 'style',
-  type: Boolean,
+  name: 'style'
 }]);
 
 var setMenuParams = setWindowParams.concat([{

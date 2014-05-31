@@ -8,6 +8,11 @@
  * @author zz85 / http://www.lab4games.net/zz85/blog
  */
 
+/**
+ * Create a new vector with given dimensions.
+ * @param x
+ * @param y
+ */
 var Vector2 = function ( x, y ) {
 
   this.x = x || 0;

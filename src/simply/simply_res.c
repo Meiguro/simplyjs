@@ -5,13 +5,19 @@
 #include <pebble.h>
 
 static bool id_filter(List1Node *node, void *data) {
-  return (((SimplyImage*) node)->id == (uint32_t)(uintptr_t) data);
+  return (((SimplyResItemCommon*) node)->id == (uint32_t)(uintptr_t) data);
 }
 
 static void destroy_image(SimplyRes *self, SimplyImage *image) {
   list1_remove(&self->images, &image->node);
   free(image->bitmap.addr);
   free(image);
+}
+
+static void destroy_font(SimplyRes *self, SimplyFont *font) {
+  list1_remove(&self->fonts, &font->node);
+  fonts_unload_custom_font(font->font);
+  free(font);
 }
 
 GBitmap *simply_res_add_bundled_image(SimplyRes *self, uint32_t id) {
@@ -91,10 +97,47 @@ GBitmap *simply_res_auto_image(SimplyRes *self, uint32_t id, bool is_placeholder
   return NULL;
 }
 
+GFont *simply_res_auto_font(SimplyRes *self, uint32_t id) {
+  if (!id) {
+    return NULL;
+  }
+  SimplyFont *font = (SimplyFont*) list1_find(self->fonts, id_filter, (void*)(uintptr_t) id);
+  if (font) {
+    return &font->font;
+  }
+  if (id <= ARRAY_LENGTH(resource_crc_table)) {
+    return simply_res_add_custom_font(self, id);
+  }
+  return NULL;
+}
+
 void simply_res_clear(SimplyRes *self) {
   while (self->images) {
     destroy_image(self, (SimplyImage*) self->images);
   }
+
+  while (self->fonts) {
+    destroy_font(self, (SimplyFont*) self->fonts);
+  }
+}
+
+GFont simply_res_add_custom_font(SimplyRes *self, uint32_t id) {
+  SimplyFont *font = malloc(sizeof(*font));
+  if (!font) {
+    return NULL;
+  }
+
+  GFont custom_font = fonts_load_custom_font(resource_get_handle(id));
+  if (!custom_font) {
+    free(font);
+    return NULL;
+  }
+
+  list1_prepend(&self->fonts, &font->node);
+
+  window_stack_schedule_top_window_render();
+
+  return &font->font;
 }
 
 SimplyRes *simply_res_create() {

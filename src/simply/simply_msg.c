@@ -67,7 +67,7 @@ enum SimplySetUiParam {
   SetUi_body,
   SetUi_icon,
   SetUi_subicon,
-  SetUi_banner,
+  SetUi_image,
   SetUi_style,
 };
 
@@ -205,7 +205,7 @@ static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
         break;
       case SetUi_icon:
       case SetUi_subicon:
-      case SetUi_banner:
+      case SetUi_image:
         ui->ui_layer.imagefields[tuple->key - SetUi_icon] = tuple->value->uint32;
         break;
       case SetUi_style:
@@ -430,7 +430,11 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
         strset(&((SimplyElementText*) element)->text, tuple->value->cstring);
         break;
       case ElementTextFont:
-        ((SimplyElementText*) element)->font = fonts_get_system_font(tuple->value->cstring);
+        if (tuple->type == TUPLE_CSTRING) {
+          ((SimplyElementText*) element)->font = fonts_get_system_font(tuple->value->cstring);
+        } else {
+          ((SimplyElementText*) element)->font = simply_res_get_font(simply->res, tuple->value->uint32);
+        }
         break;
       case ElementTextColor:
         ((SimplyElementText*) element)->text_color = tuple->value->uint8;

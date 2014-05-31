@@ -174,7 +174,7 @@ var commands = [{
   name: 'setCard',
   params: setCardParams,
 }, {
-  name: 'singleClick',
+  name: 'click',
   params: [{
     name: 'button',
   }],
@@ -702,7 +702,7 @@ SimplyPebble.onAppMessage = function(e) {
     case 'windowHide':
       WindowStack.emitHide(payload[1]);
       break;
-    case 'singleClick':
+    case 'click':
     case 'longClick':
       var button = buttons[payload[1]];
       Window.emitClick(command.name, button);

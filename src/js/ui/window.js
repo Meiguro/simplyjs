@@ -149,7 +149,7 @@ Window.prototype.action = function(field, value, clear) {
 };
 
 var isBackEvent = function(type, subtype) {
-  return ((type === 'singleClick' || type === 'longClick') && subtype === 'back');
+  return ((type === 'click' || type === 'longClick') && subtype === 'back');
 };
 
 Window.prototype.onAddHandler = function(type, subtype) {
@@ -228,7 +228,7 @@ Window.prototype._buttonAutoConfig = function() {
   if (!buttonState || buttonState.configMode !== 'auto') {
     return;
   }
-  var singleBackCount = this.listenerCount('singleClick', 'back');
+  var singleBackCount = this.listenerCount('click', 'back');
   var longBackCount = this.listenerCount('longClick', 'back');
   var useBack = singleBackCount + longBackCount > 0;
   if (useBack !== buttonState.config.back) {
@@ -249,7 +249,7 @@ Window.emit = function(type, subtype, e, klass) {
 
 /**
  * Simply.js button click event. This can either be a single click or long click.
- * Use the event type 'singleClick' or 'longClick' to subscribe to these events.
+ * Use the event type 'click' or 'longClick' to subscribe to these events.
  * @typedef simply.clickEvent
  * @property {string} button - The button that was pressed: 'back', 'up', 'select', or 'down'. This is also the event subtype.
  */

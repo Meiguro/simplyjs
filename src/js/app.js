@@ -9,7 +9,7 @@ var wind = new Pebble.UI.Card({
 });
 wind.show();
 
-wind.on('singleClick', function(e) {
+wind.on('click', function(e) {
   console.log("Button pressed: " + JSON.stringify(e));
   if (e.button == 'up') {
     var menu = new Pebble.UI.Menu();

@@ -112,8 +112,7 @@ enum ElementParam {
   ElementTextColor,
   ElementTextOverflow,
   ElementTextAlignment,
-  ElementTextIsTime,
-  ElementTextTimeUnits,
+  ElementTextUpdateTimeUnit,
   ElementImage,
   ElementCompositing,
 };
@@ -442,12 +441,8 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
       case ElementTextAlignment:
         ((SimplyElementText*) element)->alignment = tuple->value->uint8;
         break;
-      case ElementTextIsTime:
-        ((SimplyElementText*) element)->is_time = tuple->value->uint8;
-        update_ticker = true;
-        break;
-      case ElementTextTimeUnits:
-        ((SimplyElementText*) element)->time_units = tuple->value->uint8;
+      case ElementTextUpdateTimeUnit:
+        ((SimplyElementText*) element)->time_unit = tuple->value->uint8;
         update_ticker = true;
         break;
       case ElementImage:

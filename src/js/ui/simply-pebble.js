@@ -143,7 +143,7 @@ var setCardParams = setWindowParams.concat([{
   name: 'subicon',
   type: Image,
 }, {
-  name: 'banner',
+  name: 'image',
   type: Image,
 }, {
   name: 'style',

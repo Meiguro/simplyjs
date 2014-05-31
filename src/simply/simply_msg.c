@@ -67,7 +67,7 @@ enum SimplySetUiParam {
   SetUi_body,
   SetUi_icon,
   SetUi_subicon,
-  SetUi_banner,
+  SetUi_image,
   SetUi_style,
 };
 
@@ -206,7 +206,7 @@ static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
         break;
       case SetUi_icon:
       case SetUi_subicon:
-      case SetUi_banner:
+      case SetUi_image:
         ui->ui_layer.imagefields[tuple->key - SetUi_icon] = tuple->value->uint32;
         break;
       case SetUi_style:

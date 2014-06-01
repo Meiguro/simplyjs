@@ -32,6 +32,7 @@ var configProps = [
   'fullscreen',
   'style',
   'scrollable',
+  'backgroundColor',
 ];
 
 var actionProps = [

@@ -62,6 +62,10 @@ void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
   self->id = id;
 }
 
+void simply_window_set_background_color(SimplyWindow *self, GColor background_color) {
+  self->background_color = background_color;
+}
+
 void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
   self->is_action_bar = is_action_bar;
 
@@ -204,7 +208,7 @@ SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply) {
   }
 
   Window *window = self->window = window_create();
-  window_set_background_color(window, GColorBlack);
+  window_set_background_color(window, GColorClear);
   window_set_click_config_provider(window, click_config_provider);
 
   ActionBarLayer *action_bar_layer = self->action_bar_layer = action_bar_layer_create();

@@ -13,7 +13,8 @@ struct SimplyWindow {
   Layer *layer;
   ActionBarLayer *action_bar_layer;
   uint32_t id;
-  uint32_t button_mask;
+  ButtonId button_mask:4;
+  GColor background_color:2;
   bool is_scrollable:1;
   bool is_action_bar:1;
 };
@@ -28,6 +29,7 @@ void simply_window_unload(SimplyWindow *self);
 
 void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable);
 void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen);
+void simply_window_set_background_color(SimplyWindow *self, GColor background_color);
 
 void simply_window_set_button(SimplyWindow *self, ButtonId button, bool enable);
 

@@ -125,6 +125,9 @@ var setWindowParams = [{
   name: 'actionBackgroundColor',
   type: Color,
 }, {
+  name: 'backgroundColor',
+  type: Color,
+}, {
   name: 'fullscreen',
   type: Boolean,
 }, {

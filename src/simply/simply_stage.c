@@ -1,7 +1,7 @@
 #include "simply_stage.h"
 
+#include "simply_window.h"
 #include "simply_res.h"
-
 #include "simply_msg.h"
 
 #include "simply.h"
@@ -123,6 +123,9 @@ static void image_element_draw(GContext *ctx, SimplyStage *self, SimplyElementIm
 
 static void layer_update_callback(Layer *layer, GContext *ctx) {
   SimplyStage *self = *(void**) layer_get_data(layer);
+
+  graphics_context_set_fill_color(ctx, self->window.background_color);
+  graphics_fill_rect(ctx, layer_get_frame(layer), 0, GCornerNone);
 
   SimplyElementCommon *element = (SimplyElementCommon*) self->stage_layer.elements;
   while (element) {
@@ -370,6 +373,7 @@ SimplyStage *simply_stage_create(Simply *simply) {
   *self = (SimplyStage) { .window.simply = simply };
 
   simply_window_init(&self->window, simply);
+  simply_window_set_background_color(&self->window, GColorBlack);
 
   window_set_user_data(self->window.window, self);
   window_set_window_handlers(self->window.window, (WindowHandlers) {

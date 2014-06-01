@@ -35,25 +35,25 @@ var UI = require('ui');
 The basic block to build user interface is the [Card]. A Card is a type of [Window] that occupies the entire screen and allows you to display some text in a pre-structured way: a title at the top, a subtitle below it and a body area for larger paragraphs. Cards can be made scrollable to display large quantities of information. You can also add images next to the title, subtitle or in the body area.
 
 ````js
-var window = new UI.Card({
+var card = new UI.Card({
   title: 'Hello World',
   body: 'This is your first Pebble app!',
   scrollable: true
 });
 ````
 
-After creating a window, push it onto the screen with the `show()` method.
+After creating a card window, push it onto the screen with the `show()` method.
 
 ````js
-window.show();
+card.show();
 ````
 
 To interact with the users, use the buttons or the accelerometer. Add callbacks to a window with the `.on()` method:
 
 ````js
-window.on('click', function(e) {
-  window.subtitle('Button ' + e.button + ' pressed.');
-}
+card.on('click', function(e) {
+  card.subtitle('Button ' + e.button + ' pressed.');
+});
 ````
 
 Making HTTP connections is very easy with the included `ajax` library.
@@ -115,8 +115,8 @@ You can use any of the Pebble system fonts in your Pebble.js applications. Pleas
 
 ````js
 var Vector2 = require('vector2');
-var stage = new UI.Stage();
 
+var stage = new UI.Stage();
 var textfield = new UI.Text({
  position: Vector2(0, 0),
  size: Vector2(144, 168),
@@ -206,27 +206,35 @@ The number of callbacks will depend on the configuration of the accelerometer. W
 Peeks at the current accelerometer value. The callback function will be called with the data point as an event.
 
 ````js
-Accel.peek(function(data)) {
-  console.log('Current acceleration on axis are: X=' + data.x + ' Y=' + data.y + ' Z=' + data.z);
+Accel.peek(function(e)) {
+  console.log('Current acceleration on axis are: X=' + e.accel.x + ' Y=' + e.accel.y + ' Z=' + e.accel.z);
 });
 ````
 
 #### Accel.on('tap', callback)
 
-Subscribe to the `tap` event. The callback function will be passed an event with the following fields:
+Subscribe to the `Accel` `tap` event. The callback function will be passed an event with the following fields:
 
  * `axis`: The axis the tap event occurred on: 'x', 'y', or 'z'.
  * `direction`: The direction of the tap along the axis: 1 or -1.
 
 ````js
-Accel.on('tap', function (e) {
+Accel.on('tap', function(e) {
   console.log('Tap event on axis: ' + e.axis + ' and direction: ' + e.direction);
 });
 ````
 
-#### Accel.on('accelData', callback)
+A [Window] may subscribe to the `Accel` `tap` event using the `accelTap` event type. The callback function will only be called when the window is visible.
 
-Subscribe to the 'accelData' event. The callback function will be passed an event with the following fields:
+````js
+wind.on('accelTap', function(e) {
+ console.log('Tapped the window');
+});
+````
+
+#### Accel.on('data', callback)
+
+Subscribe to the accel 'data' event. The callback function will be passed an event with the following fields:
 
  * `samples`: The number of accelerometer samples in this event.
  * `accel`: The first data point in the batch. This is provided for convenience.
@@ -243,8 +251,16 @@ One accelerometer data point is an object with the following properties:
 | `time`   | Number  | The amount of ticks in millisecond resolution when this point was measured.                                                                                               |
 
 ````js
-Accel.on('accelData', function(e) {
+Accel.on('data', function(e) {
   console.log('Just received ' + e.samples + ' from the accelerometer.');
+});
+````
+
+A [Window] may also subscribe to the `Accel` `data` event using the `accelData` event type. The callback function will only be called when the window is visible.
+
+````js
+wind.on('accelData', function(e) {
+ console.log('Accel data: ' + JSON.stringify(e.accels));
 });
 ````
 

@@ -287,6 +287,7 @@ SimplyUi *simply_ui_create(Simply *simply) {
   *self = (SimplyUi) { .window.layer = NULL };
 
   simply_window_init(&self->window, simply);
+  simply_window_set_background_color(&self->window, GColorWhite);
 
   window_set_user_data(self->window.window, self);
   window_set_window_handlers(self->window.window, (WindowHandlers) {

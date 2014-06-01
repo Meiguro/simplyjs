@@ -277,12 +277,31 @@ Pebble.js provides three types of Windows:
 | Name           | Type      | Default   | Description                                                                                     |
 | ----           | :-------: | --------- | -------------                                                                                   |
 | `clear`        | boolean   |           |                                                                                                 |
-| `action`       | boolean   | false     | When true, an action bar will be shown on the right side of the screen.                         |
-| `actionUp`     | Image     | None      | An image to display in the action bar, next to the up button.                                   |
-| `actionSelect` | Image     | None      | An image to display in the action bar, next to the select button.                               |
-| `actionDown`   | Image     | None      | An image to display in the action bar, next to the down button.                                 |
+| `action`       | actionDef | None      | An action bar will be shown when configured with an `actionDef`.                                  |
 | `fullscreen`   | boolean   | false     | When true, the Pebble status bar will not be visible and the window will use the entire screen. |
 | `scrollable`   | boolean   | false     | When true, the up and down button will scroll the content of this Card.                         |
+
+#### actionDef
+
+A `Window` action bar can be displayed by setting its `action` property to an `actionDef`.
+
+| Name              | Type      | Default   | Description                                                                                     |
+| ----              | :-------: | --------- | -------------                                                                                   |
+| `up`              | Image     | None      | An image to display in the action bar, next to the up button.                                          |
+| `select`          | Image     | None      | An image to display in the action bar, next to the select button.                                      |
+| `down`            | Image     | None      | An image to display in the action bar, next to the down button.                                        |
+| `backgroundColor` | Image     | 'black'   | The background color of the action bar. You can set this to 'white' for windows with black backgrounds |
+
+````js
+var card = new UI.Card({
+  action: {
+    up: 'images/action_icon_plus.png',
+    down: 'images/action_icon_minus.png'
+  }
+});
+````
+
+You will need to add images to your project following the [Using Images] guide to display action bar icons.
 
 #### Window.show()
 
@@ -328,21 +347,24 @@ You can register a handler for the 'up', 'select', 'down', and 'back' buttons.
 
 Just like `Window.on('click', button, handler)` but for 'longClick' events.
 
-#### Window.action()
+#### Window.action(actionDef)
 
-Accessor to the `action` property. See [Window].
+This is a special nested accessor to the `action` property which takes an `actionDef`. It can be used to set a new actionDef. See [Window] for details on `actionDef.
 
-#### Window.actionUp()
+````js
+card.action({
+  up: 'images/action_icon_up.png',
+  down: 'images/action_icon_down.png'
+});
+````
 
-Accessor to the `actionUp` property. See [Window].
+#### Window.action(field, value)
 
-#### Window.actionSelect()
+You may also call `Window.action` with two arguments to set specific fields of the window's `action` propery.
 
-Accessor to the `actionSelect` property. See [Window].
-
-#### Window.actionDown()
-
-Accessor to the `actionDown` property. See [Window].
+````js
+card.action('up', 'images/action_icon_plus.png');
+````
 
 #### Window.fullscreen(fullscreen)
 

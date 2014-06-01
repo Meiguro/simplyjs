@@ -3,7 +3,7 @@ Pebble.js
 
 Pebble.js lets you write beautiful Pebble applications completely in JavaScript.
 
-Pebble.js applications run on your phone. They have access to all the resources of your phone (Internet connectivity, GPS, almost unlimited memory, etc). Because they are written in JavaScript they are also perfect to make HTTP request and connect your Pebble to the Internet.
+Pebble.js applications run on your phone. They have access to all the resources of your phone (Internet connectivity, GPS, almost unlimited memory, etc). Because they are written in JavaScript they are also perfect to make HTTP requests and connect your Pebble to the Internet.
 
 > ![JSConf 2014](http://2014.jsconf.us/img/logo.png)
 >
@@ -21,7 +21,7 @@ Pebble.js applications run on your phone. They have access to all the resources 
 
    This option allows you to customize Pebble.js. Follow the [Pebble SDK installation instructions](http://developer.getpebble.com/2/getting-started/) to install the SDK on your computer and [fork this project](http://github.com/pebble/pebblejs) on Github. 
    
-   The main entry point for your application is in `src/js/app.js` file.
+   The main entry point for your application is in the `src/js/app.js` file.
 
    [Install the Pebble SDK on your computer >](http://developer.getpebble.com/2/getting-started/)
 
@@ -32,7 +32,7 @@ Pebble.js applications follow modern JavaScript best practices. To get started, 
 var UI = require('ui');
 ````
 
-The basic block to build user interface is the [Card]. A Card is a type of [Window] that occupies the entire screen and allows you to display some text in a pre-structured way: a title at the top, a subtitle below it and a body area for larger paragraphs. Cards can be made scrollable to display large quantities of information, you can also add images next to the title, subtitle or in the body area.
+The basic block to build user interface is the [Card]. A Card is a type of [Window] that occupies the entire screen and allows you to display some text in a pre-structured way: a title at the top, a subtitle below it and a body area for larger paragraphs. Cards can be made scrollable to display large quantities of information. You can also add images next to the title, subtitle or in the body area.
 
 ````js
 var window = new UI.Card({
@@ -42,13 +42,13 @@ var window = new UI.Card({
 });
 ````
 
-After creating a window, you push it on the screen with the `show()` method.
+After creating a window, push it onto the screen with the `show()` method.
 
 ````js
 window.show();
 ````
 
-To interact with the users, you can use the buttons or the accelerometer. You add callbacks to a window with the `.on()` method:
+To interact with the users, use the buttons or the accelerometer. Add callbacks to a window with the `.on()` method:
 
 ````js
 window.on('click', function(e) {
@@ -56,7 +56,7 @@ window.on('click', function(e) {
 }
 ````
 
-Making HTTP connection is very easy with the included `ajax` library.
+Making HTTP connections is very easy with the included `ajax` library.
 
 ````js
 var ajax = require('ajax');
@@ -168,7 +168,7 @@ The `Accel` module allows you to get events from the accelerometer on Pebble.
 You can use the accelerometer in two different ways:
 
  - To detect tap events. Those events are triggered when the user flicks his wrist or tap on the Pebble. They are the same events that are used to turn the Pebble back-light on. Tap events come with a property to tell you in which direction the Pebble was shook. Tap events are very battery efficient because they are generated directly by the accelerometer inside Pebble.
- - To continuously receive streaming data from the accelerometer. In this mode the Pebble will collect accelerometer samples at a specified frequency (from 10Hz to 100Hz), batch those events in an array and pass those to an event handler. In this mode, the Pebble accelerometer needs to continuously transmit data to the processor and to the Bluetooth radio. This will drain the battery much faster.
+ - To continuously receive streaming data from the accelerometer. In this mode the Pebble will collect accelerometer samples at a specified frequency (from 10Hz to 100Hz), batch those events in an array and pass those to an event handler. Because the Pebble accelerometer needs to continuously transmit data to the processor and to the Bluetooth radio, this will drain the battery much faster.
 
 ````js
 var Accel = require('ui/accel');
@@ -198,7 +198,7 @@ The number of callbacks will depend on the configuration of the accelerometer. W
 
 #### Accel.peek(callback)
 
-Peeks at the current accelerometer value. You pass a callback function that will be called with the data point as an event.
+Peeks at the current accelerometer value. The callback function will be called with the data point as an event.
 
 ````js
 Accel.peek(function(data)) {
@@ -245,20 +245,20 @@ Accel.on('accelData', function(numSamples, sample, samples) {
 
 ### Window
 
-`Window` is the basic building block in your Pebble.js application. All window share some common properties and methods.
+`Window` is the basic building block in your Pebble.js application. All windows share some common properties and methods.
 
 Pebble.js provides three types of Windows:
 
- * [Card]: Displays a title, a subtitle, an image and some text on a screen. The position of the elements are fixed and cannot be changed.
+ * [Card]: Displays a title, a subtitle, a banner image and text on a screen. The position of the elements are fixed and cannot be changed.
  * [Menu]: Displays a menu on the Pebble screen. This is similar to the standard system menu in Pebble.
- * [Stage]: This is the most flexible Window. It allows you to add different [Element] ([Circle], [Image], [Rect], [Text]) and to specify a position and size for each of them. You can also animate them.
+ * [Stage]: This is the most flexible Window. It allows you to add different [Element]s ([Circle], [Image], [Rect], [Text]) and to specify a position and size for each of them. You can also animate them.
 
 | Name           | Type      | Default   | Description                                                                                     |
 | ----           | :-------: | --------- | -------------                                                                                   |
 | `clear`        | boolean   |           |                                                                                                 |
 | `action`       | boolean   | false     | When true, an action bar will be shown on the right side of the screen.                         |
 | `actionUp`     | Image     | None      | An image to display in the action bar, next to the up button.                                   |
-| `actionSelect` | Image     | None      | An image to display in the action bar, next to the select button.
+| `actionSelect` | Image     | None      | An image to display in the action bar, next to the select button.                               |
 | `actionDown`   | Image     | None      | An image to display in the action bar, next to the down button.                                 |
 | `fullscreen`   | boolean   | false     | When true, the Pebble status bar will not be visible and the window will use the entire screen. |
 | `scrollable`   | boolean   | false     | When true, the up and down button will scroll the content of this Card.                         |

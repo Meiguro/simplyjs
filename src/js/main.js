@@ -9,6 +9,8 @@
 require('safe');
 
 Pebble.addEventListener('ready', function(e) {
+  // Initialize the Pebble protocol
+  require('ui/simply-pebble.js').init();
   // Load local file
   require('app.js');
 });

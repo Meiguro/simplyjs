@@ -52,7 +52,7 @@ To interact with the users, use the buttons or the accelerometer. Add callbacks 
 
 ````js
 window.on('click', function(e) {
-  window.subtitle("Button " + e.button + " pressed.");
+  window.subtitle('Button ' + e.button + ' pressed.');
 }
 ````
 
@@ -105,8 +105,8 @@ To reference your image in Pebble.js, you can use the `name` field or the `file`
 
 ````js
 // These two examples are both valid ways to show the image declared above in a Card
-window.icon('images/your_image.png');
-window.icon('IMAGE_CHOOSE_A_UNIQUE_IDENTIFIER');
+card.icon('images/your_image.png');
+card.icon('IMAGE_CHOOSE_A_UNIQUE_IDENTIFIER');
 ````
 
 ## Using Fonts
@@ -117,8 +117,13 @@ You can use any of the Pebble system fonts in your Pebble.js applications. Pleas
 var Vector2 = require('vector2');
 var stage = new UI.Stage();
 
-var text = new UI.Text({ size: Vector2(144, 168), position: Vector2(0, 0), font: 'GOTHIC_18_BOLD', text: "Gothic 18 Bold" });
-stage.add(text);
+var textfield = new UI.Text({
+ position: Vector2(0, 0),
+ size: Vector2(144, 168),
+ font: 'GOTHIC_18_BOLD',
+ text: 'Gothic 18 Bold'
+});
+stage.add(textfield);
 stage.show();
 ````
 
@@ -206,26 +211,26 @@ Accel.peek(function(data)) {
 });
 ````
 
-#### Accel.on('accelTap', callback)
+#### Accel.on('tap', callback)
 
-Subscribe to the `accelTap` event. The callback function will be called with two parameters:
+Subscribe to the `tap` event. The callback function will be passed an event with the following fields:
 
  * `axis`: The axis the tap event occurred on: 'x', 'y', or 'z'.
  * `direction`: The direction of the tap along the axis: 1 or -1.
 
 ````js
-Accel.on('accelTap', function (axis, direction) {
-  console.log("Tap event on axis: " + axis + " and direction: " + direction);
-}
+Accel.on('tap', function (e) {
+  console.log('Tap event on axis: ' + e.axis + ' and direction: ' + e.direction);
+});
 ````
 
 #### Accel.on('accelData', callback)
 
-Subscribe to the 'accelData' event. The callback function will be called with three parameters:
+Subscribe to the 'accelData' event. The callback function will be passed an event with the following fields:
 
- * `numSamples`: The number of accelerometer samples in this event.
- * `sample`: The first data point in the batch. This is provided for convenience.
- * `samples`: The accelerometer samples in an array.
+ * `samples`: The number of accelerometer samples in this event.
+ * `accel`: The first data point in the batch. This is provided for convenience.
+ * `accels`: The accelerometer samples in an array.
 
 One accelerometer data point is an object with the following properties:
 
@@ -238,9 +243,9 @@ One accelerometer data point is an object with the following properties:
 | `time`   | Number  | The amount of ticks in millisecond resolution when this point was measured.                                                                                               |
 
 ````js
-Accel.on('accelData', function(numSamples, sample, samples) {
-  console.log("Just received " + numSamples + " from the accelerometer.");
-}
+Accel.on('accelData', function(e) {
+  console.log('Just received ' + e.samples + ' from the accelerometer.');
+});
 ````
 
 ### Window
@@ -276,7 +281,7 @@ If the window is currently displayed, this will take the user to the previously 
 If the window is not currently displayed, this will remove it from the window stack. The user will not be able to get back to it with the back button.
 
 ````js
-var splashScreen = new UI.Card({ 'image': 'images/splash.png' });
+var splashScreen = new UI.Card({ banner: 'images/splash.png' });
 splashScreen.show();
 
 var mainScreen = new UI.Menu();
@@ -294,7 +299,7 @@ setTimeout(function() {
 Registers a handler to call when `button` is pressed.
 
 ````js
-window.on('click', 'up', function() {
+wind.on('click', 'up', function() {
   console.log('Up clicked!');
 });
 ````
@@ -335,9 +340,9 @@ Just like any window, you can initialize a Card by passing an object to the cons
 
 ````js
 var card = new UI.Card({
-  title: "Hello People!"
+  title: 'Hello People!'
 });
-card.body("This is the content of my card!");
+card.body('This is the content of my card!');
 ````
 
 The properties available on a [Card] are:
@@ -373,18 +378,16 @@ A menu contains one or more sections. Each section has a title and contains zero
 
 ````js
 var menu = new UI.Menu({
-  sections: [ 
-    {
-      title: "First section"
-      items: [
-        {
-          title: "first item",
-          subtitle: "some subtitle",
-          icon: "images/item_icon.png"
-        }
-      ]
-    }
-  ]
+  sections: [{
+    title: 'First section'
+    items: [{
+      title: 'First Item',
+      subtitle: 'Some subtitle',
+      icon: 'images/item_icon.png'
+    }, {
+      title: 'Second item'
+    }]
+  }]
 });
 ````
 
@@ -394,13 +397,11 @@ Define the section to be displayed at sectionIndex.
 
 ````js
 var section = {
-  title: "Another section",
-  items: [
-    {
-      title: "With one item"
-    }
-  ]
-}
+  title: 'Another section',
+  items: [{
+    title: 'With one item'
+  }]
+};
 menu.section(1, section);
 ````
 
@@ -409,7 +410,7 @@ menu.section(1, section);
 Define the items to display in a specific section.
 
 ````js
-menu.items(0, [ { title: "new item1" }, { title: "new item2" } ]);
+menu.items(0, [ { title: 'new item1' }, { title: 'new item2' } ]);
 ````
 
 #### Menu.item(sectionIndex, itemIndex, item)
@@ -450,7 +451,7 @@ Adds an element to to this stage. This element will be immediately visible.
 
 Inserts an element at a specific index in the list of Element.
 
-#### Stage.remove(element, broadcast)
+#### Stage.remove(element)
 
 Removes an element from the [Stage].
 
@@ -460,12 +461,12 @@ Returns the index of an element in the Stage or -1 if the element is not in the 
 
 #### Stage.each(callback)
 
-Iterates over all the element on the stage.
+Iterates over all the elements on the stage.
 
 ````js
 stage.each(function(element) {
-  console.log("Element: ", element);
-}
+  console.log('Element: ' + JSON.stringify(element));
+});
 ````
 
 ### Element
@@ -476,8 +477,8 @@ They all share some common properties:
 
 | Name              | Type      | Default   | Description                                                        |
 | ------------      | :-------: | --------- | -------------                                                      |
-| `position`        | Vector2  |           | Position of this element in the stage.                             |
-| `size`            | Vector2  |           | Size of this element in this stage.                                |
+| `position`        | Vector2   |           | Position of this element in the stage.                             |
+| `size`            | Vector2   |           | Size of this element in this stage.                                |
 | `borderColor`     | string    | ''        | Color of the border of this element ('clear', 'black',or 'white'). |
 | `backgroundColor` | string    | ''        | Background color of this element ('clear', 'black' or 'white').    |
 
@@ -487,7 +488,7 @@ All properties can be initialized by passing an object when creating the Element
 var Vector2 = require('vector2');
 var element = new Text({ position: new Vector2(0, 0), size: new Vector2(144, 168) });
 element.borderColor('white');
-console.log("This element background color is: ", element.backgroundColor());
+console.log('This element background color is: ' + element.backgroundColor());
 ````
 
 #### Element.index()
@@ -498,7 +499,7 @@ Returns the index of this element in its stage or -1 if this element is not part
 
 Removes this element from its stage.
 
-#### Element.animate(field, value, direction)
+#### Element.animate(field, value, duration)
 
 #### Element.position(position)
 
@@ -644,7 +645,8 @@ This module gives you a very simple and easy way to make HTTP requests.
 ````
 var ajax = require('ajax');
 
-ajax({
+ajax(
+  {
     url: 'api.theysaidso.com/qod.json',
     type: 'json'
   },

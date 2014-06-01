@@ -97,13 +97,39 @@ GBitmap *simply_res_auto_image(SimplyRes *self, uint32_t id, bool is_placeholder
   return NULL;
 }
 
-GFont *simply_res_auto_font(SimplyRes *self, uint32_t id) {
+GFont simply_res_add_custom_font(SimplyRes *self, uint32_t id) {
+  SimplyFont *font = malloc(sizeof(*font));
+  if (!font) {
+    return NULL;
+  }
+
+  ResHandle handle = resource_get_handle(id);
+  if (!handle) {
+    return NULL;
+  }
+
+  GFont custom_font = fonts_load_custom_font(handle);
+  if (!custom_font) {
+    free(font);
+    return NULL;
+  }
+
+  font->font = custom_font;
+
+  list1_prepend(&self->fonts, &font->node);
+
+  window_stack_schedule_top_window_render();
+
+  return font->font;
+}
+
+GFont simply_res_auto_font(SimplyRes *self, uint32_t id) {
   if (!id) {
     return NULL;
   }
   SimplyFont *font = (SimplyFont*) list1_find(self->fonts, id_filter, (void*)(uintptr_t) id);
   if (font) {
-    return &font->font;
+    return font->font;
   }
   if (id <= ARRAY_LENGTH(resource_crc_table)) {
     return simply_res_add_custom_font(self, id);
@@ -119,25 +145,6 @@ void simply_res_clear(SimplyRes *self) {
   while (self->fonts) {
     destroy_font(self, (SimplyFont*) self->fonts);
   }
-}
-
-GFont simply_res_add_custom_font(SimplyRes *self, uint32_t id) {
-  SimplyFont *font = malloc(sizeof(*font));
-  if (!font) {
-    return NULL;
-  }
-
-  GFont custom_font = fonts_load_custom_font(resource_get_handle(id));
-  if (!custom_font) {
-    free(font);
-    return NULL;
-  }
-
-  list1_prepend(&self->fonts, &font->node);
-
-  window_stack_schedule_top_window_render();
-
-  return &font->font;
 }
 
 SimplyRes *simply_res_create() {

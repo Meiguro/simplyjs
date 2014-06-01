@@ -367,14 +367,58 @@ The properties available on a [Menu] are:
 
 | Name         | Type    | Default | Description |
 | ----         |:-------:|---------|-------------|
-| `scrollable` | boolean | false   | Whether the user can scroll this card with the up and down button. When this is enabled, click events on the up and down button will not be transmitted to your app. |
-| `sections`             | Number        |         |             |
+| `sections`   | Array   | `[]`        | A list of all the sections to display.            |
+
+A menu contains one or more sections. Each section has a title and contains zero or more items. An item must have a title. It can also have a subtitle and an icon.
+
+````js
+var menu = new UI.Menu({
+  sections: [ 
+    {
+      title: "First section"
+      items: [
+        {
+          title: "first item",
+          subtitle: "some subtitle",
+          icon: "images/item_icon.png"
+        }
+      ]
+    }
+  ]
+});
+````
 
 #### Menu.section(sectionIndex, section)
 
+Define the section to be displayed at sectionIndex.
+
+````js
+var section = {
+  title: "Another section",
+  items: [
+    {
+      title: "With one item"
+    }
+  ]
+}
+menu.section(1, section);
+````
+
 #### Menu.items(sectionIndex, items)
 
+Define the items to display in a specific section.
+
+````js
+menu.items(0, [ { title: "new item1" }, { title: "new item2" } ]);
+````
+
 #### Menu.item(sectionIndex, itemIndex, item)
+
+Define the item to display at index itemIndex in section sectionIndex.
+
+````js
+menu.item(0, 0, { title: 'A new item', subtitle: 'replacing the previous one' });
+````
 
 #### Menu.on('select', callback)
 
@@ -384,7 +428,7 @@ Registers a callback called when an item in the menu is selected.
 
 #### Menu.on('longSelect', callback)
 
-See [Menu.on('select, callback)]
+See `Menu.on('select, callback)`
 
 ### Stage
 

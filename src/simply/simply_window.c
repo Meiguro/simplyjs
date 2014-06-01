@@ -102,6 +102,7 @@ void simply_window_set_action_bar_background_color(SimplyWindow *self, GColor ba
   }
 
   action_bar_layer_set_background_color(self->action_bar_layer, background_color);
+  simply_window_set_action_bar(self, true);
 }
 
 void simply_window_action_bar_clear(SimplyWindow *self) {

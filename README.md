@@ -145,13 +145,13 @@ This documentation uses [Flatdoc](http://ricostacruz.com/flatdoc/#flatdoc).
 
 Loads another JavaScript file allowing you to write a multi-file project. Package loading loosely follows the CommonJS format.
 
-Exporting is possible by modifying or setting `module.exports` within the required file. The module path is also available as `module.path`. This currently only supports a relative path to another JavaScript file.
+Exporting is possible by modifying or setting `module.exports` within the required file. The module path is also available as `module.filename`. `require` will look for the module relative to the loading module, the root path, and the Pebble.js library folder `lib` located at `src/js/lib`.
 
 ### Pebble
 
 The `Pebble` object from [PebbleKit JavaScript](https://developer.getpebble.com/2/guides/javascript-guide.html) is available as a global variable. It's usage is discouraged in Pebble.js, instead you should use the objects documented below who provide a cleaner object interface to the same functionalities.
 
-### window (global)
+### window -- browser
 
 A `window` object is provided with a subset of the standard APIs you would find in a normal browser. It's direct usage is discouraged because available functionalities may differ between the iOS and Android runtime environment. 
 

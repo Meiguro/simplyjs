@@ -52,6 +52,7 @@ enum SimplySetWindowParam {
   SetWindow_actionSelect,
   SetWindow_actionDown,
   SetWindow_actionBackgroundColor,
+  SetWindow_backgroundColor,
   SetWindow_fullscreen,
   SetWindow_scrollable,
   SetWindowLast,
@@ -138,11 +139,7 @@ static SimplyWindow *get_top_simply_window(Simply *simply) {
   return window;
 }
 
-static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
-  SimplyWindow *window = get_top_simply_window(simply);
-  if (!window) {
-    return;
-  }
+static void set_window(SimplyWindow *window, DictionaryIterator *iter) {
   Tuple *tuple;
   if ((tuple = dict_find(iter, SetWindow_clear))) {
     simply_window_set_action_bar(window, false);
@@ -161,6 +158,9 @@ static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
       case SetWindow_actionBackgroundColor:
         simply_window_set_action_bar_background_color(window, tuple->value->uint8);
         break;
+      case SetWindow_backgroundColor:
+        simply_window_set_background_color(window, tuple->value->uint32);
+        break;
       case SetWindow_fullscreen:
         simply_window_set_fullscreen(window, tuple->value->int32);
         break;
@@ -169,6 +169,14 @@ static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
         break;
     }
   }
+}
+
+static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
+  SimplyWindow *window = get_top_simply_window(simply);
+  if (!window) {
+    return;
+  }
+  set_window(window, iter);
 }
 
 static void handle_hide_window(DictionaryIterator *iter, Simply *simply) {
@@ -213,8 +221,8 @@ static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
         break;
     }
   }
-  simply_ui_show(simply->ui);
-  handle_set_window(iter, simply);
+  set_window(&ui->window, iter);
+  simply_ui_show(ui);
 }
 
 static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
@@ -280,8 +288,8 @@ static void handle_set_menu(DictionaryIterator *iter, Simply *simply) {
         break;
     }
   }
+  set_window(&menu->window, iter);
   simply_menu_show(menu);
-  handle_set_window(iter, simply);
 }
 
 static void handle_set_menu_section(DictionaryIterator *iter, Simply *simply) {
@@ -374,8 +382,8 @@ static void handle_set_stage(DictionaryIterator *iter, Simply *simply) {
         break;
     }
   }
+  set_window(&stage->window, iter);
   simply_stage_show(stage);
-  handle_set_window(iter, simply);
 }
 
 static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {

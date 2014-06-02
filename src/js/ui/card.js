@@ -64,6 +64,7 @@ var clearableProps = textProps.concat(imageProps);
 
 var Card = function(cardDef) {
   Window.call(this, cardDef);
+  this._dynamic = false;
 };
 
 Card._codeName = 'card';

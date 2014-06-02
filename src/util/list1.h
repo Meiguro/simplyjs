@@ -53,6 +53,17 @@ static inline List1Node *list1_append(List1Node **head, List1Node *node) {
   return node;
 }
 
+static inline int list1_index(List1Node *head, List1Node *node) {
+  List1Node *walk = head;
+  for (int i = 0; walk; ++i) {
+    if (walk == node) {
+      return i;
+    }
+    walk = walk->next;
+  }
+  return -1;
+}
+
 static inline List1Node *list1_insert(List1Node **head, int index, List1Node *node) {
   List1Node **next_ref = head;
   List1Node *walk = *head;

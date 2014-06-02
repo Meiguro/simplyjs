@@ -62,8 +62,8 @@ Making HTTP connections is very easy with the included `ajax` library.
 var ajax = require('ajax');
 ajax({ url: 'http://api.theysaidso.com/qod.json', type: 'json' },
   function(data) {
-    window.body(data.contents.quote);
-    window.title(data.contents.author);
+    card.body(data.contents.quote);
+    card.title(data.contents.author);
   }
 );
 ````
@@ -116,15 +116,15 @@ You can use any of the Pebble system fonts in your Pebble.js applications. Pleas
 ````js
 var Vector2 = require('vector2');
 
-var stage = new UI.Stage();
+var wind = new UI.Window();
 var textfield = new UI.Text({
  position: Vector2(0, 0),
  size: Vector2(144, 168),
  font: 'GOTHIC_18_BOLD',
  text: 'Gothic 18 Bold'
 });
-stage.add(textfield);
-stage.show();
+wind.add(textfield);
+wind.show();
 ````
 
 ## Examples
@@ -277,7 +277,7 @@ Pebble.js provides three types of Windows:
 
  * [Card]: Displays a title, a subtitle, a banner image and text on a screen. The position of the elements are fixed and cannot be changed.
  * [Menu]: Displays a menu on the Pebble screen. This is similar to the standard system menu in Pebble.
- * [Stage]: This is the most flexible Window. It allows you to add different [Element]s ([Circle], [Image], [Rect], [Text], [TimeText]) and to specify a position and size for each of them. You can also animate them.
+ * [Window]: The Window by itself is the most flexible. It allows you to add different [Element]s ([Circle], [Image], [Rect], [Text], [TimeText]) and to specify a position and size for each of them. You can also animate them.
 
 | Name           | Type      | Default   | Description                                                                                     |
 | ----           | :-------: | --------- | -------------                                                                                   |
@@ -290,8 +290,8 @@ Pebble.js provides three types of Windows:
 
 A `Window` action bar can be displayed by setting its Window `action` property to an `actionDef`.
 
-| Name              | Type      | Default   | Description                                                                                     |
-| ----              | :-------: | --------- | -------------                                                                                   |
+| Name              | Type      | Default   | Description                                                                                            |
+| ----              | :-------: | --------- | -------------                                                                                          |
 | `up`              | Image     | None      | An image to display in the action bar, next to the up button.                                          |
 | `select`          | Image     | None      | An image to display in the action bar, next to the select button.                                      |
 | `down`            | Image     | None      | An image to display in the action bar, next to the down button.                                        |
@@ -374,6 +374,47 @@ card.action('up', 'images/action_icon_plus.png');
 #### Window.fullscreen(fullscreen)
 
 Accessor to the `fullscreen` property. See [Window].
+
+### Window (dynamic)
+
+A [Window] instantiated directly is dynamic window that can display a completely customizable user interface on the screen. When you initialize it, a window is empty and you will need to create instances of [Element] and add them to the window. [Card] and [Menu] will not display elements added to them in this way.
+
+````js
+// Create a dynamic window
+var wind = new UI.Window();
+
+// Add a rect element
+var rect = new UI.Rect({ size: Vector2(20, 20) });
+wind.add(rect);
+
+wind.show();
+````
+
+#### Window.add(element)
+
+Adds an element to to this [Window]. This element will be immediately visible.
+
+#### Window.insert(index, element)
+
+Inserts an element at a specific index in the list of Element.
+
+#### Window.remove(element)
+
+Removes an element from the [Window].
+
+#### Window.index(element)
+
+Returns the index of an element in the [Window] or -1 if the element is not in the window.
+
+#### Window.each(callback)
+
+Iterates over all the elements on the [Window].
+
+````js
+wind.each(function(element) {
+  console.log('Element: ' + JSON.stringify(element));
+});
+````
 
 ### Card
 
@@ -474,44 +515,6 @@ Registers a callback called when an item in the menu is selected.
 
 See `Menu.on('select, callback)`
 
-### Stage
-
-A stage is a type of [Window] that displays a completely customizable user interface on the screen. When you initialize it, a [Stage] is empty and you will need to create instances of [Element] and add them to the stage.
-
-Just like any window, you can initialize a Stage by passing an object to the constructor or by calling accessors to change the properties.
-
-The properties available on a [Stage] are:
-
-| Name         | Type    | Default | Description |
-| ----         |:-------:|---------|-------------|
-| `scrollable` | boolean | false   | Whether the user can scroll this card with the up and down button. When this is enabled, click events on the up and down button will not be transmitted to your app. |
-
-#### Stage.add(element)
-
-Adds an element to to this stage. This element will be immediately visible.
-
-#### Stage.insert(index, element)
-
-Inserts an element at a specific index in the list of Element.
-
-#### Stage.remove(element)
-
-Removes an element from the [Stage].
-
-#### Stage.index(element)
-
-Returns the index of an element in the Stage or -1 if the element is not in the Stage.
-
-#### Stage.each(callback)
-
-Iterates over all the elements on the stage.
-
-````js
-stage.each(function(element) {
-  console.log('Element: ' + JSON.stringify(element));
-});
-````
-
 ### Element
 
 There are four types of [Element] that can be instantiated at the moment: [Circle], [Image], [Rect] and [Text].
@@ -520,8 +523,8 @@ They all share some common properties:
 
 | Name              | Type      | Default   | Description                                                        |
 | ------------      | :-------: | --------- | -------------                                                      |
-| `position`        | Vector2   |           | Position of this element in the stage.                             |
-| `size`            | Vector2   |           | Size of this element in this stage.                                |
+| `position`        | Vector2   |           | Position of this element in the window.                            |
+| `size`            | Vector2   |           | Size of this element in this window.                               |
 | `borderColor`     | string    | ''        | Color of the border of this element ('clear', 'black',or 'white'). |
 | `backgroundColor` | string    | ''        | Background color of this element ('clear', 'black' or 'white').    |
 
@@ -536,13 +539,40 @@ console.log('This element background color is: ' + element.backgroundColor());
 
 #### Element.index()
 
-Returns the index of this element in its stage or -1 if this element is not part of a stage.
+Returns the index of this element in its [Window] or -1 if this element is not part of a window.
 
 #### Element.remove()
 
-Removes this element from its stage.
+Removes this element from its [Window].
 
-#### Element.animate(field, value, duration)
+#### Element.animate(animateDef, [duration=400])
+
+The `position` and `size` properties can be animated. An `animateDef` is object with any supported properties specified. See [Element] for a description of those properties. The default animation duration is 400 milliseconds.
+
+````js
+// Use the element's position and size to avoid allocating more vectors.
+var pos = element.position();
+var size = element.size();
+
+// Use the *Self methods to also avoid allocating more vectors.
+pos.addSelf(size);
+size.addSelf(size);
+
+// Schedule the animation with an animateDef
+element.animate({ position: pos, size: size });
+````
+
+When calling animate, the new values save immediately to the [Element].
+
+#### Element.animate(field, value, [duration=400])
+
+You can also animate a single property by specifying a field by its name.
+
+````js
+var pos = element.position();
+pos.y += 20;
+element.animate('position', pos, 1000);
+````
 
 #### Element.position(position)
 
@@ -567,7 +597,7 @@ An [Element] that displays a circle on the screen.
 Default properties value:
 
  * `backgroundColor`: 'white'
- * `borderColor:`: 'clear'
+ * `borderColor`: 'clear'
 
 ### Rect
 

@@ -7,6 +7,7 @@ var simply = require('ui/simply');
 
 var Menu = function(menuDef) {
   Window.call(this, menuDef);
+  this._dynamic = false;
   this._sections = {};
 };
 

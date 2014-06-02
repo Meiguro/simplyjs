@@ -4,6 +4,7 @@ var Emitter = require('emitter');
 var Accel = require('ui/accel');
 var WindowStack = require('ui/windowstack');
 var Propable = require('ui/propable');
+var Stage = require('ui/stage');
 var simply = require('ui/simply');
 
 var buttons = [
@@ -50,6 +51,8 @@ var Window = function(windowDef) {
   this.state = windowDef || {};
   this.state.id = nextId++;
   this._buttonInit();
+  this._items = [];
+  this._dynamic = true;
 };
 
 Window._codeName = 'window';
@@ -58,16 +61,12 @@ util2.copy(Emitter.prototype, Window.prototype);
 
 util2.copy(Propable.prototype, Window.prototype);
 
+util2.copy(Stage.prototype, Window.prototype);
+
 Propable.makeAccessors(accessorProps, Window.prototype);
 
 Window.prototype._id = function() {
   return this.state.id;
-};
-
-Window.prototype._prop = function() {
-  if (this === WindowStack.top()) {
-    simply.impl.window.apply(this, arguments);
-  }
 };
 
 Window.prototype._hide = function(broadcast) {
@@ -82,11 +81,26 @@ Window.prototype.hide = function() {
 
 Window.prototype._show = function() {
   this._prop(this.state, true);
+  if (this._dynamic) {
+    Stage.prototype._show.call(this);
+  }
 };
 
 Window.prototype.show = function() {
   WindowStack.push(this);
   return this;
+};
+
+Window.prototype._insert = function() {
+  if (this._dynamic) {
+    Stage.prototype._insert.apply(this, arguments);
+  }
+};
+
+Window.prototype._remove = function() {
+  if (this._dynamic) {
+    Stage.prototype._remove.apply(this, arguments);
+  }
 };
 
 Window.prototype._clearAction = function() {

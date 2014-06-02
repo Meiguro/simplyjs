@@ -24,7 +24,7 @@ main.on('click', 'up', function(e) {
         icon: 'images/menu_icon.png',
         subtitle: 'Can do Menus'
       }, {
-        title: 'Hello World!',
+        title: 'Second Item',
         subtitle: 'Subtitle Text'
       }]
     }]
@@ -41,7 +41,7 @@ main.on('click', 'select', function(e) {
     position: new Vector2(0, 50),
     size: new Vector2(144, 30),
     font: 'gothic-24-bold',
-    text: 'Hello World!',
+    text: 'Text Anywhere!',
     textAlign: 'center'
   });
   wind.add(textfield);

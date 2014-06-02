@@ -43,7 +43,6 @@ static void destroy_element(SimplyStage *self, SimplyElementCommon *element) {
 static void destroy_animation(SimplyStage *self, SimplyAnimation *animation) {
   if (!animation) { return; }
   list1_remove(&self->stage_layer.animations, &animation->node);
-  property_animation_destroy(animation->animation);
   free(animation);
 }
 
@@ -256,6 +255,7 @@ SimplyAnimation *simply_stage_animate_element(SimplyStage *self,
   static const PropertyAnimationImplementation implementation = {
     .base = {
       .update = (AnimationUpdateImplementation) property_animation_update_grect,
+      .teardown = (AnimationTeardownImplementation) free,
     },
     .accessors = {
       .setter = { .grect = (const GRectSetter) element_frame_setter },

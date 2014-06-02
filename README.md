@@ -392,7 +392,7 @@ wind.show();
 
 #### Window.add(element)
 
-Adds an element to to this [Window]. This element will be immediately visible.
+Adds an element to to the [Window]. The element will be immediately visible.
 
 #### Window.insert(index, element)
 
@@ -539,11 +539,11 @@ console.log('This element background color is: ' + element.backgroundColor());
 
 #### Element.index()
 
-Returns the index of this element in its [Window] or -1 if this element is not part of a window.
+Returns the index of the element in its [Window] or -1 if the element is not part of a window.
 
 #### Element.remove()
 
-Removes this element from its [Window].
+Removes the element from its [Window].
 
 #### Element.animate(animateDef, [duration=400])
 

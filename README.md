@@ -545,7 +545,34 @@ Returns the index of this element in its [Window] or -1 if this element is not p
 
 Removes this element from its [Window].
 
-#### Element.animate(field, value, duration)
+#### Element.animate(animateDef, [duration=400])
+
+The `position` and `size` properties can be animated. An `animateDef` is object with any supported properties specified. See [Element] for a description of those properties. The default animation duration is 400 milliseconds.
+
+````js
+// Use the element's position and size to avoid allocating more vectors.
+var pos = element.position();
+var size = element.size();
+
+// Use the *Self methods to also avoid allocating more vectors.
+pos.addSelf(size);
+size.addSelf(size);
+
+// Schedule the animation with an animateDef
+element.animate({ position: pos, size: size });
+````
+
+When calling animate, the new values save immediately to the [Element].
+
+#### Element.animate(field, value, [duration=400])
+
+You can also animate a single property by specifying a field by its name.
+
+````js
+var pos = element.position();
+pos.y += 20;
+element.animate('position', pos, 1000);
+````
 
 #### Element.position(position)
 

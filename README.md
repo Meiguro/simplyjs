@@ -725,7 +725,7 @@ The `failure` callback is called when an error occurred. The only parameter is a
 
 ### Vector2
 
-A 2 dimensional vector. The constructor takes two parameter for the x and y properties.
+A 2 dimensional vector. The constructor takes two parameters for the x and y values.
 
 ````js
 var Vector2 = require('vector2');
@@ -733,7 +733,7 @@ var Vector2 = require('vector2');
 var vec = new Vector2(144, 168);
 ````
 
-For more information, please refer to the Vector2 class documentation in the three.js library.
+For more information, please refer to the [Vector2 class documentation in the three.js library](http://threejs.org/docs/#Reference/Math/Vector2).
 
 
 [API Reference]: #api-reference

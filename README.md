@@ -288,9 +288,10 @@ Pebble.js provides three types of Windows:
 | `fullscreen`   | boolean   | false     | When true, the Pebble status bar will not be visible and the window will use the entire screen. |
 | `scrollable`   | boolean   | false     | When true, the up and down button will scroll the content of this Card.                         |
 
-#### actionDef
+<a id="window-actiondef"></a>
+#### Window actionDef
 
-A `Window` action bar can be displayed by setting its Window `action` property to an `actionDef`.
+A `Window` action bar can be displayed by setting its Window `action` property to an `actionDef`:
 
 | Name              | Type      | Default   | Description                                                                                            |
 | ----              | :-------: | --------- | -------------                                                                                          |
@@ -308,7 +309,7 @@ var card = new UI.Card({
 });
 ````
 
-You will need to add images to your project following the [Using Images] guide to display action bar icons.
+You will need to add images to your project according to the [Using Images] guide in order to display action bar icons.
 
 #### Window.show()
 
@@ -356,7 +357,7 @@ Just like `Window.on('click', button, handler)` but for 'longClick' events.
 
 #### Window.action(actionDef)
 
-This is a special nested accessor to the `action` property which takes an `actionDef`. It can be used to set a new `actionDef`. See [Window] for details on `actionDef`.
+This is a special nested accessor to the `action` property which takes an `actionDef`. It can be used to set a new `actionDef`. See [Window actionDef].
 
 ````js
 card.action({
@@ -367,7 +368,7 @@ card.action({
 
 #### Window.action(field, value)
 
-You may also call `Window.action` with two arguments to set specific fields of the window's `action` propery.
+You may also call `Window.action` with two arguments, `field` and `value`, to set specific fields of the window's `action` propery. `field` is a string refering to the [actionDef] property to change. `value` is the new property value to set.
 
 ````js
 card.action('up', 'images/action_icon_plus.png');
@@ -379,7 +380,7 @@ Accessor to the `fullscreen` property. See [Window].
 
 ### Window (dynamic)
 
-A [Window] instantiated directly is dynamic window that can display a completely customizable user interface on the screen. When you initialize it, a window is empty and you will need to create instances of [Element] and add them to the window. [Card] and [Menu] will not display elements added to them in this way.
+A [Window] instantiated directly is a dynamic window that can display a completely customizable user interface on the screen. Dynamic windows are initialized empty and will need [Element]s added to it. [Card] and [Menu] will not display elements added to them in this way.
 
 ````js
 // Create a dynamic window
@@ -807,6 +808,7 @@ For more information, please refer to the [Vector2 class documentation in the th
 [Image]: #image
 [Rect]: #rect
 [Text]: #text
+[Window actionDef]: #window-actiondef
 [Window.show()]: #window-show
 [Window.hide()]: #window-hide
 [Element.queue(callback(next))]: #element-queue-callback-next

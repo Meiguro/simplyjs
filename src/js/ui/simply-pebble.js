@@ -267,7 +267,7 @@ var commands = [{
     name: 'subtitle',
     type: String,
   }, {
-    name: 'image',
+    name: 'icon',
     type: Image,
   }],
 }, {

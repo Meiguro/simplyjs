@@ -7,7 +7,8 @@ UI.Stage = require('ui/stage');
 UI.Rect = require('ui/rect');
 UI.Circle = require('ui/circle');
 UI.Text = require('ui/text');
+UI.TimeText = require('ui/timetext');
 UI.Image = require('ui/image');
 UI.Inverter = require('ui/inverter');
 
-module.exports= UI;
+module.exports = UI;

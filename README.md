@@ -277,7 +277,7 @@ Pebble.js provides three types of Windows:
 
  * [Card]: Displays a title, a subtitle, a banner image and text on a screen. The position of the elements are fixed and cannot be changed.
  * [Menu]: Displays a menu on the Pebble screen. This is similar to the standard system menu in Pebble.
- * [Stage]: This is the most flexible Window. It allows you to add different [Element]s ([Circle], [Image], [Rect], [Text]) and to specify a position and size for each of them. You can also animate them.
+ * [Stage]: This is the most flexible Window. It allows you to add different [Element]s ([Circle], [Image], [Rect], [Text], [TimeText]) and to specify a position and size for each of them. You can also animate them.
 
 | Name           | Type      | Default   | Description                                                                                     |
 | ----           | :-------: | --------- | -------------                                                                                   |
@@ -593,13 +593,16 @@ The [Text] element has the following properties. Just like any other [Element] y
 | `color`           |           | 'white'   | Color of the text ('white', 'black' or 'clear').                                                                                                                                                                                                                                                                                                           |
 | `textOverflow`    | 'string'  |           | How to handle text overflow in this text element ('wrap', 'ellipsis' or 'fill').                                                                                                                                                                                                                                                                           |
 | `textAlign`       | 'string'  |           | How to align text in this element ('left', 'center' or 'right').                                                                                                                                                                                                                                                                                           |
-| `updateTimeUnits` | string    | ''        | Specifies the smallest time unit change that will cause this text to be redrawn ('seconds', 'minutes', 'hours', 'days', 'months', 'years'). Use this in conjunction with a time format string in the `text` property. This Text element will be redrawn every `updateTimeUnits` and the text parsed. The text formatting string format is described below. |
 | `borderColor`     | string    | 'clear'   | Color of the border of this element ('clear', 'black',or 'white').                                                                                                                                                                                                                                                                                         |
 | `backgroundColor` | string    | 'clear'   | Background color of this element ('clear', 'black' or 'white').                                                                                                                                                                                                                                                                                            |
 
-#### Displaying time in a Text element
+### TimeText
 
-If you want to display the current time or date in a Text element, you can use a time formatting string in the `text` property. The text element will be redrawn every `updateTimeUnits` and the format time will be re-interpreted.
+A [Text] element that displays time formatted text on the screen.
+
+#### Displaying time in a TimeText element
+
+If you want to display the current time or date, use the `TimeText` element with a time formatting string in the `text` property. The time to redraw the time text element will be automatically calculated based on the format string. For example, a `TimeText` element with the format `'%M:%S'` will be redrawn every second because of the seconds format `%S`.
 
 The available formatting options follows the C `strftime()` function:
 
@@ -722,7 +725,7 @@ The `failure` callback is called when an error occurred. The only parameter is a
 
 ### Vector2
 
-A 2 dimensional vector. The constructor takes two parameter for the x and y properties.
+A 2 dimensional vector. The constructor takes two parameters for the x and y values.
 
 ````js
 var Vector2 = require('vector2');
@@ -730,7 +733,7 @@ var Vector2 = require('vector2');
 var vec = new Vector2(144, 168);
 ````
 
-For more information, please refer to the Vector2 class documentation in the three.js library.
+For more information, please refer to the [Vector2 class documentation in the three.js library](http://threejs.org/docs/#Reference/Math/Vector2).
 
 
 [API Reference]: #api-reference

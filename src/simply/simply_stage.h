@@ -75,7 +75,7 @@ struct SimplyElementText {
   };
   char *text;
   GFont font;
-  TimeUnits time_unit:8;
+  TimeUnits time_units:8;
   GColor text_color:2;
   GTextOverflowMode overflow_mode:2;
   GTextAlignment alignment:2;

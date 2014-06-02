@@ -345,7 +345,7 @@ var commands = [{
     name: 'textAlign',
     type: TextAlignment,
   }, {
-    name: 'updateTimeUnit',
+    name: 'updateTimeUnits',
     type: TimeUnits,
   }, {
     name: 'image',

@@ -1,9 +1,9 @@
 var UI = {};
 
 UI.Vector2 = require('vector2');
+UI.Window = require('ui/window');
 UI.Card = require('ui/card');
 UI.Menu = require('ui/menu');
-UI.Stage = require('ui/stage');
 UI.Rect = require('ui/rect');
 UI.Circle = require('ui/circle');
 UI.Text = require('ui/text');

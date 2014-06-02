@@ -87,12 +87,12 @@ static void request_menu_node(void *data) {
   SimplyMenuSection *section = (SimplyMenuSection*) list1_find(self->menu_layer.sections, request_filter, NULL);
   bool found = false;
   if (section) {
-    simply_msg_menu_get_section(section->index);
+    simply_msg_menu_get_section(self->window.simply->msg, section->index);
     found = true;
   }
   SimplyMenuItem *item = (SimplyMenuItem*) list1_find(self->menu_layer.items, request_filter, NULL);
   if (item) {
-    simply_msg_menu_get_item(item->section, item->index);
+    simply_msg_menu_get_item(self->window.simply->msg, item->section, item->index);
     found = true;
   }
   if (found) {
@@ -224,11 +224,13 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 }
 
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
-  simply_msg_menu_select_click(cell_index->section, cell_index->row);
+  SimplyMenu *self = data;
+  simply_msg_menu_select_click(self->window.simply->msg, cell_index->section, cell_index->row);
 }
 
 static void menu_select_long_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
-  simply_msg_menu_select_long_click(cell_index->section, cell_index->row);
+  SimplyMenu *self = data;
+  simply_msg_menu_select_long_click(self->window.simply->msg, cell_index->section, cell_index->row);
 }
 
 static void window_load(Window *window) {
@@ -260,12 +262,12 @@ static void window_load(Window *window) {
 
 static void window_appear(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
-  simply_msg_window_show(self->window.id);
+  simply_msg_window_show(self->window.simply->msg, self->window.id);
 }
 
 static void window_disappear(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
-  simply_msg_window_hide(self->window.id);
+  simply_msg_window_hide(self->window.simply->msg, self->window.id);
 
   simply_menu_clear(self);
 }

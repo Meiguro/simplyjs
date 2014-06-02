@@ -8,6 +8,8 @@
 
 #include "simply.h"
 
+#include "util/dict.h"
+#include "util/list1.h"
 #include "util/memory.h"
 #include "util/string.h"
 
@@ -253,7 +255,7 @@ static void get_accel_data_timer_callback(void *context) {
   Simply *simply = context;
   AccelData data = { .x = 0 };
   simply_accel_peek(simply->accel, &data);
-  if (!simply_msg_accel_data(&data, 1, 0)) {
+  if (!simply_msg_accel_data(simply->msg, &data, 1, 0)) {
     app_timer_register(10, get_accel_data_timer_callback, simply);
   }
 }
@@ -602,7 +604,12 @@ static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, S
   }
 }
 
-void simply_msg_init(Simply *simply) {
+SimplyMsg *simply_msg_create(Simply *simply) {
+  SimplyMsg *self = malloc(sizeof(*self));
+  *self = (SimplyMsg) { .simply = simply };
+
+  simply->msg = self;
+
   const uint32_t size_inbound = 2048;
   const uint32_t size_outbound = 512;
   app_message_open(size_inbound, size_outbound);
@@ -613,75 +620,126 @@ void simply_msg_init(Simply *simply) {
   app_message_register_inbox_dropped(dropped_callback);
   app_message_register_outbox_sent(sent_callback);
   app_message_register_outbox_failed((AppMessageOutboxFailed) failed_callback);
+
+  return self;
 }
 
-void simply_msg_deinit() {
+void simply_msg_destroy(SimplyMsg *self) {
+  if (!self) {
+    return;
+  }
+
   app_message_deregister_callbacks();
+
+  self->simply->msg = NULL;
+
+  free(self);
 }
 
-static bool send_click(SimplyACmd type, ButtonId button) {
+static void destroy_packet(SimplyPacket *packet) {
+  if (!packet) {
+    return;
+  }
+  free(packet->buffer);
+  packet->buffer = NULL;
+  free(packet);
+}
+
+static bool send_msg(SimplyPacket *packet) {
   DictionaryIterator *iter = NULL;
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
   }
-  dict_write_uint8(iter, 0, type);
-  dict_write_uint8(iter, 1, button);
+  dict_copy_from_buffer(iter, packet->buffer, packet->length);
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
-bool simply_msg_single_click(ButtonId button) {
-  return send_click(SimplyACmd_click, button);
+static void send_msg_retry(void *data) {
+  SimplyMsg *self = data;
+  SimplyPacket *packet = (SimplyPacket*) self->queue;
+  if (!packet) {
+    return;
+  }
+  if (!send_msg(packet)){
+    app_timer_register(10, send_msg_retry, self);
+    return;
+  }
+  list1_remove(&self->queue, &packet->node);
+  destroy_packet(packet);
 }
 
-bool simply_msg_long_click(ButtonId button) {
-  return send_click(SimplyACmd_longClick, button);
+static SimplyPacket *add_packet(SimplyMsg *self, void *buffer, size_t length) {
+  SimplyPacket *packet = malloc0(sizeof(*packet));
+  if (!packet) {
+    free(buffer);
+    return NULL;
+  }
+  *packet = (SimplyPacket) {
+    .length = length,
+    .buffer = buffer,
+  };
+  list1_append(&self->queue, &packet->node);
+  send_msg_retry(self);
+  return packet;
 }
 
-bool simply_msg_window_show(uint32_t id) {
-  DictionaryIterator *iter = NULL;
-  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+static bool send_click(SimplyMsg *self, SimplyACmd type, ButtonId button) {
+  size_t length = dict_calc_buffer_size(2, 1, 1);
+  void *buffer = malloc0(length);
+  if (!buffer) {
     return false;
   }
-  dict_write_uint8(iter, 0, SimplyACmd_windowShow);
-  dict_write_uint32(iter, 1, id);
-  return (app_message_outbox_send() == APP_MSG_OK);
+  DictionaryIterator iter;
+  dict_write_begin(&iter, buffer, length);
+  dict_write_uint8(&iter, 0, type);
+  dict_write_uint8(&iter, 1, button);
+  return add_packet(self, buffer, length);
 }
 
-static bool msg_window_hide(uint32_t id) {
-  DictionaryIterator *iter = NULL;
-  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+bool simply_msg_single_click(SimplyMsg *self, ButtonId button) {
+  return send_click(self, SimplyACmd_click, button);
+}
+
+bool simply_msg_long_click(SimplyMsg *self, ButtonId button) {
+  return send_click(self, SimplyACmd_longClick, button);
+}
+
+bool send_window(SimplyMsg *self, SimplyACmd type, uint32_t id) {
+  size_t length = dict_calc_buffer_size(2, 1, 4);
+  void *buffer = malloc0(length);
+  if (!buffer) {
     return false;
   }
-  dict_write_uint8(iter, 0, SimplyACmd_windowHide);
-  dict_write_uint32(iter, 1, id);
-  return (app_message_outbox_send() == APP_MSG_OK);
+  DictionaryIterator iter;
+  dict_write_begin(&iter, buffer, length);
+  dict_write_uint8(&iter, 0, type);
+  dict_write_uint32(&iter, 1, id);
+  return add_packet(self, buffer, length);
 }
 
-static void window_hide_timer_callback(void *data) {
-  uint32_t id = (uintptr_t)(void*) data;
-  if (!msg_window_hide(id)) {
-    app_timer_register(10, window_hide_timer_callback, data);
-  }
+bool simply_msg_window_show(SimplyMsg *self, uint32_t id) {
+  return send_window(self, SimplyACmd_windowShow, id);
 }
 
-bool simply_msg_window_hide(uint32_t id) {
-  if (!id) { return true; }
-  window_hide_timer_callback((void*)(uintptr_t) id);
-  return true;
+bool simply_msg_window_hide(SimplyMsg *self, uint32_t id) {
+  return send_window(self, SimplyACmd_windowHide, id);
 }
 
-bool simply_msg_accel_tap(AccelAxisType axis, int32_t direction) {
-  DictionaryIterator *iter = NULL;
-  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+bool simply_msg_accel_tap(SimplyMsg *self, AccelAxisType axis, int32_t direction) {
+  size_t length = dict_calc_buffer_size(3, 1, 1, 1);
+  void *buffer = malloc0(length);
+  if (!buffer) {
     return false;
   }
-  dict_write_uint8(iter, 0, SimplyACmd_accelTap);
-  dict_write_uint8(iter, 1, axis);
-  dict_write_int8(iter, 2, direction);
-  return (app_message_outbox_send() == APP_MSG_OK);
+  DictionaryIterator iter;
+  dict_write_begin(&iter, buffer, length);
+  dict_write_uint8(&iter, 0, SimplyACmd_accelTap);
+  dict_write_uint8(&iter, 1, axis);
+  dict_write_int8(&iter, 2, direction);
+  return add_packet(self, buffer, length);
 }
 
-bool simply_msg_accel_data(AccelData *data, uint32_t num_samples, int32_t transaction_id) {
+bool simply_msg_accel_data(SimplyMsg *self, AccelData *data, uint32_t num_samples, int32_t transaction_id) {
   DictionaryIterator *iter = NULL;
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
@@ -695,35 +753,45 @@ bool simply_msg_accel_data(AccelData *data, uint32_t num_samples, int32_t transa
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
-bool simply_msg_menu_get_section(uint16_t index) {
-  DictionaryIterator *iter = NULL;
-  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
-    return false;
-  }
-  dict_write_uint8(iter, 0, SimplyACmd_getMenuSection);
-  dict_write_uint16(iter, 1, index);
-  return (app_message_outbox_send() == APP_MSG_OK);
-}
-
-static bool send_menu_item(SimplyACmd type, uint16_t section, uint16_t index) {
-  DictionaryIterator *iter = NULL;
-  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
-    return false;
-  }
+static void write_menu_item(DictionaryIterator *iter, SimplyACmd type, uint16_t section, uint16_t index) {
   dict_write_uint8(iter, 0, type);
   dict_write_uint16(iter, 1, section);
   dict_write_uint16(iter, 2, index);
+}
+
+static bool send_menu_item(SimplyMsg *self, SimplyACmd type, uint16_t section, uint16_t index) {
+  DictionaryIterator *iter = NULL;
+  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+    return false;
+  }
+  write_menu_item(iter, type, section, index);
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
-bool simply_msg_menu_get_item(uint16_t section, uint16_t index) {
-  return send_menu_item(SimplyACmd_getMenuItem, section, index);
+static bool send_menu_item_retry(SimplyMsg *self, SimplyACmd type, uint16_t section, uint16_t index) {
+  size_t length = dict_calc_buffer_size(3, 1, 2, 2);
+  void *buffer = malloc0(length);
+  if (!buffer) {
+    return false;
+  }
+  DictionaryIterator iter;
+  dict_write_begin(&iter, buffer, length);
+  write_menu_item(&iter, type, section, index);
+  return add_packet(self, buffer, length);
 }
 
-bool simply_msg_menu_select_click(uint16_t section, uint16_t index) {
-  return send_menu_item(SimplyACmd_menuSelect, section, index);
+bool simply_msg_menu_get_section(SimplyMsg *self, uint16_t index) {
+  return send_menu_item(self, SimplyACmd_getMenuSection, index, 0);
 }
 
-bool simply_msg_menu_select_long_click(uint16_t section, uint16_t index) {
-  return send_menu_item(SimplyACmd_menuLongSelect, section, index);
+bool simply_msg_menu_get_item(SimplyMsg *self, uint16_t section, uint16_t index) {
+  return send_menu_item(self, SimplyACmd_getMenuItem, section, index);
+}
+
+bool simply_msg_menu_select_click(SimplyMsg *self, uint16_t section, uint16_t index) {
+  return send_menu_item_retry(self, SimplyACmd_menuSelect, section, index);
+}
+
+bool simply_msg_menu_select_long_click(SimplyMsg *self, uint16_t section, uint16_t index) {
+  return send_menu_item_retry(self, SimplyACmd_menuLongSelect, section, index);
 }

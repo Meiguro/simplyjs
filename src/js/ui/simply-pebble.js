@@ -492,13 +492,35 @@ var makePacket = function(command, def) {
   return packet;
 };
 
-SimplyPebble.sendPacket = function(packet) {
-  var send;
-  send = function() {
-    Pebble.sendAppMessage(packet, util2.noop, send);
-  };
-  send();
-};
+SimplyPebble.sendPacket = (function() {
+  var queue = [];
+  var sending = false;
+
+  function stop() {
+    sending = false;
+  }
+
+  function consume() {
+    queue.splice(0, 1);
+    if (queue.length === 0) { return stop(); }
+    cycle();
+  }
+
+  function cycle() {
+    var head = queue[0];
+    if (!head) { return stop(); }
+    Pebble.sendAppMessage(head, consume, cycle);
+  }
+
+  function send(packet) {
+    queue.push(packet);
+    if (sending) { return; }
+    sending = true;
+    cycle();
+  }
+
+  return send;
+})();
 
 SimplyPebble.buttonConfig = function(buttonConf) {
   var command = commandMap.configButtons;
@@ -708,6 +730,11 @@ SimplyPebble.onAppMessage = function(e) {
   var payload = e.payload;
   var code = payload[0];
   var command = commands[code];
+
+  if (!command) {
+    console.log('Received unknown payload: ' + JSON.stringify(payload));
+    return;
+  }
 
   switch (command.name) {
     case 'windowHide':

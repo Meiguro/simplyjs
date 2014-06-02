@@ -10,19 +10,25 @@ var Vector2 = require('vector2');
 var main = new UI.Card({
   title: 'Pebble.js',
   icon: 'images/menu_icon.png',
-  body: 'Saying Hello World'
+  subtitle: 'Hello World!',
+  body: 'Press any button.'
 });
 
 main.show();
 
 main.on('click', 'up', function(e) {
-  var menu = new UI.Menu();
-  menu.items(0, [{
-    title: 'Hello World!',
-    subtitle: 'Subtitle text'
-  }, {
-    title: 'Item #2'
-  }]);
+  var menu = new UI.Menu({
+    sections: [{
+      items: [{
+        title: 'Pebble.js',
+        icon: 'images/menu_icon.png',
+        subtitle: 'Can do Menus'
+      }, {
+        title: 'Hello World!',
+        subtitle: 'Subtitle Text'
+      }]
+    }]
+  });
   menu.on('select', function(e) {
     console.log('Selected item: ' + e.section + ' ' + e.item);
   });
@@ -32,9 +38,11 @@ main.on('click', 'up', function(e) {
 main.on('click', 'select', function(e) {
   var wind = new UI.Window();
   var textfield = new UI.Text({
-    text: 'Yo!',
-    position: new Vector2(10, 10),
-    size: new Vector2(100, 30),
+    position: new Vector2(0, 50),
+    size: new Vector2(144, 30),
+    font: 'gothic-24-bold',
+    text: 'Hello World!',
+    textAlign: 'center'
   });
   wind.add(textfield);
   wind.show();
@@ -42,8 +50,8 @@ main.on('click', 'select', function(e) {
 
 main.on('click', 'down', function(e) {
   var card = new UI.Card();
-  card.title('A Pebble.js Card');
-  card.subtitle('With subtitle');
-  card.body('This is the simplest window you can push to the screen.');
+  card.title('A Card');
+  card.subtitle('Is a Window');
+  card.body('The simplest window type in Pebble.js.');
   card.show();
 });

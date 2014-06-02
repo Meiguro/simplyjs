@@ -1,5 +1,5 @@
 /**
- * Vector2 from Three.js
+ * Vector2 from three.js
  * https://github.com/mrdoob/three.js
  *
  * @author mr.doob / http://mrdoob.com/

@@ -793,7 +793,7 @@ var Vector2 = require('vector2');
 var vec = new Vector2(144, 168);
 ````
 
-For more information, please refer to the [Vector2 class documentation in the three.js library](http://threejs.org/docs/#Reference/Math/Vector2).
+For more information, see [Vector2 in the three.js reference documentation][three.js Vector2].
 
 
 [API Reference]: #api-reference
@@ -813,3 +813,4 @@ For more information, please refer to the [Vector2 class documentation in the th
 [Window.hide()]: #window-hide
 [Element.queue(callback(next))]: #element-queue-callback-next
 [Menu.on('select, callback)]: #menu-on-select-callback
+[three.js Vector2]: http://threejs.org/docs/#Reference/Math/Vector2

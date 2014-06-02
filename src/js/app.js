@@ -7,36 +7,40 @@
 var UI = require('ui');
 var Vector2 = require('vector2');
 
-var wind = new UI.Card({
+var main = new UI.Card({
   title: 'Pebble.js',
   icon: 'images/menu_icon.png',
   body: 'Saying Hello World'
 });
 
-wind.show();
+main.show();
 
-wind.on('click', 'up', function(e) {
+main.on('click', 'up', function(e) {
   var menu = new UI.Menu();
   menu.items(0, [{
-    title: 'Hello World!', subtitle: 'Subtitle text'
+    title: 'Hello World!',
+    subtitle: 'Subtitle text'
   }, {
     title: 'Item #2'
   }]);
+  menu.on('select', function(e) {
+    console.log('Selected item: ' + e.section + ' ' + e.item);
+  });
   menu.show();
 });
 
-wind.on('click', 'select', function(e) {
-  var stage = new UI.Stage();
+main.on('click', 'select', function(e) {
+  var wind = new UI.Window();
   var textfield = new UI.Text({
     text: 'Yo!',
     position: new Vector2(10, 10),
     size: new Vector2(100, 30),
   });
-  stage.add(textfield);
-  stage.show();
+  wind.add(textfield);
+  wind.show();
 });
 
-wind.on('click', 'down', function(e) {
+main.on('click', 'down', function(e) {
   var card = new UI.Card();
   card.title('A Pebble.js Card');
   card.subtitle('With subtitle');

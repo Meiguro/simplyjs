@@ -1,20 +1,16 @@
 var util2 = require('util2');
 var Emitter = require('emitter');
 var WindowStack = require('ui/windowstack');
-var Window = require('ui/window');
 var simply = require('ui/simply');
 
 var Stage = function(stageDef) {
-  Window.call(this, stageDef);
+  this.state = stageDef || {};
   this._items = [];
 };
-
-util2.inherit(Stage, Window);
 
 util2.copy(Emitter.prototype, Stage.prototype);
 
 Stage.prototype._show = function() {
-  Window.prototype._show.apply(this, arguments);
   this.each(function(element, index) {
     this._insert(index, element);
   }.bind(this));

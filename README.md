@@ -194,7 +194,9 @@ Accel.init();
 
 #### Accel.config(accelConfig)
 
-This function configures the accelerometer. It takes an `accelConfig` object:
+This function configures the accelerometer `data` events to your liking. The `tap` event requires no configuration for use. Configuring the accelerometer is a very error prone process, so it is recommended to not configure the accelerometer and use `data` events with the default configuration without calling `Accel.config`.
+
+`Accel.config` takes an `accelConfig` object with the following properties:
 
 | Name        | Type    | Argument   | Default   | Description                                                                                                                                                                                                     |
 | ----        | :----:  | :--------: | --------- | -------------                                                                                                                                                                                                   |
@@ -204,7 +206,7 @@ This function configures the accelerometer. It takes an `accelConfig` object:
 
 The number of callbacks will depend on the configuration of the accelerometer. With the default rate of 100Hz and 25 samples, your callback will be called every 250ms with 25 samples each time.
 
-**Important:** If you configure the accelerometer to send data many events, you will overload the bluetooth connection. We recommend that you send at most 5 events per second.
+**Important:** If you configure the accelerometer to send many `data` events, you will overload the bluetooth connection. We recommend that you send at most 5 events per second.
 
 #### Accel.peek(callback)
 

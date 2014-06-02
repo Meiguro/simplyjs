@@ -19,11 +19,16 @@ var nextId = 1;
 var StageElement = function(elementDef) {
   this.state = elementDef || {};
   this.state.id = nextId++;
+  this._queue = [];
 };
 
 util2.copy(Propable.prototype, StageElement.prototype);
 
 Propable.makeAccessors(accessorProps, StageElement.prototype);
+
+StageElement.prototype._reset = function() {
+  this._queue = [];
+};
 
 StageElement.prototype._id = function() {
   return this.state.id;
@@ -68,8 +73,34 @@ StageElement.prototype.animate = function(field, value, duration) {
   }
   var animateDef = myutil.toObject(field, value);
   util2.copy(animateDef, this.state);
-  this._animate(animateDef, duration);
+  function animate() {
+    this._animate(animateDef, duration);
+  }
+  if (this._queue.length === 0) {
+    animate.call(this);
+  } else {
+    this.queue(animate);
+  }
   return this;
+};
+
+StageElement.prototype.queue = function(callback) {
+  this._queue.push(callback);
+};
+
+StageElement.prototype.dequeue = function() {
+  var callback = this._queue.shift();
+  if (!callback) { return; }
+  callback.call(this, this.dequeue.bind(this));
+};
+
+StageElement.emitAnimateDone = function(index) {
+  if (index === -1) { return; }
+  var wind = WindowStack.top();
+  if (!wind || !wind._dynamic) { return; }
+  var element = wind.at(index);
+  if (!element) { return; }
+  element.dequeue();
 };
 
 module.exports = StageElement;

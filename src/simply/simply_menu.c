@@ -153,6 +153,7 @@ void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections) {
     num_sections = 1;
   }
   self->menu_layer.num_sections = num_sections;
+  mark_dirty(self);
 }
 
 void simply_menu_add_section(SimplyMenu *self, SimplyMenuSection *section) {
@@ -266,13 +267,7 @@ static void window_disappear(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
   simply_msg_window_hide(self->window.id);
 
-  while (self->menu_layer.sections) {
-    destroy_section(self, (SimplyMenuSection*) self->menu_layer.sections);
-  }
-
-  while (self->menu_layer.items) {
-    destroy_item(self, (SimplyMenuItem*) self->menu_layer.items);
-  }
+  simply_menu_clear(self);
 }
 
 static void window_unload(Window *window) {
@@ -282,6 +277,18 @@ static void window_unload(Window *window) {
   self->menu_layer.menu_layer = NULL;
 
   simply_window_unload(&self->window);
+}
+
+void simply_menu_clear(SimplyMenu *self) {
+  while (self->menu_layer.sections) {
+    destroy_section(self, (SimplyMenuSection*) self->menu_layer.sections);
+  }
+
+  while (self->menu_layer.items) {
+    destroy_item(self, (SimplyMenuItem*) self->menu_layer.items);
+  }
+
+  mark_dirty(self);
 }
 
 void simply_menu_show(SimplyMenu *self) {

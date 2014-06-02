@@ -141,9 +141,14 @@ This documentation uses [Flatdoc](http://ricostacruz.com/flatdoc/#flatdoc).
 
 ## Global namespace
 
-### require(dependency)
+### require(path)
 
-Loads another JavaScript file allowing you to write a multi-file project. Package loading loosely follows the CommonJS format.
+Loads another JavaScript file allowing you to write a multi-file project. Package loading loosely follows the CommonJS format. `path` is the path to the dependency.
+
+````js
+// src/js/dependency.js
+var dep = require('dependency');
+````
 
 Exporting is possible by modifying or setting `module.exports` within the required file. The module path is also available as `module.filename`. `require` will look for the module relative to the loading module, the root path, and the Pebble.js library folder `lib` located at `src/js/lib`.
 
@@ -277,13 +282,13 @@ Pebble.js provides three types of Windows:
 | Name           | Type      | Default   | Description                                                                                     |
 | ----           | :-------: | --------- | -------------                                                                                   |
 | `clear`        | boolean   |           |                                                                                                 |
-| `action`       | actionDef | None      | An action bar will be shown when configured with an `actionDef`.                                  |
+| `action`       | actionDef | None      | An action bar will be shown when configured with an `actionDef`.                                |
 | `fullscreen`   | boolean   | false     | When true, the Pebble status bar will not be visible and the window will use the entire screen. |
 | `scrollable`   | boolean   | false     | When true, the up and down button will scroll the content of this Card.                         |
 
 #### actionDef
 
-A `Window` action bar can be displayed by setting its `action` property to an `actionDef`.
+A `Window` action bar can be displayed by setting its Window `action` property to an `actionDef`.
 
 | Name              | Type      | Default   | Description                                                                                     |
 | ----              | :-------: | --------- | -------------                                                                                   |
@@ -349,7 +354,7 @@ Just like `Window.on('click', button, handler)` but for 'longClick' events.
 
 #### Window.action(actionDef)
 
-This is a special nested accessor to the `action` property which takes an `actionDef`. It can be used to set a new actionDef. See [Window] for details on `actionDef.
+This is a special nested accessor to the `action` property which takes an `actionDef`. It can be used to set a new `actionDef`. See [Window] for details on `actionDef`.
 
 ````js
 card.action({
@@ -509,7 +514,7 @@ stage.each(function(element) {
 
 ### Element
 
-There are four types of [Element] that can be instantiated at the moment: [Circle], [Image], [Rectangle] and [Text].
+There are four types of [Element] that can be instantiated at the moment: [Circle], [Image], [Rect] and [Text].
 
 They all share some common properties:
 

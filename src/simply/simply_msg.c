@@ -454,7 +454,7 @@ static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
         ((SimplyElementText*) element)->alignment = tuple->value->uint8;
         break;
       case ElementTextUpdateTimeUnit:
-        ((SimplyElementText*) element)->time_unit = tuple->value->uint8;
+        ((SimplyElementText*) element)->time_units = tuple->value->uint8;
         update_ticker = true;
         break;
       case ElementImage:

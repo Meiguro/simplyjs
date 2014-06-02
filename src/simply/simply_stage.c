@@ -101,7 +101,7 @@ static void text_element_draw(GContext *ctx, SimplyStage *self, SimplyElementTex
   rect_element_draw(ctx, self, (SimplyElementRect*) element);
   char *text = element->text;
   if (element->text_color != GColorClear && is_string(text)) {
-    if (element->time_unit) {
+    if (element->time_units) {
       text = format_time(text);
     }
     GFont font = element->font ? element->font : fonts_get_system_font(FONT_KEY_FONT_FALLBACK);
@@ -353,10 +353,7 @@ void simply_stage_update_ticker(SimplyStage *self) {
   SimplyElementCommon *element = (SimplyElementCommon*) self->stage_layer.elements;
   while (element) {
     if (element->type == SimplyElementTypeText) {
-      SimplyElementText *text = (SimplyElementText*) element;
-      if (text->time_unit) {
-        units |= text->time_unit;
-      }
+      units |= ((SimplyElementText*) element)->time_units;
     }
     element = (SimplyElementCommon*) element->node.next;
   }

@@ -9,11 +9,10 @@ Propable.makeAccessor = function(k) {
   return function(value) {
     if (arguments.length === 0) {
       return this.state[k];
-    } else {
-      this.state[k] = value;
-      this._prop(myutil.toObject(k, value));
-      return this;
     }
+    this.state[k] = value;
+    this._prop(myutil.toObject(k, value));
+    return this;
   };
 };
 

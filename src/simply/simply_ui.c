@@ -255,12 +255,12 @@ static void window_load(Window *window) {
 
 static void window_appear(Window *window) {
   SimplyUi *self = window_get_user_data(window);
-  simply_msg_window_show(self->window.id);
+  simply_msg_window_show(self->window.simply->msg, self->window.id);
 }
 
 static void window_disappear(Window *window) {
   SimplyUi *self = window_get_user_data(window);
-  simply_msg_window_hide(self->window.id);
+  simply_msg_window_hide(self->window.simply->msg, self->window.id);
 }
 
 static void window_unload(Window *window) {

@@ -727,6 +727,11 @@ SimplyPebble.onAppMessage = function(e) {
   var code = payload[0];
   var command = commands[code];
 
+  if (!command) {
+    console.log('Received unknown payload: ' + JSON.stringify(payload));
+    return;
+  }
+
   switch (command.name) {
     case 'windowHide':
       WindowStack.emitHide(payload[1]);

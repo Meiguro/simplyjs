@@ -12,23 +12,23 @@
 
 Simply *simply_init(void) {
   Simply *simply = malloc(sizeof(*simply));
-  simply->accel = simply_accel_create();
-  simply->res = simply_res_create();
+  simply->accel = simply_accel_create(simply);
+  simply->res = simply_res_create(simply);
   simply->splash = simply_splash_create(simply);
   simply->stage = simply_stage_create(simply);
   simply->menu = simply_menu_create(simply);
+  simply->msg = simply_msg_create(simply);
   simply->ui = simply_ui_create(simply);
 
   bool animated = false;
   window_stack_push(simply->splash->window, animated);
 
-  simply_msg_init(simply);
   return simply;
 }
 
 void simply_deinit(Simply *simply) {
-  simply_msg_deinit();
   simply_ui_destroy(simply->ui);
+  simply_msg_destroy(simply->msg);
   simply_menu_destroy(simply->menu);
   simply_stage_destroy(simply->stage);
   simply_res_destroy(simply->res);

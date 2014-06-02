@@ -125,14 +125,14 @@ static void single_click_handler(ClickRecognizerRef recognizer, void *context) {
   bool is_enabled = (self->button_mask & (1 << button));
   if (button == BUTTON_ID_BACK && !is_enabled) {
     if (simply_msg_has_communicated()) {
-      simply_msg_window_hide(self->id);
+      simply_msg_window_hide(self->simply->msg, self->id);
     } else {
       bool animated = true;
       window_stack_pop(animated);
     }
   }
   if (is_enabled) {
-    simply_msg_single_click(button);
+    simply_msg_single_click(self->simply->msg, button);
   }
 }
 
@@ -141,7 +141,7 @@ static void long_click_handler(ClickRecognizerRef recognizer, void *context) {
   ButtonId button = click_recognizer_get_button_id(recognizer);
   bool is_enabled = (self->button_mask & (1 << button));
   if (is_enabled) {
-    simply_msg_long_click(button);
+    simply_msg_long_click(self->simply->msg, button);
   }
 }
 

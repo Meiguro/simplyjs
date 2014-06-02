@@ -10,6 +10,7 @@ struct Simply {
   struct SimplySplash *splash;
   struct SimplyStage *stage;
   struct SimplyMenu *menu;
+  struct SimplyMsg *msg;
   struct SimplyUi *ui;
 };
 

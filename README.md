@@ -564,7 +564,11 @@ size.addSelf(size);
 element.animate({ position: pos, size: size });
 ````
 
-When calling animate, the new values save immediately to the [Element].
+Animations are queued when `Element.animate` is called multiple times at once. The animations will occur in order, and the first animation will occur immediately.
+
+When an animation begins, its destination values are saved immediately to the [Element].
+
+`Element.animate` is chainable.
 
 #### Element.animate(field, value, [duration=400])
 
@@ -575,6 +579,29 @@ var pos = element.position();
 pos.y += 20;
 element.animate('position', pos, 1000);
 ````
+
+<a id="element-queue-callback-next"></a>
+#### Element.queue(callback(next))
+
+`Element.queue` can be used to perform tasks that are dependent upon an animation completing, such as preparing the element for a different animation. It is recommended to use `Element.queue` instead of a timeout if the same element will be animated after the custom task.
+
+The `callback` you pass to `Element.queue` will be called with a function `next` as the first parameter. When `next` is called, the next item in the animation queue will begin. Items includes callbacks added by `Element.queue` or animations added by `Element.animate` before an animation is complete. Calling `next` is equivalent to calling `Element.dequeue`.
+
+````js
+element
+  .animate('position', new Vector2(0, 0)
+  .queue(function(next) {
+    this.backgroundColor('white');
+    next();
+  })
+  .animate('position', new Vector2(0, 50)
+````
+
+`Element.queue` is chainable.
+
+#### Element.dequeue()
+
+`Element.dequeue` can be used to continue executing items in the animation queue. It is useful in cases where the `next` function passed in `Element.queue` callbacks is not available. See [Element.queue(callback(next))] for more information on the animation queue.
 
 #### Element.position(position)
 
@@ -775,7 +802,6 @@ For more information, please refer to the [Vector2 class documentation in the th
 [Window]: #window
 [Card]: #card
 [Menu]: #menu
-[Stage]: #stage
 [Element]: #element
 [Circle]: #circle
 [Image]: #image
@@ -783,4 +809,5 @@ For more information, please refer to the [Vector2 class documentation in the th
 [Text]: #text
 [Window.show()]: #window-show
 [Window.hide()]: #window-hide
+[Element.queue(callback(next))]: #element-queue-callback-next
 [Menu.on('select, callback)]: #menu-on-select-callback

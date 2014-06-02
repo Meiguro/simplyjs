@@ -12,6 +12,7 @@ util2.copy(Emitter.prototype, Stage.prototype);
 
 Stage.prototype._show = function() {
   this.each(function(element, index) {
+    element._reset();
     this._insert(index, element);
   }.bind(this));
 };
@@ -25,6 +26,10 @@ Stage.prototype._prop = function() {
 Stage.prototype.each = function(callback) {
   this._items.forEach(callback);
   return this;
+};
+
+Stage.prototype.at = function(index) {
+  return this._items[index];
 };
 
 Stage.prototype.index = function(element) {

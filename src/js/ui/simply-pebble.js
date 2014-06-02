@@ -6,6 +6,7 @@ var ImageService = require('ui/imageservice');
 var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
 var Menu = require('ui/menu');
+var StageElement = require('ui/element');
 
 var simply = require('ui/simply');
 
@@ -376,6 +377,11 @@ var commands = [{
   }, {
     name: 'easing',
     type: AnimationCurve,
+  }],
+}, {
+  name: 'stageAnimateDone',
+  params: [{
+    name: 'index',
   }],
 }];
 
@@ -784,6 +790,9 @@ SimplyPebble.onAppMessage = function(e) {
     case 'menuSelect':
     case 'menuLongSelect':
       Menu.emitSelect(command.name, payload[1], payload[2]);
+      break;
+    case 'stageAnimateDone':
+      StageElement.emitAnimateDone(payload[1]);
       break;
   }
 };

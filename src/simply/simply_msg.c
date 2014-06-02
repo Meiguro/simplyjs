@@ -42,6 +42,7 @@ enum SimplyACmd {
   SimplyACmd_stageElement,
   SimplyACmd_stageRemove,
   SimplyACmd_stageAnimate,
+  SimplyACmd_stageAnimateDone,
 };
 
 typedef enum SimplySetWindowParam SimplySetWindowParam;
@@ -794,4 +795,17 @@ bool simply_msg_menu_select_click(SimplyMsg *self, uint16_t section, uint16_t in
 
 bool simply_msg_menu_select_long_click(SimplyMsg *self, uint16_t section, uint16_t index) {
   return send_menu_item_retry(self, SimplyACmd_menuLongSelect, section, index);
+}
+
+bool simply_msg_animate_element_done(SimplyMsg *self, uint16_t index) {
+  size_t length = dict_calc_buffer_size(2, 1, 2);
+  void *buffer = malloc0(length);
+  if (!buffer) {
+    return false;
+  }
+  DictionaryIterator iter;
+  dict_write_begin(&iter, buffer, length);
+  dict_write_uint8(&iter, 0, SimplyACmd_stageAnimateDone);
+  dict_write_uint16(&iter, 1, index);
+  return add_packet(self, buffer, length);
 }

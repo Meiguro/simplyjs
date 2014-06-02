@@ -68,13 +68,11 @@ struct SimplyMenuItem {
 };
 
 SimplyMenu *simply_menu_create(Simply *simply);
-
 void simply_menu_destroy(SimplyMenu *self);
 
 void simply_menu_show(SimplyMenu *self);
+void simply_menu_clear(SimplyMenu *self);
 
 void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections);
-
 void simply_menu_add_section(SimplyMenu *self, SimplyMenuSection *section);
-
 void simply_menu_add_item(SimplyMenu *self, SimplyMenuItem *item);

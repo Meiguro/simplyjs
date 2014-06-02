@@ -111,12 +111,9 @@ struct SimplyAnimation {
 };
 
 SimplyStage *simply_stage_create(Simply *simply);
-void simply_stage_clear(SimplyStage *self);
 void simply_stage_destroy(SimplyStage *self);
 
 void simply_stage_show(SimplyStage *self);
-void simply_stage_clear(SimplyStage *self);
-
 void simply_stage_clear(SimplyStage *self);
 
 void simply_stage_update(SimplyStage *self);

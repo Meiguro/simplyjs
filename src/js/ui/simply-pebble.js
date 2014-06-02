@@ -537,10 +537,10 @@ var setActionPacket = function(packet, command, actionDef) {
 };
 
 SimplyPebble.window = function(windowDef, clear) {
-  clear = toClearFlags(clear);
   var command = commandMap.setWindow;
   var packet = makePacket(command, windowDef);
   if (clear) {
+    clear = toClearFlags(clear);
     packet[command.paramMap.clear.id] = clear;
   }
   setActionPacket(packet, command, windowDef.action);
@@ -555,10 +555,10 @@ SimplyPebble.windowHide = function(windowId) {
 };
 
 SimplyPebble.card = function(cardDef, clear) {
-  clear = toClearFlags(clear);
   var command = commandMap.setCard;
   var packet = makePacket(command, cardDef);
   if (clear) {
+    clear = toClearFlags(clear);
     packet[command.paramMap.clear.id] = clear;
   }
   setActionPacket(packet, command, cardDef.action);
@@ -588,7 +588,7 @@ SimplyPebble.accelPeek = function(callback) {
   SimplyPebble.sendPacket(packet);
 };
 
-SimplyPebble.menu = function(menuDef) {
+SimplyPebble.menu = function(menuDef, clear) {
   var command = commandMap.setMenu;
   var packetDef = util2.copy(menuDef);
   if (packetDef.sections instanceof Array) {
@@ -598,6 +598,10 @@ SimplyPebble.menu = function(menuDef) {
     packetDef.sections = 1;
   }
   var packet = makePacket(command, packetDef);
+  if (clear) {
+    clear = toClearFlags(clear);
+    packet[command.paramMap.clear.id] = clear;
+  }
   SimplyPebble.sendPacket(packet);
 };
 

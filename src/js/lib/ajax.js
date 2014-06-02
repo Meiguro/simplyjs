@@ -81,10 +81,16 @@ var ajax = function(opt, success, failure) {
   req.onreadystatechange = function(e) {
     if (req.readyState == 4) {
       var body = req.responseText;
+      var failed = req.status != 200;
       if (opt.type == 'json') {
-        body = JSON.parse(body);
+        try {
+          body = JSON.parse(body);
+        }
+        catch (err) {
+          failed = true;
+        }
       }
-      var callback = req.status == 200 ? success : failure;
+      var callback = !failed ? success : failure;
       if (callback) {
         callback(body, req.status, req);
       }

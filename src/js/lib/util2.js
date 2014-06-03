@@ -8,6 +8,12 @@ var util2 = {};
 
 util2.noop = function() {};
 
+util2.count = function(o) {
+  var i = 0;
+  for (var k in o) { ++i; }
+  return i;
+};
+
 util2.copy = function(a, b) {
   b = b || (a instanceof Array ? [] : {});
   for (var k in a) { b[k] = a[k]; }

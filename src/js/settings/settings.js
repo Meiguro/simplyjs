@@ -1,4 +1,6 @@
 var util2 = require('util2');
+var myutil = require('myutil');
+var appinfo = require('appinfo');
 
 var Settings = module.exports;
 
@@ -7,13 +9,22 @@ var state;
 Settings.settingsUrl = 'http://meiguro.com/simplyjs/settings.html';
 
 Settings.init = function() {
-  state = Settings.state = {
-    options: {},
-    listeners: [],
-  };
+  Settings.reset();
+
+  Settings.loadOptions();
+  Settings.loadData();
+
   // Register listeners for the Settings
   Pebble.addEventListener('showConfiguration', Settings.onOpenConfig);
   Pebble.addEventListener('webviewclosed', Settings.onCloseConfig);
+};
+
+Settings.reset = function() {
+  state = Settings.state = {
+    options: {},
+    data: {},
+    listeners: [],
+  };
 };
 
 Settings.mainScriptUrl = function(scriptUrl) {
@@ -28,48 +39,66 @@ Settings.mainScriptUrl = function(scriptUrl) {
   return scriptUrl;
 };
 
-var getOptionsKey = function(path) {
-  return 'options:' + path;
-};
-
-Settings.saveOptions = function(path) {
-  var options = state.options;
-  localStorage.setItem(getOptionsKey(path), JSON.stringify(options));
-};
-
-Settings.loadOptions = function(path) {
-  state.options = {};
-  var options = localStorage.getItem(getOptionsKey(path));
-  try {
-    options = JSON.parse(options);
-  } catch (e) {}
-  if (typeof options === 'object' && options !== null) {
-    state.options = options;
-  }
-};
-
-Settings.option = function(key, value) {
-  var options = state.options;
-  if (arguments.length === 1) {
-    return options[key];
-  }
-  if (typeof value === 'undefined' || value === null) {
-    delete options[key];
-  } else {
-    try {
-      value = JSON.parse(value);
-    } catch (e) {}
-    options[key] = value;
-  }
-  Settings.saveOptions();
-  return value;
-};
-
 Settings.getBaseOptions = function() {
   return {
     scriptUrl: Settings.mainScriptUrl(),
   };
 };
+
+var getDataKey = function(path, field) {
+  path = path || appinfo.uuid;
+  return field + ':' + path;
+};
+
+Settings.saveData = function(path, field) {
+  field = field || 'data';
+  var data = data || state[field];
+  localStorage.setItem(getDataKey(path, field), JSON.stringify(data));
+};
+
+Settings.loadData = function(path, field) {
+  field = field || 'data';
+  state[field] = {};
+  var data = localStorage.getItem(getDataKey(path, field));
+  try {
+    data = JSON.parse(data);
+  } catch (e) {}
+  if (typeof data === 'object' && data !== null) {
+    state[field] = data;
+  }
+};
+
+Settings.saveOptions = function(path) {
+  Settings.saveData(path, 'options');
+};
+
+Settings.loadOptions = function(path) {
+  Settings.loadData(path, 'options');
+};
+
+var makeDataAccessor = function(type, path) {
+  return function(field, value) {
+    var data = state[type];
+    if (arguments.length === 0) {
+      return data;
+    }
+    if (arguments.length === 1 && typeof field !== 'object') {
+      return data[field];
+    }
+    if (typeof field !== 'object' && typeof value === 'undefined' || value === null) {
+      delete data[field];
+      return;
+    }
+    var def = myutil.toObject(field, value);
+    util2.copy(def, data);
+    Settings.saveData(path, type);
+    return value;
+  };
+};
+
+Settings.option = makeDataAccessor('options');
+
+Settings.data = makeDataAccessor('data');
 
 Settings.config = function(opt, open, close) {
   if (typeof opt === 'string') {

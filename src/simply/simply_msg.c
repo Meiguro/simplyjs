@@ -16,6 +16,8 @@
 
 #include <pebble.h>
 
+#define SEND_DELAY_MS 10
+
 typedef enum SimplyACmd SimplyACmd;
 
 enum SimplyACmd {
@@ -657,11 +659,13 @@ static void send_msg_retry(void *data) {
     return;
   }
   if (!send_msg(packet)){
-    app_timer_register(10, send_msg_retry, self);
+    self->send_delay_ms *= 2;
+    app_timer_register(self->send_delay_ms, send_msg_retry, self);
     return;
   }
   list1_remove(&self->queue, &packet->node);
   destroy_packet(packet);
+  self->send_delay_ms = SEND_DELAY_MS;
 }
 
 static SimplyPacket *add_packet(SimplyMsg *self, void *buffer, size_t length) {

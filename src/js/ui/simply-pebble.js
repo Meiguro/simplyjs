@@ -661,9 +661,13 @@ SimplyPebble.image = function(id, gbitmap) {
   SimplyPebble.sendPacket(packet);
 };
 
-SimplyPebble.stage = function(stageDef) {
+SimplyPebble.stage = function(stageDef, clear) {
   var command = commandMap.setStage;
   var packet = makePacket(command, stageDef);
+  if (clear) {
+    clear = toClearFlags(clear);
+    packet[command.paramMap.clear.id] = clear;
+  }
   setActionPacket(packet, command, stageDef.action);
   SimplyPebble.sendPacket(packet);
 };

@@ -88,7 +88,6 @@ Settings.config = function(opt, open, close) {
 };
 
 Settings.onOpenConfig = function(e) {
-  console.log("Settings.onOpenConfig");
   var options;
   var url;
   var listener = util2.last(state.listeners);
@@ -104,6 +103,7 @@ Settings.onOpenConfig = function(e) {
   } else {
     url = Settings.settingsUrl;
     options = Settings.getBaseOptions();
+    return;
   }
   var hash = encodeURIComponent(JSON.stringify(options));
   Pebble.openURL(url + '#' + hash);

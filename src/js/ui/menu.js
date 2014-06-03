@@ -44,24 +44,14 @@ var getMetaSection = function(sectionIndex) {
   return (this._sections[sectionIndex] || ( this._sections[sectionIndex] = {} ));
 };
 
-var targetType = {
-  menu: 1,
-  section: 2,
-  item: 3,
-};
-
-var isEnumerable = function(x, isArray) {
-  if (isArray) {
-    return (x instanceof Array);
-  } else {
-    return (typeof x === 'number' || x instanceof Array);
-  }
-};
-
-var getSections = function(target) {
+var getSections = function() {
   var sections = this.state.sections;
-  if (isEnumerable(sections, target > targetType.menu)) {
+  if (sections instanceof Array) {
     return sections;
+  }
+  if (typeof sections === 'number') {
+    sections = new Array(sections);
+    return (this.state.sections = sections);
   }
   if (typeof sections === 'function') {
     this.sectionsProvider = this.state.sections;
@@ -70,42 +60,40 @@ var getSections = function(target) {
   if (this.sectionsProvider) {
     sections = this.sectionsProvider.call(this);
     if (sections) {
-      return (this.state.sections = sections);
+      this.state.sections = sections;
+      return getSections.call(this);
     }
   }
-  if (!sections) {
-    return (this.state.sections = []);
-  }
+  return (this.state.sections = []);
 };
 
-var getSection = function(e) {
-  var sections = getSections.call(this, targetType.section);
-  var section;
-  if (sections) {
-    section = sections[e.section];
-    if (section) {
-      return section;
-    }
+var getSection = function(e, create) {
+  var sections = getSections.call(this);
+  var section = sections[e.section];
+  if (section) {
+    return section;
   }
   if (this.sectionProvider) {
     section = this.sectionProvider.call(this, e);
     if (section) {
-      if (!(sections instanceof Array)) {
-        sections = this.state.sections = [];
-      }
       return (sections[e.section] = section);
     }
   }
-  if (sections && !sections[e.section]) {
-    return (sections[e.section] = {});
-  }
+  if (!create) { return; }
+  return (sections[e.section] = {});
 };
 
-var getItems = function(e, target) {
-  var section = getSection.call(this, e);
-  if (!section) { return; }
-  if (isEnumerable(section.items, target > targetType.section)) {
+var getItems = function(e, create) {
+  var section = getSection.call(this, e, create);
+  if (!section) {
+    if (e.section > 0) { return; }
+    section = this.state.sections[0] = {};
+  }
+  if (section.items instanceof Array) {
     return section.items;
+  }
+  if (typeof section.items === 'number') {
+    return (section.items = new Array(section.items));
   }
   if (typeof section.items === 'function') {
     this._sections[e.section] = section.items;
@@ -115,69 +103,51 @@ var getItems = function(e, target) {
   if (itemsProvider) {
     var items = itemsProvider.call(this, e);
     if (items) {
-      return (section.items = items);
+      section.items = items;
+      return getItems.call(this, e, create);
     }
   }
+  return (section.items = []);
 };
 
-var getItem = function(e) {
-  var items = getItems.call(this, e, targetType.item);
-  var item;
-  if (items) {
-    item = items[e.item];
-    if (item) {
-      return item;
-    }
+var getItem = function(e, create) {
+  var items = getItems.call(this, e, create);
+  var item = items[e.item];
+  if (item) {
+    return item;
   }
-  var section = getSection.call(this, e);
   var itemProvider = getMetaSection.call(this, e.section).item || this.itemProvider;
   if (itemProvider) {
     item = itemProvider.call(this, e);
     if (item) {
-      if (!(section.items instanceof Array)) {
-        section.items = [];
-      }
-      return (section.items[e.item] = item);
+      return (items[e.item] = item);
     }
   }
+  if (!create) { return; }
+  return (items[e.item] = {});
 };
 
 Menu.prototype._resolveMenu = function() {
-  var sections = getSections.call(this, targetType.menu);
-  this.state.sections = sections;
-  if (isEnumerable(sections)) {
-    if (typeof sections === 'number') {
-      this.state.sections = new Array(sections);
-    }
-    if (this === WindowStack.top()) {
-      simply.impl.menu.call(this, this.state);
-    }
+  var sections = getSections.call(this);
+  if (this === WindowStack.top()) {
+    simply.impl.menu.call(this, this.state);
   }
 };
 
 Menu.prototype._resolveSection = function(e) {
   var section = getSection.call(this, e);
-  if (section) {
-    if (!(section.items instanceof Array)) {
-      section.items = getItems.call(this, e, targetType.section);
-    }
-    if (isEnumerable(section.items)) {
-      if (typeof section.items === 'number') {
-        section.items = new Array(section.items);
-      }
-      if (this === WindowStack.top()) {
-        simply.impl.menuSection.call(this, e.section, section);
-      }
-    }
+  if (!section) { return; }
+  section.items = getItems.call(this, e);
+  if (this === WindowStack.top()) {
+    simply.impl.menuSection.call(this, e.section, section);
   }
 };
 
 Menu.prototype._resolveItem = function(e) {
   var item = getItem.call(this, e);
-  if (item) {
-    if (this === WindowStack.top()) {
-      simply.impl.menuItem.call(this, e.section, e.item, item);
-    }
+  if (!item) { return; }
+  if (this === WindowStack.top()) {
+    simply.impl.menuItem.call(this, e.section, e.item, item);
   }
 };
 
@@ -221,11 +191,17 @@ Menu.prototype.section = function(sectionIndex, section) {
     this.sectionProvider = sectionIndex;
     return this;
   }
-  var sections = this.state.sections;
-  if (sections instanceof Array) {
-    sections[sectionIndex] = section;
+  var menuIndex = { section: sectionIndex };
+  if (!section) {
+    return getSection.call(this, menuIndex);
   }
-  this._resolveSection({ section: sectionIndex });
+  var sections = getSections.call(this);
+  var prevLength = sections.length;
+  sections[sectionIndex] = section;
+  if (sections.length !== prevLength) {
+    this._resolveMenu();
+  }
+  this._resolveSection(menuIndex);
   return this;
 };
 
@@ -240,15 +216,13 @@ Menu.prototype.items = function(sectionIndex, items) {
     getMetaSection.call(this, sectionIndex).items = items;
     return this;
   }
-  var section = getSection.call(this, { section: sectionIndex });
-  if (section) {
-    if (items) {
-      section.items = items;
-    } else {
-      return section.items;
-    }
+  var menuIndex = { section: sectionIndex };
+  if (!items) {
+    return getItems.call(this, menuIndex);
   }
-  this._resolveSection({ section: sectionIndex });
+  var section = getSection.call(this, menuIndex, true);
+  section.items = items;
+  this._resolveSection(menuIndex);
   return this;
 };
 
@@ -269,15 +243,17 @@ Menu.prototype.item = function(sectionIndex, itemIndex, item) {
     getMetaSection.call(this, sectionIndex).item = item;
     return this;
   }
-  if (item) {
-    var section = getSection.call(this, { section: sectionIndex });
-    if (section.items instanceof Array) {
-      section.items[itemIndex] = item;
-    }
-  } else {
-    return getItem.call(this, { section: sectionIndex, item: itemIndex });
+  var menuIndex = { section: sectionIndex, item: itemIndex };
+  if (!item) {
+    return getItem.call(this, menuIndex);
   }
-  this._resolveItem({ section: sectionIndex, item: itemIndex });
+  var items = getItems.call(this, menuIndex, true);
+  var prevLength = items.length;
+  items[itemIndex] = item;
+  if (items.length !== prevLength) {
+    this._resolveSection(menuIndex);
+  }
+  this._resolveItem(menuIndex);
   return this;
 };
 

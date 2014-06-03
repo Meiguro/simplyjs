@@ -1,8 +1,8 @@
 #include "simply_menu.h"
 
 #include "simply_res.h"
-
 #include "simply_msg.h"
+#include "simply_window_stack.h"
 
 #include "simply.h"
 
@@ -262,12 +262,11 @@ static void window_load(Window *window) {
 
 static void window_appear(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
-  simply_msg_window_show(self->window.simply->msg, self->window.id);
+  simply_window_stack_send_show(self->window.simply->window_stack, &self->window);
 }
 
 static void window_disappear(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
-  simply_msg_window_hide(self->window.simply->msg, self->window.id);
 
   simply_menu_clear(self);
 }
@@ -279,9 +278,16 @@ static void window_unload(Window *window) {
   self->menu_layer.menu_layer = NULL;
 
   simply_window_unload(&self->window);
+
+  simply_window_stack_send_hide(self->window.simply->window_stack, &self->window);
 }
 
 void simply_menu_clear(SimplyMenu *self) {
+  if (self->menu_layer.get_timer) {
+    app_timer_cancel(self->menu_layer.get_timer);
+    self->menu_layer.get_timer = NULL;
+  }
+
   while (self->menu_layer.sections) {
     destroy_section(self, (SimplyMenuSection*) self->menu_layer.sections);
   }

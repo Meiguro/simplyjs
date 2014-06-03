@@ -39,10 +39,10 @@ WindowStack.prototype._emitHide = function(item) {
   this.emit('hide', e);
 };
 
-WindowStack.prototype._show = function(item) {
+WindowStack.prototype._show = function(item, pushing) {
   if (!item) { return; }
   this._emitShow(item);
-  item._show();
+  item._show(pushing);
 };
 
 WindowStack.prototype._hide = function(item, broadcast) {
@@ -64,7 +64,7 @@ WindowStack.prototype.push = function(item) {
   this.remove(item);
   var prevTop = this.top();
   this._items.push(item);
-  this._show(item);
+  this._show(item, true);
   this._hide(prevTop, false);
   console.log('(+) ' + item._toString() + ' : ' + this._toString());
 };

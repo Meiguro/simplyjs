@@ -5,6 +5,7 @@
 #include "simply_stage.h"
 #include "simply_menu.h"
 #include "simply_ui.h"
+#include "simply_window_stack.h"
 
 #include "simply.h"
 
@@ -50,6 +51,7 @@ typedef enum SimplySetWindowParam SimplySetWindowParam;
 enum SimplySetWindowParam {
   SetWindow_clear = 1,
   SetWindow_id,
+  SetWindow_pushing,
   SetWindow_action,
   SetWindow_actionUp,
   SetWindow_actionSelect,
@@ -64,8 +66,6 @@ enum SimplySetWindowParam {
 typedef enum SimplySetUiParam SimplySetUiParam;
 
 enum SimplySetUiParam {
-  SetUi_clear = SetWindow_clear,
-  SetUi_id,
   SetUi_title = SetWindowLast,
   SetUi_subtitle,
   SetUi_body,
@@ -78,16 +78,7 @@ enum SimplySetUiParam {
 typedef enum SimplySetMenuParam SimplySetMenuParam;
 
 enum SimplySetMenuParam {
-  SetMenu_clear = SetWindow_clear,
-  SetMenu_id,
   SetMenu_sections = SetWindowLast,
-};
-
-typedef enum SimplySetStageParam SimplySetStageParam;
-
-enum SimplySetStageParam {
-  SetStage_clear = SetWindow_clear,
-  SetStage_id,
 };
 
 typedef enum VibeType VibeType;
@@ -148,8 +139,21 @@ static void set_window(SimplyWindow *window, DictionaryIterator *iter, Simply *s
     simply_window_set_action_bar(window, false);
     simply_window_action_bar_clear(window);
   }
+  bool is_clear = false;
+  bool is_id = false;
+  bool is_push = false;
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {
+      case SetWindow_clear:
+        is_clear = true;
+        break;
+      case SetWindow_id:
+        is_id = true;
+        window->id = tuple->value->uint32;
+        break;
+      case SetWindow_pushing:
+        is_push = true;
+        break;
       case SetWindow_action:
         simply_window_set_action_bar(window, tuple->value->int32);
         break;
@@ -171,6 +175,9 @@ static void set_window(SimplyWindow *window, DictionaryIterator *iter, Simply *s
         simply_window_set_scrollable(window, tuple->value->int32);
         break;
     }
+  }
+  if (is_clear && is_id) {
+    simply_window_stack_show(simply->window_stack, window, is_push);
   }
 }
 
@@ -194,21 +201,18 @@ static void handle_hide_window(DictionaryIterator *iter, Simply *simply) {
     window_id = tuple->value->uint32;
   }
   if (window->id == window_id) {
-    simply_window_hide(window);
+    simply_window_stack_pop(simply->window_stack, window);
   }
 }
 
 static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
   SimplyUi *ui = simply->ui;
   Tuple *tuple;
-  if ((tuple = dict_find(iter, SetUi_clear))) {
+  if ((tuple = dict_find(iter, SetWindow_clear))) {
     simply_ui_clear(ui, tuple->value->uint32);
   }
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {
-      case SetUi_id:
-        ui->window.id = tuple->value->uint32;
-        break;
       case SetUi_title:
       case SetUi_subtitle:
       case SetUi_body:
@@ -225,7 +229,6 @@ static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
     }
   }
   set_window(&ui->window, iter, simply);
-  simply_ui_show(ui);
 }
 
 static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
@@ -283,11 +286,8 @@ static void handle_set_menu(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {
-      case SetMenu_clear:
+      case SetWindow_clear:
         simply_menu_clear(menu);
-        break;
-      case SetMenu_id:
-        menu->window.id = tuple->value->uint32;
         break;
       case SetMenu_sections:
         simply_menu_set_num_sections(menu, tuple->value->int32);
@@ -295,7 +295,6 @@ static void handle_set_menu(DictionaryIterator *iter, Simply *simply) {
     }
   }
   set_window(&menu->window, iter, simply);
-  simply_menu_show(menu);
 }
 
 static void handle_set_menu_section(DictionaryIterator *iter, Simply *simply) {
@@ -380,16 +379,12 @@ static void handle_set_stage(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {
-      case SetStage_clear:
+      case SetWindow_clear:
         simply_stage_clear(stage);
-        break;
-      case SetStage_id:
-        stage->window.id = tuple->value->uint32;
         break;
     }
   }
   set_window(&stage->window, iter, simply);
-  simply_stage_show(stage);
 }
 
 static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {

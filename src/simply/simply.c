@@ -5,8 +5,9 @@
 #include "simply_splash.h"
 #include "simply_stage.h"
 #include "simply_menu.h"
-#include "simply_ui.h"
 #include "simply_msg.h"
+#include "simply_ui.h"
+#include "simply_window_stack.h"
 
 #include <pebble.h>
 
@@ -19,6 +20,7 @@ Simply *simply_init(void) {
   simply->menu = simply_menu_create(simply);
   simply->msg = simply_msg_create(simply);
   simply->ui = simply_ui_create(simply);
+  simply->window_stack = simply_window_stack_create(simply);
 
   bool animated = false;
   window_stack_push(simply->splash->window, animated);
@@ -27,6 +29,7 @@ Simply *simply_init(void) {
 }
 
 void simply_deinit(Simply *simply) {
+  simply_window_stack_destroy(simply->window_stack);
   simply_ui_destroy(simply->ui);
   simply_msg_destroy(simply->msg);
   simply_menu_destroy(simply->menu);

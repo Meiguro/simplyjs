@@ -3,6 +3,7 @@
 #include "simply_window.h"
 #include "simply_res.h"
 #include "simply_msg.h"
+#include "simply_window_stack.h"
 
 #include "simply.h"
 
@@ -310,14 +311,14 @@ static void window_load(Window *window) {
 
 static void window_appear(Window *window) {
   SimplyStage *self = window_get_user_data(window);
-  simply_msg_window_show(self->window.simply->msg, self->window.id);
+  simply_window_stack_send_show(self->window.simply->window_stack, &self->window);
 
   simply_stage_update_ticker(self);
 }
 
 static void window_disappear(Window *window) {
   SimplyStage *self = window_get_user_data(window);
-  simply_msg_window_hide(self->window.simply->msg, self->window.id);
+  simply_window_stack_send_hide(self->window.simply->window_stack, &self->window);
 
   simply_stage_clear(self);
 }

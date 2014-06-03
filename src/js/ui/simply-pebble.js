@@ -107,9 +107,11 @@ var AnimationCurve = function(x) {
 
 var setWindowParams = [{
   name: 'clear',
-  type: Boolean,
 }, {
   name: 'id',
+}, {
+  name: 'pushing',
+  type: Boolean,
 }, {
   name: 'action',
   type: Boolean,
@@ -582,12 +584,15 @@ SimplyPebble.windowHide = function(windowId) {
   SimplyPebble.sendPacket(packet);
 };
 
-SimplyPebble.card = function(cardDef, clear) {
+SimplyPebble.card = function(cardDef, clear, pushing) {
   var command = commandMap.setCard;
   var packet = makePacket(command, cardDef);
   if (clear) {
     clear = toClearFlags(clear);
     packet[command.paramMap.clear.id] = clear;
+  }
+  if (pushing) {
+    packet[command.paramMap.pushing.id] = pushing;
   }
   setActionPacket(packet, command, cardDef.action);
   SimplyPebble.sendPacket(packet);
@@ -616,7 +621,7 @@ SimplyPebble.accelPeek = function(callback) {
   SimplyPebble.sendPacket(packet);
 };
 
-SimplyPebble.menu = function(menuDef, clear) {
+SimplyPebble.menu = function(menuDef, clear, pushing) {
   var command = commandMap.setMenu;
   var packetDef = util2.copy(menuDef);
   if (packetDef.sections instanceof Array) {
@@ -629,6 +634,9 @@ SimplyPebble.menu = function(menuDef, clear) {
   if (clear) {
     clear = toClearFlags(clear);
     packet[command.paramMap.clear.id] = clear;
+  }
+  if (pushing) {
+    packet[command.paramMap.pushing.id] = pushing;
   }
   SimplyPebble.sendPacket(packet);
 };
@@ -661,12 +669,15 @@ SimplyPebble.image = function(id, gbitmap) {
   SimplyPebble.sendPacket(packet);
 };
 
-SimplyPebble.stage = function(stageDef, clear) {
+SimplyPebble.stage = function(stageDef, clear, pushing) {
   var command = commandMap.setStage;
   var packet = makePacket(command, stageDef);
   if (clear) {
     clear = toClearFlags(clear);
     packet[command.paramMap.clear.id] = clear;
+  }
+  if (pushing) {
+    packet[command.paramMap.pushing.id] = pushing;
   }
   setActionPacket(packet, command, stageDef.action);
   SimplyPebble.sendPacket(packet);

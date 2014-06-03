@@ -1,4 +1,5 @@
 var util2 = require('util2');
+var ajax = require('ajax');
 var myutil = require('myutil');
 var appinfo = require('appinfo');
 
@@ -143,15 +144,34 @@ Settings.onOpenConfig = function(e) {
 Settings.onCloseConfig = function(e) {
   var listener = util2.last(state.listeners);
   var options = {};
+  var format;
   if (e.response && e.response !== 'CANCELLED') {
-    options = JSON.parse(decodeURIComponent(e.response));
+    try {
+      options = JSON.parse(decodeURIComponent(e.response));
+      format = 'json';
+    } catch (err) {}
+    if (!format && e.response.match(/(&|=)/)) {
+      options = ajax.deformify(e.response);
+      if (util2.count(options) > 0) {
+        format = 'form';
+      }
+    }
   }
   if (listener) {
     e = {
       originalEvent: e,
+      response: e.response,
+      originalOptions: state.options,
       options: options,
       url: listener.params.url,
+      failed: !format,
+      format: format,
     };
+    if (format && listener.params.autoSave !== false) {
+      e.originalOptions = util2.copy(state.options);
+      util2.copy(options, state.options);
+      Settings.saveOptions();
+    }
     return listener.close(e);
   }
 };

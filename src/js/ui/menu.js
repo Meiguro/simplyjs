@@ -11,7 +11,7 @@ var Menu = function(menuDef) {
   this._sections = {};
 };
 
-Menu.prototype._codeName = 'menu';
+Menu._codeName = 'menu';
 
 util2.inherit(Menu, Window);
 

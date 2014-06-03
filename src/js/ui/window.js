@@ -252,6 +252,10 @@ Window.prototype._buttonAutoConfig = function() {
   }
 };
 
+Window.prototype._toString = function() {
+  return '[' + this.constructor._codeName + ' ' + this._id() + ']';
+};
+
 Window.emit = function(type, subtype, e, klass) {
   var wind = e.window = WindowStack.top();
   if (klass) {

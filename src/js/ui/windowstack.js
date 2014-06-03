@@ -66,6 +66,7 @@ WindowStack.prototype.push = function(item) {
   this._items.push(item);
   this._show(item);
   this._hide(prevTop, false);
+  console.log('(+) ' + item._toString() + ' : ' + this._toString());
 };
 
 WindowStack.prototype.pop = function(broadcast) {
@@ -86,6 +87,7 @@ WindowStack.prototype.remove = function(item, broadcast) {
     this._show(top);
     this._hide(item, top && top.constructor === item.constructor ? false : broadcast);
   }
+  console.log('(-) ' + item._toString() + ' : ' + this._toString());
   return item;
 };
 
@@ -103,6 +105,10 @@ WindowStack.prototype.emitHide = function(windowId) {
   var wind = this.get(windowId);
   if (wind !== this.top()) { return; }
   this.remove(wind);
+};
+
+WindowStack.prototype._toString = function() {
+  return this._items.map(function(x){ return x._toString(); }).join(',');
 };
 
 module.exports = new WindowStack();

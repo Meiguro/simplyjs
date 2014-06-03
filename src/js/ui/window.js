@@ -79,10 +79,10 @@ Window.prototype.hide = function() {
   return this;
 };
 
-Window.prototype._show = function() {
-  this._prop(this.state, true);
+Window.prototype._show = function(pushing) {
+  this._prop(this.state, true, pushing);
   if (this._dynamic) {
-    Stage.prototype._show.call(this);
+    Stage.prototype._show.call(this, pushing);
   }
 };
 
@@ -250,6 +250,10 @@ Window.prototype._buttonAutoConfig = function() {
     buttonState.config.back = useBack;
     return this.buttonConfig(buttonState.config, true);
   }
+};
+
+Window.prototype._toString = function() {
+  return '[' + this.constructor._codeName + ' ' + this._id() + ']';
 };
 
 Window.emit = function(type, subtype, e, klass) {

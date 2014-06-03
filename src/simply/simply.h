@@ -12,6 +12,7 @@ struct Simply {
   struct SimplyMenu *menu;
   struct SimplyMsg *msg;
   struct SimplyUi *ui;
+  struct SimplyWindowStack *window_stack;
 };
 
 Simply *simply_init();

@@ -2,7 +2,7 @@
 
 #include "simply_msg.h"
 #include "simply_res.h"
-#include "simply_menu.h"
+#include "simply_window_stack.h"
 
 #include "simply.h"
 
@@ -227,11 +227,11 @@ static void show_welcome_text(SimplyUi *self) {
     return;
   }
 
-  simply_ui_set_text(self, UiTitle, "Simply.js");
+  simply_ui_set_text(self, UiTitle, "Pebble.js");
   simply_ui_set_text(self, UiSubtitle, "Write apps with JS!");
-  simply_ui_set_text(self, UiBody, "Visit simplyjs.io for details.");
+  simply_ui_set_text(self, UiBody, "pebble.github.io/pebblejs");
 
-  simply_ui_show(self);
+  simply_window_stack_show(self->window.simply->window_stack, &self->window, true);
 }
 
 static void window_load(Window *window) {
@@ -255,12 +255,12 @@ static void window_load(Window *window) {
 
 static void window_appear(Window *window) {
   SimplyUi *self = window_get_user_data(window);
-  simply_msg_window_show(self->window.simply->msg, self->window.id);
+  simply_window_stack_send_show(self->window.simply->window_stack, &self->window);
 }
 
 static void window_disappear(Window *window) {
   SimplyUi *self = window_get_user_data(window);
-  simply_msg_window_hide(self->window.simply->msg, self->window.id);
+  simply_window_stack_send_hide(self->window.simply->window_stack, &self->window);
 }
 
 static void window_unload(Window *window) {
@@ -270,16 +270,6 @@ static void window_unload(Window *window) {
   self->window.layer = self->ui_layer.layer = NULL;
 
   simply_window_unload(&self->window);
-}
-
-void simply_ui_show(SimplyUi *self) {
-  if (!self->window.window) {
-    return;
-  }
-  if (!window_stack_contains_window(self->window.window)) {
-    bool animated = !self->window.simply->splash;
-    window_stack_push(self->window.window, animated);
-  }
 }
 
 SimplyUi *simply_ui_create(Simply *simply) {

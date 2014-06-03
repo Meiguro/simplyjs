@@ -13,6 +13,7 @@ typedef struct SimplyMsg SimplyMsg;
 struct SimplyMsg {
   Simply *simply;
   List1Node *queue;
+  uint32_t send_delay_ms;
 };
 
 typedef struct SimplyPacket SimplyPacket;

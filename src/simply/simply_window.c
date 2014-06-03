@@ -3,6 +3,7 @@
 #include "simply_msg.h"
 #include "simply_res.h"
 #include "simply_menu.h"
+#include "simply_window_stack.h"
 
 #include "simply.h"
 
@@ -125,7 +126,7 @@ static void single_click_handler(ClickRecognizerRef recognizer, void *context) {
   bool is_enabled = (self->button_mask & (1 << button));
   if (button == BUTTON_ID_BACK && !is_enabled) {
     if (simply_msg_has_communicated()) {
-      simply_msg_window_hide(self->simply->msg, self->id);
+      simply_window_stack_back(self->simply->window_stack, self);
     } else {
       bool animated = true;
       window_stack_pop(animated);
@@ -180,23 +181,6 @@ void simply_window_load(SimplyWindow *self) {
 void simply_window_unload(SimplyWindow *self) {
   scroll_layer_destroy(self->scroll_layer);
   self->scroll_layer = NULL;
-}
-
-void simply_window_hide(SimplyWindow *self) {
-  if (self->window == window_stack_get_top_window()) {
-    bool animated = true;
-    window_stack_pop(animated);
-  }
-}
-
-void simply_window_show(SimplyWindow *self) {
-  if (!self->window) {
-    return;
-  }
-  if (!window_stack_contains_window(self->window)) {
-    bool animated = true;
-    window_stack_push(self->window, animated);
-  }
 }
 
 SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply) {

@@ -121,14 +121,16 @@ Settings.onOpenConfig = function(e) {
   var url;
   var listener = util2.last(state.listeners);
   if (listener) {
-    url = listener.params.url;
-    options = state.options;
     e = {
       originalEvent: e,
-      options: options,
+      options: state.options,
       url: listener.params.url,
     };
-    listener.open(e);
+    if (listener.open(e) === false) {
+      return;
+    }
+    url = listener.params.url;
+    options = state.options;
   } else {
     url = Settings.settingsUrl;
     options = Settings.getBaseOptions();

@@ -1,11 +1,11 @@
 /**
- *  PebbleJS Project main file.
+ *  Pebble.js Project main file.
  */
 
 #include <pebble.h>
 #include "simply/simply.h"
 
-/* 
+/**
  * By default, we 'simply' load Simply and start running it.
  */
 int main(void) {

@@ -11,7 +11,7 @@ void simply_window_stack_show(SimplyWindowStack *self, SimplyWindow *window, boo
   bool animated = (self->simply->splash == NULL);
 
   self->is_showing = true;
-  window_stack_pop_all(false);
+  window_stack_pop_all(!is_push);
   self->is_showing = false;
 
   Window *temp_window = NULL;

@@ -50,24 +50,18 @@ Settings.loadOptions = function(path) {
 
 Settings.option = function(key, value) {
   var options = state.options;
-  if (arguments.length >= 2) {
-    if (typeof value === 'undefined') {
-      delete options[key];
-    } else {
-      try {
-        value = JSON.stringify(value);
-      } catch (e) {}
-      options[key] = '' + value;
-    }
-    Settings.saveOptions();
+  if (arguments.length === 1) {
+    return options[key];
   }
-  value = options[key];
-  if (!isNaN(Number(value))) {
-    return Number(value);
+  if (typeof value === 'undefined' || value === null) {
+    delete options[key];
+  } else {
+    try {
+      value = JSON.parse(value);
+    } catch (e) {}
+    options[key] = value;
   }
-  try {
-    value = JSON.parse(value);
-  } catch (e) {}
+  Settings.saveOptions();
   return value;
 };
 

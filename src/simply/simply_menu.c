@@ -299,16 +299,6 @@ void simply_menu_clear(SimplyMenu *self) {
   mark_dirty(self);
 }
 
-void simply_menu_show(SimplyMenu *self) {
-  if (!self->window.window) {
-    return;
-  }
-  if (!window_stack_contains_window(self->window.window)) {
-    bool animated = !self->window.simply->splash;
-    window_stack_push(self->window.window, animated);
-  }
-}
-
 SimplyMenu *simply_menu_create(Simply *simply) {
   SimplyMenu *self = malloc(sizeof(*self));
   *self = (SimplyMenu) {

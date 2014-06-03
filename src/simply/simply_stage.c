@@ -332,16 +332,6 @@ static void window_unload(Window *window) {
   simply_window_unload(&self->window);
 }
 
-void simply_stage_show(SimplyStage *self) {
-  if (!self->window.window) {
-    return;
-  }
-  if (!window_stack_contains_window(self->window.window)) {
-    bool animated = !self->window.simply->splash;
-    window_stack_push(self->window.window, animated);
-  }
-}
-
 void simply_stage_update(SimplyStage *self) {
   if (self->stage_layer.layer) {
     layer_mark_dirty(self->stage_layer.layer);

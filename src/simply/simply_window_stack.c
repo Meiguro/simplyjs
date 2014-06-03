@@ -8,8 +8,10 @@
 #include <pebble.h>
 
 void simply_window_stack_show(SimplyWindowStack *self, SimplyWindow *window, bool is_push) {
+  bool animated = (self->simply->splash == NULL);
+
   self->is_showing = true;
-  window_stack_pop_all(true);
+  window_stack_pop_all(false);
   self->is_showing = false;
 
   Window *temp_window = NULL;
@@ -18,7 +20,7 @@ void simply_window_stack_show(SimplyWindowStack *self, SimplyWindow *window, boo
     window_stack_push(temp_window, false);
   }
 
-  simply_window_show(window);
+  window_stack_push(window->window, animated);
 
   if (is_push) {
     window_stack_remove(temp_window, false);
@@ -28,7 +30,10 @@ void simply_window_stack_show(SimplyWindowStack *self, SimplyWindow *window, boo
 
 void simply_window_stack_pop(SimplyWindowStack *self, SimplyWindow *window) {
   self->is_hiding = true;
-  simply_window_hide(window);
+  if (window->window == window_stack_get_top_window()) {
+    bool animated = true;
+    window_stack_pop(animated);
+  }
   self->is_hiding = false;
 }
 

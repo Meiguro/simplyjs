@@ -44,9 +44,7 @@ struct SimplyUi {
 };
 
 SimplyUi *simply_ui_create(Simply *simply);
-
 void simply_ui_destroy(SimplyUi *self);
-void simply_ui_show(SimplyUi *self);
 
 void simply_ui_clear(SimplyUi *self, uint32_t clear_mask);
 

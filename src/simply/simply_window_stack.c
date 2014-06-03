@@ -14,17 +14,14 @@ void simply_window_stack_show(SimplyWindowStack *self, SimplyWindow *window, boo
   window_stack_pop_all(!is_push);
   self->is_showing = false;
 
-  Window *temp_window = NULL;
   if (is_push) {
-    temp_window = window_create();
-    window_stack_push(temp_window, false);
+    window_stack_push(self->pusher, false);
   }
 
   window_stack_push(window->window, animated);
 
   if (is_push) {
-    window_stack_remove(temp_window, false);
-    window_destroy(temp_window);
+    window_stack_remove(self->pusher, false);
   }
 }
 
@@ -56,13 +53,15 @@ void simply_window_stack_send_hide(SimplyWindowStack *self, SimplyWindow *window
   }
   simply_msg_window_hide(self->simply->msg, window->id);
   if (!self->is_hiding) {
-    window_stack_push(window->window, false);
+    window_stack_push(self->pusher, false);
   }
 }
 
 SimplyWindowStack *simply_window_stack_create(Simply *simply) {
   SimplyWindowStack *self = malloc(sizeof(*self));
   *self = (SimplyWindowStack) { .simply = simply };
+
+  self->pusher = window_create();
 
   return self;
 }
@@ -71,6 +70,9 @@ void simply_window_stack_destroy(SimplyWindowStack *self) {
   if (!self) {
     return;
   }
+
+  window_destroy(self->pusher);
+  self->pusher = NULL;
 
   free(self);
 }

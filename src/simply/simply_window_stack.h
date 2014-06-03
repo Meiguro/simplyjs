@@ -10,6 +10,7 @@ typedef struct SimplyWindowStack SimplyWindowStack;
 
 struct SimplyWindowStack {
   Simply *simply;
+  Window *pusher;
   bool is_showing:1;
   bool is_hiding:1;
 };

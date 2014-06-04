@@ -808,6 +808,7 @@ For more information, see [Vector2 in the three.js reference documentation][thre
 [Image]: #image
 [Rect]: #rect
 [Text]: #text
+[TimeText]: #timetext
 [Window actionDef]: #window-actiondef
 [Window.show()]: #window-show
 [Window.hide()]: #window-hide

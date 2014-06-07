@@ -753,14 +753,14 @@ var ajax = require('ajax');
 
 ajax(
   {
-    url: 'api.theysaidso.com/qod.json',
+    url: 'http://api.theysaidso.com/qod.json',
     type: 'json'
   },
-  function (data) {
-    console.log("Quote of the day is: " + data.contents.quote);
+  function(data) {
+    console.log('Quote of the day is: ' + data.contents.quote);
   },
-  function (error) {
-    console.log("Something bad happened :(" + error);
+  function(error) {
+    console.log('The ajax request failed: ' + error);
   }
 );
 ````

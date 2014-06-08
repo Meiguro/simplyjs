@@ -466,7 +466,7 @@ A menu contains one or more sections. Each section has a title and contains zero
 ````js
 var menu = new UI.Menu({
   sections: [{
-    title: 'First section'
+    title: 'First section',
     items: [{
       title: 'First Item',
       subtitle: 'Some subtitle',

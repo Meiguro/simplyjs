@@ -7,9 +7,20 @@ var ajax = (function(){
 var formify = function(data) {
   var params = [], i = 0;
   for (var name in data) {
-    params[i++] = encodeURI(name) + '=' + encodeURI(data[name]);
+    params[i++] = encodeURIComponent(name) + '=' + encodeURIComponent(data[name]);
   }
   return params.join('&');
+};
+
+var deformify = function(form) {
+  var params = {};
+  form.replace(/(?:([^=&]*)=?([^&]*)?)(?:&|$)/g, function(_, name, value) {
+    if (name) {
+      params[name] = value || true;
+    }
+    return _;
+  });
+  return params;
 };
 
 /**
@@ -101,6 +112,7 @@ var ajax = function(opt, success, failure) {
 };
 
 ajax.formify = formify;
+ajax.deformify = deformify;
 
 if (typeof module !== 'undefined') {
   module.exports = ajax;

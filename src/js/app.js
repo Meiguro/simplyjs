@@ -22,7 +22,17 @@ main.on('click', 'up', function(e) {
       items: [{
         title: 'Pebble.js',
         icon: 'images/menu_icon.png',
-        subtitle: 'Can do Menus'
+        subtitle: 'Can do Menus',
+        select: function() {
+          var fMenu = new UI.Menu();
+          fMenu.show();
+          fMenu.item(0, 0, {title: 'one'});
+          fMenu.item(0, 1, {title: 'two'});
+          fMenu.item(0, 2, {title: 'three'});
+          fMenu.on('select', function(e) {
+            console.log(e.item);
+          });
+        }
       }, {
         title: 'Second Item',
         subtitle: 'Subtitle Text'

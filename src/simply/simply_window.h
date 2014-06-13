@@ -27,6 +27,8 @@ void simply_window_hide(SimplyWindow *self);
 void simply_window_load(SimplyWindow *self);
 void simply_window_unload(SimplyWindow *self);
 
+void simply_window_single_click_handler(ClickRecognizerRef recognizer, void *context);
+
 void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable);
 void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen);
 void simply_window_set_background_color(SimplyWindow *self, GColor background_color);

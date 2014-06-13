@@ -6,6 +6,8 @@
 
 #include "simply.h"
 
+#include "util/menu_layer.h"
+
 #include <pebble.h>
 
 #define MAX_CACHED_SECTIONS 10
@@ -233,6 +235,17 @@ static void menu_select_long_click_callback(MenuLayer *menu_layer, MenuIndex *ce
   simply_msg_menu_select_long_click(self->window.simply->msg, cell_index->section, cell_index->row);
 }
 
+static void single_click_handler(ClickRecognizerRef recognizer, void *context) {
+  Window *base_window = layer_get_window(context);
+  SimplyWindow *window = window_get_user_data(base_window);
+  simply_window_single_click_handler(recognizer, window);
+}
+
+static void click_config_provider(void *context) {
+  window_single_click_subscribe(BUTTON_ID_BACK, single_click_handler);
+  menu_layer_click_config(context);
+}
+
 static void window_load(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
 
@@ -257,7 +270,7 @@ static void window_load(Window *window) {
     .select_long_click = menu_select_long_click_callback,
   });
 
-  menu_layer_set_click_config_onto_window(menu_layer, window);
+  menu_layer_set_click_config_provider_onto_window(menu_layer, click_config_provider, window);
 }
 
 static void window_appear(Window *window) {
@@ -267,6 +280,7 @@ static void window_appear(Window *window) {
 
 static void window_disappear(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
+  simply_window_stack_send_hide(self->window.simply->window_stack, &self->window);
 
   simply_menu_clear(self);
 }
@@ -278,8 +292,6 @@ static void window_unload(Window *window) {
   self->menu_layer.menu_layer = NULL;
 
   simply_window_unload(&self->window);
-
-  simply_window_stack_send_hide(self->window.simply->window_stack, &self->window);
 }
 
 void simply_menu_clear(SimplyMenu *self) {

@@ -120,7 +120,7 @@ void simply_window_set_button(SimplyWindow *self, ButtonId button, bool enable) 
   }
 }
 
-static void single_click_handler(ClickRecognizerRef recognizer, void *context) {
+void simply_window_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   SimplyWindow *self = context;
   ButtonId button = click_recognizer_get_button_id(recognizer);
   bool is_enabled = (self->button_mask & (1 << button));
@@ -151,7 +151,7 @@ static void click_config_provider(void *context) {
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     if (!self->is_scrollable || (i != BUTTON_ID_UP && i != BUTTON_ID_DOWN)) {
       window_set_click_context(i, context);
-      window_single_click_subscribe(i, (ClickHandler) single_click_handler);
+      window_single_click_subscribe(i, simply_window_single_click_handler);
       window_long_click_subscribe(i, 500, (ClickHandler) long_click_handler, NULL);
     }
   }

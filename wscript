@@ -29,7 +29,8 @@ def build(ctx):
 @conf
 def concat_javascript(self, *k, **kw):
     js_path = kw['js_path']
-    js_nodes = self.path.ant_glob(js_path + '/**/*.js')
+    js_nodes = (self.path.ant_glob(js_path + '/**/*.js') +
+                self.path.ant_glob(js_path + '/**/*.json'))
 
     if not js_nodes:
         return []
@@ -51,6 +52,8 @@ def concat_javascript(self, *k, **kw):
             relpath = os.path.relpath(node.abspath(), js_path)
             with open(node.abspath(), 'r') as f:
                 body = f.read()
+                if relpath.endswith('.json'):
+                    body = JSON_TEMPLATE.format(body=body)
                 if relpath == LOADER_PATH:
                     sources.insert(0, body)
                 elif relpath.startswith('vendor/'):

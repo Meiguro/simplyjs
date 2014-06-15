@@ -5,11 +5,16 @@
  * @license MIT
  */
 
+var capitalize = function(str) {
+  return str.charAt(0).toUpperCase() + str.substr(1);
+};
+
 var struct = function(def) {
   this._littleEndian = true;
   this._offset = 0;
   this._makeAccessors(def);
   this._view = new DataView(new ArrayBuffer(this.size));
+  this._def = def;
 };
 
 struct.types = {
@@ -23,10 +28,6 @@ struct.types = {
   uint64: { size: 8 },
   float32: { size: 2 },
   float64: { size: 4 },
-};
-
-var capitalize = function(str) {
-  return str.charAt(0).toUpperCase() + str.substr(1);
 };
 
 struct.prototype._makeAccessor = function(index, type, name, transform) {
@@ -45,13 +46,21 @@ struct.prototype._makeAccessor = function(index, type, name, transform) {
   return this;
 };
 
-struct.prototype._makeAccessors = function(def) {
-  var index = 0;
-  var fields = [];
+struct.prototype._makeAccessors = function(def, index, fields, prefix) {
+  index = index || 0;
+  fields = fields || [];
   for (var i = 0, ii = def.length; i < ii; ++i) {
     var member = def[i];
     var type = member[0];
     var name = member[1];
+    if (prefix) {
+      name = prefix + capitalize(name);
+    }
+    if (type instanceof struct) {
+      this._makeAccessors(type._def, index, fields, name);
+      index = this.size;
+      continue;
+    }
     var transform = member[2];
     this._makeAccessor(index, type, name, transform);
     fields.push({

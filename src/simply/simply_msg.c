@@ -40,6 +40,7 @@ enum SimplyACmd {
   SimplyACmd_getMenuItem,
   SimplyACmd_menuSelect,
   SimplyACmd_menuLongSelect,
+  SimplyACmd_menuSelection,
   SimplyACmd_image,
   SimplyACmd_setStage,
   SimplyACmd_stageElement,
@@ -81,6 +82,10 @@ typedef enum SimplySetMenuParam SimplySetMenuParam;
 
 enum SimplySetMenuParam {
   SetMenu_sections = SetWindowLast,
+  SetMenu_selectionSection,
+  SetMenu_selectionItem,
+  SetMenu_selectionAlign,
+  SetMenu_selectionAnimated,
 };
 
 typedef enum VibeType VibeType;
@@ -280,6 +285,10 @@ static void handle_set_accel_config(DictionaryIterator *iter, Simply *simply) {
 static void handle_set_menu(DictionaryIterator *iter, Simply *simply) {
   SimplyMenu *menu = simply->menu;
   Tuple *tuple;
+  bool is_selection = false;
+  MenuIndex menu_index = { 0, 0 };
+  MenuRowAlign align = MenuRowAlignCenter;
+  bool selection_animated = true;
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {
       case SetWindow_clear:
@@ -288,9 +297,25 @@ static void handle_set_menu(DictionaryIterator *iter, Simply *simply) {
       case SetMenu_sections:
         simply_menu_set_num_sections(menu, tuple->value->int32);
         break;
+      case SetMenu_selectionSection:
+        menu_index.section = tuple->value->uint16;
+        break;
+      case SetMenu_selectionItem:
+        is_selection = true;
+        menu_index.row = tuple->value->uint16;
+        break;
+      case SetMenu_selectionAlign:
+        align = tuple->value->uint8;
+        break;
+      case SetMenu_selectionAnimated:
+        selection_animated = tuple->value->uint8;
+        break;
     }
   }
   set_window(&menu->window, iter, simply);
+  if (is_selection) {
+    simply_menu_set_selection(menu, menu_index, align, selection_animated);
+  }
 }
 
 static void handle_set_menu_section(DictionaryIterator *iter, Simply *simply) {
@@ -350,6 +375,10 @@ static void handle_set_menu_item(DictionaryIterator *iter, Simply *simply) {
     .icon = icon,
   };
   simply_menu_add_item(simply->menu, item);
+}
+
+static void handle_get_menu_selection(DictionaryIterator *iter, Simply *simply) {
+  simply_msg_send_menu_selection(simply->msg);
 }
 
 static void handle_set_image(DictionaryIterator *iter, Simply *simply) {
@@ -565,6 +594,8 @@ static void received_callback(DictionaryIterator *iter, void *context) {
     case SimplyACmd_setMenuItem:
       handle_set_menu_item(iter, context);
       break;
+    case SimplyACmd_menuSelection:
+      handle_get_menu_selection(iter, context);
     case SimplyACmd_image:
       handle_set_image(iter, context);
       break;
@@ -793,6 +824,11 @@ bool simply_msg_menu_select_long_click(SimplyMsg *self, uint16_t section, uint16
   return send_menu_item_retry(self, SimplyACmd_menuLongSelect, section, index);
 }
 
+bool simply_msg_send_menu_selection(SimplyMsg *self) {
+  MenuIndex menu_index = simply_menu_get_selection(self->simply->menu);
+  return send_menu_item_retry(self, SimplyACmd_menuSelection, menu_index.section, menu_index.row);
+}
+
 bool simply_msg_animate_element_done(SimplyMsg *self, uint16_t index) {
   size_t length = dict_calc_buffer_size(2, 1, 2);
   void *buffer = malloc0(length);
@@ -805,3 +841,4 @@ bool simply_msg_animate_element_done(SimplyMsg *self, uint16_t index) {
   dict_write_uint16(&iter, 1, index);
   return add_packet(self, buffer, length);
 }
+

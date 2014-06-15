@@ -174,6 +174,14 @@ void simply_menu_add_item(SimplyMenu *self, SimplyMenuItem *item) {
   mark_dirty(self);
 }
 
+MenuIndex simply_menu_get_selection(SimplyMenu *self) {
+  return menu_layer_get_selected_index(self->menu_layer.menu_layer);
+}
+
+void simply_menu_set_selection(SimplyMenu *self, MenuIndex menu_index, MenuRowAlign align, bool animated) {
+  menu_layer_set_selected_index(self->menu_layer.menu_layer, menu_index, align, animated);
+}
+
 static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data) {
   SimplyMenu *self = data;
   return self->menu_layer.num_sections;

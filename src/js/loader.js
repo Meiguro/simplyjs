@@ -23,7 +23,7 @@ var replace = function(a, regexp, b) {
 };
 
 loader.normalize = function(path) {
-  path = replace(path, /(?:\/\.?\/)+/g, '/');
+  path = replace(path, /(?:(^|\/)\.?\/)+/g, '$1');
   path = replace(path, /[^\/]*\/\.\.\//, '');
   return path;
 };

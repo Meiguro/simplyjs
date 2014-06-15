@@ -9,6 +9,8 @@ var Menu = function(menuDef) {
   Window.call(this, menuDef);
   this._dynamic = false;
   this._sections = {};
+  this._selection = { section: 0, item: 0 };
+  this._selections = [];
 };
 
 Menu._codeName = 'menu';
@@ -22,9 +24,9 @@ Menu.prototype._show = function() {
   Window.prototype._show.apply(this, arguments);
 };
 
-Menu.prototype._prop = function() {
+Menu.prototype._prop = function(state, clear, pushing) {
   if (this === WindowStack.top()) {
-    simply.impl.menu.apply(this, arguments);
+    simply.impl.menu.call(this, state, clear, pushing, this._selection);
   }
 };
 
@@ -152,20 +154,34 @@ Menu.prototype._resolveItem = function(e) {
 };
 
 Menu.prototype._emitSelect = function(e) {
+  this._selection = e;
   var item = getItem.call(this, e);
-  if (!item) { return; }
   switch (e.type) {
     case 'select':
-      if (typeof item.select === 'function') {
+      if (item && typeof item.select === 'function') {
         if (item.select(e) === false) {
           return false;
         }
       }
       break;
     case 'longSelect':
-      if (typeof item.longSelect === 'function') {
+      if (item && typeof item.longSelect === 'function') {
         if (item.longSelect(e) === false) {
           return false;
+        }
+      }
+      break;
+    case 'selection':
+      var handlers = this._selections;
+      this._selections = [];
+      if (item && typeof item.selected === 'function') {
+        if (item.selected(e) === false) {
+          return false;
+        }
+      }
+      for (var i = 0, ii = handlers.length; i < ii; ++i) {
+        if (handlers[i](e) === false) {
+          break;
         }
       }
       break;
@@ -257,6 +273,11 @@ Menu.prototype.item = function(sectionIndex, itemIndex, item) {
   return this;
 };
 
+Menu.prototype.selection = function(callback) {
+  this._selections.push(callback);
+  simply.impl.menuSelection();
+};
+
 Menu.emit = function(type, subtype, e) {
   Window.emit(type, subtype, e, Menu);
 };
@@ -296,6 +317,7 @@ Menu.emitSelect = function(type, section, item) {
   switch (type) {
     case 'menuSelect': type = 'select'; break;
     case 'menuLongSelect': type = 'longSelect'; break;
+    case 'menuSelection': type = 'selection'; break;
   }
   if (Menu.emit(type, null, e) === false) {
     return false;

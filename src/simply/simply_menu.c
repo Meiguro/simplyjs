@@ -19,9 +19,9 @@
 static char EMPTY_TITLE[] = "";
 
 static bool section_filter(List1Node *node, void *data) {
-  SimplyMenuSection *section = (SimplyMenuSection*) node;
+  SimplyMenuCommon *section = (SimplyMenuCommon*) node;
   uint16_t section_index = (uint16_t)(uintptr_t) data;
-  return (section->index == section_index);
+  return (section->section == section_index);
 }
 
 static bool item_filter(List1Node *node, void *data) {
@@ -29,7 +29,7 @@ static bool item_filter(List1Node *node, void *data) {
   uint32_t cell_index = (uint32_t)(uintptr_t) data;
   uint16_t section_index = cell_index;
   uint16_t row = cell_index >> 16;
-  return (item->section == section_index && item->index == row);
+  return (item->section == section_index && item->item == row);
 }
 
 static bool request_filter(List1Node *node, void *data) {
@@ -89,12 +89,12 @@ static void request_menu_node(void *data) {
   SimplyMenuSection *section = (SimplyMenuSection*) list1_find(self->menu_layer.sections, request_filter, NULL);
   bool found = false;
   if (section) {
-    simply_msg_menu_get_section(self->window.simply->msg, section->index);
+    simply_msg_menu_get_section(self->window.simply->msg, section->section);
     found = true;
   }
   SimplyMenuItem *item = (SimplyMenuItem*) list1_find(self->menu_layer.items, request_filter, NULL);
   if (item) {
-    simply_msg_menu_get_item(self->window.simply->msg, item->section, item->index);
+    simply_msg_menu_get_item(self->window.simply->msg, item->section, item->item);
     found = true;
   }
   if (found) {
@@ -112,7 +112,7 @@ static void add_section(SimplyMenu *self, SimplyMenuSection *section) {
   if (list1_size(self->menu_layer.sections) >= MAX_CACHED_SECTIONS) {
     destroy_section(self, (SimplyMenuSection*) list1_last(self->menu_layer.sections));
   }
-  destroy_section_by_index(self, section->index);
+  destroy_section_by_index(self, section->section);
   list1_append(&self->menu_layer.sections, &section->node);
 }
 
@@ -120,14 +120,14 @@ static void add_item(SimplyMenu *self, SimplyMenuItem *item) {
   if (list1_size(self->menu_layer.items) >= MAX_CACHED_ITEMS) {
     destroy_item(self, (SimplyMenuItem*) list1_last(self->menu_layer.items));
   }
-  destroy_item_by_index(self, item->section, item->index);
+  destroy_item_by_index(self, item->section, item->item);
   list1_append(&self->menu_layer.items, &item->node);
 }
 
 static void request_menu_section(SimplyMenu *self, uint16_t section_index) {
   SimplyMenuSection *section = malloc(sizeof(*section));
   *section = (SimplyMenuSection) {
-    .index = section_index,
+    .section = section_index,
   };
   add_section(self, section);
   schedule_get_timer(self);
@@ -137,7 +137,7 @@ static void request_menu_item(SimplyMenu *self, uint16_t section_index, uint16_t
   SimplyMenuItem *item = malloc(sizeof(*item));
   *item = (SimplyMenuItem) {
     .section = section_index,
-    .index = item_index,
+    .item = item_index,
   };
   add_item(self, item);
   schedule_get_timer(self);
@@ -292,6 +292,14 @@ static void window_unload(Window *window) {
   self->menu_layer.menu_layer = NULL;
 
   simply_window_unload(&self->window);
+}
+
+void simply_menu_clear_section_items(SimplyMenu *self, int section_index) {
+  SimplyMenuItem *item = NULL;
+  do {
+    item = (SimplyMenuItem*) list1_find(self->menu_layer.items, section_filter, (void*)(uintptr_t) section_index);
+    destroy_item(self, item);
+  } while (item);
 }
 
 void simply_menu_clear(SimplyMenu *self) {

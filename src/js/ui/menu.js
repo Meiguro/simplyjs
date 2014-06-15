@@ -134,12 +134,12 @@ Menu.prototype._resolveMenu = function() {
   }
 };
 
-Menu.prototype._resolveSection = function(e) {
+Menu.prototype._resolveSection = function(e, clear) {
   var section = getSection.call(this, e);
   if (!section) { return; }
   section.items = getItems.call(this, e);
   if (this === WindowStack.top()) {
-    simply.impl.menuSection.call(this, e.section, section);
+    simply.impl.menuSection.call(this, e.section, section, clear);
   }
 };
 
@@ -186,7 +186,7 @@ Menu.prototype.sections = function(sections) {
 
 Menu.prototype.section = function(sectionIndex, section) {
   if (typeof sectionIndex === 'object') {
-    sectionIndex = sectionIndex.section;
+    sectionIndex = sectionIndex.section || 0;
   } else if (typeof sectionIndex === 'function') {
     this.sectionProvider = sectionIndex;
     return this;
@@ -197,17 +197,17 @@ Menu.prototype.section = function(sectionIndex, section) {
   }
   var sections = getSections.call(this);
   var prevLength = sections.length;
-  sections[sectionIndex] = section;
+  sections[sectionIndex] = util2.copy(section, sections[sectionIndex]);
   if (sections.length !== prevLength) {
     this._resolveMenu();
   }
-  this._resolveSection(menuIndex);
+  this._resolveSection(menuIndex, typeof section.items !== 'undefined');
   return this;
 };
 
 Menu.prototype.items = function(sectionIndex, items) {
   if (typeof sectionIndex === 'object') {
-    sectionIndex = sectionIndex.section;
+    sectionIndex = sectionIndex.section || 0;
   } else if (typeof sectionIndex === 'function') {
     this.itemsProvider = sectionIndex;
     return this;
@@ -222,7 +222,7 @@ Menu.prototype.items = function(sectionIndex, items) {
   }
   var section = getSection.call(this, menuIndex, true);
   section.items = items;
-  this._resolveSection(menuIndex);
+  this._resolveSection(menuIndex, true);
   return this;
 };
 
@@ -230,7 +230,7 @@ Menu.prototype.item = function(sectionIndex, itemIndex, item) {
   if (typeof sectionIndex === 'object') {
     item = itemIndex || item;
     itemIndex = sectionIndex.item;
-    sectionIndex = sectionIndex.section;
+    sectionIndex = sectionIndex.section || 0;
   } else if (typeof sectionIndex === 'function') {
     this.itemProvider = sectionIndex;
     return this;
@@ -249,7 +249,7 @@ Menu.prototype.item = function(sectionIndex, itemIndex, item) {
   }
   var items = getItems.call(this, menuIndex, true);
   var prevLength = items.length;
-  items[itemIndex] = item;
+  items[itemIndex] = util2.copy(item, items[itemIndex]);
   if (items.length !== prevLength) {
     this._resolveSection(menuIndex);
   }

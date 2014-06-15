@@ -298,18 +298,21 @@ static void handle_set_menu_section(DictionaryIterator *iter, Simply *simply) {
   uint16_t section_index = 0;
   uint16_t num_items = 1;
   char *title = NULL;
-  if ((tuple = dict_find(iter, 1))) {
+  if ((tuple = dict_find(iter, 2))) {
     section_index = tuple->value->uint16;
   }
-  if ((tuple = dict_find(iter, 2))) {
+  if ((tuple = dict_find(iter, 3))) {
     num_items = tuple->value->uint16;
   }
-  if ((tuple = dict_find(iter, 3))) {
+  if ((tuple = dict_find(iter, 4))) {
     title = tuple->value->cstring;
+  }
+  if ((tuple = dict_find(iter, 1))) {
+    simply_menu_clear_section_items(simply->menu, section_index);
   }
   SimplyMenuSection *section = malloc(sizeof(*section));
   *section = (SimplyMenuSection) {
-    .index = section_index,
+    .section = section_index,
     .num_items = num_items,
     .title = strdup2(title),
   };
@@ -341,7 +344,7 @@ static void handle_set_menu_item(DictionaryIterator *iter, Simply *simply) {
   SimplyMenuItem *item = malloc(sizeof(*item));
   *item = (SimplyMenuItem) {
     .section = section_index,
-    .index = row,
+    .item = row,
     .title = strdup2(title),
     .subtitle = strdup2(subtitle),
     .icon = icon,

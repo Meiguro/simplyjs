@@ -42,6 +42,7 @@ typedef struct SimplyMenuCommon SimplyMenuCommon;
 
 #define SimplyMenuCommonDef { \
   List1Node node;             \
+  uint16_t section;           \
   char *title;                \
 }
 
@@ -55,7 +56,6 @@ struct SimplyMenuCommon SimplyMenuCommonDef;
 
 struct SimplyMenuSection {
   SimplyMenuCommonMember;
-  uint16_t index;
   uint16_t num_items;
 };
 
@@ -63,13 +63,13 @@ struct SimplyMenuItem {
   SimplyMenuCommonMember;
   char *subtitle;
   uint32_t icon;
-  uint16_t section;
-  uint16_t index;
+  uint16_t item;
 };
 
 SimplyMenu *simply_menu_create(Simply *simply);
 void simply_menu_destroy(SimplyMenu *self);
 
+void simply_menu_clear_section_items(SimplyMenu *self, int section_index);
 void simply_menu_clear(SimplyMenu *self);
 
 void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections);

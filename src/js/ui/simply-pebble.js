@@ -245,6 +245,9 @@ var commands = [{
 }, {
   name: 'setMenuSection',
   params: [{
+    name: 'clear',
+    type: Boolean,
+  }, {
     name: 'section',
   }, {
     name: 'items',
@@ -467,7 +470,7 @@ SimplyPebble.init = function() {
 
 var toParam = function(param, v) {
   if (param.type === String) {
-    v = v.toString();
+    v = typeof v !== 'undefined' ? v.toString() : '';
   } else if (param.type === Boolean) {
     v = v ? 1 : 0;
   } else if (param.type === Image && typeof v !== 'number') {
@@ -641,13 +644,14 @@ SimplyPebble.menu = function(menuDef, clear, pushing) {
   SimplyPebble.sendPacket(packet);
 };
 
-SimplyPebble.menuSection = function(sectionIndex, sectionDef) {
+SimplyPebble.menuSection = function(sectionIndex, sectionDef, clear) {
   var command = commandMap.setMenuSection;
   var packetDef = util2.copy(sectionDef);
   packetDef.section = sectionIndex;
   if (packetDef.items instanceof Array) {
     packetDef.items = packetDef.items.length;
   }
+  packetDef.clear = clear;
   var packet = makePacket(command, packetDef);
   SimplyPebble.sendPacket(packet);
 };

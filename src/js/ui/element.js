@@ -19,8 +19,20 @@ var nextId = 1;
 var StageElement = function(elementDef) {
   this.state = elementDef || {};
   this.state.id = nextId++;
+  if (!this.state.position) {
+    this.state.position = new Vector2();
+  }
+  if (!this.state.size) {
+    this.state.size = new Vector2();
+  }
   this._queue = [];
 };
+
+StageElement.RectType = 1;
+StageElement.CircleType = 2;
+StageElement.TextType = 3;
+StageElement.ImageType = 4;
+StageElement.InverterType = 5;
 
 util2.copy(Propable.prototype, StageElement.prototype);
 
@@ -39,14 +51,8 @@ StageElement.prototype._type = function() {
 };
 
 StageElement.prototype._prop = function(elementDef) {
-  if (!this.state.position) {
-    this.state.position = new Vector2();
-  }
-  if (!this.state.size) {
-    this.state.size = new Vector2();
-  }
   if (this.parent === WindowStack.top()) {
-    simply.impl.stageElement(this._id(), this._type(), elementDef);
+    simply.impl.stageElement(this._id(), this._type(), this.state);
   }
 };
 

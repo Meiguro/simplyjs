@@ -42,6 +42,14 @@ enum Command {
   CommandMenuItem,
   CommandMenuGetSelection,
   CommandMenuSetSelection,
+  CommandStageClear,
+  CommandElementInsert,
+  CommandElementRemove,
+  CommandElementCommon,
+  CommandElementRadius,
+  CommandElementText,
+  CommandElementTextStyle,
+  CommandElementImage,
 };
 
 typedef enum WindowType WindowType;
@@ -207,6 +215,72 @@ struct __attribute__((__packed__)) MenuSetSelectionPacket {
   bool animated;
 };
 
+typedef Packet StageClearPacket;
+
+typedef struct ElementInsertPacket ElementInsertPacket;
+
+struct __attribute__((__packed__)) ElementInsertPacket {
+  Packet packet;
+  uint32_t id;
+  SimplyElementType type:8;
+  uint16_t index;
+};
+
+typedef struct ElementRemovePacket ElementRemovePacket;
+
+struct __attribute__((__packed__)) ElementRemovePacket {
+  Packet packet;
+  uint32_t id;
+};
+
+typedef struct ElementCommonPacket ElementCommonPacket;
+
+struct __attribute__((__packed__)) ElementCommonPacket {
+  Packet packet;
+  uint32_t id;
+  GRect frame;
+  GColor background_color:8;
+  GColor border_color:8;
+};
+
+typedef struct ElementRadiusPacket ElementRadiusPacket;
+
+struct __attribute__((__packed__)) ElementRadiusPacket {
+  Packet packet;
+  uint32_t id;
+  uint16_t radius;
+};
+
+typedef struct ElementTextPacket ElementTextPacket;
+
+struct __attribute__((__packed__)) ElementTextPacket {
+  Packet packet;
+  uint32_t id;
+  TimeUnits time_units:8;
+  char text[];
+};
+
+typedef struct ElementTextStylePacket ElementTextStylePacket;
+
+struct __attribute__((__packed__)) ElementTextStylePacket {
+  Packet packet;
+  uint32_t id;
+  GColor color:8;
+  GTextOverflowMode overflow_mode:8;
+  GTextAlignment alignment:8;
+  uint32_t custom_font;
+  char system_font[];
+};
+
+typedef struct ElementImagePacket ElementImagePacket;
+
+struct __attribute__((__packed__)) ElementImagePacket {
+  Packet packet;
+  uint32_t id;
+  uint32_t image;
+  GCompOp compositing:8;
+};
+
 typedef enum SimplyACmd SimplyACmd;
 
 enum SimplyACmd {
@@ -319,121 +393,6 @@ static void handle_set_image(DictionaryIterator *iter, Simply *simply) {
     pixels = (uint32_t*) tuple->value->data;
   }
   simply_res_add_image(simply->res, id, width, height, pixels);
-}
-
-static void handle_set_stage(DictionaryIterator *iter, Simply *simply) {
-  SimplyStage *stage = simply->stage;
-  Tuple *tuple;
-  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
-    switch (tuple->key) {
-      case 0:
-        simply_stage_clear(stage);
-        break;
-    }
-  }
-}
-
-static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
-  SimplyStage *stage = simply->stage;
-  Tuple *tuple;
-  uint32_t id = 0;
-  SimplyElementType type = SimplyElementTypeNone;
-  if ((tuple = dict_find(iter, ElementId))) {
-    id = tuple->value->uint32;
-  }
-  if ((tuple = dict_find(iter, ElementType))) {
-    type = tuple->value->int32;
-  }
-  SimplyElementCommon *element = simply_stage_auto_element(stage, id, type);
-  if (!element || element->type != type) {
-    return;
-  }
-  GRect frame = element->frame;
-  bool update_frame = false;
-  bool update_ticker = false;
-  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
-    switch (tuple->key) {
-      case ElementIndex:
-        simply_stage_insert_element(stage, tuple->value->uint16, element);
-        break;
-      case ElementX:
-        frame.origin.x = tuple->value->int16;
-        update_frame = true;
-        break;
-      case ElementY:
-        frame.origin.y = tuple->value->int16;
-        update_frame = true;
-        break;
-      case ElementWidth:
-        frame.size.w = tuple->value->uint16;
-        update_frame = true;
-        break;
-      case ElementHeight:
-        frame.size.h = tuple->value->uint16;
-        update_frame = true;
-        break;
-      case ElementBackgroundColor:
-        element->background_color = tuple->value->uint8;
-        break;
-      case ElementBorderColor:
-        element->border_color = tuple->value->uint8;
-        break;
-      case ElementRadius:
-        ((SimplyElementRect*) element)->radius = tuple->value->uint16;
-        break;
-      case ElementText:
-        strset(&((SimplyElementText*) element)->text, tuple->value->cstring);
-        break;
-      case ElementTextFont:
-        if (tuple->type == TUPLE_CSTRING) {
-          ((SimplyElementText*) element)->font = fonts_get_system_font(tuple->value->cstring);
-        } else {
-          ((SimplyElementText*) element)->font = simply_res_get_font(simply->res, tuple->value->uint32);
-        }
-        break;
-      case ElementTextColor:
-        ((SimplyElementText*) element)->text_color = tuple->value->uint8;
-        break;
-      case ElementTextOverflow:
-        ((SimplyElementText*) element)->overflow_mode = tuple->value->uint8;
-        break;
-      case ElementTextAlignment:
-        ((SimplyElementText*) element)->alignment = tuple->value->uint8;
-        break;
-      case ElementTextUpdateTimeUnit:
-        ((SimplyElementText*) element)->time_units = tuple->value->uint8;
-        update_ticker = true;
-        break;
-      case ElementImage:
-        ((SimplyElementImage*) element)->image = tuple->value->uint32;
-        break;
-      case ElementCompositing:
-        ((SimplyElementImage*) element)->compositing = tuple->value->uint8;
-        break;
-    }
-  }
-  if (update_frame) {
-    simply_stage_set_element_frame(stage, element, frame);
-  }
-  if (update_ticker) {
-    simply_stage_update_ticker(stage);
-  }
-  simply_stage_update(stage);
-}
-
-static void handle_remove_stage_element(DictionaryIterator *iter, Simply *simply) {
-  SimplyStage *stage = simply->stage;
-  Tuple *tuple;
-  uint32_t id = 0;
-  if ((tuple = dict_find(iter, 1))) {
-    id = tuple->value->uint32;
-  }
-  SimplyElementCommon *element = simply_stage_get_element(stage, id);
-  if (!element) {
-    return;
-  }
-  simply_stage_remove_element(stage, element);
-  simply_stage_update(stage);
 }
 
 static void handle_animate_stage_element(DictionaryIterator *iter, Simply *simply) {
@@ -625,6 +584,94 @@ static void handle_menu_set_selection_packet(Simply *simply, Packet *data) {
   simply_menu_set_selection(simply->menu, menu_index, packet->align, packet->animated);
 }
 
+static void handle_stage_clear_packet(Simply *simply, Packet *data) {
+  simply_stage_clear(simply->stage);
+}
+
+static void handle_element_insert_packet(Simply *simply, Packet *data) {
+  ElementInsertPacket *packet = (ElementInsertPacket*) data;
+  SimplyElementCommon *element = simply_stage_auto_element(simply->stage, packet->id, packet->type);
+  if (!element) {
+    return;
+  }
+  simply_stage_insert_element(simply->stage, packet->index, element);
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_remove_packet(Simply *simply, Packet *data) {
+  ElementInsertPacket *packet = (ElementInsertPacket*) data;
+  SimplyElementCommon *element = simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  simply_stage_remove_element(simply->stage, element);
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_common_packet(Simply *simply, Packet *data) {
+  ElementCommonPacket *packet = (ElementCommonPacket*) data;
+  SimplyElementCommon *element = simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  simply_stage_set_element_frame(simply->stage, element, packet->frame);
+  element->background_color = packet->background_color;
+  element->border_color = packet->border_color;
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_radius_packet(Simply *simply, Packet *data) {
+  ElementRadiusPacket *packet = (ElementRadiusPacket*) data;
+  SimplyElementRect *element = (SimplyElementRect*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->radius = packet->radius;
+  simply_stage_update(simply->stage);
+};
+
+static void handle_element_text_packet(Simply *simply, Packet *data) {
+  ElementTextPacket *packet = (ElementTextPacket*) data;
+  SimplyElementText *element = (SimplyElementText*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  if (element->time_units != packet->time_units) {
+    element->time_units = packet->time_units;
+    simply_stage_update_ticker(simply->stage);
+  }
+  strset(&element->text, packet->text);
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_text_style_packet(Simply *simply, Packet *data) {
+  ElementTextStylePacket *packet = (ElementTextStylePacket*) data;
+  SimplyElementText *element = (SimplyElementText*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->text_color = packet->color;
+  element->overflow_mode = packet->overflow_mode;
+  element->alignment = packet->alignment;
+  if (packet->custom_font) {
+    element->font = simply_res_get_font(simply->res, packet->custom_font);
+  } else if (packet->system_font[0]) {
+    element->font = fonts_get_system_font(packet->system_font);
+  }
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_image_packet(Simply *simply, Packet *data) {
+  ElementImagePacket *packet = (ElementImagePacket*) data;
+  SimplyElementImage *element = (SimplyElementImage*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->image = packet->image;
+  element->compositing = packet->compositing;
+  simply_stage_update(simply->stage);
+}
+
 static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
   Packet *packet = (Packet*) buffer;
   switch (packet->type) {
@@ -685,6 +732,30 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandMenuSetSelection:
       handle_menu_set_selection_packet(simply, packet);
       break;
+    case CommandStageClear:
+      handle_stage_clear_packet(simply, packet);
+      break;
+    case CommandElementInsert:
+      handle_element_insert_packet(simply, packet);
+      break;
+    case CommandElementRemove:
+      handle_element_remove_packet(simply, packet);
+      break;
+    case CommandElementCommon:
+      handle_element_common_packet(simply, packet);
+      break;
+    case CommandElementRadius:
+      handle_element_radius_packet(simply, packet);
+      break;
+    case CommandElementText:
+      handle_element_text_packet(simply, packet);
+      break;
+    case CommandElementTextStyle:
+      handle_element_text_style_packet(simply, packet);
+      break;
+    case CommandElementImage:
+      handle_element_image_packet(simply, packet);
+      break;
   }
 }
 
@@ -703,15 +774,6 @@ static void received_callback(DictionaryIterator *iter, void *context) {
   switch (tuple->value->uint8) {
     case SimplyACmd_image:
       handle_set_image(iter, context);
-      break;
-    case SimplyACmd_setStage:
-      handle_set_stage(iter, context);
-      break;
-    case SimplyACmd_stageElement:
-      handle_set_stage_element(iter, context);
-      break;
-    case SimplyACmd_stageRemove:
-      handle_remove_stage_element(iter, context);
       break;
     case SimplyACmd_stageAnimate:
       handle_animate_stage_element(iter, context);

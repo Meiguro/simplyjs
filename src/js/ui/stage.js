@@ -8,6 +8,12 @@ var Stage = function(stageDef) {
   this._items = [];
 };
 
+Stage.RectType = 1;
+Stage.CircleType = 2;
+Stage.TextType = 3;
+Stage.ImageType = 4;
+Stage.InverterType = 5;
+
 util2.copy(Emitter.prototype, Stage.prototype);
 
 Stage.prototype._show = function() {

@@ -8,9 +8,8 @@ var defaults = {
 };
 
 var Circle = function(elementDef) {
-  StageElement.call(this, elementDef);
-  myutil.shadow(defaults, this.state);
-  this.state.type = 2;
+  StageElement.call(this, myutil.shadow(defaults, elementDef || {}));
+  this.state.type = StageElement.CircleType;
 };
 
 util2.inherit(Circle, StageElement);

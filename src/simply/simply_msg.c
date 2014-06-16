@@ -18,6 +18,65 @@
 
 #define SEND_DELAY_MS 10
 
+typedef enum Command Command;
+
+enum Command {
+  CommandWindowShow = 1,
+  CommandWindowHide,
+  CommandWindowProps,
+  CommandWindowActionBar,
+};
+
+typedef enum WindowType WindowType;
+
+enum WindowType {
+  WindowTypeWindow = 0,
+  WindowTypeMenu,
+  WindowTypeCard,
+  WindowTypeLast,
+};
+
+typedef struct Packet Packet;
+
+struct __attribute__((__packed__)) Packet {
+  Command type:16;
+  uint16_t length;
+};
+
+typedef struct WindowShowPacket WindowShowPacket;
+
+struct __attribute__((__packed__)) WindowShowPacket {
+  Packet packet;
+  WindowType type:8;
+  bool pushing;
+};
+
+typedef struct WindowHidePacket WindowHidePacket;
+
+struct __attribute__((__packed__)) WindowHidePacket {
+  Packet packet;
+  uint32_t id;
+};
+
+typedef struct WindowPropsPacket WindowPropsPacket;
+
+struct __attribute__((__packed__)) WindowPropsPacket {
+  Packet packet;
+  uint32_t id;
+  GColor background_color:8;
+  bool fullscreen;
+  bool scrollable;
+};
+
+typedef struct WindowActionBarPacket WindowActionBarPacket;
+
+struct __attribute__((__packed__)) WindowActionBarPacket {
+  Packet packet;
+  uint32_t image[3];
+  GColor background_color:8;
+  bool action;
+};
+
 typedef enum SimplyACmd SimplyACmd;
 
 enum SimplyACmd {
@@ -48,27 +107,11 @@ enum SimplyACmd {
   SimplyACmd_stageAnimateDone,
 };
 
-typedef enum SimplySetWindowParam SimplySetWindowParam;
-
-enum SimplySetWindowParam {
-  SetWindow_clear = 1,
-  SetWindow_id,
-  SetWindow_pushing,
-  SetWindow_action,
-  SetWindow_actionUp,
-  SetWindow_actionSelect,
-  SetWindow_actionDown,
-  SetWindow_actionBackgroundColor,
-  SetWindow_backgroundColor,
-  SetWindow_fullscreen,
-  SetWindow_scrollable,
-  SetWindowLast,
-};
-
 typedef enum SimplySetUiParam SimplySetUiParam;
 
 enum SimplySetUiParam {
-  SetUi_title = SetWindowLast,
+  SetUi_clear = 1,
+  SetUi_title,
   SetUi_subtitle,
   SetUi_body,
   SetUi_icon,
@@ -80,7 +123,8 @@ enum SimplySetUiParam {
 typedef enum SimplySetMenuParam SimplySetMenuParam;
 
 enum SimplySetMenuParam {
-  SetMenu_sections = SetWindowLast,
+  SetMenu_clear = 1,
+  SetMenu_sections,
 };
 
 typedef enum VibeType VibeType;
@@ -129,82 +173,10 @@ static SimplyWindow *get_top_simply_window(Simply *simply) {
   return window;
 }
 
-static void set_window(SimplyWindow *window, DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  if (&simply->menu->window != window && (tuple = dict_find(iter, SetWindow_clear))) {
-    simply_window_set_action_bar(window, false);
-    simply_window_action_bar_clear(window);
-  }
-  bool is_clear = false;
-  bool is_id = false;
-  bool is_push = false;
-  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
-    switch (tuple->key) {
-      case SetWindow_clear:
-        is_clear = true;
-        break;
-      case SetWindow_id:
-        is_id = true;
-        window->id = tuple->value->uint32;
-        break;
-      case SetWindow_pushing:
-        is_push = true;
-        break;
-      case SetWindow_action:
-        simply_window_set_action_bar(window, tuple->value->int32);
-        break;
-      case SetWindow_actionUp:
-      case SetWindow_actionSelect:
-      case SetWindow_actionDown:
-        simply_window_set_action_bar_icon(window, tuple->key - SetWindow_action, tuple->value->int32);
-        break;
-      case SetWindow_actionBackgroundColor:
-        simply_window_set_action_bar_background_color(window, tuple->value->uint8);
-        break;
-      case SetWindow_backgroundColor:
-        simply_window_set_background_color(window, tuple->value->uint32);
-        break;
-      case SetWindow_fullscreen:
-        simply_window_set_fullscreen(window, tuple->value->int32);
-        break;
-      case SetWindow_scrollable:
-        simply_window_set_scrollable(window, tuple->value->int32);
-        break;
-    }
-  }
-  if (is_clear && is_id) {
-    simply_window_stack_show(simply->window_stack, window, is_push);
-  }
-}
-
-static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
-  SimplyWindow *window = get_top_simply_window(simply);
-  if (!window) {
-    return;
-  }
-  set_window(window, iter, simply);
-}
-
-static void handle_hide_window(DictionaryIterator *iter, Simply *simply) {
-  Window *base_window = window_stack_get_top_window();
-  SimplyWindow *window = window_get_user_data(base_window);
-  if (!window || (void*) window == simply->splash) {
-    return;
-  }
-  Tuple *tuple;
-  uint32_t window_id = 0;
-  if ((tuple = dict_find(iter, 1))) {
-    window_id = tuple->value->uint32;
-  }
-  if (window->id == window_id) {
-    simply_window_stack_pop(simply->window_stack, window);
-  }
-}
-
 static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
   SimplyUi *ui = simply->ui;
   Tuple *tuple;
-  if ((tuple = dict_find(iter, SetWindow_clear))) {
+  if ((tuple = dict_find(iter, SetUi_clear))) {
     simply_ui_clear(ui, tuple->value->uint32);
   }
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
@@ -224,7 +196,6 @@ static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
         break;
     }
   }
-  set_window(&ui->window, iter, simply);
 }
 
 static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
@@ -282,7 +253,7 @@ static void handle_set_menu(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {
-      case SetWindow_clear:
+      case SetMenu_clear:
         simply_menu_clear(menu);
         break;
       case SetMenu_sections:
@@ -290,7 +261,6 @@ static void handle_set_menu(DictionaryIterator *iter, Simply *simply) {
         break;
     }
   }
-  set_window(&menu->window, iter, simply);
 }
 
 static void handle_set_menu_section(DictionaryIterator *iter, Simply *simply) {
@@ -378,12 +348,11 @@ static void handle_set_stage(DictionaryIterator *iter, Simply *simply) {
   Tuple *tuple;
   for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
     switch (tuple->key) {
-      case SetWindow_clear:
+      case 0:
         simply_stage_clear(stage);
         break;
     }
   }
-  set_window(&stage->window, iter, simply);
 }
 
 static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
@@ -526,6 +495,67 @@ static void handle_animate_stage_element(DictionaryIterator *iter, Simply *simpl
   simply_stage_animate_element(stage, element, animation, to_frame);
 }
 
+static void handle_window_show_packet(Simply *simply, Packet *data) {
+  WindowShowPacket *packet = (WindowShowPacket*) data;
+  unsigned int i = packet->type < WindowTypeLast ? packet->type : 0;
+  SimplyWindow *window = simply->windows[i];
+  simply_window_stack_show(simply->window_stack, window, packet->pushing);
+}
+
+static void handle_window_hide_packet(Simply *simply, Packet *data) {
+  WindowHidePacket *packet = (WindowHidePacket*) data;
+  SimplyWindow *window = get_top_simply_window(simply);
+  if (!window) {
+    return;
+  }
+  if (window->id == packet->id) {
+    simply_window_stack_pop(simply->window_stack, window);
+  }
+}
+
+static void handle_window_props_packet(Simply *simply, Packet *data) {
+  WindowPropsPacket *packet = (WindowPropsPacket*) data;
+  SimplyWindow *window = get_top_simply_window(simply);
+  if (!window) {
+    return;
+  }
+  window->id = packet->id;
+  simply_window_set_background_color(window, packet->background_color);
+  simply_window_set_fullscreen(window, packet->fullscreen);
+  simply_window_set_scrollable(window, packet->scrollable);
+}
+
+static void handle_window_action_bar_packet(Simply *simply, Packet *data) {
+  WindowActionBarPacket *packet = (WindowActionBarPacket*) data;
+  SimplyWindow *window = get_top_simply_window(simply);
+  if (!window) {
+    return;
+  }
+  for (unsigned int i = 0; i < ARRAY_LENGTH(packet->image); ++i) {
+    simply_window_set_action_bar_icon(window, i, packet->image[i]);
+  }
+  simply_window_set_action_bar_background_color(window, packet->background_color);
+  simply_window_set_action_bar(window, packet->action);
+}
+
+static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
+  Packet *packet = (Packet*) buffer;
+  switch (packet->type) {
+    case CommandWindowShow:
+      handle_window_show_packet(simply, packet);
+      break;
+    case CommandWindowHide:
+      handle_window_hide_packet(simply, packet);
+      break;
+    case CommandWindowProps:
+      handle_window_props_packet(simply, packet);
+      break;
+    case CommandWindowActionBar:
+      handle_window_action_bar_packet(simply, packet);
+      break;
+  }
+}
+
 static void received_callback(DictionaryIterator *iter, void *context) {
   Tuple *tuple = dict_find(iter, 0);
   if (!tuple) {
@@ -534,12 +564,14 @@ static void received_callback(DictionaryIterator *iter, void *context) {
 
   s_has_communicated = true;
 
+  if (tuple->length > sizeof(Packet)) {
+    handle_packet(context, tuple->value->data, tuple->length);
+  }
+
   switch (tuple->value->uint8) {
     case SimplyACmd_setWindow:
-      handle_set_window(iter, context);
       break;
     case SimplyACmd_windowHide:
-      handle_hide_window(iter, context);
       break;
     case SimplyACmd_setUi:
       handle_set_ui(iter, context);

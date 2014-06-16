@@ -7,12 +7,17 @@ typedef struct Simply Simply;
 struct Simply {
   struct SimplyAccel *accel;
   struct SimplyRes *res;
-  struct SimplySplash *splash;
-  struct SimplyStage *stage;
-  struct SimplyMenu *menu;
   struct SimplyMsg *msg;
-  struct SimplyUi *ui;
   struct SimplyWindowStack *window_stack;
+  struct SimplySplash *splash;
+  union {
+    struct {
+      struct SimplyStage *stage;
+      struct SimplyMenu *menu;
+      struct SimplyUi *ui;
+    };
+    struct SimplyWindow *windows[0];
+  };
 };
 
 Simply *simply_init();

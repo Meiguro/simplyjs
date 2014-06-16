@@ -30,6 +30,7 @@ struct.types = {
   float32: { size: 2 },
   float64: { size: 4 },
   cstring: { size: 1, dynamic: true },
+  data: { size: 0, dynamic: true },
 };
 
 var makeDataViewAccessor = function(type, typeName) {
@@ -73,6 +74,32 @@ struct.types.cstring.set = function(offset, value) {
   this._advance = value.length + 1;
 };
 
+struct.types.data.get = function(offset) {
+  var length = this._value;
+  this._cursor = offset;
+  var buffer = this._view;
+  var copy = new DataView(new ArrayBuffer(length));
+  for (var i = 0; i < length; ++i) {
+    copy.setUint8(i, buffer.getUint8(i + offset));
+  }
+  this._advance = length;
+  return copy;
+};
+
+struct.types.data.set = function(offset, value) {
+  var length = value.byteLength || value.length;
+  this._cursor = offset;
+  this._grow(offset + length);
+  var buffer = this._view;
+  if (value instanceof ArrayBuffer) {
+    value = new DataView(value);
+  }
+  for (var i = 0; i < length; ++i) {
+    buffer.setUint8(i + offset, value instanceof DataView ? value.getUint8(i) : value[i]);
+  }
+  this._advance = length;
+};
+
 struct.prototype._grow = function(target) {
   var buffer = this._view;
   var size = buffer.byteLength;
@@ -85,13 +112,18 @@ struct.prototype._grow = function(target) {
   this._view = copy;
 };
 
+struct.prototype._prevField = function(field) {
+  field = field || this._access;
+  var fieldIndex = this._fields.indexOf(field);
+  return this._fields[fieldIndex - 1];
+};
+
 struct.prototype._makeAccessor = function(field) {
   this[field.name] = function(value) {
     var type = field.type;
     if (field.dynamic) {
-      var fieldIndex = this._fields.indexOf(field);
-      var prevField = this._fields[fieldIndex - 1];
-      if (fieldIndex === 0) {
+      var prevField = this._prevField(field);
+      if (prevField === undefined) {
         this._cursor = 0;
       } else if (this._access === field) {
         this._cursor -= this._advance;
@@ -105,11 +137,13 @@ struct.prototype._makeAccessor = function(field) {
     var result = this;
     if (arguments.length === 0) {
       result = type.get.call(this, this._cursor, this._littleEndian);
+      this._value = result;
     } else {
       if (field.transform) {
         value = field.transform(value, field);
       }
       type.set.call(this, this._cursor, value, this._littleEndian);
+      this._value = value;
     }
     this._cursor += this._advance;
     return result;

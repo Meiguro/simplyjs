@@ -42,5 +42,6 @@ bool simply_msg_menu_get_item(SimplyMsg *self, uint16_t section, uint16_t index)
 bool simply_msg_menu_select_click(SimplyMsg *self, uint16_t section, uint16_t index);
 bool simply_msg_menu_select_long_click(SimplyMsg *self, uint16_t section, uint16_t index);
 bool simply_msg_menu_hide(SimplyMsg *self, uint16_t section, uint16_t index);
+bool simply_msg_send_menu_selection(SimplyMsg *self);
 
 bool simply_msg_animate_element_done(SimplyMsg *self, uint16_t index);

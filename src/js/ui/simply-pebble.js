@@ -14,8 +14,7 @@ var simply = require('ui/simply');
 /**
  * This package provides the underlying implementation for the ui/* classes.
  *
- * This implementation uses PebbleKit JS AppMessage to send commands to a Pebble Watch.
- */
+ * This implementation uses PebbleKit JS AppMessage to send commands to a Pebble Watm */
 
 /**
  * First part of this file is defining the commands and types that we will use later.
@@ -110,6 +109,16 @@ var AnimationCurve = function(x) {
     case 'easeInOut': return 3;
   }
   return Number(x);
+};
+
+var MenuRowAlign = function(x) {
+  switch(x) {
+    case 'none'   : return 0;
+    case 'center' : return 1;
+    case 'top'    : return 2;
+    case 'bottom' : return 3;
+  }
+  return x ? Number(x) : 0;
 };
 
 var makeArrayType = function(types) {
@@ -252,6 +261,18 @@ var setMenuParams = [{
 }, {
   name: 'sections',
   type: Number,
+}, {
+  name: 'selectionSection',
+  type: Number,
+}, {
+  name: 'selectionItem',
+  type: Number,
+}, {
+  name: 'selectionAlign',
+  type: MenuRowAlign,
+}, {
+  name: 'selectionAnimated',
+  type: Boolean,
 }];
 
 var setStageParams = [{
@@ -380,6 +401,14 @@ var commands = [{
   }, {
     name: 'item',
   }],
+}, {
+  name: 'menuSelection',
+  params: [{
+    name: 'section',
+  }, {
+    name: 'item',
+  }],
+}, {
 }, {
   name: 'image',
   params: [{
@@ -519,6 +548,13 @@ var actionBarTypeMap = {
   select: 'actionSelect',
   down: 'actionDown',
   backgroundColor: 'actionBackgroundColor',
+};
+
+var menuSelectionTypeMap = {
+  section: 'selectionSection',
+  item: 'selectionItem',
+  align: 'selectionAlign',
+  animated: 'selectionAnimated',
 };
 
 
@@ -736,7 +772,7 @@ var setActionMessage = function(message, command, actionDef) {
   return message;
 };
 
-SimplyPebble.menu = function(menuDef, clear, pushing) {
+SimplyPebble.menu = function(menuDef, clear, pushing, selection) {
   if (arguments.length === 3) {
     SimplyPebble.windowShow({ type: 'menu', pushing: pushing });
   }
@@ -753,6 +789,9 @@ SimplyPebble.menu = function(menuDef, clear, pushing) {
   if (clear) {
     clear = toClearFlags(clear);
     message[command.paramMap.clear.id] = clear;
+  }
+  if (selection) {
+    setMessage(packet, command, selection, menuSelectionTypeMap);
   }
   SimplyPebble.sendMessage(message);
 };
@@ -776,6 +815,12 @@ SimplyPebble.menuItem = function(sectionIndex, itemIndex, itemDef) {
   messageDef.item = itemIndex;
   var message = makeMessage(command, messageDef);
   SimplyPebble.sendMessage(message);
+};
+
+SimplyPebble.menuSelection = function() {
+  var command = commandMap.menuSelection;
+  var packet = makePacket(command);
+  SimplyPebble.sendPacket(packet);
 };
 
 SimplyPebble.image = function(id, gbitmap) {
@@ -922,6 +967,7 @@ SimplyPebble.onAppMessage = function(e) {
       break;
     case 'menuSelect':
     case 'menuLongSelect':
+    case 'menuSelection':
       Menu.emitSelect(command.name, payload[1], payload[2]);
       break;
     case 'stageAnimateDone':

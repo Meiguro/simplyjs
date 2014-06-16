@@ -14,7 +14,7 @@ var struct = function(def) {
   this._offset = 0;
   this._cursor = 0;
   this._makeAccessors(def);
-  this._view = new DataView(new ArrayBuffer(this.size));
+  this._view = new DataView(new ArrayBuffer(this._size));
   this._def = def;
 };
 
@@ -107,7 +107,7 @@ struct.prototype._makeAccessor = function(field) {
       result = type.get.call(this, this._cursor, this._littleEndian);
     } else {
       if (field.transform) {
-        value = field.transform(value);
+        value = field.transform(value, field);
       }
       type.set.call(this, this._cursor, value, this._littleEndian);
     }
@@ -133,7 +133,7 @@ struct.prototype._makeAccessors = function(def, index, fields, prefix) {
     }
     if (type instanceof struct) {
       this._makeAccessors(type._def, index, fields, name);
-      index = this.size;
+      index = this._size;
       continue;
     }
     var transform = member[2];
@@ -149,22 +149,26 @@ struct.prototype._makeAccessors = function(def, index, fields, prefix) {
     index += type.size;
     prevField = field;
   }
-  this.size = index;
+  this._size = index;
   return this;
 };
 
 struct.prototype.prop = function(def) {
+  var fields = this._fields;
+  var i = 0, ii = fields.length, name;
   if (arguments.length === 0) {
     var obj = {};
-    var fields = this._fields;
-    for (var i = 0, ii = fields.length; i < ii; ++i) {
-      var name = fields[i].name;
+    for (; i < ii; ++i) {
+      name = fields[i].name;
       obj[name] = this[name]();
     }
     return obj;
   }
-  for (var k in def) {
-    this[k](def[k]);
+  for (; i < ii; ++i) {
+    name = fields[i].name;
+    if (name in def) {
+      this[name](def[name]);
+    }
   }
   return this;
 };

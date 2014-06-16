@@ -1,3 +1,4 @@
+var struct = require('struct');
 var util2 = require('util2');
 var myutil = require('myutil');
 var Resource = require('ui/resource');
@@ -10,7 +11,7 @@ var StageElement = require('ui/element');
 
 var simply = require('ui/simply');
 
-/** 
+/**
  * This package provides the underlying implementation for the ui/* classes.
  *
  * This implementation uses PebbleKit JS AppMessage to send commands to a Pebble Watch.
@@ -481,29 +482,29 @@ var toParam = function(param, v) {
   return v;
 };
 
-var setPacket = function(packet, command, def, typeMap) {
+var setMessage = function(message, command, def, typeMap) {
   var paramMap = command.paramMap;
   for (var k in def) {
     var paramName = typeMap && typeMap[k] || k;
     if (!paramName) { continue; }
     var param = paramMap[paramName];
     if (param) {
-      packet[param.id] = toParam(param, def[k]);
+      message[param.id] = toParam(param, def[k]);
     }
   }
-  return packet;
+  return message;
 };
 
-var makePacket = function(command, def) {
-  var packet = {};
-  packet[0] = command.id;
+var makeMessage = function(command, def) {
+  var message = {};
+  message[0] = command.id;
   if (def) {
-    setPacket(packet, command, def);
+    setMessage(message, command, def);
   }
-  return packet;
+  return message;
 };
 
-SimplyPebble.sendPacket = (function() {
+SimplyPebble.sendMessage = (function() {
   var queue = [];
   var sending = false;
 
@@ -523,8 +524,8 @@ SimplyPebble.sendPacket = (function() {
     Pebble.sendAppMessage(head, consume, cycle);
   }
 
-  function send(packet) {
-    queue.push(packet);
+  function send(message) {
+    queue.push(message);
     if (sending) { return; }
     sending = true;
     cycle();
@@ -535,8 +536,8 @@ SimplyPebble.sendPacket = (function() {
 
 SimplyPebble.buttonConfig = function(buttonConf) {
   var command = commandMap.configButtons;
-  var packet = makePacket(command, buttonConf);
-  SimplyPebble.sendPacket(packet);
+  var message = makeMessage(command, buttonConf);
+  SimplyPebble.sendMessage(message);
 };
 
 var toClearFlags = function(clear) {
@@ -559,60 +560,60 @@ var toClearFlags = function(clear) {
   return clear;
 };
 
-var setActionPacket = function(packet, command, actionDef) {
+var setActionMessage = function(message, command, actionDef) {
   if (actionDef) {
     if (typeof actionDef === 'boolean') {
       actionDef = { action: actionDef };
     }
-    setPacket(packet, command, actionDef, actionBarTypeMap);
+    setMessage(message, command, actionDef, actionBarTypeMap);
   }
-  return packet;
+  return message;
 };
 
 SimplyPebble.window = function(windowDef, clear) {
   var command = commandMap.setWindow;
-  var packet = makePacket(command, windowDef);
+  var message = makeMessage(command, windowDef);
   if (clear) {
     clear = toClearFlags(clear);
-    packet[command.paramMap.clear.id] = clear;
+    message[command.paramMap.clear.id] = clear;
   }
-  setActionPacket(packet, command, windowDef.action);
-  SimplyPebble.sendPacket(packet);
+  setActionMessage(message, command, windowDef.action);
+  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.windowHide = function(windowId) {
   var command = commandMap.windowHide;
-  var packet = makePacket(command);
-  packet[command.paramMap.id.id] = windowId;
-  SimplyPebble.sendPacket(packet);
+  var message = makeMessage(command);
+  message[command.paramMap.id.id] = windowId;
+  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.card = function(cardDef, clear, pushing) {
   var command = commandMap.setCard;
-  var packet = makePacket(command, cardDef);
+  var message = makeMessage(command, cardDef);
   if (clear) {
     clear = toClearFlags(clear);
-    packet[command.paramMap.clear.id] = clear;
+    message[command.paramMap.clear.id] = clear;
   }
   if (pushing) {
-    packet[command.paramMap.pushing.id] = pushing;
+    message[command.paramMap.pushing.id] = pushing;
   }
-  setActionPacket(packet, command, cardDef.action);
-  SimplyPebble.sendPacket(packet);
+  setActionMessage(message, command, cardDef.action);
+  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.vibe = function(type) {
   var command = commandMap.vibe;
-  var packet = makePacket(command);
+  var message = makeMessage(command);
   var vibeIndex = vibeTypes.indexOf(type);
-  packet[command.paramMap.type.id] = vibeIndex !== -1 ? vibeIndex : 0;
-  SimplyPebble.sendPacket(packet);
+  message[command.paramMap.type.id] = vibeIndex !== -1 ? vibeIndex : 0;
+  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.accelConfig = function(configDef) {
   var command = commandMap.configAccelData;
-  var packet = makePacket(command, configDef);
-  SimplyPebble.sendPacket(packet);
+  var message = makeMessage(command, configDef);
+  SimplyPebble.sendMessage(message);
 };
 
 var accelListeners = [];
@@ -620,127 +621,127 @@ var accelListeners = [];
 SimplyPebble.accelPeek = function(callback) {
   accelListeners.push(callback);
   var command = commandMap.getAccelData;
-  var packet = makePacket(command);
-  SimplyPebble.sendPacket(packet);
+  var message = makeMessage(command);
+  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.menu = function(menuDef, clear, pushing) {
   var command = commandMap.setMenu;
-  var packetDef = util2.copy(menuDef);
-  if (packetDef.sections instanceof Array) {
-    packetDef.sections = packetDef.sections.length;
+  var messageDef = util2.copy(menuDef);
+  if (messageDef.sections instanceof Array) {
+    messageDef.sections = messageDef.sections.length;
   }
-  if (!packetDef.sections) {
-    packetDef.sections = 1;
+  if (!messageDef.sections) {
+    messageDef.sections = 1;
   }
-  var packet = makePacket(command, packetDef);
+  var message = makeMessage(command, messageDef);
   if (clear) {
     clear = toClearFlags(clear);
-    packet[command.paramMap.clear.id] = clear;
+    message[command.paramMap.clear.id] = clear;
   }
   if (pushing) {
-    packet[command.paramMap.pushing.id] = pushing;
+    message[command.paramMap.pushing.id] = pushing;
   }
-  SimplyPebble.sendPacket(packet);
+  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.menuSection = function(sectionIndex, sectionDef, clear) {
   var command = commandMap.setMenuSection;
-  var packetDef = util2.copy(sectionDef);
-  packetDef.section = sectionIndex;
-  if (packetDef.items instanceof Array) {
-    packetDef.items = packetDef.items.length;
+  var messageDef = util2.copy(sectionDef);
+  messageDef.section = sectionIndex;
+  if (messageDef.items instanceof Array) {
+    messageDef.items = messageDef.items.length;
   }
-  packetDef.clear = clear;
-  var packet = makePacket(command, packetDef);
-  SimplyPebble.sendPacket(packet);
+  messageDef.clear = clear;
+  var message = makeMessage(command, messageDef);
+  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.menuItem = function(sectionIndex, itemIndex, itemDef) {
   var command = commandMap.setMenuItem;
-  var packetDef = util2.copy(itemDef);
-  packetDef.section = sectionIndex;
-  packetDef.item = itemIndex;
-  var packet = makePacket(command, packetDef);
-  SimplyPebble.sendPacket(packet);
+  var messageDef = util2.copy(itemDef);
+  messageDef.section = sectionIndex;
+  messageDef.item = itemIndex;
+  var message = makeMessage(command, messageDef);
+  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.image = function(id, gbitmap) {
   var command = commandMap.image;
-  var packetDef = util2.copy(gbitmap);
-  packetDef.id = id;
-  var packet = makePacket(command, packetDef);
-  SimplyPebble.sendPacket(packet);
+  var messageDef = util2.copy(gbitmap);
+  messageDef.id = id;
+  var message = makeMessage(command, messageDef);
+  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.stage = function(stageDef, clear, pushing) {
   var command = commandMap.setStage;
-  var packet = makePacket(command, stageDef);
+  var message = makeMessage(command, stageDef);
   if (clear) {
     clear = toClearFlags(clear);
-    packet[command.paramMap.clear.id] = clear;
+    message[command.paramMap.clear.id] = clear;
   }
   if (pushing) {
-    packet[command.paramMap.pushing.id] = pushing;
+    message[command.paramMap.pushing.id] = pushing;
   }
-  setActionPacket(packet, command, stageDef.action);
-  SimplyPebble.sendPacket(packet);
+  setActionMessage(message, command, stageDef.action);
+  SimplyPebble.sendMessage(message);
 };
 
-var toFramePacket = function(packetDef) {
-  if (packetDef.position) {
-    var position = packetDef.position;
-    delete packetDef.position;
-    packetDef.x = position.x;
-    packetDef.y = position.y;
+var toFrameMessage = function(messageDef) {
+  if (messageDef.position) {
+    var position = messageDef.position;
+    delete messageDef.position;
+    messageDef.x = position.x;
+    messageDef.y = position.y;
   }
-  if (packetDef.size) {
-    var size = packetDef.size;
-    delete packetDef.size;
-    packetDef.width = size.x;
-    packetDef.height = size.y;
+  if (messageDef.size) {
+    var size = messageDef.size;
+    delete messageDef.size;
+    messageDef.width = size.x;
+    messageDef.height = size.y;
   }
-  return packetDef;
+  return messageDef;
 };
 
 SimplyPebble.stageElement = function(elementId, elementType, elementDef, index) {
   var command = commandMap.stageElement;
-  var packetDef = util2.copy(elementDef);
-  packetDef.id = elementId;
-  packetDef.type = elementType;
-  packetDef.index = index;
-  packetDef = toFramePacket(packetDef);
-  var packet = makePacket(command, packetDef);
-  SimplyPebble.sendPacket(packet);
+  var messageDef = util2.copy(elementDef);
+  messageDef.id = elementId;
+  messageDef.type = elementType;
+  messageDef.index = index;
+  messageDef = toFrameMessage(messageDef);
+  var message = makeMessage(command, messageDef);
+  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.stageRemove = function(elementId) {
   var command = commandMap.stageRemove;
-  var packet = makePacket(command);
-  packet[command.paramMap.id.id] = elementId;
-  SimplyPebble.sendPacket(packet);
+  var message = makeMessage(command);
+  message[command.paramMap.id.id] = elementId;
+  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.stageAnimate = function(elementId, animateDef, duration, easing) {
   var command = commandMap.stageAnimate;
-  var packetDef = util2.copy(animateDef);
-  packetDef.id = elementId;
+  var messageDef = util2.copy(animateDef);
+  messageDef.id = elementId;
   if (duration) {
-    packetDef.duration = duration;
+    messageDef.duration = duration;
   }
   if (easing) {
-    packetDef.easing = easing;
+    messageDef.easing = easing;
   }
-  packetDef = toFramePacket(packetDef);
-  var packet = makePacket(command, packetDef);
-  SimplyPebble.sendPacket(packet);
+  messageDef = toFrameMessage(messageDef);
+  var message = makeMessage(command, messageDef);
+  SimplyPebble.sendMessage(message);
 };
 
-var readInt = function(packet, width, pos, signed) {
+var readInt = function(message, width, pos, signed) {
   var value = 0;
   pos = pos || 0;
   for (var i = 0; i < width; ++i) {
-    value += (packet[pos + i] & 0xFF) << (i * 8);
+    value += (message[pos + i] & 0xFF) << (i * 8);
   }
   if (signed) {
     var mask = 1 << (width * 8 - 1);

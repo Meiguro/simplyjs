@@ -70,7 +70,7 @@ Accel.autoSubscribe = function() {
  * @param {simply.accelConfig} accelConf - An object defining the accelerometer configuration.
  */
 Accel.config = function(opt, auto) {
-  if (typeof opt === 'undefined') {
+  if (arguments.length === 0) {
     return {
       rate: state.rate,
       samples: state.samples,
@@ -85,7 +85,7 @@ Accel.config = function(opt, auto) {
     }
     state[k] = opt[k];
   }
-  return simply.impl.accelConfig.apply(this, arguments);
+  return simply.impl.accelConfig(Accel.config());
 };
 
 /**

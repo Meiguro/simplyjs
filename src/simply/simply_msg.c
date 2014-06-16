@@ -32,6 +32,8 @@ enum Command {
   CommandCardImage,
   CommandCardStyle,
   CommandVibe,
+  CommandAccelPeek,
+  CommandAccelConfig,
 };
 
 typedef enum WindowType WindowType;
@@ -127,6 +129,17 @@ typedef struct VibePacket VibePacket;
 struct __attribute__((__packed__)) VibePacket {
   Packet packet;
   VibeType type:8;
+};
+
+typedef Packet AccelPeekPacket;
+
+typedef struct AccelConfigPacket AccelConfigPacket;
+
+struct __attribute__((__packed__)) AccelConfigPacket {
+  Packet packet;
+  uint16_t num_samples;
+  AccelSamplingRate rate:8;
+  bool data_subscribed;
 };
 
 typedef enum SimplyACmd SimplyACmd;
@@ -227,32 +240,6 @@ static void handle_config_buttons(DictionaryIterator *iter, Simply *simply) {
     if ((tuple = dict_find(iter, i + 1))) {
       simply_window_set_button(window, i, tuple->value->int32);
     }
-  }
-}
-
-static void get_accel_data_timer_callback(void *context) {
-  Simply *simply = context;
-  AccelData data = { .x = 0 };
-  simply_accel_peek(simply->accel, &data);
-  if (!simply_msg_accel_data(simply->msg, &data, 1, 0)) {
-    app_timer_register(10, get_accel_data_timer_callback, simply);
-  }
-}
-
-static void handle_get_accel_data(DictionaryIterator *iter, Simply *simply) {
-  app_timer_register(10, get_accel_data_timer_callback, simply);
-}
-
-static void handle_set_accel_config(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  if ((tuple = dict_find(iter, 1))) {
-    simply_accel_set_data_rate(simply->accel, tuple->value->int32);
-  }
-  if ((tuple = dict_find(iter, 2))) {
-    simply_accel_set_data_samples(simply->accel, tuple->value->int32);
-  }
-  if ((tuple = dict_find(iter, 3))) {
-    simply_accel_set_data_subscribe(simply->accel, tuple->value->int32);
   }
 }
 
@@ -575,6 +562,26 @@ static void handle_vibe_packet(Simply *simply, Packet *data) {
   }
 }
 
+static void accel_peek_timer_callback(void *context) {
+  Simply *simply = context;
+  AccelData data = { .x = 0 };
+  simply_accel_peek(simply->accel, &data);
+  if (!simply_msg_accel_data(simply->msg, &data, 1, 0)) {
+    app_timer_register(10, accel_peek_timer_callback, simply);
+  }
+}
+
+static void handle_accel_peek_packet(Simply *simply, Packet *data) {
+  app_timer_register(10, accel_peek_timer_callback, simply);
+}
+
+static void handle_accel_config_packet(Simply *simply, Packet *data) {
+  AccelConfigPacket *packet = (AccelConfigPacket*) data;
+  simply->accel->num_samples = packet->num_samples;
+  simply->accel->rate = packet->rate;
+  simply_accel_set_data_subscribe(simply->accel, packet->data_subscribed);
+}
+
 static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
   Packet *packet = (Packet*) buffer;
   switch (packet->type) {
@@ -605,6 +612,12 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandVibe:
       handle_vibe_packet(simply, packet);
       break;
+    case CommandAccelPeek:
+      handle_accel_peek_packet(simply, packet);
+      break;
+    case CommandAccelConfig:
+      handle_accel_config_packet(simply, packet);
+      break;
   }
 }
 
@@ -616,17 +629,11 @@ static void received_callback(DictionaryIterator *iter, void *context) {
 
   s_has_communicated = true;
 
-  if (tuple->length > sizeof(Packet)) {
+  if (tuple->value->uint32 > 0xFFFF) {
     handle_packet(context, tuple->value->data, tuple->length);
   }
 
   switch (tuple->value->uint8) {
-    case SimplyACmd_getAccelData:
-      handle_get_accel_data(iter, context);
-      break;
-    case SimplyACmd_configAccelData:
-      handle_set_accel_config(iter, context);
-      break;
     case SimplyACmd_configButtons:
       handle_config_buttons(iter, context);
       break;

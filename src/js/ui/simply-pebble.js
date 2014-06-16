@@ -221,6 +221,17 @@ var VibePacket = new struct([
   ['uint8', 'type', VibeType],
 ]);
 
+var AccelPeekPacket = new struct([
+  [Packet, 'packet'],
+]);
+
+var AccelConfigPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'samples'],
+  ['uint8', 'rate'],
+  ['bool', 'subscribe', BoolType],
+]);
+
 var CommandPackets = [
   Packet,
   WindowShowPacket,
@@ -232,6 +243,8 @@ var CommandPackets = [
   CardImagePacket,
   CardStylePacket,
   VibePacket,
+  AccelPeekPacket,
+  AccelConfigPacket,
 ];
 
 var setMenuParams = [{
@@ -696,6 +709,17 @@ SimplyPebble.vibe = function(type) {
   SimplyPebble.sendPacket(VibePacket.type(type));
 };
 
+var accelListeners = [];
+
+SimplyPebble.accelPeek = function(callback) {
+  accelListeners.push(callback);
+  SimplyPebble.sendPacket(AccelPeekPacket);
+};
+
+SimplyPebble.accelConfig = function(def) {
+  SimplyPebble.sendPacket(setPacket(AccelConfigPacket, def));
+};
+
 SimplyPebble.buttonConfig = function(buttonConf) {
   var command = commandMap.configButtons;
   var message = makeMessage(command, buttonConf);
@@ -710,21 +734,6 @@ var setActionMessage = function(message, command, actionDef) {
     setMessage(message, command, actionDef, actionBarTypeMap);
   }
   return message;
-};
-
-SimplyPebble.accelConfig = function(configDef) {
-  var command = commandMap.configAccelData;
-  var message = makeMessage(command, configDef);
-  SimplyPebble.sendMessage(message);
-};
-
-var accelListeners = [];
-
-SimplyPebble.accelPeek = function(callback) {
-  accelListeners.push(callback);
-  var command = commandMap.getAccelData;
-  var message = makeMessage(command);
-  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.menu = function(menuDef, clear, pushing) {

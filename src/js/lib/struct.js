@@ -54,35 +54,35 @@ struct.types.bool = struct.types.uint8;
 
 struct.types.cstring.get = function(offset) {
   var chars = [];
-  var buffer = this._view.buffer;
-  for (var i = offset, ii = buffer.byteLength, j = 0; i < ii && buffer[i] !== 0; ++i, ++j) {
-    chars[j] = String.fromCharCode(buffer[i]);
+  var buffer = this._view;
+  for (var i = offset, ii = buffer.byteLength, j = 0; i < ii && buffer.getUint8(i) !== 0; ++i, ++j) {
+    chars[j] = String.fromCharCode(buffer.getUint8(i));
   }
   this._advance = chars.length + 1;
   return chars.join('');
 };
 
 struct.types.cstring.set = function(offset, value) {
-  this._grow(offset + value.length);
+  this._grow(offset + value.length + 1);
   var i = offset;
-  var buffer = this._view.buffer;
-  for (var j = 0, jj = value.length; j < jj && value[i] !== 0; ++i, ++j) {
-    buffer[i] = value.charCodeAt(j);
+  var buffer = this._view;
+  for (var j = 0, jj = value.length; j < jj && value[i] !== '\0'; ++i, ++j) {
+    buffer.setUint8(i, value.charCodeAt(j));
   }
-  buffer[i + 1] = '\0';
+  buffer.setUint8(i, 0);
   this._advance = value.length + 1;
 };
 
 struct.prototype._grow = function(target) {
-  var buffer = this._view.buffer;
+  var buffer = this._view;
   var size = buffer.byteLength;
   if (target <= size) { return; }
   while (size < target) { size *= 2; }
-  var copy = new ArrayBuffer(size);
+  var copy = new DataView(new ArrayBuffer(size));
   for (var i = 0; i < buffer.byteLength; ++i) {
-    copy[i] = buffer[i];
+    copy.setUint8(i, buffer.getUint8(i));
   }
-  this._view = new DataView(copy);
+  this._view = copy;
 };
 
 struct.prototype._makeAccessor = function(field) {

@@ -28,6 +28,7 @@ enum Command {
   CommandWindowProps,
   CommandWindowButtonConfig,
   CommandWindowActionBar,
+  CommandImagePacket,
   CommandCardClear,
   CommandCardText,
   CommandCardImage,
@@ -116,6 +117,16 @@ struct __attribute__((__packed__)) WindowActionBarPacket {
   uint32_t image[3];
   GColor background_color:8;
   bool action;
+};
+
+typedef struct ImagePacket ImagePacket;
+
+struct __attribute__((__packed__)) ImagePacket {
+  Packet packet;
+  uint32_t id;
+  int16_t width;
+  int16_t height;
+  uint32_t pixels[];
 };
 
 typedef struct CardClearPacket CardClearPacket;
@@ -385,27 +396,6 @@ static SimplyWindow *get_top_simply_window(Simply *simply) {
   return window;
 }
 
-static void handle_set_image(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  uint32_t id = 0;
-  int16_t width = 0;
-  int16_t height = 0;
-  uint32_t *pixels = NULL;
-  if ((tuple = dict_find(iter, 1))) {
-    id = tuple->value->uint32;
-  }
-  if ((tuple = dict_find(iter, 2))) {
-    width = tuple->value->int16;
-  }
-  if ((tuple = dict_find(iter, 3))) {
-    height = tuple->value->int16;
-  }
-  if ((tuple = dict_find(iter, 4))) {
-    pixels = (uint32_t*) tuple->value->data;
-  }
-  simply_res_add_image(simply->res, id, width, height, pixels);
-}
-
 static void handle_window_show_packet(Simply *simply, Packet *data) {
   WindowShowPacket *packet = (WindowShowPacket*) data;
   SimplyWindow *window = simply->windows[MIN(WindowTypeLast - 1, packet->type)];
@@ -455,6 +445,11 @@ static void handle_window_action_bar_packet(Simply *simply, Packet *data) {
   }
   simply_window_set_action_bar_background_color(window, packet->background_color);
   simply_window_set_action_bar(window, packet->action);
+}
+
+static void handle_image_packet(Simply *simply, Packet *data) {
+  ImagePacket *packet = (ImagePacket*) data;
+  simply_res_add_image(simply->res, packet->id, packet->width, packet->height, packet->pixels);
 }
 
 static void handle_card_clear_packet(Simply *simply, Packet *data) {
@@ -676,6 +671,9 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandWindowActionBar:
       handle_window_action_bar_packet(simply, packet);
       break;
+    case CommandImagePacket:
+      handle_image_packet(simply, packet);
+      break;
     case CommandCardClear:
       handle_card_clear_packet(simply, packet);
       break;
@@ -756,15 +754,7 @@ static void received_callback(DictionaryIterator *iter, void *context) {
 
   s_has_communicated = true;
 
-  if (tuple->value->uint32 > 0xFFFF) {
-    handle_packet(context, tuple->value->data, tuple->length);
-  }
-
-  switch (tuple->value->uint8) {
-    case SimplyACmd_image:
-      handle_set_image(iter, context);
-      break;
-  }
+  handle_packet(context, tuple->value->data, tuple->length);
 }
 
 static void dropped_callback(AppMessageResult reason, void *context) {

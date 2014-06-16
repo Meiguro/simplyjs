@@ -254,6 +254,14 @@ var WindowActionBarPacket = new struct([
   ['uint8', 'action', BoolType],
 ]);
 
+var ImagePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['int16', 'width'],
+  ['int16', 'height'],
+  ['data', 'pixels'],
+]);
+
 var CardClearPacket = new struct([
   [Packet, 'packet'],
   ['uint8', 'flags'],
@@ -423,6 +431,7 @@ var CommandPackets = [
   WindowPropsPacket,
   WindowButtonConfigPacket,
   WindowActionBarPacket,
+  ImagePacket,
   CardClearPacket,
   CardTextPacket,
   CardImagePacket,
@@ -715,6 +724,14 @@ SimplyPebble.sendPacket = function(packet) {
   SimplyPebble.sendMessage({ 0: toByteArray(packet) });
 };
 
+SimplyPebble.windowShow = function(def) {
+  SimplyPebble.sendPacket(WindowShowPacket.prop(def));
+};
+
+SimplyPebble.windowHide = function(id) {
+  SimplyPebble.sendPacket(WindowHidePacket.id(id));
+};
+
 SimplyPebble.windowProps = function(def) {
   SimplyPebble.sendPacket(WindowPropsPacket.prop(def));
 };
@@ -734,12 +751,8 @@ SimplyPebble.windowActionBar = function(def) {
   SimplyPebble.sendPacket(WindowActionBarPacket.prop(toActionDef(def)));
 };
 
-SimplyPebble.windowShow = function(def) {
-  SimplyPebble.sendPacket(WindowShowPacket.prop(def));
-};
-
-SimplyPebble.windowHide = function(id) {
-  SimplyPebble.sendPacket(WindowHidePacket.id(id));
+SimplyPebble.image = function(id, gbitmap) {
+  SimplyPebble.sendPacket(ImagePacket.id(id).prop(gbitmap));
 };
 
 var toClearFlags = function(clear) {
@@ -964,14 +977,6 @@ var setActionMessage = function(message, command, actionDef) {
     setMessage(message, command, actionDef, actionBarTypeMap);
   }
   return message;
-};
-
-SimplyPebble.image = function(id, gbitmap) {
-  var command = commandMap.image;
-  var messageDef = util2.copy(gbitmap);
-  messageDef.id = id;
-  var message = makeMessage(command, messageDef);
-  SimplyPebble.sendMessage(message);
 };
 
 var readInt = function(message, width, pos, signed) {

@@ -17,14 +17,16 @@ var simply = require('ui/simply');
  * This implementation uses PebbleKit JS AppMessage to send commands to a Pebble Watch.
  */
 
-/* Make JSHint happy */
-if (typeof Image === 'undefined') {
-  window.Image = function(){};
-}
-
 /**
  * First part of this file is defining the commands and types that we will use later.
  */
+
+var ImageType = function(x) {
+  if (typeof x !== 'number') {
+    return ImageService.resolve(x);
+  }
+  return x;
+};
 
 var Color = function(x) {
   switch (x) {
@@ -118,13 +120,13 @@ var setWindowParams = [{
   type: Boolean,
 }, {
   name: 'actionUp',
-  type: Image,
+  type: ImageType,
 }, {
   name: 'actionSelect',
-  type: Image,
+  type: ImageType,
 }, {
   name: 'actionDown',
-  type: Image,
+  type: ImageType,
 }, {
   name: 'actionBackgroundColor',
   type: Color,
@@ -150,13 +152,13 @@ var setCardParams = setWindowParams.concat([{
   type: String,
 }, {
   name: 'icon',
-  type: Image,
+  type: ImageType,
 }, {
   name: 'subicon',
-  type: Image,
+  type: ImageType,
 }, {
   name: 'image',
-  type: Image,
+  type: ImageType,
 }, {
   name: 'style'
 }]);
@@ -275,7 +277,7 @@ var commands = [{
     type: String,
   }, {
     name: 'icon',
-    type: Image,
+    type: ImageType,
   }],
 }, {
   name: 'getMenuItem',
@@ -356,7 +358,7 @@ var commands = [{
     type: TimeUnits,
   }, {
     name: 'image',
-    type: Image,
+    type: ImageType,
   }, {
     name: 'compositing',
     type: CompositingOp,
@@ -474,8 +476,6 @@ var toParam = function(param, v) {
     v = typeof v !== 'undefined' ? v.toString() : '';
   } else if (param.type === Boolean) {
     v = v ? 1 : 0;
-  } else if (param.type === Image && typeof v !== 'number') {
-    v = ImageService.resolve(v);
   } else if (typeof param.type === 'function') {
     v = param.type(v);
   }

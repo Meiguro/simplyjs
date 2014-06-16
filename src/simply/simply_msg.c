@@ -34,6 +34,13 @@ enum Command {
   CommandVibe,
   CommandAccelPeek,
   CommandAccelConfig,
+  CommandMenuClear,
+  CommandMenuClearSection,
+  CommandMenuProps,
+  CommandMenuSection,
+  CommandMenuItem,
+  CommandMenuGetSelection,
+  CommandMenuSetSelection,
 };
 
 typedef enum WindowType WindowType;
@@ -142,6 +149,56 @@ struct __attribute__((__packed__)) AccelConfigPacket {
   bool data_subscribed;
 };
 
+typedef Packet MenuClearPacket;
+
+typedef struct MenuClearSectionPacket MenuClearSectionPacket;
+
+struct __attribute__((__packed__)) MenuClearSectionPacket {
+  Packet packet;
+  uint16_t section;
+};
+
+typedef struct MenuPropsPacket MenuPropsPacket;
+
+struct __attribute__((__packed__)) MenuPropsPacket {
+  Packet packet;
+  uint16_t num_sections;
+};
+
+typedef struct MenuSectionPacket MenuSectionPacket;
+
+struct __attribute__((__packed__)) MenuSectionPacket {
+  Packet packet;
+  uint16_t section;
+  uint16_t num_items;
+  uint16_t title_length;
+  char title[];
+};
+
+typedef struct MenuItemPacket MenuItemPacket;
+
+struct __attribute__((__packed__)) MenuItemPacket {
+  Packet packet;
+  uint16_t section;
+  uint16_t item;
+  uint32_t icon;
+  uint16_t title_length;
+  uint16_t subtitle_length;
+  char buffer[];
+};
+
+typedef Packet MenuGetSelectionPacket;
+
+typedef struct MenuSetSelectionPacket MenuSetSelectionPacket;
+
+struct __attribute__((__packed__)) MenuSetSelectionPacket {
+  Packet packet;
+  uint16_t section;
+  uint16_t item;
+  MenuRowAlign align:8;
+  bool animated;
+};
+
 typedef enum SimplyACmd SimplyACmd;
 
 enum SimplyACmd {
@@ -246,104 +303,6 @@ static void handle_config_buttons(DictionaryIterator *iter, Simply *simply) {
       simply_window_set_button(window, i, tuple->value->int32);
     }
   }
-}
-
-static void handle_set_menu(DictionaryIterator *iter, Simply *simply) {
-  SimplyMenu *menu = simply->menu;
-  Tuple *tuple;
-  bool is_selection = false;
-  MenuIndex menu_index = { 0, 0 };
-  MenuRowAlign align = MenuRowAlignCenter;
-  bool selection_animated = true;
-  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
-    switch (tuple->key) {
-      case SetMenu_clear:
-        simply_menu_clear(menu);
-        break;
-      case SetMenu_sections:
-        simply_menu_set_num_sections(menu, tuple->value->int32);
-        break;
-      case SetMenu_selectionSection:
-        menu_index.section = tuple->value->uint16;
-        break;
-      case SetMenu_selectionItem:
-        is_selection = true;
-        menu_index.row = tuple->value->uint16;
-        break;
-      case SetMenu_selectionAlign:
-        align = tuple->value->uint8;
-        break;
-      case SetMenu_selectionAnimated:
-        selection_animated = tuple->value->uint8;
-        break;
-    }
-  }
-  if (is_selection) {
-    simply_menu_set_selection(menu, menu_index, align, selection_animated);
-  }
-}
-
-static void handle_set_menu_section(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  uint16_t section_index = 0;
-  uint16_t num_items = 1;
-  char *title = NULL;
-  if ((tuple = dict_find(iter, 2))) {
-    section_index = tuple->value->uint16;
-  }
-  if ((tuple = dict_find(iter, 3))) {
-    num_items = tuple->value->uint16;
-  }
-  if ((tuple = dict_find(iter, 4))) {
-    title = tuple->value->cstring;
-  }
-  if ((tuple = dict_find(iter, 1))) {
-    simply_menu_clear_section_items(simply->menu, section_index);
-  }
-  SimplyMenuSection *section = malloc(sizeof(*section));
-  *section = (SimplyMenuSection) {
-    .section = section_index,
-    .num_items = num_items,
-    .title = strdup2(title),
-  };
-  simply_menu_add_section(simply->menu, section);
-}
-
-static void handle_set_menu_item(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  uint16_t section_index = 0;
-  uint16_t row = 0;
-  uint32_t icon = 0;
-  char *title = NULL;
-  char *subtitle = NULL;
-  if ((tuple = dict_find(iter, 1))) {
-    section_index = tuple->value->uint16;
-  }
-  if ((tuple = dict_find(iter, 2))) {
-    row = tuple->value->uint16;
-  }
-  if ((tuple = dict_find(iter, 3))) {
-    title = tuple->value->cstring;
-  }
-  if ((tuple = dict_find(iter, 4))) {
-    subtitle = tuple->value->cstring;
-  }
-  if ((tuple = dict_find(iter, 5))) {
-    icon = tuple->value->uint32;
-  }
-  SimplyMenuItem *item = malloc(sizeof(*item));
-  *item = (SimplyMenuItem) {
-    .section = section_index,
-    .item = row,
-    .title = strdup2(title),
-    .subtitle = strdup2(subtitle),
-    .icon = icon,
-  };
-  simply_menu_add_item(simply->menu, item);
-}
-
-static void handle_get_menu_selection(DictionaryIterator *iter, Simply *simply) {
-  simply_msg_send_menu_selection(simply->msg);
 }
 
 static void handle_set_image(DictionaryIterator *iter, Simply *simply) {
@@ -611,6 +570,57 @@ static void handle_accel_config_packet(Simply *simply, Packet *data) {
   simply_accel_set_data_subscribe(simply->accel, packet->data_subscribed);
 }
 
+static void handle_menu_clear_packet(Simply *simply, Packet *data) {
+  simply_menu_clear(simply->menu);
+}
+
+static void handle_menu_clear_section_packet(Simply *simply, Packet *data) {
+  MenuClearSectionPacket *packet = (MenuClearSectionPacket*) data;
+  simply_menu_clear_section_items(simply->menu, packet->section);
+}
+
+static void handle_menu_props_packet(Simply *simply, Packet *data) {
+  MenuPropsPacket *packet = (MenuPropsPacket*) data;
+  simply_menu_set_num_sections(simply->menu, packet->num_sections);
+}
+
+static void handle_menu_section_packet(Simply *simply, Packet *data) {
+  MenuSectionPacket *packet = (MenuSectionPacket*) data;
+  SimplyMenuSection *section = malloc(sizeof(*section));
+  *section = (SimplyMenuSection) {
+    .section = packet->section,
+    .num_items = packet->num_items,
+    .title = packet->title_length ? strdup2(packet->title) : NULL,
+  };
+  simply_menu_add_section(simply->menu, section);
+}
+
+static void handle_menu_item_packet(Simply *simply, Packet *data) {
+  MenuItemPacket *packet = (MenuItemPacket*) data;
+  SimplyMenuItem *item = malloc(sizeof(*item));
+  *item = (SimplyMenuItem) {
+    .section = packet->section,
+    .item = packet->item,
+    .title = packet->title_length ? strdup2(packet->buffer) : NULL,
+    .subtitle = packet->subtitle_length ? strdup2(packet->buffer + packet->title_length + 1) : NULL,
+    .icon = packet->icon,
+  };
+  simply_menu_add_item(simply->menu, item);
+}
+
+static void handle_menu_get_selection_packet(Simply *simply, Packet *data) {
+  simply_msg_send_menu_selection(simply->msg);
+}
+
+static void handle_menu_set_selection_packet(Simply *simply, Packet *data) {
+  MenuSetSelectionPacket *packet = (MenuSetSelectionPacket*) data;
+  MenuIndex menu_index = {
+    .section = packet->section,
+    .row = packet->item,
+  };
+  simply_menu_set_selection(simply->menu, menu_index, packet->align, packet->animated);
+}
+
 static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
   Packet *packet = (Packet*) buffer;
   switch (packet->type) {
@@ -647,6 +657,27 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandAccelConfig:
       handle_accel_config_packet(simply, packet);
       break;
+    case CommandMenuClear:
+      handle_menu_clear_packet(simply, packet);
+      break;
+    case CommandMenuClearSection:
+      handle_menu_clear_section_packet(simply, packet);
+      break;
+    case CommandMenuProps:
+      handle_menu_props_packet(simply, packet);
+      break;
+    case CommandMenuSection:
+      handle_menu_section_packet(simply, packet);
+      break;
+    case CommandMenuItem:
+      handle_menu_item_packet(simply, packet);
+      break;
+    case CommandMenuGetSelection:
+      handle_menu_get_selection_packet(simply, packet);
+      break;
+    case CommandMenuSetSelection:
+      handle_menu_set_selection_packet(simply, packet);
+      break;
   }
 }
 
@@ -666,17 +697,6 @@ static void received_callback(DictionaryIterator *iter, void *context) {
     case SimplyACmd_configButtons:
       handle_config_buttons(iter, context);
       break;
-    case SimplyACmd_setMenu:
-      handle_set_menu(iter, context);
-      break;
-    case SimplyACmd_setMenuSection:
-      handle_set_menu_section(iter, context);
-      break;
-    case SimplyACmd_setMenuItem:
-      handle_set_menu_item(iter, context);
-      break;
-    case SimplyACmd_menuSelection:
-      handle_get_menu_selection(iter, context);
     case SimplyACmd_image:
       handle_set_image(iter, context);
       break;

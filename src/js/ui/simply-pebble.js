@@ -24,11 +24,22 @@ var BoolType = function(x) {
   return x ? 1 : 0;
 };
 
+var StringType = function(x) {
+  return x || '';
+};
+
+var EnumerableType = function(x) {
+  if (x && x.hasOwnProperty('length')) {
+    return x.length;
+  }
+  return x ? Number(x) : 0;
+};
+
 var ImageType = function(x) {
-  if (typeof x !== 'number') {
+  if (x && typeof x !== 'number') {
     return ImageService.resolve(x);
   }
-  return x;
+  return x ? Number(x) : 0;
 };
 
 var Color = function(x) {
@@ -241,6 +252,51 @@ var AccelConfigPacket = new struct([
   ['bool', 'subscribe', BoolType],
 ]);
 
+var MenuClearPacket = new struct([
+  [Packet, 'packet'],
+]);
+
+var MenuClearSectionPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+]);
+
+var MenuPropsPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'sections', EnumerableType],
+]);
+
+var MenuSectionPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'items', EnumerableType],
+  ['uint16', 'titleLength', EnumerableType],
+  ['cstring', 'title', StringType],
+]);
+
+var MenuItemPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'item'],
+  ['uint32', 'icon', ImageType],
+  ['uint16', 'titleLength', EnumerableType],
+  ['uint16', 'subtitleLength', EnumerableType],
+  ['cstring', 'title', StringType],
+  ['cstring', 'subtitle', StringType],
+]);
+
+var MenuGetSelectionPacket = new struct([
+  [Packet, 'packet'],
+]);
+
+var MenuSetSelectionPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'item'],
+  ['uint8', 'align', MenuRowAlign],
+  ['bool', 'animated', BoolType],
+]);
+
 var CommandPackets = [
   Packet,
   WindowShowPacket,
@@ -254,6 +310,13 @@ var CommandPackets = [
   VibePacket,
   AccelPeekPacket,
   AccelConfigPacket,
+  MenuClearPacket,
+  MenuClearSectionPacket,
+  MenuPropsPacket,
+  MenuSectionPacket,
+  MenuItemPacket,
+  MenuGetSelectionPacket,
+  MenuSetSelectionPacket,
 ];
 
 var setMenuParams = [{
@@ -320,18 +383,8 @@ var commands = [{
   }],
 }, {
   name: 'getAccelData',
-  params: [{
-    name: 'transactionId',
-  }],
 }, {
   name: 'configAccelData',
-  params: [{
-    name: 'rate',
-  }, {
-    name: 'samples',
-  }, {
-    name: 'subscribe',
-  }],
 }, {
   name: 'configButtons',
   params: [{
@@ -345,20 +398,8 @@ var commands = [{
   }],
 }, {
   name: 'setMenu',
-  params: setMenuParams,
 }, {
   name: 'setMenuSection',
-  params: [{
-    name: 'clear',
-    type: Boolean,
-  }, {
-    name: 'section',
-  }, {
-    name: 'items',
-  }, {
-    name: 'title',
-    type: String,
-  }],
 }, {
   name: 'getMenuSection',
   params: [{
@@ -366,20 +407,6 @@ var commands = [{
   }],
 }, {
   name: 'setMenuItem',
-  params: [{
-    name: 'section',
-  }, {
-    name: 'item',
-  }, {
-    name: 'title',
-    type: String,
-  }, {
-    name: 'subtitle',
-    type: String,
-  }, {
-    name: 'icon',
-    type: ImageType,
-  }],
 }, {
   name: 'getMenuItem',
   params: [{
@@ -403,12 +430,6 @@ var commands = [{
   }],
 }, {
   name: 'menuSelection',
-  params: [{
-    name: 'section',
-  }, {
-    name: 'item',
-  }],
-}, {
 }, {
   name: 'image',
   params: [{
@@ -756,6 +777,60 @@ SimplyPebble.accelConfig = function(def) {
   SimplyPebble.sendPacket(setPacket(AccelConfigPacket, def));
 };
 
+SimplyPebble.menuClear = function() {
+  SimplyPebble.sendPacket(MenuClearPacket);
+};
+
+SimplyPebble.menuClearSection = function(section) {
+  SimplyPebble.sendPacket(MenuClearSectionPacket.section(section));
+};
+
+SimplyPebble.menuProps = function(def) {
+  SimplyPebble.sendPacket(setPacket(MenuPropsPacket, def));
+};
+
+SimplyPebble.menuSection = function(section, def, clear) {
+  if (clear !== undefined) {
+    SimplyPebble.menuClearSection(section);
+  }
+  MenuSectionPacket
+    .section(section)
+    .items(def.items)
+    .titleLength(def.title)
+    .title(def.title);
+  SimplyPebble.sendPacket(MenuSectionPacket);
+};
+
+SimplyPebble.menuItem = function(section, item, def) {
+  MenuItemPacket
+    .section(section)
+    .item(item)
+    .icon(def.icon)
+    .titleLength(def.title)
+    .subtitleLength(def.subtitle)
+    .title(def.title)
+    .subtitle(def.subtitle);
+  SimplyPebble.sendPacket(MenuItemPacket);
+};
+
+SimplyPebble.menuSelection = function(section, item) {
+  if (arguments.length === 0) {
+    SimplyPebble.sendPacket(MenuGetSelectionPacket);
+  }
+  SimplyPebble.sendPacket(MenuSetSelectionPacket.section(section).item(item));
+};
+
+SimplyPebble.menu = function(def, clear, pushing) {
+  if (arguments.length === 3) {
+    SimplyPebble.windowShow({ type: 'menu', pushing: pushing });
+  }
+  if (clear !== undefined) {
+    SimplyPebble.menuClear();
+  }
+  SimplyPebble.windowProps(def);
+  SimplyPebble.menuProps(def);
+};
+
 SimplyPebble.buttonConfig = function(buttonConf) {
   var command = commandMap.configButtons;
   var message = makeMessage(command, buttonConf);
@@ -770,57 +845,6 @@ var setActionMessage = function(message, command, actionDef) {
     setMessage(message, command, actionDef, actionBarTypeMap);
   }
   return message;
-};
-
-SimplyPebble.menu = function(menuDef, clear, pushing, selection) {
-  if (arguments.length === 3) {
-    SimplyPebble.windowShow({ type: 'menu', pushing: pushing });
-  }
-  SimplyPebble.windowProps(menuDef);
-  var command = commandMap.setMenu;
-  var messageDef = util2.copy(menuDef);
-  if (messageDef.sections instanceof Array) {
-    messageDef.sections = messageDef.sections.length;
-  }
-  if (!messageDef.sections) {
-    messageDef.sections = 1;
-  }
-  var message = makeMessage(command, messageDef);
-  if (clear) {
-    clear = toClearFlags(clear);
-    message[command.paramMap.clear.id] = clear;
-  }
-  if (selection) {
-    setMessage(packet, command, selection, menuSelectionTypeMap);
-  }
-  SimplyPebble.sendMessage(message);
-};
-
-SimplyPebble.menuSection = function(sectionIndex, sectionDef, clear) {
-  var command = commandMap.setMenuSection;
-  var messageDef = util2.copy(sectionDef);
-  messageDef.section = sectionIndex;
-  if (messageDef.items instanceof Array) {
-    messageDef.items = messageDef.items.length;
-  }
-  messageDef.clear = clear;
-  var message = makeMessage(command, messageDef);
-  SimplyPebble.sendMessage(message);
-};
-
-SimplyPebble.menuItem = function(sectionIndex, itemIndex, itemDef) {
-  var command = commandMap.setMenuItem;
-  var messageDef = util2.copy(itemDef);
-  messageDef.section = sectionIndex;
-  messageDef.item = itemIndex;
-  var message = makeMessage(command, messageDef);
-  SimplyPebble.sendMessage(message);
-};
-
-SimplyPebble.menuSelection = function() {
-  var command = commandMap.menuSelection;
-  var packet = makePacket(command);
-  SimplyPebble.sendPacket(packet);
 };
 
 SimplyPebble.image = function(id, gbitmap) {

@@ -26,7 +26,11 @@ Menu.prototype._show = function() {
 
 Menu.prototype._prop = function(state, clear, pushing) {
   if (this === WindowStack.top()) {
-    simply.impl.menu.call(this, state, clear, pushing, this._selection);
+    simply.impl.menu.call(this, state, clear, pushing);
+    var select = this._selection;
+    if (this._resolveSection(select)) {
+      simply.impl.menuSelection(select.section, select.item);
+    }
   }
 };
 
@@ -133,6 +137,7 @@ Menu.prototype._resolveMenu = function() {
   var sections = getSections.call(this);
   if (this === WindowStack.top()) {
     simply.impl.menu.call(this, this.state);
+    return true;
   }
 };
 
@@ -142,6 +147,7 @@ Menu.prototype._resolveSection = function(e, clear) {
   section.items = getItems.call(this, e);
   if (this === WindowStack.top()) {
     simply.impl.menuSection.call(this, e.section, section, clear);
+    return true;
   }
 };
 
@@ -150,6 +156,7 @@ Menu.prototype._resolveItem = function(e) {
   if (!item) { return; }
   if (this === WindowStack.top()) {
     simply.impl.menuItem.call(this, e.section, e.item, item);
+    return true;
   }
 };
 

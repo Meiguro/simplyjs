@@ -31,6 +31,7 @@ enum Command {
   CommandCardText,
   CommandCardImage,
   CommandCardStyle,
+  CommandVibe,
 };
 
 typedef enum WindowType WindowType;
@@ -40,6 +41,14 @@ enum WindowType {
   WindowTypeMenu,
   WindowTypeCard,
   WindowTypeLast,
+};
+
+typedef enum VibeType VibeType;
+
+enum VibeType {
+  VibeShort = 0,
+  VibeLong = 1,
+  VibeDouble = 2,
 };
 
 typedef struct Packet Packet;
@@ -113,6 +122,13 @@ struct __attribute__((__packed__)) CardStylePacket {
   uint8_t style;
 };
 
+typedef struct VibePacket VibePacket;
+
+struct __attribute__((__packed__)) VibePacket {
+  Packet packet;
+  VibeType type:8;
+};
+
 typedef enum SimplyACmd SimplyACmd;
 
 enum SimplyACmd {
@@ -163,14 +179,6 @@ enum SimplySetMenuParam {
   SetMenu_sections,
 };
 
-typedef enum VibeType VibeType;
-
-enum VibeType {
-  VibeShort = 0,
-  VibeLong = 1,
-  VibeDouble = 2,
-};
-
 typedef enum ElementParam ElementParam;
 
 enum ElementParam {
@@ -207,17 +215,6 @@ static SimplyWindow *get_top_simply_window(Simply *simply) {
     return NULL;
   }
   return window;
-}
-
-static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  if ((tuple = dict_find(iter, 1))) {
-    switch ((VibeType) tuple->value->int32) {
-      case VibeShort: vibes_short_pulse(); break;
-      case VibeLong: vibes_short_pulse(); break;
-      case VibeDouble: vibes_double_pulse(); break;
-    }
-  }
 }
 
 static void handle_config_buttons(DictionaryIterator *iter, Simply *simply) {
@@ -569,6 +566,15 @@ static void handle_card_style_packet(Simply *simply, Packet *data) {
   simply_ui_set_style(simply->ui, packet->style);
 }
 
+static void handle_vibe_packet(Simply *simply, Packet *data) {
+  VibePacket *packet = (VibePacket*) data;
+  switch (packet->type) {
+    case VibeShort: vibes_short_pulse(); break;
+    case VibeLong: vibes_short_pulse(); break;
+    case VibeDouble: vibes_double_pulse(); break;
+  }
+}
+
 static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
   Packet *packet = (Packet*) buffer;
   switch (packet->type) {
@@ -596,6 +602,9 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandCardStyle:
       handle_card_style_packet(simply, packet);
       break;
+    case CommandVibe:
+      handle_vibe_packet(simply, packet);
+      break;
   }
 }
 
@@ -612,15 +621,6 @@ static void received_callback(DictionaryIterator *iter, void *context) {
   }
 
   switch (tuple->value->uint8) {
-    case SimplyACmd_setWindow:
-      break;
-    case SimplyACmd_windowHide:
-      break;
-    case SimplyACmd_setUi:
-      break;
-    case SimplyACmd_vibe:
-      handle_vibe(iter, context);
-      break;
     case SimplyACmd_getAccelData:
       handle_get_accel_data(iter, context);
       break;

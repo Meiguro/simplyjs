@@ -154,6 +154,14 @@ var cardStyleTypes = [
 
 var CardStyleType = makeArrayType(cardStyleTypes);
 
+var vibeTypes = [
+  'short',
+  'long',
+  'double',
+];
+
+var VibeType = makeArrayType(vibeTypes);
+
 var Packet = new struct([
   ['uint16', 'type'],
   ['uint16', 'length'],
@@ -208,6 +216,11 @@ var CardStylePacket = new struct([
   ['uint8', 'style', CardStyleType],
 ]);
 
+var VibePacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'type', VibeType],
+]);
+
 var CommandPackets = [
   Packet,
   WindowShowPacket,
@@ -218,6 +231,7 @@ var CommandPackets = [
   CardTextPacket,
   CardImagePacket,
   CardStylePacket,
+  VibePacket,
 ];
 
 var setMenuParams = [{
@@ -481,12 +495,6 @@ var accelAxes = [
   'z',
 ];
 
-var vibeTypes = [
-  'short',
-  'long',
-  'double',
-];
-
 var clearFlagMap = {
   action: (1 << 0),
   text: (1 << 1),
@@ -684,6 +692,10 @@ SimplyPebble.card = function(def, clear, pushing) {
   }
 };
 
+SimplyPebble.vibe = function(type) {
+  SimplyPebble.sendPacket(VibePacket.type(type));
+};
+
 SimplyPebble.buttonConfig = function(buttonConf) {
   var command = commandMap.configButtons;
   var message = makeMessage(command, buttonConf);
@@ -698,14 +710,6 @@ var setActionMessage = function(message, command, actionDef) {
     setMessage(message, command, actionDef, actionBarTypeMap);
   }
   return message;
-};
-
-SimplyPebble.vibe = function(type) {
-  var command = commandMap.vibe;
-  var message = makeMessage(command);
-  var vibeIndex = vibeTypes.indexOf(type);
-  message[command.paramMap.type.id] = vibeIndex !== -1 ? vibeIndex : 0;
-  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.accelConfig = function(configDef) {

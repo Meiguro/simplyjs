@@ -45,10 +45,16 @@ var actionProps = [
 
 var accessorProps = configProps;
 
+var defaults = {
+  backgroundColor: 'black',
+  fullscreen: false,
+  scrollable: false,
+};
+
 var nextId = 1;
 
 var Window = function(windowDef) {
-  this.state = windowDef || {};
+  this.state = myutil.shadow(defaults, windowDef || {});
   this.state.id = nextId++;
   this._buttonInit();
   this._items = [];

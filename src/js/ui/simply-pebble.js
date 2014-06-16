@@ -21,6 +21,10 @@ var simply = require('ui/simply');
  * First part of this file is defining the commands and types that we will use later.
  */
 
+var BoolType = function(x) {
+  return x ? 1 : 0;
+};
+
 var ImageType = function(x) {
   if (typeof x !== 'number') {
     return ImageService.resolve(x);
@@ -108,40 +112,66 @@ var AnimationCurve = function(x) {
   return Number(x);
 };
 
-var setWindowParams = [{
+var makeArrayType = function(types) {
+  return function(x) {
+    var index = types.indexOf(x);
+    if (index !== -1) {
+      return index;
+    }
+    return Number(x);
+  };
+};
+
+var windowTypes = [
+  'window',
+  'menu',
+  'card',
+];
+
+var WindowType = makeArrayType(windowTypes);
+
+var Packet = new struct([
+  ['uint16', 'type'],
+  ['uint16', 'length'],
+]);
+
+var WindowShowPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'type', WindowType],
+  ['bool', 'pushing', BoolType],
+]);
+
+var WindowHidePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+]);
+
+var WindowPropsPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['uint8', 'backgroundColor', Color],
+  ['bool', 'fullscreen', BoolType],
+  ['bool', 'scrollable', BoolType],
+]);
+
+var WindowActionBarPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'upImage'],
+  ['uint32', 'selectImage'],
+  ['uint32', 'downImage'],
+]);
+
+var CommandPackets = [
+  Packet,
+  WindowShowPacket,
+  WindowHidePacket,
+  WindowPropsPacket,
+  WindowActionBarPacket,
+];
+
+var setCardParams = [{
   name: 'clear',
 }, {
-  name: 'id',
-}, {
-  name: 'pushing',
-  type: Boolean,
-}, {
-  name: 'action',
-  type: Boolean,
-}, {
-  name: 'actionUp',
-  type: ImageType,
-}, {
-  name: 'actionSelect',
-  type: ImageType,
-}, {
-  name: 'actionDown',
-  type: ImageType,
-}, {
-  name: 'actionBackgroundColor',
-  type: Color,
-}, {
-  name: 'backgroundColor',
-  type: Color,
-}, {
-  name: 'fullscreen',
-  type: Boolean,
-}, {
-  name: 'scrollable',
-  type: Boolean,
-}];
-
-var setCardParams = setWindowParams.concat([{
   name: 'title',
   type: String,
 }, {
@@ -161,28 +191,25 @@ var setCardParams = setWindowParams.concat([{
   type: ImageType,
 }, {
   name: 'style'
-}]);
+}];
 
-var setMenuParams = setWindowParams.concat([{
+var setMenuParams = [{
+  name: 'clear',
+}, {
   name: 'sections',
   type: Number,
-}]);
+}];
 
-var setStageParams = setWindowParams;
+var setStageParams = [{
+  name: 'clear',
+}];
 
 var commands = [{
   name: 'setWindow',
-  params: setWindowParams,
 }, {
   name: 'windowShow',
-  params: [{
-    name: 'id'
-  }]
 }, {
   name: 'windowHide',
-  params: [{
-    name: 'id'
-  }]
 }, {
   name: 'setCard',
   params: setCardParams,
@@ -534,6 +561,49 @@ SimplyPebble.sendMessage = (function() {
   return send;
 })();
 
+var toByteArray = function(packet) {
+  var size = Math.max(packet.size, packet._cursor);
+  packet.packetType(CommandPackets.indexOf(packet));
+  packet.packetLength(size);
+
+  var byteArray = new Array(size);
+  var dataView = packet._view;
+  for (var i = 0; i < size; ++i) {
+    byteArray[i] = dataView.getUint8(i);
+  }
+
+  return byteArray;
+};
+
+SimplyPebble.sendPacket = function(packet) {
+  SimplyPebble.sendMessage({ 0: toByteArray(packet) });
+};
+
+var setPacket = function(packet, def) {
+  packet._fields.forEach(function(field) {
+    if (field.name in def) {
+      packet[field.name](def[field.name]);
+    }
+  });
+  return packet;
+};
+
+SimplyPebble.windowProps = function(def) {
+  SimplyPebble.sendPacket(setPacket(WindowPropsPacket, def));
+};
+
+SimplyPebble.windowActionBar = function(def) {
+  SimplyPebble.sendPacket(setPacket(WindowActionBarPacket, def));
+};
+
+SimplyPebble.windowShow = function(def) {
+  SimplyPebble.sendPacket(setPacket(WindowShowPacket, def));
+};
+
+SimplyPebble.windowHide = function(id) {
+  SimplyPebble.sendPacket(WindowHidePacket.id(id));
+};
+
 SimplyPebble.buttonConfig = function(buttonConf) {
   var command = commandMap.configButtons;
   var message = makeMessage(command, buttonConf);
@@ -570,33 +640,16 @@ var setActionMessage = function(message, command, actionDef) {
   return message;
 };
 
-SimplyPebble.window = function(windowDef, clear) {
-  var command = commandMap.setWindow;
-  var message = makeMessage(command, windowDef);
-  if (clear) {
-    clear = toClearFlags(clear);
-    message[command.paramMap.clear.id] = clear;
-  }
-  setActionMessage(message, command, windowDef.action);
-  SimplyPebble.sendMessage(message);
-};
-
-SimplyPebble.windowHide = function(windowId) {
-  var command = commandMap.windowHide;
-  var message = makeMessage(command);
-  message[command.paramMap.id.id] = windowId;
-  SimplyPebble.sendMessage(message);
-};
-
 SimplyPebble.card = function(cardDef, clear, pushing) {
+  if (arguments.length === 3) {
+    SimplyPebble.windowShow({ type: 'card', pushing: pushing });
+  }
+  SimplyPebble.windowProps(cardDef);
   var command = commandMap.setCard;
   var message = makeMessage(command, cardDef);
   if (clear) {
     clear = toClearFlags(clear);
     message[command.paramMap.clear.id] = clear;
-  }
-  if (pushing) {
-    message[command.paramMap.pushing.id] = pushing;
   }
   setActionMessage(message, command, cardDef.action);
   SimplyPebble.sendMessage(message);
@@ -626,6 +679,10 @@ SimplyPebble.accelPeek = function(callback) {
 };
 
 SimplyPebble.menu = function(menuDef, clear, pushing) {
+  if (arguments.length === 3) {
+    SimplyPebble.windowShow({ type: 'menu', pushing: pushing });
+  }
+  SimplyPebble.windowProps(menuDef);
   var command = commandMap.setMenu;
   var messageDef = util2.copy(menuDef);
   if (messageDef.sections instanceof Array) {
@@ -638,9 +695,6 @@ SimplyPebble.menu = function(menuDef, clear, pushing) {
   if (clear) {
     clear = toClearFlags(clear);
     message[command.paramMap.clear.id] = clear;
-  }
-  if (pushing) {
-    message[command.paramMap.pushing.id] = pushing;
   }
   SimplyPebble.sendMessage(message);
 };
@@ -675,14 +729,15 @@ SimplyPebble.image = function(id, gbitmap) {
 };
 
 SimplyPebble.stage = function(stageDef, clear, pushing) {
+  if (arguments.length === 3) {
+    SimplyPebble.windowShow({ type: 'window', pushing: pushing });
+  }
+  SimplyPebble.windowProps(stageDef);
   var command = commandMap.setStage;
   var message = makeMessage(command, stageDef);
   if (clear) {
     clear = toClearFlags(clear);
     message[command.paramMap.clear.id] = clear;
-  }
-  if (pushing) {
-    message[command.paramMap.pushing.id] = pushing;
   }
   setActionMessage(message, command, stageDef.action);
   SimplyPebble.sendMessage(message);

@@ -15,6 +15,10 @@
 static void click_config_provider(void *data);
 
 void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
+  if (self->is_scrollable == is_scrollable) {
+    return;
+  }
+
   self->is_scrollable = is_scrollable;
 
   if (!self->scroll_layer) {
@@ -39,6 +43,10 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
 }
 
 void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
+  if (self->is_fullscreen == is_fullscreen) {
+    return;
+  }
+
   window_set_fullscreen(self->window, is_fullscreen);
 
   if (!self->layer) {
@@ -68,6 +76,10 @@ void simply_window_set_background_color(SimplyWindow *self, GColor background_co
 }
 
 void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
+  if (self->is_action_bar == is_action_bar) {
+    return;
+  }
+
   self->is_action_bar = is_action_bar;
 
   if (!self->action_bar_layer) {

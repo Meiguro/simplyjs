@@ -50,6 +50,7 @@ enum Command {
   CommandElementText,
   CommandElementTextStyle,
   CommandElementImage,
+  CommandElementAnimate,
 };
 
 typedef enum WindowType WindowType;
@@ -281,6 +282,16 @@ struct __attribute__((__packed__)) ElementImagePacket {
   GCompOp compositing:8;
 };
 
+typedef struct ElementAnimatePacket ElementAnimatePacket;
+
+struct __attribute__((__packed__)) ElementAnimatePacket {
+  Packet packet;
+  uint32_t id;
+  GRect frame;
+  uint32_t duration;
+  AnimationCurve curve:8;
+};
+
 typedef enum SimplyACmd SimplyACmd;
 
 enum SimplyACmd {
@@ -393,43 +404,6 @@ static void handle_set_image(DictionaryIterator *iter, Simply *simply) {
     pixels = (uint32_t*) tuple->value->data;
   }
   simply_res_add_image(simply->res, id, width, height, pixels);
-}
-
-static void handle_animate_stage_element(DictionaryIterator *iter, Simply *simply) {
-  SimplyStage *stage = simply->stage;
-  Tuple *tuple;
-  uint32_t id = 0;
-  if ((tuple = dict_find(iter, 1))) {
-    id = tuple->value->uint32;
-  }
-  SimplyElementCommon *element = simply_stage_get_element(stage, id);
-  if (!element) {
-    return;
-  }
-  GRect to_frame = element->frame;
-  SimplyAnimation *animation = malloc0(sizeof(*animation));
-  if (!animation) {
-    return;
-  }
-  if ((tuple = dict_find(iter, 2))) {
-    to_frame.origin.x = tuple->value->int16;
-  }
-  if ((tuple = dict_find(iter, 3))) {
-    to_frame.origin.y = tuple->value->int16;
-  }
-  if ((tuple = dict_find(iter, 4))) {
-    to_frame.size.w = tuple->value->int16;
-  }
-  if ((tuple = dict_find(iter, 5))) {
-    to_frame.size.h = tuple->value->int16;
-  }
-  if ((tuple = dict_find(iter, 6))) {
-    animation->duration = tuple->value->uint32;
-  }
-  if ((tuple = dict_find(iter, 7))) {
-    animation->curve = tuple->value->uint8;
-  }
-  simply_stage_animate_element(stage, element, animation, to_frame);
 }
 
 static void handle_window_show_packet(Simply *simply, Packet *data) {
@@ -672,6 +646,18 @@ static void handle_element_image_packet(Simply *simply, Packet *data) {
   simply_stage_update(simply->stage);
 }
 
+static void handle_element_animate_packet(Simply *simply, Packet *data) {
+  ElementAnimatePacket *packet = (ElementAnimatePacket*) data;
+  SimplyElementCommon *element = simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  SimplyAnimation *animation = malloc0(sizeof(*animation));
+  animation->duration = packet->duration;
+  animation->curve = packet->curve;
+  simply_stage_animate_element(simply->stage, element, animation, packet->frame);
+}
+
 static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
   Packet *packet = (Packet*) buffer;
   switch (packet->type) {
@@ -756,6 +742,9 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandElementImage:
       handle_element_image_packet(simply, packet);
       break;
+    case CommandElementAnimate:
+      handle_element_animate_packet(simply, packet);
+      break;
   }
 }
 
@@ -774,9 +763,6 @@ static void received_callback(DictionaryIterator *iter, void *context) {
   switch (tuple->value->uint8) {
     case SimplyACmd_image:
       handle_set_image(iter, context);
-      break;
-    case SimplyACmd_stageAnimate:
-      handle_animate_stage_element(iter, context);
       break;
   }
 }

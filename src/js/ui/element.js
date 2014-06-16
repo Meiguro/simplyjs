@@ -69,7 +69,8 @@ StageElement.prototype.remove = function(broadcast) {
 
 StageElement.prototype._animate = function(animateDef, duration) {
   if (this.parent === WindowStack.top()) {
-    simply.impl.stageAnimate(this._id(), animateDef, duration || 400, animateDef.easing || 'easeInOut');
+    simply.impl.stageAnimate(this._id(), this.state,
+        animateDef, duration || 400, animateDef.easing || 'easeInOut');
   }
 };
 

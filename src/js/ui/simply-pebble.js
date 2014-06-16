@@ -407,6 +407,15 @@ var ElementImagePacket = new struct([
   ['uint8', 'compositing', CompositingOp],
 ]);
 
+var ElementAnimatePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  [GPoint, 'position', PositionType],
+  [GSize, 'size', SizeType],
+  ['uint32', 'duration'],
+  ['uint8', 'easing', AnimationCurve],
+]);
+
 var CommandPackets = [
   Packet,
   WindowShowPacket,
@@ -436,6 +445,7 @@ var CommandPackets = [
   ElementTextPacket,
   ElementTextStylePacket,
   ElementImagePacket,
+  ElementAnimatePacket,
 ];
 
 var setStageParams = [{
@@ -550,22 +560,6 @@ var commands = [{
   name: 'stageRemove',
 }, {
   name: 'stageAnimate',
-  params: [{
-    name: 'id',
-  }, {
-    name: 'x',
-  }, {
-    name: 'y',
-  }, {
-    name: 'width',
-  }, {
-    name: 'height',
-  }, {
-    name: 'duration',
-  }, {
-    name: 'easing',
-    type: AnimationCurve,
-  }],
 }, {
   name: 'stageAnimateDone',
   params: [{
@@ -909,6 +903,16 @@ SimplyPebble.elementImage = function(id, image, compositing) {
   SimplyPebble.sendPacket(ElementImagePacket.id(id).image(image).compositing(compositing));
 };
 
+SimplyPebble.elementAnimate = function(id, def, animateDef, duration, easing) {
+  ElementAnimatePacket
+    .id(id)
+    .position(animateDef.position || def.position)
+    .size(animateDef.size || def.size)
+    .duration(duration)
+    .easing(easing);
+  SimplyPebble.sendPacket(ElementAnimatePacket);
+};
+
 SimplyPebble.stageClear = function() {
   SimplyPebble.sendPacket(StageClearPacket);
 };
@@ -937,6 +941,8 @@ SimplyPebble.stageElement = function(id, type, def, index) {
 
 SimplyPebble.stageRemove = SimplyPebble.elementRemove;
 
+SimplyPebble.stageAnimate = SimplyPebble.elementAnimate;
+
 SimplyPebble.stage = function(def, clear, pushing) {
   if (arguments.length === 3) {
     SimplyPebble.windowShow({ type: 'window', pushing: pushing });
@@ -964,37 +970,6 @@ SimplyPebble.image = function(id, gbitmap) {
   var command = commandMap.image;
   var messageDef = util2.copy(gbitmap);
   messageDef.id = id;
-  var message = makeMessage(command, messageDef);
-  SimplyPebble.sendMessage(message);
-};
-
-var toFrameMessage = function(messageDef) {
-  if (messageDef.position) {
-    var position = messageDef.position;
-    delete messageDef.position;
-    messageDef.x = position.x;
-    messageDef.y = position.y;
-  }
-  if (messageDef.size) {
-    var size = messageDef.size;
-    delete messageDef.size;
-    messageDef.width = size.x;
-    messageDef.height = size.y;
-  }
-  return messageDef;
-};
-
-SimplyPebble.stageAnimate = function(elementId, animateDef, duration, easing) {
-  var command = commandMap.stageAnimate;
-  var messageDef = util2.copy(animateDef);
-  messageDef.id = elementId;
-  if (duration) {
-    messageDef.duration = duration;
-  }
-  if (easing) {
-    messageDef.easing = easing;
-  }
-  messageDef = toFrameMessage(messageDef);
   var message = makeMessage(command, messageDef);
   SimplyPebble.sendMessage(message);
 };

@@ -11,8 +11,10 @@
 
 #include "util/dict.h"
 #include "util/list1.h"
+#include "util/math.h"
 #include "util/memory.h"
 #include "util/string.h"
+#include "util/window.h"
 
 #include <pebble.h>
 
@@ -25,6 +27,10 @@ enum Command {
   CommandWindowHide,
   CommandWindowProps,
   CommandWindowActionBar,
+  CommandCardClear,
+  CommandCardText,
+  CommandCardImage,
+  CommandCardStyle,
 };
 
 typedef enum WindowType WindowType;
@@ -75,6 +81,36 @@ struct __attribute__((__packed__)) WindowActionBarPacket {
   uint32_t image[3];
   GColor background_color:8;
   bool action;
+};
+
+typedef struct CardClearPacket CardClearPacket;
+
+struct __attribute__((__packed__)) CardClearPacket {
+  Packet packet;
+  uint8_t flags;
+};
+
+typedef struct CardTextPacket CardTextPacket;
+
+struct __attribute__((__packed__)) CardTextPacket {
+  Packet packet;
+  uint8_t index;
+  char text[];
+};
+
+typedef struct CardImagePacket CardImagePacket;
+
+struct __attribute__((__packed__)) CardImagePacket {
+  Packet packet;
+  uint32_t image;
+  uint8_t index;
+};
+
+typedef struct CardStylePacket CardStylePacket;
+
+struct __attribute__((__packed__)) CardStylePacket {
+  Packet packet;
+  uint8_t style;
 };
 
 typedef enum SimplyACmd SimplyACmd;
@@ -171,31 +207,6 @@ static SimplyWindow *get_top_simply_window(Simply *simply) {
     return NULL;
   }
   return window;
-}
-
-static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
-  SimplyUi *ui = simply->ui;
-  Tuple *tuple;
-  if ((tuple = dict_find(iter, SetUi_clear))) {
-    simply_ui_clear(ui, tuple->value->uint32);
-  }
-  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
-    switch (tuple->key) {
-      case SetUi_title:
-      case SetUi_subtitle:
-      case SetUi_body:
-        simply_ui_set_text(ui, tuple->key - SetUi_title, tuple->value->cstring);
-        break;
-      case SetUi_icon:
-      case SetUi_subicon:
-      case SetUi_image:
-        ui->ui_layer.imagefields[tuple->key - SetUi_icon] = tuple->value->uint32;
-        break;
-      case SetUi_style:
-        simply_ui_set_style(simply->ui, tuple->value->int32);
-        break;
-    }
-  }
 }
 
 static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
@@ -497,8 +508,7 @@ static void handle_animate_stage_element(DictionaryIterator *iter, Simply *simpl
 
 static void handle_window_show_packet(Simply *simply, Packet *data) {
   WindowShowPacket *packet = (WindowShowPacket*) data;
-  unsigned int i = packet->type < WindowTypeLast ? packet->type : 0;
-  SimplyWindow *window = simply->windows[i];
+  SimplyWindow *window = simply->windows[MIN(WindowTypeLast - 1, packet->type)];
   simply_window_stack_show(simply->window_stack, window, packet->pushing);
 }
 
@@ -538,6 +548,27 @@ static void handle_window_action_bar_packet(Simply *simply, Packet *data) {
   simply_window_set_action_bar(window, packet->action);
 }
 
+static void handle_card_clear_packet(Simply *simply, Packet *data) {
+  CardClearPacket *packet = (CardClearPacket*) data;
+  simply_ui_clear(simply->ui, packet->flags);
+}
+
+static void handle_card_text_packet(Simply *simply, Packet *data) {
+  CardTextPacket *packet = (CardTextPacket*) data;
+  simply_ui_set_text(simply->ui, MIN(NumUiTextfields - 1, packet->index), packet->text);
+}
+
+static void handle_card_image_packet(Simply *simply, Packet *data) {
+  CardImagePacket *packet = (CardImagePacket*) data;
+  simply->ui->ui_layer.imagefields[MIN(NumUiImagefields - 1, packet->index)] = packet->image;
+  window_stack_schedule_top_window_render();
+}
+
+static void handle_card_style_packet(Simply *simply, Packet *data) {
+  CardStylePacket *packet = (CardStylePacket*) data;
+  simply_ui_set_style(simply->ui, packet->style);
+}
+
 static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
   Packet *packet = (Packet*) buffer;
   switch (packet->type) {
@@ -552,6 +583,18 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
       break;
     case CommandWindowActionBar:
       handle_window_action_bar_packet(simply, packet);
+      break;
+    case CommandCardClear:
+      handle_card_clear_packet(simply, packet);
+      break;
+    case CommandCardText:
+      handle_card_text_packet(simply, packet);
+      break;
+    case CommandCardImage:
+      handle_card_image_packet(simply, packet);
+      break;
+    case CommandCardStyle:
+      handle_card_style_packet(simply, packet);
       break;
   }
 }
@@ -574,7 +617,6 @@ static void received_callback(DictionaryIterator *iter, void *context) {
     case SimplyACmd_windowHide:
       break;
     case SimplyACmd_setUi:
-      handle_set_ui(iter, context);
       break;
     case SimplyACmd_vibe:
       handle_vibe(iter, context);

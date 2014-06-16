@@ -130,6 +130,30 @@ var windowTypes = [
 
 var WindowType = makeArrayType(windowTypes);
 
+var cardTextTypes = [
+  'title',
+  'subtitle',
+  'body',
+];
+
+var CardTextType = makeArrayType(cardTextTypes);
+
+var cardImageTypes = [
+  'icon',
+  'subicon',
+  'banner',
+];
+
+var CardImageType = makeArrayType(cardImageTypes);
+
+var cardStyleTypes = [
+  'small',
+  'large',
+  'mono',
+];
+
+var CardStyleType = makeArrayType(cardStyleTypes);
+
 var Packet = new struct([
   ['uint16', 'type'],
   ['uint16', 'length'],
@@ -156,9 +180,32 @@ var WindowPropsPacket = new struct([
 
 var WindowActionBarPacket = new struct([
   [Packet, 'packet'],
-  ['uint32', 'upImage'],
-  ['uint32', 'selectImage'],
-  ['uint32', 'downImage'],
+  ['uint32', 'up', ImageType],
+  ['uint32', 'select', ImageType],
+  ['uint32', 'down', ImageType],
+  ['uint8', 'action', BoolType],
+]);
+
+var CardClearPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'flags'],
+]);
+
+var CardTextPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'index', CardTextType],
+  ['cstring', 'text'],
+]);
+
+var CardImagePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'image', ImageType],
+  ['uint8', 'index', CardImageType],
+]);
+
+var CardStylePacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'style', CardStyleType],
 ]);
 
 var CommandPackets = [
@@ -167,31 +214,11 @@ var CommandPackets = [
   WindowHidePacket,
   WindowPropsPacket,
   WindowActionBarPacket,
+  CardClearPacket,
+  CardTextPacket,
+  CardImagePacket,
+  CardStylePacket,
 ];
-
-var setCardParams = [{
-  name: 'clear',
-}, {
-  name: 'title',
-  type: String,
-}, {
-  name: 'subtitle',
-  type: String,
-}, {
-  name: 'body',
-  type: String,
-}, {
-  name: 'icon',
-  type: ImageType,
-}, {
-  name: 'subicon',
-  type: ImageType,
-}, {
-  name: 'image',
-  type: ImageType,
-}, {
-  name: 'style'
-}];
 
 var setMenuParams = [{
   name: 'clear',
@@ -212,7 +239,6 @@ var commands = [{
   name: 'windowHide',
 }, {
   name: 'setCard',
-  params: setCardParams,
 }, {
   name: 'click',
   params: [{
@@ -461,12 +487,6 @@ var vibeTypes = [
   'double',
 ];
 
-var styleTypes = [
-  'small',
-  'large',
-  'mono',
-];
-
 var clearFlagMap = {
   action: (1 << 0),
   text: (1 << 1),
@@ -562,14 +582,15 @@ SimplyPebble.sendMessage = (function() {
 })();
 
 var toByteArray = function(packet) {
+  var type = CommandPackets.indexOf(packet);
   var size = Math.max(packet.size, packet._cursor);
-  packet.packetType(CommandPackets.indexOf(packet));
+  packet.packetType(type);
   packet.packetLength(size);
 
+  var buffer = packet._view;
   var byteArray = new Array(size);
-  var dataView = packet._view;
   for (var i = 0; i < size; ++i) {
-    byteArray[i] = dataView.getUint8(i);
+    byteArray[i] = buffer.getUint8(i);
   }
 
   return byteArray;
@@ -592,8 +613,15 @@ SimplyPebble.windowProps = function(def) {
   SimplyPebble.sendPacket(setPacket(WindowPropsPacket, def));
 };
 
+var toActionDef = function(actionDef) {
+  if (typeof actionDef === 'boolean') {
+    actionDef = { action: actionDef };
+  }
+  return actionDef;
+};
+
 SimplyPebble.windowActionBar = function(def) {
-  SimplyPebble.sendPacket(setPacket(WindowActionBarPacket, def));
+  SimplyPebble.sendPacket(setPacket(WindowActionBarPacket, toActionDef(def)));
 };
 
 SimplyPebble.windowShow = function(def) {
@@ -602,12 +630,6 @@ SimplyPebble.windowShow = function(def) {
 
 SimplyPebble.windowHide = function(id) {
   SimplyPebble.sendPacket(WindowHidePacket.id(id));
-};
-
-SimplyPebble.buttonConfig = function(buttonConf) {
-  var command = commandMap.configButtons;
-  var message = makeMessage(command, buttonConf);
-  SimplyPebble.sendMessage(message);
 };
 
 var toClearFlags = function(clear) {
@@ -630,6 +652,44 @@ var toClearFlags = function(clear) {
   return clear;
 };
 
+SimplyPebble.cardClear = function(clear) {
+  SimplyPebble.sendPacket(CardClearPacket.flags(toClearFlags(clear)));
+};
+
+SimplyPebble.cardText = function(field, text) {
+  SimplyPebble.sendPacket(CardTextPacket.index(field).text(text));
+};
+
+SimplyPebble.cardImage = function(field, image) {
+  SimplyPebble.sendPacket(CardImagePacket.index(field).image(image));
+};
+
+SimplyPebble.card = function(def, clear, pushing) {
+  if (arguments.length === 3) {
+    SimplyPebble.windowShow({ type: 'card', pushing: pushing });
+  }
+  if (clear !== undefined) {
+    SimplyPebble.cardClear(clear);
+  }
+  SimplyPebble.windowProps(def);
+  if (def.action !== undefined) {
+    SimplyPebble.windowActionBar(def.action);
+  }
+  for (var k in def) {
+    if (cardTextTypes.indexOf(k) !== -1) {
+      SimplyPebble.cardText(k, def[k]);
+    } else if (cardImageTypes.indexOf(k) !== -1) {
+      SimplyPebble.cardImage(k, def[k]);
+    }
+  }
+};
+
+SimplyPebble.buttonConfig = function(buttonConf) {
+  var command = commandMap.configButtons;
+  var message = makeMessage(command, buttonConf);
+  SimplyPebble.sendMessage(message);
+};
+
 var setActionMessage = function(message, command, actionDef) {
   if (actionDef) {
     if (typeof actionDef === 'boolean') {
@@ -638,21 +698,6 @@ var setActionMessage = function(message, command, actionDef) {
     setMessage(message, command, actionDef, actionBarTypeMap);
   }
   return message;
-};
-
-SimplyPebble.card = function(cardDef, clear, pushing) {
-  if (arguments.length === 3) {
-    SimplyPebble.windowShow({ type: 'card', pushing: pushing });
-  }
-  SimplyPebble.windowProps(cardDef);
-  var command = commandMap.setCard;
-  var message = makeMessage(command, cardDef);
-  if (clear) {
-    clear = toClearFlags(clear);
-    message[command.paramMap.clear.id] = clear;
-  }
-  setActionMessage(message, command, cardDef.action);
-  SimplyPebble.sendMessage(message);
 };
 
 SimplyPebble.vibe = function(type) {

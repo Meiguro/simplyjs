@@ -38,8 +38,6 @@ Menu.prototype.action = function() {
   throw new Error("Menus don't support action bars.");
 };
 
-Menu.prototype._buttonInit = function() {};
-
 Menu.prototype.buttonConfig = function() {
   throw new Error("Menus don't support changing button configurations.");
 };

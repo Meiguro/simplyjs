@@ -87,6 +87,7 @@ Window.prototype.hide = function() {
 
 Window.prototype._show = function(pushing) {
   this._prop(this.state, true, pushing);
+  this._buttonConfig({});
   if (this._dynamic) {
     Stage.prototype._show.call(this, pushing);
   }
@@ -192,14 +193,14 @@ Window.prototype.onRemoveHandler = function(type, subtype) {
 };
 
 Window.prototype._buttonInit = function() {
-  this.state.button = {
+  this._button = {
     config: {},
     configMode: 'auto',
   };
   for (var i = 0, ii = buttons.length; i < ii; i++) {
     var button = buttons[i];
     if (button !== 'back') {
-      this.state.button.config[buttons[i]] = true;
+      this._button.config[buttons[i]] = true;
     }
   }
 };
@@ -221,40 +222,42 @@ Window.prototype._buttonInit = function() {
  * @memberOf simply
  * @param {simply.buttonConfig} buttonConf - An object defining the button configuration.
  */
-Window.prototype.buttonConfig = function(buttonConf, auto) {
-  var buttonState = this.state.button;
-  if (typeof buttonConf === 'undefined') {
+Window.prototype._buttonConfig = function(buttonConf, auto) {
+  if (buttonConf === undefined) {
     var config = {};
     for (var i = 0, ii = buttons.length; i < ii; ++i) {
       var name = buttons[i];
-      config[name] = buttonConf.config[name];
+      config[name] = this._button.config[name];
     }
     return config;
   }
   for (var k in buttonConf) {
     if (buttons.indexOf(k) !== -1) {
       if (k === 'back') {
-        buttonState.configMode = buttonConf.back && !auto ? 'manual' : 'auto';
+        this._button.configMode = buttonConf.back && !auto ? 'manual' : 'auto';
       }
-      buttonState.config[k] = buttonConf[k];
+      this._button.config[k] = buttonConf[k];
     }
   }
-  if (simply.impl.buttonConfig) {
-    return simply.impl.buttonConfig(buttonState.config);
+  if (simply.impl.windowButtonConfig) {
+    return simply.impl.windowButtonConfig(this._button.config);
   }
 };
 
+Window.prototype.buttonConfig = function(buttonConf) {
+  this._buttonConfig(buttonConf);
+};
+
 Window.prototype._buttonAutoConfig = function() {
-  var buttonState = this.state.button;
-  if (!buttonState || buttonState.configMode !== 'auto') {
+  if (!this._button || this._button.configMode !== 'auto') {
     return;
   }
   var singleBackCount = this.listenerCount('click', 'back');
   var longBackCount = this.listenerCount('longClick', 'back');
   var useBack = singleBackCount + longBackCount > 0;
-  if (useBack !== buttonState.config.back) {
-    buttonState.config.back = useBack;
-    return this.buttonConfig(buttonState.config, true);
+  if (useBack !== this._button.config.back) {
+    this._button.config.back = useBack;
+    return this._buttonConfig(this._button.config, true);
   }
 };
 

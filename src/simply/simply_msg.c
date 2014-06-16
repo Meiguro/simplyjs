@@ -26,6 +26,7 @@ enum Command {
   CommandWindowShow = 1,
   CommandWindowHide,
   CommandWindowProps,
+  CommandWindowButtonConfig,
   CommandWindowActionBar,
   CommandCardClear,
   CommandCardText,
@@ -90,6 +91,13 @@ struct __attribute__((__packed__)) WindowPropsPacket {
   GColor background_color:8;
   bool fullscreen;
   bool scrollable;
+};
+
+typedef struct WindowButtonConfigPacket WindowButtonConfigPacket;
+
+struct __attribute__((__packed__)) WindowButtonConfigPacket {
+  Packet packet;
+  uint8_t button_mask;
 };
 
 typedef struct WindowActionBarPacket WindowActionBarPacket;
@@ -290,19 +298,6 @@ static SimplyWindow *get_top_simply_window(Simply *simply) {
     return NULL;
   }
   return window;
-}
-
-static void handle_config_buttons(DictionaryIterator *iter, Simply *simply) {
-  SimplyWindow *window = get_top_simply_window(simply);
-  if (!window) {
-    return;
-  }
-  Tuple *tuple;
-  for (int i = 0; i < NUM_BUTTONS; ++i) {
-    if ((tuple = dict_find(iter, i + 1))) {
-      simply_window_set_button(window, i, tuple->value->int32);
-    }
-  }
 }
 
 static void handle_set_image(DictionaryIterator *iter, Simply *simply) {
@@ -507,6 +502,15 @@ static void handle_window_props_packet(Simply *simply, Packet *data) {
   simply_window_set_scrollable(window, packet->scrollable);
 }
 
+static void handle_window_button_config_packet(Simply *simply, Packet *data) {
+  WindowButtonConfigPacket *packet = (WindowButtonConfigPacket*) data;
+  SimplyWindow *window = get_top_simply_window(simply);
+  if (!window) {
+    return;
+  }
+  window->button_mask = packet->button_mask;
+}
+
 static void handle_window_action_bar_packet(Simply *simply, Packet *data) {
   WindowActionBarPacket *packet = (WindowActionBarPacket*) data;
   SimplyWindow *window = get_top_simply_window(simply);
@@ -633,6 +637,9 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandWindowProps:
       handle_window_props_packet(simply, packet);
       break;
+    case CommandWindowButtonConfig:
+      handle_window_button_config_packet(simply, packet);
+      break;
     case CommandWindowActionBar:
       handle_window_action_bar_packet(simply, packet);
       break;
@@ -694,9 +701,6 @@ static void received_callback(DictionaryIterator *iter, void *context) {
   }
 
   switch (tuple->value->uint8) {
-    case SimplyACmd_configButtons:
-      handle_config_buttons(iter, context);
-      break;
     case SimplyACmd_image:
       handle_set_image(iter, context);
       break;

@@ -142,6 +142,20 @@ var makeArrayType = function(types) {
   };
 };
 
+var makeFlagsType = function(types) {
+  return function(x) {
+    var z = 0;
+    for (var k in x) {
+      if (!x[k]) { continue; }
+      var index = types.indexOf(k);
+      if (index !== -1) {
+        z |= 1 << index;
+      }
+    }
+    return z;
+  };
+};
+
 var windowTypes = [
   'window',
   'menu',
@@ -149,6 +163,17 @@ var windowTypes = [
 ];
 
 var WindowType = makeArrayType(windowTypes);
+
+var buttonTypes = [
+  'back',
+  'up',
+  'select',
+  'down',
+];
+
+var ButtonType = makeArrayType(buttonTypes);
+
+var ButtonFlagsType = makeFlagsType(buttonTypes);
 
 var cardTextTypes = [
   'title',
@@ -204,6 +229,11 @@ var WindowPropsPacket = new struct([
   ['uint8', 'backgroundColor', Color],
   ['bool', 'fullscreen', BoolType],
   ['bool', 'scrollable', BoolType],
+]);
+
+var WindowButtonConfigPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'buttonMask', ButtonFlagsType],
 ]);
 
 var WindowActionBarPacket = new struct([
@@ -302,6 +332,7 @@ var CommandPackets = [
   WindowShowPacket,
   WindowHidePacket,
   WindowPropsPacket,
+  WindowButtonConfigPacket,
   WindowActionBarPacket,
   CardClearPacket,
   CardTextPacket,
@@ -318,25 +349,6 @@ var CommandPackets = [
   MenuGetSelectionPacket,
   MenuSetSelectionPacket,
 ];
-
-var setMenuParams = [{
-  name: 'clear',
-}, {
-  name: 'sections',
-  type: Number,
-}, {
-  name: 'selectionSection',
-  type: Number,
-}, {
-  name: 'selectionItem',
-  type: Number,
-}, {
-  name: 'selectionAlign',
-  type: MenuRowAlign,
-}, {
-  name: 'selectionAnimated',
-  type: Boolean,
-}];
 
 var setStageParams = [{
   name: 'clear',
@@ -545,13 +557,6 @@ for (var i = 0, ii = commands.length; i < ii; ++i) {
   }
 }
 
-var buttons = [
-  'back',
-  'up',
-  'select',
-  'down',
-];
-
 var accelAxes = [
   'x',
   'y',
@@ -689,6 +694,10 @@ var setPacket = function(packet, def) {
 
 SimplyPebble.windowProps = function(def) {
   SimplyPebble.sendPacket(setPacket(WindowPropsPacket, def));
+};
+
+SimplyPebble.windowButtonConfig = function(def) {
+  SimplyPebble.sendPacket(WindowButtonConfigPacket.buttonMask(def));
 };
 
 var toActionDef = function(actionDef) {
@@ -831,12 +840,6 @@ SimplyPebble.menu = function(def, clear, pushing) {
   SimplyPebble.menuProps(def);
 };
 
-SimplyPebble.buttonConfig = function(buttonConf) {
-  var command = commandMap.configButtons;
-  var message = makeMessage(command, buttonConf);
-  SimplyPebble.sendMessage(message);
-};
-
 var setActionMessage = function(message, command, actionDef) {
   if (actionDef) {
     if (typeof actionDef === 'boolean') {
@@ -950,7 +953,7 @@ SimplyPebble.onAppMessage = function(e) {
       break;
     case 'click':
     case 'longClick':
-      var button = buttons[payload[1]];
+      var button = buttonTypes[payload[1]];
       Window.emitClick(command.name, button);
       break;
     case 'accelTap':

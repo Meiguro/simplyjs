@@ -117,6 +117,13 @@ struct.prototype._makeAccessor = function(field) {
   return this;
 };
 
+struct.prototype._makeMetaAccessor = function(name, transform) {
+  this[name] = function(value, field) {
+    transform.call(this, value, field);
+    return this;
+  };
+};
+
 struct.prototype._makeAccessors = function(def, index, fields, prefix) {
   index = index || 0;
   this._fields = ( fields = fields || [] );
@@ -131,12 +138,15 @@ struct.prototype._makeAccessors = function(def, index, fields, prefix) {
     if (prefix) {
       name = prefix + capitalize(name);
     }
+    var transform = member[2];
     if (type instanceof struct) {
+      if (transform) {
+        this._makeMetaAccessor(name, transform);
+      }
       this._makeAccessors(type._def, index, fields, name);
       index = this._size;
       continue;
     }
-    var transform = member[2];
     var field = {
       index: index,
       type: type,

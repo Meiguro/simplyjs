@@ -153,3 +153,5 @@ Accel.emitAccelData = function(accels, callback) {
   }
   Accel.emit('data', e);
 };
+
+Accel.init();

@@ -28,8 +28,6 @@ struct SimplyMenuLayer {
   MenuLayer *menu_layer;
   List1Node *sections;
   List1Node *items;
-  AppTimer *get_timer;
-  uint32_t request_delay_ms;
   uint16_t num_sections;
 };
 

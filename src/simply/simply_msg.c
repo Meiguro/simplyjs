@@ -985,16 +985,6 @@ bool simply_msg_accel_data(SimplyMsg *self, AccelData *data, uint32_t num_sample
 }
 
 static bool send_menu_item(SimplyMsg *self, Command type, uint16_t section, uint16_t item) {
-  MenuItemEventPacket packet = {
-    .packet.type = type,
-    .packet.length = sizeof(packet),
-    .section = section,
-    .item = item,
-  };
-  return send_msg((uint8_t*) &packet, sizeof(packet));
-}
-
-static bool send_menu_item_retry(SimplyMsg *self, Command type, uint16_t section, uint16_t item) {
   size_t length;
   MenuItemEventPacket *packet = malloc0(length = sizeof(*packet));
   if (!packet) {
@@ -1014,16 +1004,16 @@ bool simply_msg_menu_get_item(SimplyMsg *self, uint16_t section, uint16_t index)
 }
 
 bool simply_msg_menu_select_click(SimplyMsg *self, uint16_t section, uint16_t index) {
-  return send_menu_item_retry(self, CommandMenuSelect, section, index);
+  return send_menu_item(self, CommandMenuSelect, section, index);
 }
 
 bool simply_msg_menu_select_long_click(SimplyMsg *self, uint16_t section, uint16_t index) {
-  return send_menu_item_retry(self, CommandMenuLongSelect, section, index);
+  return send_menu_item(self, CommandMenuLongSelect, section, index);
 }
 
 bool simply_msg_send_menu_selection(SimplyMsg *self) {
   MenuIndex menu_index = simply_menu_get_selection(self->simply->menu);
-  return send_menu_item_retry(self, CommandMenuSelectionEvent, menu_index.section, menu_index.row);
+  return send_menu_item(self, CommandMenuSelectionEvent, menu_index.section, menu_index.row);
 }
 
 bool simply_msg_animate_element_done(SimplyMsg *self, uint32_t id) {

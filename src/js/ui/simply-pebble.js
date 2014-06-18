@@ -561,6 +561,8 @@ var clearFlagMap = {
  * It's an implementation of an abstract interface used by all the other classes.
  */
 
+var state;
+
 var SimplyPebble = {};
 
 SimplyPebble.init = function() {
@@ -569,37 +571,55 @@ SimplyPebble.init = function() {
 
   // Register this implementation as the one currently in use
   simply.impl = SimplyPebble;
+
+  state = SimplyPebble.state = {};
+
+  // Initialize the app message queue
+  state.messageQueue = new MessageQueue();
 };
 
-SimplyPebble.sendMessage = (function() {
-  var queue = [];
-  var sending = false;
+/**
+ * MessageQueue is an app message queue that guarantees delivery and order.
+ */
+var MessageQueue = function() {
+  this._queue = [];
+  this._sending = false;
 
-  function stop() {
-    sending = false;
+  this._consume = this.consume.bind(this);
+  this._cycle = this.cycle.bind(this);
+};
+
+MessageQueue.prototype.stop = function() {
+  this._sending = false;
+};
+
+MessageQueue.prototype.consume = function() {
+  this._queue.splice(0, 1);
+  if (this._queue.length === 0) {
+    return this.stop();
   }
+  this.cycle();
+};
 
-  function consume() {
-    queue.splice(0, 1);
-    if (queue.length === 0) { return stop(); }
-    cycle();
+MessageQueue.prototype.cycle = function() {
+  if (!this._sending) {
+    return;
   }
-
-  function cycle() {
-    var head = queue[0];
-    if (!head) { return stop(); }
-    Pebble.sendAppMessage(head, consume, cycle);
+  var head = this._queue[0];
+  if (!head) {
+    return this.stop();
   }
+  Pebble.sendAppMessage(head, this._consume, this._cycle);
+};
 
-  function send(message) {
-    queue.push(message);
-    if (sending) { return; }
-    sending = true;
-    cycle();
+MessageQueue.prototype.send = function(message) {
+  this._queue.push(message);
+  if (this._sending) {
+    return;
   }
-
-  return send;
-})();
+  this._sending = true;
+  this.cycle();
+};
 
 var toByteArray = function(packet) {
   var type = CommandPackets.indexOf(packet);
@@ -617,7 +637,7 @@ var toByteArray = function(packet) {
 };
 
 SimplyPebble.sendPacket = function(packet) {
-  SimplyPebble.sendMessage({ 0: toByteArray(packet) });
+  state.messageQueue.send({ 0: toByteArray(packet) });
 };
 
 SimplyPebble.windowShow = function(def) {

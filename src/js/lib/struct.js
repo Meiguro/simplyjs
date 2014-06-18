@@ -53,6 +53,23 @@ for (var k in struct.types) {
 
 struct.types.bool = struct.types.uint8;
 
+struct.types.uint64.get = function(offset, little) {
+  var buffer = this._view;
+  var a = buffer.getUint32(offset, little);
+  var b = buffer.getUint32(offset + 4, little);
+  this._advance = 8;
+  return ((little ? b : a) << 32) + (little ? a : b);
+};
+
+struct.types.uint64.set = function(offset, value, little) {
+  var a = value & 0xFFFFFFFF;
+  var b = (value >> 32) & 0xFFFFFFFF;
+  var buffer = this._view;
+  buffer.setUint32(offset, little ? a : b, little);
+  buffer.setUint32(offset + 4, little ? b : a, little);
+  this._advance = 8;
+};
+
 struct.types.cstring.get = function(offset) {
   var chars = [];
   var buffer = this._view;
@@ -131,18 +148,18 @@ struct.prototype._makeAccessor = function(field) {
         throw new Error('dynamic field requires sequential access');
       }
     } else {
-      this._cursor = this._offset + field.index;
+      this._cursor = field.index;
     }
     this._access = field;
     var result = this;
     if (arguments.length === 0) {
-      result = type.get.call(this, this._cursor, this._littleEndian);
+      result = type.get.call(this, this._offset + this._cursor, this._littleEndian);
       this._value = result;
     } else {
       if (field.transform) {
         value = field.transform(value, field);
       }
-      type.set.call(this, this._cursor, value, this._littleEndian);
+      type.set.call(this, this._offset + this._cursor, value, this._littleEndian);
       this._value = value;
     }
     this._cursor += this._advance;

@@ -25,6 +25,8 @@ typedef enum Command Command;
 enum Command {
   CommandWindowShow = 1,
   CommandWindowHide,
+  CommandWindowShowEvent,
+  CommandWindowHideEvent,
   CommandWindowProps,
   CommandWindowButtonConfig,
   CommandWindowActionBar,
@@ -88,12 +90,20 @@ struct __attribute__((__packed__)) WindowShowPacket {
   bool pushing;
 };
 
-typedef struct WindowHidePacket WindowHidePacket;
+typedef struct WindowSignalPacket WindowSignalPacket;
 
-struct __attribute__((__packed__)) WindowHidePacket {
+struct __attribute__((__packed__)) WindowSignalPacket {
   Packet packet;
   uint32_t id;
 };
+
+typedef WindowSignalPacket WindowHidePacket;
+
+typedef WindowHidePacket WindowEventPacket;
+
+typedef WindowEventPacket WindowShowEventPacket;
+
+typedef WindowEventPacket WindowHideEventPacket;
 
 typedef struct WindowPropsPacket WindowPropsPacket;
 
@@ -673,6 +683,10 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandWindowHide:
       handle_window_hide_packet(simply, packet);
       break;
+    case CommandWindowShowEvent:
+      break;
+    case CommandWindowHideEvent:
+      break;
     case CommandWindowProps:
       handle_window_props_packet(simply, packet);
       break;
@@ -911,25 +925,22 @@ bool simply_msg_long_click(SimplyMsg *self, ButtonId button) {
   return send_click(self, CommandLongClick, button);
 }
 
-bool send_window(SimplyMsg *self, SimplyACmd type, uint32_t id) {
-  size_t length = dict_calc_buffer_size(2, 1, 4);
-  void *buffer = malloc0(length);
-  if (!buffer) {
+bool send_window(SimplyMsg *self, Command type, uint32_t id) {
+  size_t length;
+  WindowEventPacket *packet = malloc0(length = sizeof(*packet));
+  if (!packet) {
     return false;
   }
-  DictionaryIterator iter;
-  dict_write_begin(&iter, buffer, length);
-  dict_write_uint8(&iter, 0, type);
-  dict_write_uint32(&iter, 1, id);
-  return add_dict(self, buffer, length);
+  packet->id = id;
+  return add_packet(self, (Packet*) packet, type, length);
 }
 
 bool simply_msg_window_show(SimplyMsg *self, uint32_t id) {
-  return send_window(self, SimplyACmd_windowShow, id);
+  return send_window(self, CommandWindowShowEvent, id);
 }
 
 bool simply_msg_window_hide(SimplyMsg *self, uint32_t id) {
-  return send_window(self, SimplyACmd_windowHide, id);
+  return send_window(self, CommandWindowHideEvent, id);
 }
 
 bool simply_msg_accel_tap(SimplyMsg *self, AccelAxisType axis, int32_t direction) {

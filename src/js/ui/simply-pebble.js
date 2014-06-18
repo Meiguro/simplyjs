@@ -233,6 +233,16 @@ var WindowHidePacket = new struct([
   ['uint32', 'id'],
 ]);
 
+var WindowShowEventPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+]);
+
+var WindowHideEventPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+]);
+
 var WindowPropsPacket = new struct([
   [Packet, 'packet'],
   ['uint32', 'id'],
@@ -438,6 +448,8 @@ var CommandPackets = [
   Packet,
   WindowShowPacket,
   WindowHidePacket,
+  WindowShowEventPacket,
+  WindowHideEventPacket,
   WindowPropsPacket,
   WindowButtonConfigPacket,
   WindowActionBarPacket,
@@ -1020,6 +1032,9 @@ SimplyPebble.onPacket = function(data) {
   var packet = CommandPackets[Packet.type()];
   packet._view = Packet._view;
   switch (packet) {
+    case WindowHideEventPacket:
+      WindowStack.emitHide(packet.id());
+      break;
     case ClickPacket:
       Window.emitClick('click', buttonTypes[packet.button()]);
       break;
@@ -1046,14 +1061,6 @@ SimplyPebble.onAppMessage = function(e) {
   }
 
   switch (command.name) {
-    case 'windowHide':
-      WindowStack.emitHide(payload[1]);
-      break;
-    case 'click':
-    case 'longClick':
-      var button = buttonTypes[payload[1]];
-      Window.emitClick(command.name, button);
-      break;
     case 'accelTap':
       var axis = accelAxes[payload[1]];
       Accel.emitAccelTap(axis, payload[2]);

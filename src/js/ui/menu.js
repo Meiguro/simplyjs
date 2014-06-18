@@ -27,9 +27,13 @@ Menu.prototype._show = function() {
 Menu.prototype._prop = function(state, clear, pushing) {
   if (this === WindowStack.top()) {
     simply.impl.menu.call(this, state, clear, pushing);
-    var select = this._selection;
+    var select = util2.copy(this._selection);
     if (this._resolveSection(select)) {
       simply.impl.menuSelection(select.section, select.item);
+      for (var i = 0; i < 3; ++i) {
+        this._resolveItem(select);
+        select.item++;
+      }
     }
   }
 };

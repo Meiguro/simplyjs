@@ -576,6 +576,9 @@ SimplyPebble.init = function() {
 
   // Initialize the app message queue
   state.messageQueue = new MessageQueue();
+
+  // Initialize the packet queue
+  state.packetQueue = new PacketQueue();
 };
 
 /**
@@ -636,8 +639,35 @@ var toByteArray = function(packet) {
   return byteArray;
 };
 
+/**
+ * PacketQueue is a packet queue that combines multiple packets into a single packet.
+ * This reduces latency caused by the time spacing between each app message.
+ */
+var PacketQueue = function() {
+  this._message = [];
+
+  this._send = this.send.bind(this);
+};
+
+PacketQueue.prototype._maxPayloadSize = 2048 - 20;
+
+PacketQueue.prototype.add = function(packet) {
+  var byteArray = toByteArray(packet);
+  if (this._message.length + byteArray.length >= this._maxPayloadSize) {
+    this.send();
+  }
+  Array.prototype.push.apply(this._message, byteArray);
+  clearTimeout(this._timeout);
+  this._timeout = setTimeout(this._send, 0);
+};
+
+PacketQueue.prototype.send = function() {
+  state.messageQueue.send({ 0: this._message });
+  this._message = [];
+};
+
 SimplyPebble.sendPacket = function(packet) {
-  state.messageQueue.send({ 0: toByteArray(packet) });
+  state.packetQueue.add(packet);
 };
 
 SimplyPebble.windowShow = function(def) {

@@ -636,8 +636,7 @@ static void handle_element_animate_packet(Simply *simply, Packet *data) {
   simply_stage_animate_element(simply->stage, element, animation, packet->frame);
 }
 
-static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
-  Packet *packet = (Packet*) buffer;
+static void handle_packet(Simply *simply, Packet *packet) {
   switch (packet->type) {
     case CommandWindowShow:
       handle_window_show_packet(simply, packet);
@@ -761,7 +760,19 @@ static void received_callback(DictionaryIterator *iter, void *context) {
 
   s_has_communicated = true;
 
-  handle_packet(context, tuple->value->data, tuple->length);
+  size_t length = tuple->length;
+  uint8_t *buffer = tuple->value->data;
+  while (true) {
+    Packet *packet = (Packet*) buffer;
+    handle_packet(context, packet);
+
+    length -= packet->length;
+    if (length == 0) {
+      break;
+    }
+
+    buffer += packet->length;
+  }
 }
 
 static void dropped_callback(AppMessageResult reason, void *context) {

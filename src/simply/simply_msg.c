@@ -38,9 +38,10 @@ enum Command {
   CommandCardImage,
   CommandCardStyle,
   CommandVibe,
-  CommandAccelTap,
   CommandAccelPeek,
   CommandAccelConfig,
+  CommandAccelData,
+  CommandAccelTap,
   CommandMenuClear,
   CommandMenuClearSection,
   CommandMenuProps,
@@ -194,14 +195,6 @@ struct __attribute__((__packed__)) VibePacket {
   VibeType type:8;
 };
 
-typedef struct AccelTapPacket AccelTapPacket;
-
-struct __attribute__((__packed__)) AccelTapPacket {
-  Packet packet;
-  AccelAxisType axis:8;
-  int8_t direction;
-};
-
 typedef Packet AccelPeekPacket;
 
 typedef struct AccelConfigPacket AccelConfigPacket;
@@ -211,6 +204,23 @@ struct __attribute__((__packed__)) AccelConfigPacket {
   uint16_t num_samples;
   AccelSamplingRate rate:8;
   bool data_subscribed;
+};
+
+typedef struct AccelTapPacket AccelTapPacket;
+
+struct __attribute__((__packed__)) AccelTapPacket {
+  Packet packet;
+  AccelAxisType axis:8;
+  int8_t direction;
+};
+
+typedef struct AccelDataPacket AccelDataPacket;
+
+struct __attribute__((__packed__)) AccelDataPacket {
+  Packet packet;
+  bool is_peek;
+  uint8_t num_samples;
+  AccelData data[];
 };
 
 typedef Packet MenuClearPacket;
@@ -537,7 +547,7 @@ static void accel_peek_timer_callback(void *context) {
   Simply *simply = context;
   AccelData data = { .x = 0 };
   simply_accel_peek(simply->accel, &data);
-  if (!simply_msg_accel_data(simply->msg, &data, 1, 0)) {
+  if (!simply_msg_accel_data(simply->msg, &data, 1, true)) {
     app_timer_register(10, accel_peek_timer_callback, simply);
   }
 }
@@ -748,13 +758,15 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandVibe:
       handle_vibe_packet(simply, packet);
       break;
-    case CommandAccelTap:
-      break;
     case CommandAccelPeek:
       handle_accel_peek_packet(simply, packet);
       break;
     case CommandAccelConfig:
       handle_accel_config_packet(simply, packet);
+      break;
+    case CommandAccelData:
+      break;
+    case CommandAccelTap:
       break;
     case CommandMenuClear:
       handle_menu_clear_packet(simply, packet);
@@ -978,18 +990,27 @@ bool simply_msg_accel_tap(SimplyMsg *self, AccelAxisType axis, int32_t direction
   return add_packet(self, (Packet*) packet, CommandAccelTap, length);
 }
 
-bool simply_msg_accel_data(SimplyMsg *self, AccelData *data, uint32_t num_samples, int32_t transaction_id) {
-  DictionaryIterator *iter = NULL;
-  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+bool simply_msg_accel_data(SimplyMsg *self, AccelData *data, uint32_t num_samples, bool is_peek) {
+  size_t data_length = sizeof(AccelData) * num_samples;
+  size_t length;
+  AccelDataPacket *packet = malloc(length = sizeof(AccelDataPacket) + data_length);
+  if (!packet) {
     return false;
   }
-  dict_write_uint8(iter, 0, SimplyACmd_accelData);
-  if (transaction_id >= 0) {
-    dict_write_int32(iter, 1, transaction_id);
-  }
-  dict_write_uint8(iter, 2, num_samples);
-  dict_write_data(iter, 3, (uint8_t*) data, sizeof(*data) * num_samples);
-  return (app_message_outbox_send() == APP_MSG_OK);
+  packet->packet = (Packet) {
+    .type = CommandAccelData,
+    .length = length,
+  };
+  packet->is_peek = is_peek;
+  packet->num_samples = num_samples;
+  memcpy(packet->data, data, data_length);
+  SimplyPacket packet_node = {
+    .length = length,
+    .buffer = packet,
+  };
+  bool result = send_msg(&packet_node);
+  free(packet);
+  return result;
 }
 
 static bool send_menu_item(SimplyMsg *self, Command type, uint16_t section, uint16_t item) {

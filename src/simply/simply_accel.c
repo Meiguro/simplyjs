@@ -9,7 +9,7 @@
 SimplyAccel *s_accel = NULL;
 
 static void handle_accel_data(AccelData *data, uint32_t num_samples) {
-  simply_msg_accel_data(s_accel->simply->msg, data, num_samples, TRANSACTION_ID_INVALID);
+  simply_msg_accel_data(s_accel->simply->msg, data, num_samples, false);
 }
 
 void simply_accel_set_data_subscribe(SimplyAccel *self, bool subscribe) {

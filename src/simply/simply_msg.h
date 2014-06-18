@@ -6,8 +6,6 @@
 
 #include <pebble.h>
 
-#define TRANSACTION_ID_INVALID (-1)
-
 typedef struct SimplyMsg SimplyMsg;
 
 struct SimplyMsg {
@@ -35,7 +33,7 @@ bool simply_msg_window_show(SimplyMsg *self, uint32_t id);
 bool simply_msg_window_hide(SimplyMsg *self, uint32_t id);
 
 bool simply_msg_accel_tap(SimplyMsg *self, AccelAxisType axis, int32_t direction);
-bool simply_msg_accel_data(SimplyMsg *self, AccelData *accel, uint32_t num_samples, int32_t transaction_id);
+bool simply_msg_accel_data(SimplyMsg *self, AccelData *accel, uint32_t num_samples, bool is_peek);
 
 bool simply_msg_menu_get_section(SimplyMsg *self, uint16_t index);
 bool simply_msg_menu_get_item(SimplyMsg *self, uint16_t section, uint16_t index);

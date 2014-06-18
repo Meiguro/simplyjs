@@ -309,12 +309,6 @@ var VibePacket = new struct([
   ['uint8', 'type', VibeType],
 ]);
 
-var AccelTapPacket = new struct([
-  [Packet, 'packet'],
-  ['uint8', 'axis'],
-  ['int8', 'direction'],
-]);
-
 var AccelPeekPacket = new struct([
   [Packet, 'packet'],
 ]);
@@ -324,6 +318,26 @@ var AccelConfigPacket = new struct([
   ['uint16', 'samples'],
   ['uint8', 'rate'],
   ['bool', 'subscribe', BoolType],
+]);
+
+var AccelData = new struct([
+  ['int16', 'x'],
+  ['int16', 'y'],
+  ['int16', 'z'],
+  ['bool', 'vibe'],
+  ['uint64', 'time'],
+]);
+
+var AccelDataPacket = new struct([
+  [Packet, 'packet'],
+  ['bool', 'peek'],
+  ['uint8', 'samples'],
+]);
+
+var AccelTapPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'axis'],
+  ['int8', 'direction'],
 ]);
 
 var MenuClearPacket = new struct([
@@ -501,9 +515,10 @@ var CommandPackets = [
   CardImagePacket,
   CardStylePacket,
   VibePacket,
-  AccelTapPacket,
   AccelPeekPacket,
   AccelConfigPacket,
+  AccelDataPacket,
+  AccelTapPacket,
   MenuClearPacket,
   MenuClearSectionPacket,
   MenuPropsPacket,
@@ -1094,6 +1109,25 @@ SimplyPebble.onPacket = function(data) {
     case LongClickPacket:
       Window.emitClick('longClick', buttonTypes[packet.button()]);
       break;
+    case AccelDataPacket:
+      var samples = packet.samples();
+      var accels = [];
+      AccelData._view = packet._view;
+      AccelData._offset = packet._size;
+      for (var i = 0; i < samples; ++i) {
+        accels.push(AccelData.prop());
+        AccelData._offset += AccelData._size;
+      }
+      if (!packet.peek()) {
+        Accel.emitAccelData(accels);
+      } else {
+        var handlers = accelListeners;
+        accelListeners = [];
+        for (var j = 0, jj = handlers.length; j < jj; ++j) {
+          Accel.emitAccelData(accels, handlers[j]);
+        }
+      }
+      break;
     case AccelTapPacket:
       Accel.emitAccelTap(accelAxes[packet.axis()], packet.direction());
       break;
@@ -1133,35 +1167,7 @@ SimplyPebble.onAppMessage = function(e) {
     console.log('Received unknown payload: ' + JSON.stringify(payload));
     return;
   }
-
-  switch (command.name) {
-    case 'accelData':
-      var transactionId = payload[1];
-      var samples = payload[2];
-      var data = payload[3];
-      var accels = [];
-      for (var i = 0; i < samples; i++) {
-        var pos = i * 15;
-        var accel = {
-          x: readInt(data, 2, pos, true),
-          y: readInt(data, 2, pos + 2, true),
-          z: readInt(data, 2, pos + 4, true),
-          vibe: readInt(data, 1, pos + 6) ? true : false,
-          time: readInt(data, 8, pos + 7),
-        };
-        accels[i] = accel;
-      }
-      if (typeof transactionId === 'undefined') {
-        Accel.emitAccelData(accels);
-      } else {
-        var handlers = accelListeners;
-        accelListeners = [];
-        for (var j = 0, jj = handlers.length; j < jj; ++j) {
-          Accel.emitAccelData(accels, handlers[j]);
-        }
-      }
-      break;
-  }
 };
 
 module.exports = SimplyPebble;
+

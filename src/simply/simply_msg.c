@@ -20,6 +20,10 @@
 
 #define SEND_DELAY_MS 10
 
+static const size_t APP_MSG_SIZE_INBOUND = 2048;
+
+static const size_t APP_MSG_SIZE_OUTBOUND = 512;
+
 typedef enum Command Command;
 
 enum Command {
@@ -797,9 +801,7 @@ SimplyMsg *simply_msg_create(Simply *simply) {
 
   simply->msg = self;
 
-  const uint32_t size_inbound = 2048;
-  const uint32_t size_outbound = 512;
-  app_message_open(size_inbound, size_outbound);
+  app_message_open(APP_MSG_SIZE_INBOUND, APP_MSG_SIZE_OUTBOUND);
 
   app_message_set_context(simply);
 
@@ -823,37 +825,72 @@ void simply_msg_destroy(SimplyMsg *self) {
   free(self);
 }
 
-static void destroy_packet(SimplyPacket *packet) {
+static void destroy_packet(SimplyMsg *self, SimplyPacket *packet) {
   if (!packet) {
     return;
   }
+  list1_remove(&self->queue, &packet->node);
   free(packet->buffer);
   packet->buffer = NULL;
   free(packet);
 }
 
-static bool send_msg(SimplyPacket *packet) {
+static bool send_msg(uint8_t *buffer, size_t length) {
   DictionaryIterator *iter = NULL;
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
   }
-  dict_write_data(iter, 0, packet->buffer, packet->length);
+  dict_write_data(iter, 0, buffer, length);
   return (app_message_outbox_send() == APP_MSG_OK);
+}
+
+static void make_multi_packet(SimplyMsg *self, SimplyPacket *packet) {
+  if (!packet) {
+    return;
+  }
+  size_t length = 0;
+  SimplyPacket *last;
+  for (SimplyPacket *walk = packet;;) {
+    length += walk->length;
+    SimplyPacket *next = (SimplyPacket*) walk->node.next;
+    if (!next || length + next->length > APP_MSG_SIZE_OUTBOUND - 2 * sizeof(Tuple)) {
+      last = next;
+      break;
+    }
+    walk = next;
+  }
+  uint8_t *buffer = malloc(length);
+  if (!buffer) {
+    return;
+  }
+  uint8_t *cursor = buffer;
+  for (SimplyPacket *walk = packet; walk && walk != last;) {
+    memcpy(cursor, walk->buffer, walk->length);
+    cursor += walk->length;
+    SimplyPacket *next = (SimplyPacket*) walk->node.next;
+    destroy_packet(self, walk);
+    walk = next;
+  }
+  self->send_buffer = buffer;
+  self->send_length = length;
 }
 
 static void send_msg_retry(void *data) {
   SimplyMsg *self = data;
-  SimplyPacket *packet = (SimplyPacket*) self->queue;
-  if (!packet) {
+  self->send_timer = NULL;
+  if (!self->send_buffer) {
+    make_multi_packet(self, (SimplyPacket*) self->queue);
+  }
+  if (!self->send_buffer) {
     return;
   }
-  if (!send_msg(packet)){
+  if (!send_msg(self->send_buffer, self->send_length)){
     self->send_delay_ms *= 2;
-    app_timer_register(self->send_delay_ms, send_msg_retry, self);
+    self->send_timer = app_timer_register(self->send_delay_ms, send_msg_retry, self);
     return;
   }
-  list1_remove(&self->queue, &packet->node);
-  destroy_packet(packet);
+  free(self->send_buffer);
+  self->send_buffer = NULL;
   self->send_delay_ms = SEND_DELAY_MS;
 }
 
@@ -872,7 +909,12 @@ static SimplyPacket *add_packet(SimplyMsg *self, Packet *buffer, Command type, s
     .buffer = buffer,
   };
   list1_append(&self->queue, &packet->node);
-  send_msg_retry(self);
+  if (self->send_delay_ms <= SEND_DELAY_MS) {
+    if (self->send_timer) {
+      app_timer_cancel(self->send_timer);
+    }
+    app_timer_register(SEND_DELAY_MS, send_msg_retry, self);
+  }
   return packet;
 }
 
@@ -937,11 +979,7 @@ bool simply_msg_accel_data(SimplyMsg *self, AccelData *data, uint32_t num_sample
   packet->is_peek = is_peek;
   packet->num_samples = num_samples;
   memcpy(packet->data, data, data_length);
-  SimplyPacket packet_node = {
-    .length = length,
-    .buffer = packet,
-  };
-  bool result = send_msg(&packet_node);
+  bool result = send_msg((uint8_t*) packet, length);
   free(packet);
   return result;
 }
@@ -953,19 +991,17 @@ static bool send_menu_item(SimplyMsg *self, Command type, uint16_t section, uint
     .section = section,
     .item = item,
   };
-  SimplyPacket packet_node = {
-    .length = sizeof(packet),
-    .buffer = &packet,
-  };
-  return send_msg(&packet_node);
+  return send_msg((uint8_t*) &packet, sizeof(packet));
 }
 
-static bool send_menu_item_retry(SimplyMsg *self, Command type, uint16_t section, uint16_t index) {
+static bool send_menu_item_retry(SimplyMsg *self, Command type, uint16_t section, uint16_t item) {
   size_t length;
   MenuItemEventPacket *packet = malloc0(length = sizeof(*packet));
   if (!packet) {
     return false;
   }
+  packet->section = section;
+  packet->item = item;
   return add_packet(self, (Packet*) packet, type, length);
 }
 

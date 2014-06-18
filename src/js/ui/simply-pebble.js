@@ -924,16 +924,18 @@ var toArrayBuffer = function(array, length) {
   return copy;
 };
 
-SimplyPebble.onPacket = function(data) {
-  Packet._view = toArrayBuffer(data);
+SimplyPebble.onPacket = function(buffer, offset) {
+  Packet._view = buffer;
+  Packet._offset = offset;
   var packet = CommandPackets[Packet.type()];
 
   if (!packet) {
-    console.log('Received unknown packet: ' + JSON.stringify(data));
+    console.log('Received unknown packet: ' + JSON.stringify(buffer));
     return;
   }
 
   packet._view = Packet._view;
+  packet._offset = offset;
   switch (packet) {
     case WindowHideEventPacket:
       WindowStack.emitHide(packet.id());
@@ -988,7 +990,18 @@ SimplyPebble.onPacket = function(data) {
 };
 
 SimplyPebble.onAppMessage = function(e) {
-  SimplyPebble.onPacket(e.payload[0]);
+  var data = e.payload[0];
+  Packet._view = toArrayBuffer(data);
+
+  var offset = 0;
+  var length = data.length;
+
+  do {
+    SimplyPebble.onPacket(Packet._view, offset);
+
+    Packet._offset = offset;
+    offset += Packet.length();
+  } while (offset !== 0 && offset < length);
 };
 
 module.exports = SimplyPebble;

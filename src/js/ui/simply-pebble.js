@@ -254,6 +254,16 @@ var WindowActionBarPacket = new struct([
   ['uint8', 'action', BoolType],
 ]);
 
+var ClickPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'button', ButtonType],
+]);
+
+var LongClickPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'button', ButtonType],
+]);
+
 var ImagePacket = new struct([
   [Packet, 'packet'],
   ['uint32', 'id'],
@@ -431,6 +441,8 @@ var CommandPackets = [
   WindowPropsPacket,
   WindowButtonConfigPacket,
   WindowActionBarPacket,
+  ClickPacket,
+  LongClickPacket,
   ImagePacket,
   CardClearPacket,
   CardTextPacket,
@@ -994,10 +1006,39 @@ var readInt = function(message, width, pos, signed) {
   return value;
 };
 
+var toArrayBuffer = function(array, length) {
+  length = length || array.length;
+  var copy = new DataView(new ArrayBuffer(length));
+  for (var i = 0; i < length; ++i) {
+    copy.setUint8(i, array[i]);
+  }
+  return copy;
+};
+
+SimplyPebble.onPacket = function(data) {
+  Packet._view = toArrayBuffer(data);
+  var packet = CommandPackets[Packet.type()];
+  packet._view = Packet._view;
+  switch (packet) {
+    case ClickPacket:
+      Window.emitClick('click', buttonTypes[packet.button()]);
+      break;
+    case LongClickPacket:
+      Window.emitClick('longClick', buttonTypes[packet.button()]);
+      break;
+  }
+};
+
 SimplyPebble.onAppMessage = function(e) {
   var payload = e.payload;
   var code = payload[0];
-  var command = commands[code];
+  var command;
+
+  if (code instanceof Array) {
+    return SimplyPebble.onPacket(code);
+  } else {
+    command = commands[code];
+  }
 
   if (!command) {
     console.log('Received unknown payload: ' + JSON.stringify(payload));

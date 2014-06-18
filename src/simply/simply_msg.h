@@ -20,7 +20,8 @@ typedef struct SimplyPacket SimplyPacket;
 
 struct SimplyPacket {
   List1Node node;
-  size_t length;
+  uint16_t length;
+  bool is_dict;
   void *buffer;
 };
 

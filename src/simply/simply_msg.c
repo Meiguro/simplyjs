@@ -28,6 +28,8 @@ enum Command {
   CommandWindowProps,
   CommandWindowButtonConfig,
   CommandWindowActionBar,
+  CommandClick,
+  CommandLongClick,
   CommandImagePacket,
   CommandCardClear,
   CommandCardText,
@@ -118,6 +120,15 @@ struct __attribute__((__packed__)) WindowActionBarPacket {
   GColor background_color:8;
   bool action;
 };
+
+typedef struct ClickPacket ClickPacket;
+
+struct __attribute__((__packed__)) ClickPacket {
+  Packet packet;
+  ButtonId button:8;
+};
+
+typedef ClickPacket LongClickPacket;
 
 typedef struct ImagePacket ImagePacket;
 
@@ -671,6 +682,10 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandWindowActionBar:
       handle_window_action_bar_packet(simply, packet);
       break;
+    case CommandClick:
+      break;
+    case CommandLongClick:
+      break;
     case CommandImagePacket:
       handle_image_packet(simply, packet);
       break;
@@ -819,7 +834,11 @@ static bool send_msg(SimplyPacket *packet) {
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
   }
-  dict_copy_from_buffer(iter, packet->buffer, packet->length);
+  if (packet->is_dict) {
+    dict_copy_from_buffer(iter, packet->buffer, packet->length);
+  } else {
+    dict_write_data(iter, 0, packet->buffer, packet->length);
+  }
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
@@ -839,12 +858,16 @@ static void send_msg_retry(void *data) {
   self->send_delay_ms = SEND_DELAY_MS;
 }
 
-static SimplyPacket *add_packet(SimplyMsg *self, void *buffer, size_t length) {
+static SimplyPacket *add_packet(SimplyMsg *self, Packet *buffer, Command type, size_t length) {
   SimplyPacket *packet = malloc0(sizeof(*packet));
   if (!packet) {
     free(buffer);
     return NULL;
   }
+  *buffer = (Packet) {
+    .type = type,
+    .length = length,
+  };
   *packet = (SimplyPacket) {
     .length = length,
     .buffer = buffer,
@@ -854,25 +877,38 @@ static SimplyPacket *add_packet(SimplyMsg *self, void *buffer, size_t length) {
   return packet;
 }
 
-static bool send_click(SimplyMsg *self, SimplyACmd type, ButtonId button) {
-  size_t length = dict_calc_buffer_size(2, 1, 1);
-  void *buffer = malloc0(length);
-  if (!buffer) {
+static SimplyPacket *add_dict(SimplyMsg *self, void *buffer, size_t length) {
+  SimplyPacket *packet = malloc0(sizeof(*packet));
+  if (!packet) {
+    free(buffer);
+    return NULL;
+  }
+  *packet = (SimplyPacket) {
+    .is_dict = true,
+    .length = length,
+    .buffer = buffer,
+  };
+  list1_append(&self->queue, &packet->node);
+  send_msg_retry(self);
+  return packet;
+}
+
+static bool send_click(SimplyMsg *self, Command type, ButtonId button) {
+  size_t length;
+  ClickPacket *packet = malloc0(length = sizeof(*packet));
+  if (!packet) {
     return false;
   }
-  DictionaryIterator iter;
-  dict_write_begin(&iter, buffer, length);
-  dict_write_uint8(&iter, 0, type);
-  dict_write_uint8(&iter, 1, button);
-  return add_packet(self, buffer, length);
+  packet->button = button;
+  return add_packet(self, (Packet*) packet, type, length);
 }
 
 bool simply_msg_single_click(SimplyMsg *self, ButtonId button) {
-  return send_click(self, SimplyACmd_click, button);
+  return send_click(self, CommandClick, button);
 }
 
 bool simply_msg_long_click(SimplyMsg *self, ButtonId button) {
-  return send_click(self, SimplyACmd_longClick, button);
+  return send_click(self, CommandLongClick, button);
 }
 
 bool send_window(SimplyMsg *self, SimplyACmd type, uint32_t id) {
@@ -885,7 +921,7 @@ bool send_window(SimplyMsg *self, SimplyACmd type, uint32_t id) {
   dict_write_begin(&iter, buffer, length);
   dict_write_uint8(&iter, 0, type);
   dict_write_uint32(&iter, 1, id);
-  return add_packet(self, buffer, length);
+  return add_dict(self, buffer, length);
 }
 
 bool simply_msg_window_show(SimplyMsg *self, uint32_t id) {
@@ -907,7 +943,7 @@ bool simply_msg_accel_tap(SimplyMsg *self, AccelAxisType axis, int32_t direction
   dict_write_uint8(&iter, 0, SimplyACmd_accelTap);
   dict_write_uint8(&iter, 1, axis);
   dict_write_int8(&iter, 2, direction);
-  return add_packet(self, buffer, length);
+  return add_dict(self, buffer, length);
 }
 
 bool simply_msg_accel_data(SimplyMsg *self, AccelData *data, uint32_t num_samples, int32_t transaction_id) {
@@ -948,7 +984,7 @@ static bool send_menu_item_retry(SimplyMsg *self, SimplyACmd type, uint16_t sect
   DictionaryIterator iter;
   dict_write_begin(&iter, buffer, length);
   write_menu_item(&iter, type, section, index);
-  return add_packet(self, buffer, length);
+  return add_dict(self, buffer, length);
 }
 
 bool simply_msg_menu_get_section(SimplyMsg *self, uint16_t index) {
@@ -982,6 +1018,6 @@ bool simply_msg_animate_element_done(SimplyMsg *self, uint16_t index) {
   dict_write_begin(&iter, buffer, length);
   dict_write_uint8(&iter, 0, SimplyACmd_stageAnimateDone);
   dict_write_uint16(&iter, 1, index);
-  return add_packet(self, buffer, length);
+  return add_dict(self, buffer, length);
 }
 

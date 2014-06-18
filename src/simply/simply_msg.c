@@ -45,9 +45,14 @@ enum Command {
   CommandMenuClearSection,
   CommandMenuProps,
   CommandMenuSection,
+  CommandMenuGetSection,
   CommandMenuItem,
+  CommandMenuGetItem,
+  CommandMenuSelection,
   CommandMenuGetSelection,
-  CommandMenuSetSelection,
+  CommandMenuSelectionEvent,
+  CommandMenuSelect,
+  CommandMenuLongSelect,
   CommandStageClear,
   CommandElementInsert,
   CommandElementRemove,
@@ -245,11 +250,19 @@ struct __attribute__((__packed__)) MenuItemPacket {
   char buffer[];
 };
 
+typedef struct MenuItemEventPacket MenuItemEventPacket;
+
+struct __attribute__((__packed__)) MenuItemEventPacket {
+  Packet packet;
+  uint16_t section;
+  uint16_t item;
+};
+
 typedef Packet MenuGetSelectionPacket;
 
-typedef struct MenuSetSelectionPacket MenuSetSelectionPacket;
+typedef struct MenuSelectionPacket MenuSelectionPacket;
 
-struct __attribute__((__packed__)) MenuSetSelectionPacket {
+struct __attribute__((__packed__)) MenuSelectionPacket {
   Packet packet;
   uint16_t section;
   uint16_t item;
@@ -574,8 +587,8 @@ static void handle_menu_get_selection_packet(Simply *simply, Packet *data) {
   simply_msg_send_menu_selection(simply->msg);
 }
 
-static void handle_menu_set_selection_packet(Simply *simply, Packet *data) {
-  MenuSetSelectionPacket *packet = (MenuSetSelectionPacket*) data;
+static void handle_menu_selection_packet(Simply *simply, Packet *data) {
+  MenuSelectionPacket *packet = (MenuSelectionPacket*) data;
   MenuIndex menu_index = {
     .section = packet->section,
     .row = packet->item,
@@ -747,14 +760,24 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandMenuSection:
       handle_menu_section_packet(simply, packet);
       break;
+    case CommandMenuGetSection:
+      break;
     case CommandMenuItem:
       handle_menu_item_packet(simply, packet);
+      break;
+    case CommandMenuGetItem:
+      break;
+    case CommandMenuSelection:
+      handle_menu_selection_packet(simply, packet);
       break;
     case CommandMenuGetSelection:
       handle_menu_get_selection_packet(simply, packet);
       break;
-    case CommandMenuSetSelection:
-      handle_menu_set_selection_packet(simply, packet);
+    case CommandMenuSelectionEvent:
+      break;
+    case CommandMenuSelect:
+      break;
+    case CommandMenuLongSelect:
       break;
     case CommandStageClear:
       handle_stage_clear_packet(simply, packet);
@@ -979,52 +1002,48 @@ bool simply_msg_accel_data(SimplyMsg *self, AccelData *data, uint32_t num_sample
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
-static void write_menu_item(DictionaryIterator *iter, SimplyACmd type, uint16_t section, uint16_t index) {
-  dict_write_uint8(iter, 0, type);
-  dict_write_uint16(iter, 1, section);
-  dict_write_uint16(iter, 2, index);
+static bool send_menu_item(SimplyMsg *self, Command type, uint16_t section, uint16_t item) {
+  MenuItemEventPacket packet = {
+    .packet.type = type,
+    .packet.length = sizeof(packet),
+    .section = section,
+    .item = item,
+  };
+  SimplyPacket packet_node = {
+    .length = sizeof(packet),
+    .buffer = &packet,
+  };
+  return send_msg(&packet_node);
 }
 
-static bool send_menu_item(SimplyMsg *self, SimplyACmd type, uint16_t section, uint16_t index) {
-  DictionaryIterator *iter = NULL;
-  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+static bool send_menu_item_retry(SimplyMsg *self, Command type, uint16_t section, uint16_t index) {
+  size_t length;
+  MenuItemEventPacket *packet = malloc0(length = sizeof(*packet));
+  if (!packet) {
     return false;
   }
-  write_menu_item(iter, type, section, index);
-  return (app_message_outbox_send() == APP_MSG_OK);
-}
-
-static bool send_menu_item_retry(SimplyMsg *self, SimplyACmd type, uint16_t section, uint16_t index) {
-  size_t length = dict_calc_buffer_size(3, 1, 2, 2);
-  void *buffer = malloc0(length);
-  if (!buffer) {
-    return false;
-  }
-  DictionaryIterator iter;
-  dict_write_begin(&iter, buffer, length);
-  write_menu_item(&iter, type, section, index);
-  return add_dict(self, buffer, length);
+  return add_packet(self, (Packet*) packet, type, length);
 }
 
 bool simply_msg_menu_get_section(SimplyMsg *self, uint16_t index) {
-  return send_menu_item(self, SimplyACmd_getMenuSection, index, 0);
+  return send_menu_item(self, CommandMenuGetSection, index, 0);
 }
 
 bool simply_msg_menu_get_item(SimplyMsg *self, uint16_t section, uint16_t index) {
-  return send_menu_item(self, SimplyACmd_getMenuItem, section, index);
+  return send_menu_item(self, CommandMenuGetItem, section, index);
 }
 
 bool simply_msg_menu_select_click(SimplyMsg *self, uint16_t section, uint16_t index) {
-  return send_menu_item_retry(self, SimplyACmd_menuSelect, section, index);
+  return send_menu_item_retry(self, CommandMenuSelect, section, index);
 }
 
 bool simply_msg_menu_select_long_click(SimplyMsg *self, uint16_t section, uint16_t index) {
-  return send_menu_item_retry(self, SimplyACmd_menuLongSelect, section, index);
+  return send_menu_item_retry(self, CommandMenuLongSelect, section, index);
 }
 
 bool simply_msg_send_menu_selection(SimplyMsg *self) {
   MenuIndex menu_index = simply_menu_get_selection(self->simply->menu);
-  return send_menu_item_retry(self, SimplyACmd_menuSelection, menu_index.section, menu_index.row);
+  return send_menu_item_retry(self, CommandMenuSelectionEvent, menu_index.section, menu_index.row);
 }
 
 bool simply_msg_animate_element_done(SimplyMsg *self, uint16_t index) {

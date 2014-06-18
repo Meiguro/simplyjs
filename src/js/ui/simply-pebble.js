@@ -348,6 +348,11 @@ var MenuSectionPacket = new struct([
   ['cstring', 'title', StringType],
 ]);
 
+var MenuGetSectionPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+]);
+
 var MenuItemPacket = new struct([
   [Packet, 'packet'],
   ['uint16', 'section'],
@@ -359,16 +364,40 @@ var MenuItemPacket = new struct([
   ['cstring', 'subtitle', StringType],
 ]);
 
-var MenuGetSelectionPacket = new struct([
+var MenuGetItemPacket = new struct([
   [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'item'],
 ]);
 
-var MenuSetSelectionPacket = new struct([
+var MenuSelectionPacket = new struct([
   [Packet, 'packet'],
   ['uint16', 'section'],
   ['uint16', 'item'],
   ['uint8', 'align', MenuRowAlign],
   ['bool', 'animated', BoolType],
+]);
+
+var MenuGetSelectionPacket = new struct([
+  [Packet, 'packet'],
+]);
+
+var MenuSelectionEventPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'item'],
+]);
+
+var MenuSelectPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'item'],
+]);
+
+var MenuLongSelectPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'item'],
 ]);
 
 var StageClearPacket = new struct([
@@ -474,9 +503,14 @@ var CommandPackets = [
   MenuClearSectionPacket,
   MenuPropsPacket,
   MenuSectionPacket,
+  MenuGetSectionPacket,
   MenuItemPacket,
+  MenuGetItemPacket,
+  MenuSelectionPacket,
   MenuGetSelectionPacket,
-  MenuSetSelectionPacket,
+  MenuSelectionEventPacket,
+  MenuSelectPacket,
+  MenuLongSelectPacket,
   StageClearPacket,
   ElementInsertPacket,
   ElementRemovePacket,
@@ -893,7 +927,7 @@ SimplyPebble.menuSelection = function(section, item) {
   if (arguments.length === 0) {
     SimplyPebble.sendPacket(MenuGetSelectionPacket);
   }
-  SimplyPebble.sendPacket(MenuSetSelectionPacket.section(section).item(item));
+  SimplyPebble.sendPacket(MenuSelectionPacket.section(section).item(item));
 };
 
 SimplyPebble.menu = function(def, clear, pushing) {
@@ -1051,6 +1085,21 @@ SimplyPebble.onPacket = function(data) {
     case AccelTapPacket:
       Accel.emitAccelTap(accelAxes[packet.axis()], packet.direction());
       break;
+    case MenuGetSectionPacket:
+      Menu.emitSection(packet.section());
+      break;
+    case MenuGetItemPacket:
+      Menu.emitItem(packet.section(), packet.item());
+      break;
+    case MenuSelectPacket:
+      Menu.emitSelect('menuSelect', packet.section(), packet.item());
+      break;
+    case MenuLongSelectPacket:
+      Menu.emitSelect('menuLongSelect', packet.section(), packet.item());
+      break;
+    case MenuSelectionEventPacket:
+      Menu.emitSelect('menuSelection', packet.section(), packet.item());
+      break;
   }
 };
 
@@ -1096,17 +1145,6 @@ SimplyPebble.onAppMessage = function(e) {
           Accel.emitAccelData(accels, handlers[j]);
         }
       }
-      break;
-    case 'getMenuSection':
-      Menu.emitSection(payload[1]);
-      break;
-    case 'getMenuItem':
-      Menu.emitItem(payload[1], payload[2]);
-      break;
-    case 'menuSelect':
-    case 'menuLongSelect':
-    case 'menuSelection':
-      Menu.emitSelect(command.name, payload[1], payload[2]);
       break;
     case 'stageAnimateDone':
       StageElement.emitAnimateDone(payload[1]);

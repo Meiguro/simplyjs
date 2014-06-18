@@ -101,13 +101,15 @@ StageElement.prototype.dequeue = function() {
   callback.call(this, this.dequeue.bind(this));
 };
 
-StageElement.emitAnimateDone = function(index) {
-  if (index === -1) { return; }
+StageElement.emitAnimateDone = function(id) {
   var wind = WindowStack.top();
   if (!wind || !wind._dynamic) { return; }
-  var element = wind.at(index);
-  if (!element) { return; }
-  element.dequeue();
+  wind.each(function(element) {
+    if (element._id() === id) {
+      element.dequeue();
+      return false;
+    }
+  });
 };
 
 module.exports = StageElement;

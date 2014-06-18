@@ -239,8 +239,7 @@ static void animation_stopped(Animation *base_animation, bool finished, void *co
   }
   SimplyElementCommon *element = animation->element;
   destroy_animation(self, animation);
-  simply_msg_animate_element_done(self->window.simply->msg,
-      list1_index(self->stage_layer.elements, &element->node));
+  simply_msg_animate_element_done(self->window.simply->msg, element->id);
 }
 
 SimplyAnimation *simply_stage_animate_element(SimplyStage *self,

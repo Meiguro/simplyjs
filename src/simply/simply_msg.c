@@ -62,6 +62,7 @@ enum Command {
   CommandElementTextStyle,
   CommandElementImage,
   CommandElementAnimate,
+  CommandElementAnimateDone,
 };
 
 typedef enum WindowType WindowType;
@@ -344,6 +345,13 @@ struct __attribute__((__packed__)) ElementAnimatePacket {
   GRect frame;
   uint32_t duration;
   AnimationCurve curve:8;
+};
+
+typedef struct ElementAnimateDonePacket ElementAnimateDonePacket;
+
+struct __attribute__((__packed__)) ElementAnimateDonePacket {
+  Packet packet;
+  uint32_t id;
 };
 
 typedef enum SimplyACmd SimplyACmd;
@@ -806,6 +814,8 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandElementAnimate:
       handle_element_animate_packet(simply, packet);
       break;
+    case CommandElementAnimateDone:
+      break;
   }
 }
 
@@ -882,11 +892,7 @@ static bool send_msg(SimplyPacket *packet) {
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
   }
-  if (packet->is_dict) {
-    dict_copy_from_buffer(iter, packet->buffer, packet->length);
-  } else {
-    dict_write_data(iter, 0, packet->buffer, packet->length);
-  }
+  dict_write_data(iter, 0, packet->buffer, packet->length);
   return (app_message_outbox_send() == APP_MSG_OK);
 }
 
@@ -917,22 +923,6 @@ static SimplyPacket *add_packet(SimplyMsg *self, Packet *buffer, Command type, s
     .length = length,
   };
   *packet = (SimplyPacket) {
-    .length = length,
-    .buffer = buffer,
-  };
-  list1_append(&self->queue, &packet->node);
-  send_msg_retry(self);
-  return packet;
-}
-
-static SimplyPacket *add_dict(SimplyMsg *self, void *buffer, size_t length) {
-  SimplyPacket *packet = malloc0(sizeof(*packet));
-  if (!packet) {
-    free(buffer);
-    return NULL;
-  }
-  *packet = (SimplyPacket) {
-    .is_dict = true,
     .length = length,
     .buffer = buffer,
   };
@@ -1046,16 +1036,13 @@ bool simply_msg_send_menu_selection(SimplyMsg *self) {
   return send_menu_item_retry(self, CommandMenuSelectionEvent, menu_index.section, menu_index.row);
 }
 
-bool simply_msg_animate_element_done(SimplyMsg *self, uint16_t index) {
-  size_t length = dict_calc_buffer_size(2, 1, 2);
-  void *buffer = malloc0(length);
-  if (!buffer) {
+bool simply_msg_animate_element_done(SimplyMsg *self, uint32_t id) {
+  size_t length;
+  ElementAnimateDonePacket *packet = malloc0(length = sizeof(*packet));
+  if (!packet) {
     return false;
   }
-  DictionaryIterator iter;
-  dict_write_begin(&iter, buffer, length);
-  dict_write_uint8(&iter, 0, SimplyACmd_stageAnimateDone);
-  dict_write_uint16(&iter, 1, index);
-  return add_dict(self, buffer, length);
+  packet->id = id;
+  return add_packet(self, (Packet*) packet, CommandElementAnimateDone, length);
 }
 

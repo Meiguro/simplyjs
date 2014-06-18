@@ -479,6 +479,11 @@ var ElementAnimatePacket = new struct([
   ['uint8', 'easing', AnimationCurve],
 ]);
 
+var ElementAnimateDonePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+]);
+
 var CommandPackets = [
   Packet,
   WindowShowPacket,
@@ -520,6 +525,7 @@ var CommandPackets = [
   ElementTextStylePacket,
   ElementImagePacket,
   ElementAnimatePacket,
+  ElementAnimateDonePacket,
 ];
 
 var setStageParams = [{
@@ -1071,6 +1077,12 @@ var toArrayBuffer = function(array, length) {
 SimplyPebble.onPacket = function(data) {
   Packet._view = toArrayBuffer(data);
   var packet = CommandPackets[Packet.type()];
+
+  if (!packet) {
+    console.log('Received unknown packet: ' + JSON.stringify(data));
+    return;
+  }
+
   packet._view = Packet._view;
   switch (packet) {
     case WindowHideEventPacket:
@@ -1099,6 +1111,9 @@ SimplyPebble.onPacket = function(data) {
       break;
     case MenuSelectionEventPacket:
       Menu.emitSelect('menuSelection', packet.section(), packet.item());
+      break;
+    case ElementAnimateDonePacket:
+      StageElement.emitAnimateDone(packet.id());
       break;
   }
 };
@@ -1145,9 +1160,6 @@ SimplyPebble.onAppMessage = function(e) {
           Accel.emitAccelData(accels, handlers[j]);
         }
       }
-      break;
-    case 'stageAnimateDone':
-      StageElement.emitAnimateDone(payload[1]);
       break;
   }
 };

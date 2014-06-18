@@ -21,7 +21,6 @@ typedef struct SimplyPacket SimplyPacket;
 struct SimplyPacket {
   List1Node node;
   uint16_t length;
-  bool is_dict;
   void *buffer;
 };
 
@@ -45,4 +44,4 @@ bool simply_msg_menu_select_long_click(SimplyMsg *self, uint16_t section, uint16
 bool simply_msg_menu_hide(SimplyMsg *self, uint16_t section, uint16_t index);
 bool simply_msg_send_menu_selection(SimplyMsg *self);
 
-bool simply_msg_animate_element_done(SimplyMsg *self, uint16_t index);
+bool simply_msg_animate_element_done(SimplyMsg *self, uint32_t id);

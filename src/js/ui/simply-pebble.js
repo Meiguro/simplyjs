@@ -543,147 +543,6 @@ var CommandPackets = [
   ElementAnimateDonePacket,
 ];
 
-var setStageParams = [{
-  name: 'clear',
-}];
-
-var commands = [{
-  name: 'setWindow',
-}, {
-  name: 'windowShow',
-}, {
-  name: 'windowHide',
-}, {
-  name: 'setCard',
-}, {
-  name: 'click',
-  params: [{
-    name: 'button',
-  }],
-}, {
-  name: 'longClick',
-  params: [{
-    name: 'button',
-  }],
-}, {
-  name: 'accelTap',
-  params: [{
-    name: 'axis',
-  }, {
-    name: 'direction',
-  }],
-}, {
-  name: 'vibe',
-  params: [{
-    name: 'type',
-  }],
-}, {
-  name: 'accelData',
-  params: [{
-    name: 'transactionId',
-  }, {
-    name: 'numSamples',
-  }, {
-    name: 'accelData',
-  }],
-}, {
-  name: 'getAccelData',
-}, {
-  name: 'configAccelData',
-}, {
-  name: 'configButtons',
-  params: [{
-    name: 'back',
-  }, {
-    name: 'up',
-  }, {
-    name: 'select',
-  }, {
-    name: 'down',
-  }],
-}, {
-  name: 'setMenu',
-}, {
-  name: 'setMenuSection',
-}, {
-  name: 'getMenuSection',
-  params: [{
-    name: 'section',
-  }],
-}, {
-  name: 'setMenuItem',
-}, {
-  name: 'getMenuItem',
-  params: [{
-    name: 'section',
-  }, {
-    name: 'item',
-  }],
-}, {
-  name: 'menuSelect',
-  params: [{
-    name: 'section',
-  }, {
-    name: 'item',
-  }],
-}, {
-  name: 'menuLongSelect',
-  params: [{
-    name: 'section',
-  }, {
-    name: 'item',
-  }],
-}, {
-  name: 'menuSelection',
-}, {
-  name: 'image',
-  params: [{
-    name: 'id',
-  }, {
-    name: 'width',
-  }, {
-    name: 'height',
-  }, {
-    name: 'pixels',
-  }],
-}, {
-  name: 'setStage',
-  params: setStageParams,
-}, {
-  name: 'stageElement',
-}, {
-  name: 'stageRemove',
-}, {
-  name: 'stageAnimate',
-}, {
-  name: 'stageAnimateDone',
-  params: [{
-    name: 'index',
-  }],
-}];
-
-// Build the commandMap and map each command to an integer.
-
-var commandMap = {};
-
-for (var i = 0, ii = commands.length; i < ii; ++i) {
-  var command = commands[i];
-  commandMap[command.name] = command;
-  command.id = i;
-
-  var params = command.params;
-  if (!params) {
-    continue;
-  }
-
-  var paramMap = command.paramMap = {};
-  for (var j = 0, jj = params.length; j < jj; ++j) {
-    var param = params[j];
-    paramMap[param.name] = param;
-    param.id = j + 1;
-  }
-}
-
 var accelAxes = [
   'x',
   'y',
@@ -695,21 +554,6 @@ var clearFlagMap = {
   text: (1 << 1),
   image: (1 << 2),
 };
-
-var actionBarTypeMap = {
-  up: 'actionUp',
-  select: 'actionSelect',
-  down: 'actionDown',
-  backgroundColor: 'actionBackgroundColor',
-};
-
-var menuSelectionTypeMap = {
-  section: 'selectionSection',
-  item: 'selectionItem',
-  align: 'selectionAlign',
-  animated: 'selectionAnimated',
-};
-
 
 /**
  * SimplyPebble object provides the actual methods to communicate with Pebble.
@@ -725,40 +569,6 @@ SimplyPebble.init = function() {
 
   // Register this implementation as the one currently in use
   simply.impl = SimplyPebble;
-};
-
-
-var toParam = function(param, v) {
-  if (param.type === String) {
-    v = typeof v !== 'undefined' ? v.toString() : '';
-  } else if (param.type === Boolean) {
-    v = v ? 1 : 0;
-  } else if (typeof param.type === 'function') {
-    v = param.type(v);
-  }
-  return v;
-};
-
-var setMessage = function(message, command, def, typeMap) {
-  var paramMap = command.paramMap;
-  for (var k in def) {
-    var paramName = typeMap && typeMap[k] || k;
-    if (!paramName) { continue; }
-    var param = paramMap[paramName];
-    if (param) {
-      message[param.id] = toParam(param, def[k]);
-    }
-  }
-  return message;
-};
-
-var makeMessage = function(command, def) {
-  var message = {};
-  message[0] = command.id;
-  if (def) {
-    setMessage(message, command, def);
-  }
-  return message;
 };
 
 SimplyPebble.sendMessage = (function() {
@@ -1055,31 +865,6 @@ SimplyPebble.stage = function(def, clear, pushing) {
   }
 };
 
-var setActionMessage = function(message, command, actionDef) {
-  if (actionDef) {
-    if (typeof actionDef === 'boolean') {
-      actionDef = { action: actionDef };
-    }
-    setMessage(message, command, actionDef, actionBarTypeMap);
-  }
-  return message;
-};
-
-var readInt = function(message, width, pos, signed) {
-  var value = 0;
-  pos = pos || 0;
-  for (var i = 0; i < width; ++i) {
-    value += (message[pos + i] & 0xFF) << (i * 8);
-  }
-  if (signed) {
-    var mask = 1 << (width * 8 - 1);
-    if (value & mask) {
-      value = value - (((mask - 1) << 1) + 1);
-    }
-  }
-  return value;
-};
-
 var toArrayBuffer = function(array, length) {
   length = length || array.length;
   var copy = new DataView(new ArrayBuffer(length));
@@ -1153,20 +938,7 @@ SimplyPebble.onPacket = function(data) {
 };
 
 SimplyPebble.onAppMessage = function(e) {
-  var payload = e.payload;
-  var code = payload[0];
-  var command;
-
-  if (code instanceof Array) {
-    return SimplyPebble.onPacket(code);
-  } else {
-    command = commands[code];
-  }
-
-  if (!command) {
-    console.log('Received unknown payload: ' + JSON.stringify(payload));
-    return;
-  }
+  SimplyPebble.onPacket(e.payload[0]);
 };
 
 module.exports = SimplyPebble;

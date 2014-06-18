@@ -38,6 +38,7 @@ enum Command {
   CommandCardImage,
   CommandCardStyle,
   CommandVibe,
+  CommandAccelTap,
   CommandAccelPeek,
   CommandAccelConfig,
   CommandMenuClear,
@@ -185,6 +186,14 @@ typedef struct VibePacket VibePacket;
 struct __attribute__((__packed__)) VibePacket {
   Packet packet;
   VibeType type:8;
+};
+
+typedef struct AccelTapPacket AccelTapPacket;
+
+struct __attribute__((__packed__)) AccelTapPacket {
+  Packet packet;
+  AccelAxisType axis:8;
+  int8_t direction;
 };
 
 typedef Packet AccelPeekPacket;
@@ -718,6 +727,8 @@ static void handle_packet(Simply *simply, uint8_t *buffer, uint16_t length) {
     case CommandVibe:
       handle_vibe_packet(simply, packet);
       break;
+    case CommandAccelTap:
+      break;
     case CommandAccelPeek:
       handle_accel_peek_packet(simply, packet);
       break;
@@ -944,17 +955,14 @@ bool simply_msg_window_hide(SimplyMsg *self, uint32_t id) {
 }
 
 bool simply_msg_accel_tap(SimplyMsg *self, AccelAxisType axis, int32_t direction) {
-  size_t length = dict_calc_buffer_size(3, 1, 1, 1);
-  void *buffer = malloc0(length);
-  if (!buffer) {
+  size_t length;
+  AccelTapPacket *packet = malloc0(length = sizeof(*packet));
+  if (!packet) {
     return false;
   }
-  DictionaryIterator iter;
-  dict_write_begin(&iter, buffer, length);
-  dict_write_uint8(&iter, 0, SimplyACmd_accelTap);
-  dict_write_uint8(&iter, 1, axis);
-  dict_write_int8(&iter, 2, direction);
-  return add_dict(self, buffer, length);
+  packet->axis = axis;
+  packet->direction = direction;
+  return add_packet(self, (Packet*) packet, CommandAccelTap, length);
 }
 
 bool simply_msg_accel_data(SimplyMsg *self, AccelData *data, uint32_t num_samples, int32_t transaction_id) {

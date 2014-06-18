@@ -309,6 +309,12 @@ var VibePacket = new struct([
   ['uint8', 'type', VibeType],
 ]);
 
+var AccelTapPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'axis'],
+  ['int8', 'direction'],
+]);
+
 var AccelPeekPacket = new struct([
   [Packet, 'packet'],
 ]);
@@ -461,6 +467,7 @@ var CommandPackets = [
   CardImagePacket,
   CardStylePacket,
   VibePacket,
+  AccelTapPacket,
   AccelPeekPacket,
   AccelConfigPacket,
   MenuClearPacket,
@@ -1041,6 +1048,9 @@ SimplyPebble.onPacket = function(data) {
     case LongClickPacket:
       Window.emitClick('longClick', buttonTypes[packet.button()]);
       break;
+    case AccelTapPacket:
+      Accel.emitAccelTap(accelAxes[packet.axis()], packet.direction());
+      break;
   }
 };
 
@@ -1061,10 +1071,6 @@ SimplyPebble.onAppMessage = function(e) {
   }
 
   switch (command.name) {
-    case 'accelTap':
-      var axis = accelAxes[payload[1]];
-      Accel.emitAccelTap(axis, payload[2]);
-      break;
     case 'accelData':
       var transactionId = payload[1];
       var samples = payload[2];

@@ -1,10 +1,10 @@
 {
   "uuid": "133215f0-cf20-4c05-997b-3c9be5a64e5b",
-  "shortName": "Simply.js",
-  "longName": "Simply.js",
+  "shortName": "Pebble.js",
+  "longName": "Pebble.js",
   "companyName": "Meiguro",
   "versionCode": 1,
-  "versionLabel": "0.3.4",
+  "versionLabel": "0.4.0",
   "capabilities": [ "configurable" ],
   "watchapp": {
     "watchface": false
@@ -21,6 +21,10 @@
         "type": "png",
         "name": "IMAGE_LOGO_SPLASH",
         "file": "images/logo_splash.png"
+      }, {
+        "type": "png",
+        "name": "IMAGE_TILE_SPLASH",
+        "file": "images/tile_splash.png"
       }, {
         "type": "font",
         "name": "MONO_FONT_14",

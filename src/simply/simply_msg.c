@@ -913,7 +913,7 @@ static SimplyPacket *add_packet(SimplyMsg *self, Packet *buffer, Command type, s
     if (self->send_timer) {
       app_timer_cancel(self->send_timer);
     }
-    app_timer_register(SEND_DELAY_MS, send_msg_retry, self);
+    self->send_timer = app_timer_register(SEND_DELAY_MS, send_msg_retry, self);
   }
   return packet;
 }

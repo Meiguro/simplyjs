@@ -804,11 +804,11 @@ SimplyPebble.menuItem = function(section, item, def) {
   SimplyPebble.sendPacket(MenuItemPacket);
 };
 
-SimplyPebble.menuSelection = function(section, item) {
+SimplyPebble.menuSelection = function(section, item, align) {
   if (arguments.length === 0) {
     SimplyPebble.sendPacket(MenuGetSelectionPacket);
   }
-  SimplyPebble.sendPacket(MenuSelectionPacket.section(section).item(item));
+  SimplyPebble.sendPacket(MenuSelectionPacket.section(section).item(item).align(align || 'center'));
 };
 
 SimplyPebble.menu = function(def, clear, pushing) {

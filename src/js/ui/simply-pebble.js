@@ -726,7 +726,7 @@ SimplyPebble.cardClear = function(clear) {
 };
 
 SimplyPebble.cardText = function(field, text) {
-  SimplyPebble.sendPacket(CardTextPacket.index(field).text(text));
+  SimplyPebble.sendPacket(CardTextPacket.index(field).text(text || ''));
 };
 
 SimplyPebble.cardImage = function(field, image) {

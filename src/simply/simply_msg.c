@@ -884,14 +884,14 @@ static void send_msg_retry(void *data) {
   if (!self->send_buffer) {
     return;
   }
-  if (!send_msg(self->send_buffer, self->send_length)){
+  if (send_msg(self->send_buffer, self->send_length)) {
+    free(self->send_buffer);
+    self->send_buffer = NULL;
+    self->send_delay_ms = SEND_DELAY_MS;
+  } else {
     self->send_delay_ms *= 2;
-    self->send_timer = app_timer_register(self->send_delay_ms, send_msg_retry, self);
-    return;
   }
-  free(self->send_buffer);
-  self->send_buffer = NULL;
-  self->send_delay_ms = SEND_DELAY_MS;
+  self->send_timer = app_timer_register(self->send_delay_ms, send_msg_retry, self);
 }
 
 static SimplyPacket *add_packet(SimplyMsg *self, Packet *buffer, Command type, size_t length) {

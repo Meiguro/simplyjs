@@ -24,14 +24,19 @@ Menu.prototype._show = function() {
   Window.prototype._show.apply(this, arguments);
 };
 
+Menu.prototype._preload = 5;
+
 Menu.prototype._prop = function(state, clear, pushing) {
   if (this === WindowStack.top()) {
     simply.impl.menu.call(this, state, clear, pushing);
     var select = util2.copy(this._selection);
     if (this._resolveSection(select)) {
       simply.impl.menuSelection(select.section, select.item);
-      for (var i = 0; i < 3; ++i) {
-        this._resolveItem(select);
+      select.item -= Math.max(0, Math.floor(this._preload / 2));
+      for (var i = 0; i < this._preload; ++i) {
+        if (!this._resolveItem(select)) {
+          break;
+        }
         select.item++;
       }
     }

@@ -24,22 +24,12 @@ Menu.prototype._show = function() {
   Window.prototype._show.apply(this, arguments);
 };
 
-Menu.prototype._preload = 5;
+Menu.prototype._numPreloadItems = 5;
 
 Menu.prototype._prop = function(state, clear, pushing) {
   if (this === WindowStack.top()) {
     simply.impl.menu.call(this, state, clear, pushing);
-    var select = util2.copy(this._selection);
-    if (this._resolveSection(select)) {
-      simply.impl.menuSelection(select.section, select.item);
-      select.item -= Math.max(0, Math.floor(this._preload / 2));
-      for (var i = 0; i < this._preload; ++i) {
-        if (!this._resolveItem(select)) {
-          break;
-        }
-        select.item++;
-      }
-    }
+    this._resolveSection(this._selection);
   }
 };
 
@@ -154,6 +144,10 @@ Menu.prototype._resolveSection = function(e, clear) {
   section.items = getItems.call(this, e);
   if (this === WindowStack.top()) {
     simply.impl.menuSection.call(this, e.section, section, clear);
+    var select = this._selection;
+    if (select.section === e.section) {
+      this._preloadSection(select);
+    }
     return true;
   }
 };
@@ -165,6 +159,20 @@ Menu.prototype._resolveItem = function(e) {
     simply.impl.menuItem.call(this, e.section, e.item, item);
     return true;
   }
+};
+
+Menu.prototype._preloadItems = function(e) {
+  var select = util2.copy(e);
+  select.item = Math.max(0, select.item - Math.floor(this._numPreloadItems / 2));
+  for (var i = 0; i < this._numPreloadItems; ++i) {
+    this._resolveItem(select);
+    select.item++;
+  }
+};
+
+Menu.prototype._preloadSection = function(e) {
+  simply.impl.menuSelection(e.section, e.item);
+  this._preloadItems(e);
 };
 
 Menu.prototype._emitSelect = function(e) {

@@ -90,18 +90,19 @@ var ajax = function(opt, success, failure) {
   }
 
   req.onreadystatechange = function(e) {
-    if (req.readyState == 4) {
+    if (req.readyState === 4) {
       var body = req.responseText;
-      var failed = req.status != 200;
-      if (opt.type == 'json') {
-        try {
+      var okay = req.status === 200;
+      try {
+        if (opt.type === 'json') {
           body = JSON.parse(body);
+        } else if (opt.type === 'form') {
+          body = deformify(body);
         }
-        catch (err) {
-          failed = true;
-        }
+      } catch (err) {
+        okay = false;
       }
-      var callback = !failed ? success : failure;
+      var callback = okay ? success : failure;
       if (callback) {
         callback(body, req.status, req);
       }

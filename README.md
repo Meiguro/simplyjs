@@ -154,11 +154,11 @@ Exporting is possible by modifying or setting `module.exports` within the requir
 
 ### Pebble
 
-The `Pebble` object from [PebbleKit JavaScript](https://developer.getpebble.com/2/guides/javascript-guide.html) is available as a global variable. It's usage is discouraged in Pebble.js, instead you should use the objects documented below who provide a cleaner object interface to the same functionalities.
+The `Pebble` object from [PebbleKit JavaScript](https://developer.getpebble.com/2/guides/javascript-guide.html) is available as a global variable. Its usage is discouraged in Pebble.js, instead you should use the objects documented below who provide a cleaner object interface to the same functionalities.
 
 ### window -- browser
 
-A `window` object is provided with a subset of the standard APIs you would find in a normal browser. It's direct usage is discouraged because available functionalities may differ between the iOS and Android runtime environment. 
+A `window` object is provided with a subset of the standard APIs you would find in a normal browser. Its direct usage is discouraged because available functionalities may differ between the iOS and Android runtime environment. 
 
 More specifically:
 

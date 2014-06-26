@@ -127,10 +127,14 @@ Settings.onOpenConfig = function(e) {
       options: state.options,
       url: listener.params.url,
     };
-    if (listener.open(e) === false) {
-      return;
+    var result;
+    if (listener.open) {
+      result = listener.open(e);
+      if (result === false) {
+        return;
+      }
     }
-    url = listener.params.url;
+    url = typeof result === 'string' ? result : listener.params.url;
     options = state.options;
   } else {
     url = Settings.settingsUrl;

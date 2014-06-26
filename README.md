@@ -195,13 +195,13 @@ var Settings = require('settings');
 ````js
 // Set a configurable with the open callback
 Settings.config(
-  { url: 'http://www.example.com' }
+  { url: 'http://www.example.com' },
   function(e) {
     console.log('opening configurable');
 
     // Reset color to red before opening the webview
     Settings.option('color', 'red');
-  }
+  },
   function(e) {
     console.log('closed configurable');
   }
@@ -213,7 +213,7 @@ Settings.config(
 ````js
 // Set a configurable with just the close callback
 Settings.config(
-  { url: 'http://www.example.com' }
+  { url: 'http://www.example.com' },
   function(e) {
     console.log('closed configurable');
 

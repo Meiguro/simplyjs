@@ -294,7 +294,7 @@ simply.fexecPackage = function(script, pkg) {
     var msg = pkg.name + ': ' + args.join(' ');
     var width = 45;
     var prefix = (new Array(width + 1)).join('\b'); // erase Simply.js source line
-    var suffix = msg.length < width ? (new Array(width - msg.length + 1)).join(' ') : 0;
+    var suffix = msg.length < width ? (new Array(width - msg.length + 1)).join(' ') : '';
     console.log(prefix + msg + suffix);
   };
 

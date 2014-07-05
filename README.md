@@ -377,7 +377,7 @@ The number of callbacks will depend on the configuration of the accelerometer. W
 Peeks at the current accelerometer value. The callback function will be called with the data point as an event.
 
 ````js
-Accel.peek(function(e)) {
+Accel.peek(function(e) {
   console.log('Current acceleration on axis are: X=' + e.accel.x + ' Y=' + e.accel.y + ' Z=' + e.accel.z);
 });
 ````

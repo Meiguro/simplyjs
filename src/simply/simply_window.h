@@ -15,6 +15,7 @@ struct SimplyWindow {
   uint32_t id;
   ButtonId button_mask:4;
   GColor background_color:2;
+  bool is_fullscreen:1;
   bool is_scrollable:1;
   bool is_action_bar:1;
 };

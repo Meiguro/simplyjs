@@ -8,9 +8,8 @@ var defaults = {
 };
 
 var Rect = function(elementDef) {
-  StageElement.call(this, elementDef);
-  myutil.shadow(defaults, this.state);
-  this.state.type = 1;
+  StageElement.call(this, myutil.shadow(defaults, elementDef || {}));
+  this.state.type = StageElement.RectType;
 };
 
 util2.inherit(Rect, StageElement);

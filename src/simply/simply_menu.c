@@ -32,11 +32,6 @@ static bool item_filter(List1Node *node, void *data) {
   return (item->section == section_index && item->item == row);
 }
 
-static bool request_filter(List1Node *node, void *data) {
-  SimplyMenuCommon *item = (SimplyMenuCommon*) node;
-  return (item->title == NULL);
-}
-
 static SimplyMenuSection *get_menu_section(SimplyMenu *self, int index) {
   return (SimplyMenuSection*) list1_find(self->menu_layer.sections, section_filter, (void*)(uintptr_t) index);
 }
@@ -81,33 +76,6 @@ static void destroy_item_by_index(SimplyMenu *self, int section, int index) {
         self->menu_layer.items, item_filter, (void*)(uintptr_t) cell_index));
 }
 
-static void schedule_get_timer(SimplyMenu *self);
-
-static void request_menu_node(void *data) {
-  SimplyMenu *self = data;
-  self->menu_layer.get_timer = NULL;
-  SimplyMenuSection *section = (SimplyMenuSection*) list1_find(self->menu_layer.sections, request_filter, NULL);
-  bool found = false;
-  if (section) {
-    simply_msg_menu_get_section(self->window.simply->msg, section->section);
-    found = true;
-  }
-  SimplyMenuItem *item = (SimplyMenuItem*) list1_find(self->menu_layer.items, request_filter, NULL);
-  if (item) {
-    simply_msg_menu_get_item(self->window.simply->msg, item->section, item->item);
-    found = true;
-  }
-  if (found) {
-    schedule_get_timer(self);
-  }
-}
-
-static void schedule_get_timer(SimplyMenu *self) {
-  if (self->menu_layer.get_timer) { return; }
-  self->menu_layer.get_timer = app_timer_register(self->menu_layer.request_delay_ms, request_menu_node, self);
-  self->menu_layer.request_delay_ms *= 2;
-}
-
 static void add_section(SimplyMenu *self, SimplyMenuSection *section) {
   if (list1_size(self->menu_layer.sections) >= MAX_CACHED_SECTIONS) {
     destroy_section(self, (SimplyMenuSection*) list1_last(self->menu_layer.sections));
@@ -125,29 +93,35 @@ static void add_item(SimplyMenu *self, SimplyMenuItem *item) {
 }
 
 static void request_menu_section(SimplyMenu *self, uint16_t section_index) {
-  SimplyMenuSection *section = malloc(sizeof(*section));
+  SimplyMenuSection *section = get_menu_section(self, section_index);
+  if (section) {
+    return;
+  }
+  section = malloc(sizeof(*section));
   *section = (SimplyMenuSection) {
     .section = section_index,
   };
   add_section(self, section);
-  schedule_get_timer(self);
+  simply_msg_menu_get_section(self->window.simply->msg, section_index);
 }
 
 static void request_menu_item(SimplyMenu *self, uint16_t section_index, uint16_t item_index) {
-  SimplyMenuItem *item = malloc(sizeof(*item));
+  SimplyMenuItem *item = get_menu_item(self, section_index, item_index);
+  if (item) {
+    return;
+  }
+  item = malloc(sizeof(*item));
   *item = (SimplyMenuItem) {
     .section = section_index,
     .item = item_index,
   };
   add_item(self, item);
-  schedule_get_timer(self);
+  simply_msg_menu_get_item(self->window.simply->msg, section_index, item_index);
 }
 
 static void mark_dirty(SimplyMenu *self) {
   if (!self->menu_layer.menu_layer) { return; }
   menu_layer_reload_data(self->menu_layer.menu_layer);
-  request_menu_node(self);
-  self->menu_layer.request_delay_ms = REQUEST_DELAY_MS;
 }
 
 void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections) {
@@ -172,6 +146,14 @@ void simply_menu_add_item(SimplyMenu *self, SimplyMenuItem *item) {
   }
   add_item(self, item);
   mark_dirty(self);
+}
+
+MenuIndex simply_menu_get_selection(SimplyMenu *self) {
+  return menu_layer_get_selected_index(self->menu_layer.menu_layer);
+}
+
+void simply_menu_set_selection(SimplyMenu *self, MenuIndex menu_index, MenuRowAlign align, bool animated) {
+  menu_layer_set_selected_index(self->menu_layer.menu_layer, menu_index, align, animated);
 }
 
 static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data) {
@@ -303,11 +285,6 @@ void simply_menu_clear_section_items(SimplyMenu *self, int section_index) {
 }
 
 void simply_menu_clear(SimplyMenu *self) {
-  if (self->menu_layer.get_timer) {
-    app_timer_cancel(self->menu_layer.get_timer);
-    self->menu_layer.get_timer = NULL;
-  }
-
   while (self->menu_layer.sections) {
     destroy_section(self, (SimplyMenuSection*) self->menu_layer.sections);
   }
@@ -324,7 +301,6 @@ SimplyMenu *simply_menu_create(Simply *simply) {
   *self = (SimplyMenu) {
     .window.simply = simply,
     .menu_layer.num_sections = 1,
-    .menu_layer.request_delay_ms = REQUEST_DELAY_MS,
   };
 
   simply_window_init(&self->window, simply);

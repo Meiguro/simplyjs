@@ -14,9 +14,8 @@ var defaults = {
 };
 
 var ImageElement = function(elementDef) {
-  StageElement.call(this, elementDef);
-  myutil.shadow(defaults, this.state);
-  this.state.type = 4;
+  StageElement.call(this, myutil.shadow(defaults, elementDef || {}));
+  this.state.type = StageElement.ImageType;
 };
 
 util2.inherit(ImageElement, StageElement);

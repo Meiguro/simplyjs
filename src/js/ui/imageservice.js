@@ -1,4 +1,4 @@
-var imagelib = require('image');
+var imagelib = require('lib/image');
 var myutil = require('myutil');
 var Resource = require('ui/resource');
 var simply = require('ui/simply');
@@ -8,10 +8,10 @@ var ImageService = module.exports;
 var state;
 
 ImageService.init = function() {
-  state = Image.state = {
+  state = ImageService.state = {
     cache: {},
     nextId: Resource.items.length + 1,
-    rootURL: null
+    rootUrl: undefined,
   };
 };
 
@@ -61,7 +61,7 @@ ImageService.load = function(opt, reset, callback) {
     callback = reset;
     reset = null;
   }
-  var url = myutil.abspath(state.rootURL, opt.url);
+  var url = myutil.abspath(state.rootUrl, opt.url);
   var hash = makeImageHash(opt);
   var image = state.cache[hash];
   if (image) {
@@ -96,8 +96,8 @@ ImageService.load = function(opt, reset, callback) {
   return image.id;
 };
 
-ImageService.setRootURL = function(url) {
-  state.rootURL = url;
+ImageService.setRootUrl = function(url) {
+  state.rootUrl = url;
 };
 
 /**
@@ -108,3 +108,5 @@ ImageService.resolve = function(opt) {
   var id = Resource.getId(opt);
   return typeof id !== 'undefined' ? id : ImageService.load(opt);
 };
+
+ImageService.init();

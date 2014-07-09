@@ -19,9 +19,8 @@ var defaults = {
 };
 
 var Text = function(elementDef) {
-  StageElement.call(this, elementDef);
-  myutil.shadow(defaults, this.state);
-  this.state.type = 3;
+  StageElement.call(this, myutil.shadow(defaults, elementDef || {}));
+  this.state.type = StageElement.TextType;
 };
 
 util2.inherit(Text, StageElement);

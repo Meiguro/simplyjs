@@ -28,8 +28,6 @@ struct SimplyMenuLayer {
   MenuLayer *menu_layer;
   List1Node *sections;
   List1Node *items;
-  AppTimer *get_timer;
-  uint32_t request_delay_ms;
   uint16_t num_sections;
 };
 
@@ -75,3 +73,7 @@ void simply_menu_clear(SimplyMenu *self);
 void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections);
 void simply_menu_add_section(SimplyMenu *self, SimplyMenuSection *section);
 void simply_menu_add_item(SimplyMenu *self, SimplyMenuItem *item);
+
+MenuIndex simply_menu_get_selection(SimplyMenu *self);
+void simply_menu_set_selection(SimplyMenu *self, MenuIndex menu_index, MenuRowAlign align, bool animated);
+

@@ -81,7 +81,7 @@ static void add_section(SimplyMenu *self, SimplyMenuSection *section) {
     destroy_section(self, (SimplyMenuSection*) list1_last(self->menu_layer.sections));
   }
   destroy_section_by_index(self, section->section);
-  list1_append(&self->menu_layer.sections, &section->node);
+  list1_prepend(&self->menu_layer.sections, &section->node);
 }
 
 static void add_item(SimplyMenu *self, SimplyMenuItem *item) {
@@ -89,7 +89,7 @@ static void add_item(SimplyMenu *self, SimplyMenuItem *item) {
     destroy_item(self, (SimplyMenuItem*) list1_last(self->menu_layer.items));
   }
   destroy_item_by_index(self, item->section, item->item);
-  list1_append(&self->menu_layer.items, &item->node);
+  list1_prepend(&self->menu_layer.items, &item->node);
 }
 
 static void request_menu_section(SimplyMenu *self, uint16_t section_index) {

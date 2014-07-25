@@ -9,6 +9,8 @@ var Menu = function(menuDef) {
   Window.call(this, menuDef);
   this._dynamic = false;
   this._sections = {};
+  this._selection = { section: 0, item: 0 };
+  this._selections = [];
 };
 
 Menu._codeName = 'menu';
@@ -22,17 +24,18 @@ Menu.prototype._show = function() {
   Window.prototype._show.apply(this, arguments);
 };
 
-Menu.prototype._prop = function() {
+Menu.prototype._numPreloadItems = 5;
+
+Menu.prototype._prop = function(state, clear, pushing) {
   if (this === WindowStack.top()) {
-    simply.impl.menu.apply(this, arguments);
+    simply.impl.menu.call(this, state, clear, pushing);
+    this._resolveSection(this._selection);
   }
 };
 
 Menu.prototype.action = function() {
   throw new Error("Menus don't support action bars.");
 };
-
-Menu.prototype._buttonInit = function() {};
 
 Menu.prototype.buttonConfig = function() {
   throw new Error("Menus don't support changing button configurations.");
@@ -131,6 +134,7 @@ Menu.prototype._resolveMenu = function() {
   var sections = getSections.call(this);
   if (this === WindowStack.top()) {
     simply.impl.menu.call(this, this.state);
+    return true;
   }
 };
 
@@ -140,6 +144,11 @@ Menu.prototype._resolveSection = function(e, clear) {
   section.items = getItems.call(this, e);
   if (this === WindowStack.top()) {
     simply.impl.menuSection.call(this, e.section, section, clear);
+    var select = this._selection;
+    if (select.section === e.section) {
+      this._preloadSection(select);
+    }
+    return true;
   }
 };
 
@@ -148,24 +157,53 @@ Menu.prototype._resolveItem = function(e) {
   if (!item) { return; }
   if (this === WindowStack.top()) {
     simply.impl.menuItem.call(this, e.section, e.item, item);
+    return true;
   }
 };
 
+Menu.prototype._preloadItems = function(e) {
+  var select = util2.copy(e);
+  select.item = Math.max(0, select.item - Math.floor(this._numPreloadItems / 2));
+  for (var i = 0; i < this._numPreloadItems; ++i) {
+    this._resolveItem(select);
+    select.item++;
+  }
+};
+
+Menu.prototype._preloadSection = function(e) {
+  simply.impl.menuSelection(e.section, e.item);
+  this._preloadItems(e);
+};
+
 Menu.prototype._emitSelect = function(e) {
+  this._selection = e;
   var item = getItem.call(this, e);
-  if (!item) { return; }
   switch (e.type) {
     case 'select':
-      if (typeof item.select === 'function') {
+      if (item && typeof item.select === 'function') {
         if (item.select(e) === false) {
           return false;
         }
       }
       break;
     case 'longSelect':
-      if (typeof item.longSelect === 'function') {
+      if (item && typeof item.longSelect === 'function') {
         if (item.longSelect(e) === false) {
           return false;
+        }
+      }
+      break;
+    case 'selection':
+      var handlers = this._selections;
+      this._selections = [];
+      if (item && typeof item.selected === 'function') {
+        if (item.selected(e) === false) {
+          return false;
+        }
+      }
+      for (var i = 0, ii = handlers.length; i < ii; ++i) {
+        if (handlers[i](e) === false) {
+          break;
         }
       }
       break;
@@ -257,6 +295,11 @@ Menu.prototype.item = function(sectionIndex, itemIndex, item) {
   return this;
 };
 
+Menu.prototype.selection = function(callback) {
+  this._selections.push(callback);
+  simply.impl.menuSelection();
+};
+
 Menu.emit = function(type, subtype, e) {
   Window.emit(type, subtype, e, Menu);
 };
@@ -296,6 +339,7 @@ Menu.emitSelect = function(type, section, item) {
   switch (type) {
     case 'menuSelect': type = 'select'; break;
     case 'menuLongSelect': type = 'longSelect'; break;
+    case 'menuSelection': type = 'selection'; break;
   }
   if (Menu.emit(type, null, e) === false) {
     return false;

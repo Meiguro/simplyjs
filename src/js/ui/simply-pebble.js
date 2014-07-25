@@ -1,3 +1,4 @@
+var struct = require('struct');
 var util2 = require('util2');
 var myutil = require('myutil');
 var Resource = require('ui/resource');
@@ -10,20 +11,46 @@ var StageElement = require('ui/element');
 
 var simply = require('ui/simply');
 
-/** 
+/**
  * This package provides the underlying implementation for the ui/* classes.
  *
- * This implementation uses PebbleKit JS AppMessage to send commands to a Pebble Watch.
- */
-
-/* Make JSHint happy */
-if (typeof Image === 'undefined') {
-  window.Image = function(){};
-}
+ * This implementation uses PebbleKit JS AppMessage to send commands to a Pebble Watm */
 
 /**
  * First part of this file is defining the commands and types that we will use later.
  */
+
+var BoolType = function(x) {
+  return x ? 1 : 0;
+};
+
+var StringType = function(x) {
+  return x || '';
+};
+
+var EnumerableType = function(x) {
+  if (x && x.hasOwnProperty('length')) {
+    return x.length;
+  }
+  return x ? Number(x) : 0;
+};
+
+var ImageType = function(x) {
+  if (x && typeof x !== 'number') {
+    return ImageService.resolve(x);
+  }
+  return x ? Number(x) : 0;
+};
+
+var PositionType = function(x) {
+  this.positionX(x.x);
+  this.positionY(x.y);
+};
+
+var SizeType = function(x) {
+  this.sizeW(x.x);
+  this.sizeH(x.y);
+};
 
 var Color = function(x) {
   switch (x) {
@@ -105,318 +132,415 @@ var AnimationCurve = function(x) {
   return Number(x);
 };
 
-var setWindowParams = [{
-  name: 'clear',
-}, {
-  name: 'id',
-}, {
-  name: 'pushing',
-  type: Boolean,
-}, {
-  name: 'action',
-  type: Boolean,
-}, {
-  name: 'actionUp',
-  type: Image,
-}, {
-  name: 'actionSelect',
-  type: Image,
-}, {
-  name: 'actionDown',
-  type: Image,
-}, {
-  name: 'actionBackgroundColor',
-  type: Color,
-}, {
-  name: 'backgroundColor',
-  type: Color,
-}, {
-  name: 'fullscreen',
-  type: Boolean,
-}, {
-  name: 'scrollable',
-  type: Boolean,
-}];
-
-var setCardParams = setWindowParams.concat([{
-  name: 'title',
-  type: String,
-}, {
-  name: 'subtitle',
-  type: String,
-}, {
-  name: 'body',
-  type: String,
-}, {
-  name: 'icon',
-  type: Image,
-}, {
-  name: 'subicon',
-  type: Image,
-}, {
-  name: 'image',
-  type: Image,
-}, {
-  name: 'style'
-}]);
-
-var setMenuParams = setWindowParams.concat([{
-  name: 'sections',
-  type: Number,
-}]);
-
-var setStageParams = setWindowParams;
-
-var commands = [{
-  name: 'setWindow',
-  params: setWindowParams,
-}, {
-  name: 'windowShow',
-  params: [{
-    name: 'id'
-  }]
-}, {
-  name: 'windowHide',
-  params: [{
-    name: 'id'
-  }]
-}, {
-  name: 'setCard',
-  params: setCardParams,
-}, {
-  name: 'click',
-  params: [{
-    name: 'button',
-  }],
-}, {
-  name: 'longClick',
-  params: [{
-    name: 'button',
-  }],
-}, {
-  name: 'accelTap',
-  params: [{
-    name: 'axis',
-  }, {
-    name: 'direction',
-  }],
-}, {
-  name: 'vibe',
-  params: [{
-    name: 'type',
-  }],
-}, {
-  name: 'accelData',
-  params: [{
-    name: 'transactionId',
-  }, {
-    name: 'numSamples',
-  }, {
-    name: 'accelData',
-  }],
-}, {
-  name: 'getAccelData',
-  params: [{
-    name: 'transactionId',
-  }],
-}, {
-  name: 'configAccelData',
-  params: [{
-    name: 'rate',
-  }, {
-    name: 'samples',
-  }, {
-    name: 'subscribe',
-  }],
-}, {
-  name: 'configButtons',
-  params: [{
-    name: 'back',
-  }, {
-    name: 'up',
-  }, {
-    name: 'select',
-  }, {
-    name: 'down',
-  }],
-}, {
-  name: 'setMenu',
-  params: setMenuParams,
-}, {
-  name: 'setMenuSection',
-  params: [{
-    name: 'clear',
-    type: Boolean,
-  }, {
-    name: 'section',
-  }, {
-    name: 'items',
-  }, {
-    name: 'title',
-    type: String,
-  }],
-}, {
-  name: 'getMenuSection',
-  params: [{
-    name: 'section',
-  }],
-}, {
-  name: 'setMenuItem',
-  params: [{
-    name: 'section',
-  }, {
-    name: 'item',
-  }, {
-    name: 'title',
-    type: String,
-  }, {
-    name: 'subtitle',
-    type: String,
-  }, {
-    name: 'icon',
-    type: Image,
-  }],
-}, {
-  name: 'getMenuItem',
-  params: [{
-    name: 'section',
-  }, {
-    name: 'item',
-  }],
-}, {
-  name: 'menuSelect',
-  params: [{
-    name: 'section',
-  }, {
-    name: 'item',
-  }],
-}, {
-  name: 'menuLongSelect',
-  params: [{
-    name: 'section',
-  }, {
-    name: 'item',
-  }],
-}, {
-  name: 'image',
-  params: [{
-    name: 'id',
-  }, {
-    name: 'width',
-  }, {
-    name: 'height',
-  }, {
-    name: 'pixels',
-  }],
-}, {
-  name: 'setStage',
-  params: setStageParams,
-}, {
-  name: 'stageElement',
-  params: [{
-    name: 'id',
-  }, {
-    name: 'type',
-  }, {
-    name: 'index',
-  }, {
-    name: 'x',
-  }, {
-    name: 'y',
-  }, {
-    name: 'width',
-  }, {
-    name: 'height',
-  }, {
-    name: 'backgroundColor',
-    type: Color,
-  }, {
-    name: 'borderColor',
-    type: Color,
-  }, {
-    name: 'radius',
-  }, {
-    name: 'text',
-    type: String,
-  }, {
-    name: 'font',
-    type: Font,
-  }, {
-    name: 'color',
-    type: Color,
-  }, {
-    name: 'textOverflow',
-    type: TextOverflowMode,
-  }, {
-    name: 'textAlign',
-    type: TextAlignment,
-  }, {
-    name: 'updateTimeUnits',
-    type: TimeUnits,
-  }, {
-    name: 'image',
-    type: Image,
-  }, {
-    name: 'compositing',
-    type: CompositingOp,
-  }],
-}, {
-  name: 'stageRemove',
-  params: [{
-    name: 'id',
-  }],
-}, {
-  name: 'stageAnimate',
-  params: [{
-    name: 'id',
-  }, {
-    name: 'x',
-  }, {
-    name: 'y',
-  }, {
-    name: 'width',
-  }, {
-    name: 'height',
-  }, {
-    name: 'duration',
-  }, {
-    name: 'easing',
-    type: AnimationCurve,
-  }],
-}, {
-  name: 'stageAnimateDone',
-  params: [{
-    name: 'index',
-  }],
-}];
-
-// Build the commandMap and map each command to an integer.
-
-var commandMap = {};
-
-for (var i = 0, ii = commands.length; i < ii; ++i) {
-  var command = commands[i];
-  commandMap[command.name] = command;
-  command.id = i;
-
-  var params = command.params;
-  if (!params) {
-    continue;
+var MenuRowAlign = function(x) {
+  switch(x) {
+    case 'none'   : return 0;
+    case 'center' : return 1;
+    case 'top'    : return 2;
+    case 'bottom' : return 3;
   }
+  return x ? Number(x) : 0;
+};
 
-  var paramMap = command.paramMap = {};
-  for (var j = 0, jj = params.length; j < jj; ++j) {
-    var param = params[j];
-    paramMap[param.name] = param;
-    param.id = j + 1;
-  }
-}
+var makeArrayType = function(types) {
+  return function(x) {
+    var index = types.indexOf(x);
+    if (index !== -1) {
+      return index;
+    }
+    return Number(x);
+  };
+};
 
-var buttons = [
+var makeFlagsType = function(types) {
+  return function(x) {
+    var z = 0;
+    for (var k in x) {
+      if (!x[k]) { continue; }
+      var index = types.indexOf(k);
+      if (index !== -1) {
+        z |= 1 << index;
+      }
+    }
+    return z;
+  };
+};
+
+var windowTypes = [
+  'window',
+  'menu',
+  'card',
+];
+
+var WindowType = makeArrayType(windowTypes);
+
+var buttonTypes = [
   'back',
   'up',
   'select',
   'down',
+];
+
+var ButtonType = makeArrayType(buttonTypes);
+
+var ButtonFlagsType = makeFlagsType(buttonTypes);
+
+var cardTextTypes = [
+  'title',
+  'subtitle',
+  'body',
+];
+
+var CardTextType = makeArrayType(cardTextTypes);
+
+var cardImageTypes = [
+  'icon',
+  'subicon',
+  'banner',
+];
+
+var CardImageType = makeArrayType(cardImageTypes);
+
+var cardStyleTypes = [
+  'small',
+  'large',
+  'mono',
+];
+
+var CardStyleType = makeArrayType(cardStyleTypes);
+
+var vibeTypes = [
+  'short',
+  'long',
+  'double',
+];
+
+var VibeType = makeArrayType(vibeTypes);
+
+var Packet = new struct([
+  ['uint16', 'type'],
+  ['uint16', 'length'],
+]);
+
+var WindowShowPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'type', WindowType],
+  ['bool', 'pushing', BoolType],
+]);
+
+var WindowHidePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+]);
+
+var WindowShowEventPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+]);
+
+var WindowHideEventPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+]);
+
+var WindowPropsPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['uint8', 'backgroundColor', Color],
+  ['bool', 'fullscreen', BoolType],
+  ['bool', 'scrollable', BoolType],
+]);
+
+var WindowButtonConfigPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'buttonMask', ButtonFlagsType],
+]);
+
+var WindowActionBarPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'up', ImageType],
+  ['uint32', 'select', ImageType],
+  ['uint32', 'down', ImageType],
+  ['uint8', 'action', BoolType],
+]);
+
+var ClickPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'button', ButtonType],
+]);
+
+var LongClickPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'button', ButtonType],
+]);
+
+var ImagePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['int16', 'width'],
+  ['int16', 'height'],
+  ['data', 'pixels'],
+]);
+
+var CardClearPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'flags'],
+]);
+
+var CardTextPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'index', CardTextType],
+  ['cstring', 'text'],
+]);
+
+var CardImagePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'image', ImageType],
+  ['uint8', 'index', CardImageType],
+]);
+
+var CardStylePacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'style', CardStyleType],
+]);
+
+var VibePacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'type', VibeType],
+]);
+
+var AccelPeekPacket = new struct([
+  [Packet, 'packet'],
+]);
+
+var AccelConfigPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'samples'],
+  ['uint8', 'rate'],
+  ['bool', 'subscribe', BoolType],
+]);
+
+var AccelData = new struct([
+  ['int16', 'x'],
+  ['int16', 'y'],
+  ['int16', 'z'],
+  ['bool', 'vibe'],
+  ['uint64', 'time'],
+]);
+
+var AccelDataPacket = new struct([
+  [Packet, 'packet'],
+  ['bool', 'peek'],
+  ['uint8', 'samples'],
+]);
+
+var AccelTapPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'axis'],
+  ['int8', 'direction'],
+]);
+
+var MenuClearPacket = new struct([
+  [Packet, 'packet'],
+]);
+
+var MenuClearSectionPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+]);
+
+var MenuPropsPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'sections', EnumerableType],
+]);
+
+var MenuSectionPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'items', EnumerableType],
+  ['uint16', 'titleLength', EnumerableType],
+  ['cstring', 'title', StringType],
+]);
+
+var MenuGetSectionPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+]);
+
+var MenuItemPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'item'],
+  ['uint32', 'icon', ImageType],
+  ['uint16', 'titleLength', EnumerableType],
+  ['uint16', 'subtitleLength', EnumerableType],
+  ['cstring', 'title', StringType],
+  ['cstring', 'subtitle', StringType],
+]);
+
+var MenuGetItemPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'item'],
+]);
+
+var MenuSelectionPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'item'],
+  ['uint8', 'align', MenuRowAlign],
+  ['bool', 'animated', BoolType],
+]);
+
+var MenuGetSelectionPacket = new struct([
+  [Packet, 'packet'],
+]);
+
+var MenuSelectionEventPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'item'],
+]);
+
+var MenuSelectPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'item'],
+]);
+
+var MenuLongSelectPacket = new struct([
+  [Packet, 'packet'],
+  ['uint16', 'section'],
+  ['uint16', 'item'],
+]);
+
+var StageClearPacket = new struct([
+  [Packet, 'packet'],
+]);
+
+var ElementInsertPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['uint8', 'type'],
+  ['uint16', 'index'],
+]);
+
+var ElementRemovePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+]);
+
+var GPoint = new struct([
+  ['int16', 'x'],
+  ['int16', 'y'],
+]);
+
+var GSize = new struct([
+  ['int16', 'w'],
+  ['int16', 'h'],
+]);
+
+var GRect = new struct([
+  [GPoint, 'origin', PositionType],
+  [GSize, 'size', SizeType],
+]);
+
+var ElementCommonPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  [GPoint, 'position', PositionType],
+  [GSize, 'size', SizeType],
+  ['uint8', 'backgroundColor', Color],
+  ['uint8', 'borderColor', Color],
+]);
+
+var ElementRadiusPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['uint16', 'radius', EnumerableType],
+]);
+
+var ElementTextPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['uint8', 'updateTimeUnits', TimeUnits],
+  ['cstring', 'text', StringType],
+]);
+
+var ElementTextStylePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['uint8', 'color', Color],
+  ['uint8', 'textOverflow', TextOverflowMode],
+  ['uint8', 'textAlign', TextAlignment],
+  ['uint32', 'customFont'],
+  ['cstring', 'systemFont', StringType],
+]);
+
+var ElementImagePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['uint32', 'image', ImageType],
+  ['uint8', 'compositing', CompositingOp],
+]);
+
+var ElementAnimatePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  [GPoint, 'position', PositionType],
+  [GSize, 'size', SizeType],
+  ['uint32', 'duration'],
+  ['uint8', 'easing', AnimationCurve],
+]);
+
+var ElementAnimateDonePacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+]);
+
+var CommandPackets = [
+  Packet,
+  WindowShowPacket,
+  WindowHidePacket,
+  WindowShowEventPacket,
+  WindowHideEventPacket,
+  WindowPropsPacket,
+  WindowButtonConfigPacket,
+  WindowActionBarPacket,
+  ClickPacket,
+  LongClickPacket,
+  ImagePacket,
+  CardClearPacket,
+  CardTextPacket,
+  CardImagePacket,
+  CardStylePacket,
+  VibePacket,
+  AccelPeekPacket,
+  AccelConfigPacket,
+  AccelDataPacket,
+  AccelTapPacket,
+  MenuClearPacket,
+  MenuClearSectionPacket,
+  MenuPropsPacket,
+  MenuSectionPacket,
+  MenuGetSectionPacket,
+  MenuItemPacket,
+  MenuGetItemPacket,
+  MenuSelectionPacket,
+  MenuGetSelectionPacket,
+  MenuSelectionEventPacket,
+  MenuSelectPacket,
+  MenuLongSelectPacket,
+  StageClearPacket,
+  ElementInsertPacket,
+  ElementRemovePacket,
+  ElementCommonPacket,
+  ElementRadiusPacket,
+  ElementTextPacket,
+  ElementTextStylePacket,
+  ElementImagePacket,
+  ElementAnimatePacket,
+  ElementAnimateDonePacket,
 ];
 
 var accelAxes = [
@@ -425,37 +549,19 @@ var accelAxes = [
   'z',
 ];
 
-var vibeTypes = [
-  'short',
-  'long',
-  'double',
-];
-
-var styleTypes = [
-  'small',
-  'large',
-  'mono',
-];
-
 var clearFlagMap = {
   action: (1 << 0),
   text: (1 << 1),
   image: (1 << 2),
 };
 
-var actionBarTypeMap = {
-  up: 'actionUp',
-  select: 'actionSelect',
-  down: 'actionDown',
-  backgroundColor: 'actionBackgroundColor',
-};
-
-
 /**
  * SimplyPebble object provides the actual methods to communicate with Pebble.
  *
  * It's an implementation of an abstract interface used by all the other classes.
  */
+
+var state;
 
 var SimplyPebble = {};
 
@@ -465,78 +571,134 @@ SimplyPebble.init = function() {
 
   // Register this implementation as the one currently in use
   simply.impl = SimplyPebble;
+
+  state = SimplyPebble.state = {};
+
+  // Initialize the app message queue
+  state.messageQueue = new MessageQueue();
+
+  // Initialize the packet queue
+  state.packetQueue = new PacketQueue();
 };
 
+/**
+ * MessageQueue is an app message queue that guarantees delivery and order.
+ */
+var MessageQueue = function() {
+  this._queue = [];
+  this._sending = false;
 
-var toParam = function(param, v) {
-  if (param.type === String) {
-    v = typeof v !== 'undefined' ? v.toString() : '';
-  } else if (param.type === Boolean) {
-    v = v ? 1 : 0;
-  } else if (param.type === Image && typeof v !== 'number') {
-    v = ImageService.resolve(v);
-  } else if (typeof param.type === 'function') {
-    v = param.type(v);
-  }
-  return v;
+  this._consume = this.consume.bind(this);
+  this._cycle = this.cycle.bind(this);
 };
 
-var setPacket = function(packet, command, def, typeMap) {
-  var paramMap = command.paramMap;
-  for (var k in def) {
-    var paramName = typeMap && typeMap[k] || k;
-    if (!paramName) { continue; }
-    var param = paramMap[paramName];
-    if (param) {
-      packet[param.id] = toParam(param, def[k]);
-    }
-  }
-  return packet;
+MessageQueue.prototype.stop = function() {
+  this._sending = false;
 };
 
-var makePacket = function(command, def) {
-  var packet = {};
-  packet[0] = command.id;
-  if (def) {
-    setPacket(packet, command, def);
+MessageQueue.prototype.consume = function() {
+  this._queue.splice(0, 1);
+  if (this._queue.length === 0) {
+    return this.stop();
   }
-  return packet;
+  this.cycle();
 };
 
-SimplyPebble.sendPacket = (function() {
-  var queue = [];
-  var sending = false;
+MessageQueue.prototype.cycle = function() {
+  if (!this._sending) {
+    return;
+  }
+  var head = this._queue[0];
+  if (!head) {
+    return this.stop();
+  }
+  Pebble.sendAppMessage(head, this._consume, this._cycle);
+};
 
-  function stop() {
-    sending = false;
+MessageQueue.prototype.send = function(message) {
+  this._queue.push(message);
+  if (this._sending) {
+    return;
+  }
+  this._sending = true;
+  this.cycle();
+};
+
+var toByteArray = function(packet) {
+  var type = CommandPackets.indexOf(packet);
+  var size = Math.max(packet._size, packet._cursor);
+  packet.packetType(type);
+  packet.packetLength(size);
+
+  var buffer = packet._view;
+  var byteArray = new Array(size);
+  for (var i = 0; i < size; ++i) {
+    byteArray[i] = buffer.getUint8(i);
   }
 
-  function consume() {
-    queue.splice(0, 1);
-    if (queue.length === 0) { return stop(); }
-    cycle();
+  return byteArray;
+};
+
+/**
+ * PacketQueue is a packet queue that combines multiple packets into a single packet.
+ * This reduces latency caused by the time spacing between each app message.
+ */
+var PacketQueue = function() {
+  this._message = [];
+
+  this._send = this.send.bind(this);
+};
+
+PacketQueue.prototype._maxPayloadSize = 2048 - 20;
+
+PacketQueue.prototype.add = function(packet) {
+  var byteArray = toByteArray(packet);
+  if (this._message.length + byteArray.length >= this._maxPayloadSize) {
+    this.send();
   }
+  Array.prototype.push.apply(this._message, byteArray);
+  clearTimeout(this._timeout);
+  this._timeout = setTimeout(this._send, 0);
+};
 
-  function cycle() {
-    var head = queue[0];
-    if (!head) { return stop(); }
-    Pebble.sendAppMessage(head, consume, cycle);
+PacketQueue.prototype.send = function() {
+  state.messageQueue.send({ 0: this._message });
+  this._message = [];
+};
+
+SimplyPebble.sendPacket = function(packet) {
+  state.packetQueue.add(packet);
+};
+
+SimplyPebble.windowShow = function(def) {
+  SimplyPebble.sendPacket(WindowShowPacket.prop(def));
+};
+
+SimplyPebble.windowHide = function(id) {
+  SimplyPebble.sendPacket(WindowHidePacket.id(id));
+};
+
+SimplyPebble.windowProps = function(def) {
+  SimplyPebble.sendPacket(WindowPropsPacket.prop(def));
+};
+
+SimplyPebble.windowButtonConfig = function(def) {
+  SimplyPebble.sendPacket(WindowButtonConfigPacket.buttonMask(def));
+};
+
+var toActionDef = function(actionDef) {
+  if (typeof actionDef === 'boolean') {
+    actionDef = { action: actionDef };
   }
+  return actionDef;
+};
 
-  function send(packet) {
-    queue.push(packet);
-    if (sending) { return; }
-    sending = true;
-    cycle();
-  }
+SimplyPebble.windowActionBar = function(def) {
+  SimplyPebble.sendPacket(WindowActionBarPacket.prop(toActionDef(def)));
+};
 
-  return send;
-})();
-
-SimplyPebble.buttonConfig = function(buttonConf) {
-  var command = commandMap.configButtons;
-  var packet = makePacket(command, buttonConf);
-  SimplyPebble.sendPacket(packet);
+SimplyPebble.image = function(id, gbitmap) {
+  SimplyPebble.sendPacket(ImagePacket.id(id).prop(gbitmap));
 };
 
 var toClearFlags = function(clear) {
@@ -559,238 +721,241 @@ var toClearFlags = function(clear) {
   return clear;
 };
 
-var setActionPacket = function(packet, command, actionDef) {
-  if (actionDef) {
-    if (typeof actionDef === 'boolean') {
-      actionDef = { action: actionDef };
+SimplyPebble.cardClear = function(clear) {
+  SimplyPebble.sendPacket(CardClearPacket.flags(toClearFlags(clear)));
+};
+
+SimplyPebble.cardText = function(field, text) {
+  SimplyPebble.sendPacket(CardTextPacket.index(field).text(text || ''));
+};
+
+SimplyPebble.cardImage = function(field, image) {
+  SimplyPebble.sendPacket(CardImagePacket.index(field).image(image));
+};
+
+SimplyPebble.card = function(def, clear, pushing) {
+  if (arguments.length === 3) {
+    SimplyPebble.windowShow({ type: 'card', pushing: pushing });
+  }
+  if (clear !== undefined) {
+    SimplyPebble.cardClear(clear);
+  }
+  SimplyPebble.windowProps(def);
+  if (def.action !== undefined) {
+    SimplyPebble.windowActionBar(def.action);
+  }
+  for (var k in def) {
+    if (cardTextTypes.indexOf(k) !== -1) {
+      SimplyPebble.cardText(k, def[k]);
+    } else if (cardImageTypes.indexOf(k) !== -1) {
+      SimplyPebble.cardImage(k, def[k]);
     }
-    setPacket(packet, command, actionDef, actionBarTypeMap);
   }
-  return packet;
-};
-
-SimplyPebble.window = function(windowDef, clear) {
-  var command = commandMap.setWindow;
-  var packet = makePacket(command, windowDef);
-  if (clear) {
-    clear = toClearFlags(clear);
-    packet[command.paramMap.clear.id] = clear;
-  }
-  setActionPacket(packet, command, windowDef.action);
-  SimplyPebble.sendPacket(packet);
-};
-
-SimplyPebble.windowHide = function(windowId) {
-  var command = commandMap.windowHide;
-  var packet = makePacket(command);
-  packet[command.paramMap.id.id] = windowId;
-  SimplyPebble.sendPacket(packet);
-};
-
-SimplyPebble.card = function(cardDef, clear, pushing) {
-  var command = commandMap.setCard;
-  var packet = makePacket(command, cardDef);
-  if (clear) {
-    clear = toClearFlags(clear);
-    packet[command.paramMap.clear.id] = clear;
-  }
-  if (pushing) {
-    packet[command.paramMap.pushing.id] = pushing;
-  }
-  setActionPacket(packet, command, cardDef.action);
-  SimplyPebble.sendPacket(packet);
 };
 
 SimplyPebble.vibe = function(type) {
-  var command = commandMap.vibe;
-  var packet = makePacket(command);
-  var vibeIndex = vibeTypes.indexOf(type);
-  packet[command.paramMap.type.id] = vibeIndex !== -1 ? vibeIndex : 0;
-  SimplyPebble.sendPacket(packet);
-};
-
-SimplyPebble.accelConfig = function(configDef) {
-  var command = commandMap.configAccelData;
-  var packet = makePacket(command, configDef);
-  SimplyPebble.sendPacket(packet);
+  SimplyPebble.sendPacket(VibePacket.type(type));
 };
 
 var accelListeners = [];
 
 SimplyPebble.accelPeek = function(callback) {
   accelListeners.push(callback);
-  var command = commandMap.getAccelData;
-  var packet = makePacket(command);
-  SimplyPebble.sendPacket(packet);
+  SimplyPebble.sendPacket(AccelPeekPacket);
 };
 
-SimplyPebble.menu = function(menuDef, clear, pushing) {
-  var command = commandMap.setMenu;
-  var packetDef = util2.copy(menuDef);
-  if (packetDef.sections instanceof Array) {
-    packetDef.sections = packetDef.sections.length;
-  }
-  if (!packetDef.sections) {
-    packetDef.sections = 1;
-  }
-  var packet = makePacket(command, packetDef);
-  if (clear) {
-    clear = toClearFlags(clear);
-    packet[command.paramMap.clear.id] = clear;
-  }
-  if (pushing) {
-    packet[command.paramMap.pushing.id] = pushing;
-  }
-  SimplyPebble.sendPacket(packet);
+SimplyPebble.accelConfig = function(def) {
+  SimplyPebble.sendPacket(AccelConfigPacket.prop(def));
 };
 
-SimplyPebble.menuSection = function(sectionIndex, sectionDef, clear) {
-  var command = commandMap.setMenuSection;
-  var packetDef = util2.copy(sectionDef);
-  packetDef.section = sectionIndex;
-  if (packetDef.items instanceof Array) {
-    packetDef.items = packetDef.items.length;
-  }
-  packetDef.clear = clear;
-  var packet = makePacket(command, packetDef);
-  SimplyPebble.sendPacket(packet);
+SimplyPebble.menuClear = function() {
+  SimplyPebble.sendPacket(MenuClearPacket);
 };
 
-SimplyPebble.menuItem = function(sectionIndex, itemIndex, itemDef) {
-  var command = commandMap.setMenuItem;
-  var packetDef = util2.copy(itemDef);
-  packetDef.section = sectionIndex;
-  packetDef.item = itemIndex;
-  var packet = makePacket(command, packetDef);
-  SimplyPebble.sendPacket(packet);
+SimplyPebble.menuClearSection = function(section) {
+  SimplyPebble.sendPacket(MenuClearSectionPacket.section(section));
 };
 
-SimplyPebble.image = function(id, gbitmap) {
-  var command = commandMap.image;
-  var packetDef = util2.copy(gbitmap);
-  packetDef.id = id;
-  var packet = makePacket(command, packetDef);
-  SimplyPebble.sendPacket(packet);
+SimplyPebble.menuProps = function(def) {
+  SimplyPebble.sendPacket(MenuPropsPacket.prop(def));
 };
 
-SimplyPebble.stage = function(stageDef, clear, pushing) {
-  var command = commandMap.setStage;
-  var packet = makePacket(command, stageDef);
-  if (clear) {
-    clear = toClearFlags(clear);
-    packet[command.paramMap.clear.id] = clear;
+SimplyPebble.menuSection = function(section, def, clear) {
+  if (clear !== undefined) {
+    SimplyPebble.menuClearSection(section);
   }
-  if (pushing) {
-    packet[command.paramMap.pushing.id] = pushing;
-  }
-  setActionPacket(packet, command, stageDef.action);
-  SimplyPebble.sendPacket(packet);
+  MenuSectionPacket
+    .section(section)
+    .items(def.items)
+    .titleLength(def.title)
+    .title(def.title);
+  SimplyPebble.sendPacket(MenuSectionPacket);
 };
 
-var toFramePacket = function(packetDef) {
-  if (packetDef.position) {
-    var position = packetDef.position;
-    delete packetDef.position;
-    packetDef.x = position.x;
-    packetDef.y = position.y;
-  }
-  if (packetDef.size) {
-    var size = packetDef.size;
-    delete packetDef.size;
-    packetDef.width = size.x;
-    packetDef.height = size.y;
-  }
-  return packetDef;
+SimplyPebble.menuItem = function(section, item, def) {
+  MenuItemPacket
+    .section(section)
+    .item(item)
+    .icon(def.icon)
+    .titleLength(def.title)
+    .subtitleLength(def.subtitle)
+    .title(def.title)
+    .subtitle(def.subtitle);
+  SimplyPebble.sendPacket(MenuItemPacket);
 };
 
-SimplyPebble.stageElement = function(elementId, elementType, elementDef, index) {
-  var command = commandMap.stageElement;
-  var packetDef = util2.copy(elementDef);
-  packetDef.id = elementId;
-  packetDef.type = elementType;
-  packetDef.index = index;
-  packetDef = toFramePacket(packetDef);
-  var packet = makePacket(command, packetDef);
-  SimplyPebble.sendPacket(packet);
+SimplyPebble.menuSelection = function(section, item, align) {
+  if (arguments.length === 0) {
+    SimplyPebble.sendPacket(MenuGetSelectionPacket);
+  }
+  SimplyPebble.sendPacket(MenuSelectionPacket.section(section).item(item).align(align || 'center'));
 };
 
-SimplyPebble.stageRemove = function(elementId) {
-  var command = commandMap.stageRemove;
-  var packet = makePacket(command);
-  packet[command.paramMap.id.id] = elementId;
-  SimplyPebble.sendPacket(packet);
+SimplyPebble.menu = function(def, clear, pushing) {
+  if (arguments.length === 3) {
+    SimplyPebble.windowShow({ type: 'menu', pushing: pushing });
+  }
+  if (clear !== undefined) {
+    SimplyPebble.menuClear();
+  }
+  SimplyPebble.windowProps(def);
+  SimplyPebble.menuProps(def);
 };
 
-SimplyPebble.stageAnimate = function(elementId, animateDef, duration, easing) {
-  var command = commandMap.stageAnimate;
-  var packetDef = util2.copy(animateDef);
-  packetDef.id = elementId;
-  if (duration) {
-    packetDef.duration = duration;
-  }
-  if (easing) {
-    packetDef.easing = easing;
-  }
-  packetDef = toFramePacket(packetDef);
-  var packet = makePacket(command, packetDef);
-  SimplyPebble.sendPacket(packet);
+SimplyPebble.elementInsert = function(id, type, index) {
+  SimplyPebble.sendPacket(ElementInsertPacket.id(id).type(type).index(index));
 };
 
-var readInt = function(packet, width, pos, signed) {
-  var value = 0;
-  pos = pos || 0;
-  for (var i = 0; i < width; ++i) {
-    value += (packet[pos + i] & 0xFF) << (i * 8);
-  }
-  if (signed) {
-    var mask = 1 << (width * 8 - 1);
-    if (value & mask) {
-      value = value - (((mask - 1) << 1) + 1);
-    }
-  }
-  return value;
+SimplyPebble.elementRemove = function(id) {
+  SimplyPebble.sendPacket(ElementRemovePacket.id(id));
 };
 
-SimplyPebble.onAppMessage = function(e) {
-  var payload = e.payload;
-  var code = payload[0];
-  var command = commands[code];
+SimplyPebble.elementCommon = function(id, def) {
+  ElementCommonPacket
+    .id(id)
+    .position(def.position)
+    .size(def.size)
+    .prop(def);
+  SimplyPebble.sendPacket(ElementCommonPacket);
+};
 
-  if (!command) {
-    console.log('Received unknown payload: ' + JSON.stringify(payload));
+SimplyPebble.elementRadius = function(id, radius) {
+  SimplyPebble.sendPacket(ElementRadiusPacket.id(id).radius(radius));
+};
+
+SimplyPebble.elementText = function(id, text, timeUnits) {
+  SimplyPebble.sendPacket(ElementTextPacket.id(id).updateTimeUnits(timeUnits).text(text));
+};
+
+SimplyPebble.elementTextStyle = function(id, def) {
+  ElementTextStylePacket.id(id).prop(def);
+  var font = Font(def.font);
+  if (typeof font === 'number') {
+    ElementTextStylePacket.customFont(font).systemFont('');
+  } else {
+    ElementTextStylePacket.customFont(0).systemFont(font);
+  }
+  SimplyPebble.sendPacket(ElementTextStylePacket);
+};
+
+SimplyPebble.elementImage = function(id, image, compositing) {
+  SimplyPebble.sendPacket(ElementImagePacket.id(id).image(image).compositing(compositing));
+};
+
+SimplyPebble.elementAnimate = function(id, def, animateDef, duration, easing) {
+  ElementAnimatePacket
+    .id(id)
+    .position(animateDef.position || def.position)
+    .size(animateDef.size || def.size)
+    .duration(duration)
+    .easing(easing);
+  SimplyPebble.sendPacket(ElementAnimatePacket);
+};
+
+SimplyPebble.stageClear = function() {
+  SimplyPebble.sendPacket(StageClearPacket);
+};
+
+SimplyPebble.stageElement = function(id, type, def, index) {
+  if (index !== undefined) {
+    SimplyPebble.elementInsert(id, type, index);
+  }
+  SimplyPebble.elementCommon(id, def);
+  switch (type) {
+    case StageElement.RectType:
+    case StageElement.CircleType:
+      SimplyPebble.elementRadius(id, def.radius);
+      break;
+    case StageElement.TextType:
+      SimplyPebble.elementRadius(id, def.radius);
+      SimplyPebble.elementTextStyle(id, def);
+      SimplyPebble.elementText(id, def.text, def.updateTimeUnits);
+      break;
+    case StageElement.ImageType:
+      SimplyPebble.elementRadius(id, def.radius);
+      SimplyPebble.elementImage(id, def.image, def.compositing);
+      break;
+  }
+};
+
+SimplyPebble.stageRemove = SimplyPebble.elementRemove;
+
+SimplyPebble.stageAnimate = SimplyPebble.elementAnimate;
+
+SimplyPebble.stage = function(def, clear, pushing) {
+  if (arguments.length === 3) {
+    SimplyPebble.windowShow({ type: 'window', pushing: pushing });
+  }
+  SimplyPebble.windowProps(def);
+  if (clear !== undefined) {
+    SimplyPebble.stageClear();
+  }
+  if (def.action !== undefined) {
+    SimplyPebble.windowActionBar(def.action);
+  }
+};
+
+var toArrayBuffer = function(array, length) {
+  length = length || array.length;
+  var copy = new DataView(new ArrayBuffer(length));
+  for (var i = 0; i < length; ++i) {
+    copy.setUint8(i, array[i]);
+  }
+  return copy;
+};
+
+SimplyPebble.onPacket = function(buffer, offset) {
+  Packet._view = buffer;
+  Packet._offset = offset;
+  var packet = CommandPackets[Packet.type()];
+
+  if (!packet) {
+    console.log('Received unknown packet: ' + JSON.stringify(buffer));
     return;
   }
 
-  switch (command.name) {
-    case 'windowHide':
-      WindowStack.emitHide(payload[1]);
+  packet._view = Packet._view;
+  packet._offset = offset;
+  switch (packet) {
+    case WindowHideEventPacket:
+      WindowStack.emitHide(packet.id());
       break;
-    case 'click':
-    case 'longClick':
-      var button = buttons[payload[1]];
-      Window.emitClick(command.name, button);
+    case ClickPacket:
+      Window.emitClick('click', buttonTypes[packet.button()]);
       break;
-    case 'accelTap':
-      var axis = accelAxes[payload[1]];
-      Accel.emitAccelTap(axis, payload[2]);
+    case LongClickPacket:
+      Window.emitClick('longClick', buttonTypes[packet.button()]);
       break;
-    case 'accelData':
-      var transactionId = payload[1];
-      var samples = payload[2];
-      var data = payload[3];
+    case AccelDataPacket:
+      var samples = packet.samples();
       var accels = [];
-      for (var i = 0; i < samples; i++) {
-        var pos = i * 15;
-        var accel = {
-          x: readInt(data, 2, pos, true),
-          y: readInt(data, 2, pos + 2, true),
-          z: readInt(data, 2, pos + 4, true),
-          vibe: readInt(data, 1, pos + 6) ? true : false,
-          time: readInt(data, 8, pos + 7),
-        };
-        accels[i] = accel;
+      AccelData._view = packet._view;
+      AccelData._offset = packet._size;
+      for (var i = 0; i < samples; ++i) {
+        accels.push(AccelData.prop());
+        AccelData._offset += AccelData._size;
       }
-      if (typeof transactionId === 'undefined') {
+      if (!packet.peek()) {
         Accel.emitAccelData(accels);
       } else {
         var handlers = accelListeners;
@@ -800,20 +965,44 @@ SimplyPebble.onAppMessage = function(e) {
         }
       }
       break;
-    case 'getMenuSection':
-      Menu.emitSection(payload[1]);
+    case AccelTapPacket:
+      Accel.emitAccelTap(accelAxes[packet.axis()], packet.direction());
       break;
-    case 'getMenuItem':
-      Menu.emitItem(payload[1], payload[2]);
+    case MenuGetSectionPacket:
+      Menu.emitSection(packet.section());
       break;
-    case 'menuSelect':
-    case 'menuLongSelect':
-      Menu.emitSelect(command.name, payload[1], payload[2]);
+    case MenuGetItemPacket:
+      Menu.emitItem(packet.section(), packet.item());
       break;
-    case 'stageAnimateDone':
-      StageElement.emitAnimateDone(payload[1]);
+    case MenuSelectPacket:
+      Menu.emitSelect('menuSelect', packet.section(), packet.item());
+      break;
+    case MenuLongSelectPacket:
+      Menu.emitSelect('menuLongSelect', packet.section(), packet.item());
+      break;
+    case MenuSelectionEventPacket:
+      Menu.emitSelect('menuSelection', packet.section(), packet.item());
+      break;
+    case ElementAnimateDonePacket:
+      StageElement.emitAnimateDone(packet.id());
       break;
   }
 };
 
+SimplyPebble.onAppMessage = function(e) {
+  var data = e.payload[0];
+  Packet._view = toArrayBuffer(data);
+
+  var offset = 0;
+  var length = data.length;
+
+  do {
+    SimplyPebble.onPacket(Packet._view, offset);
+
+    Packet._offset = offset;
+    offset += Packet.length();
+  } while (offset !== 0 && offset < length);
+};
+
 module.exports = SimplyPebble;
+

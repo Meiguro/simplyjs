@@ -38,8 +38,10 @@ loader.require = function(path, requirer) {
     return module.exports;
   }
 
+  var require = function(path) { return loader.require(path, module); };
+
   module.exports = {};
-  module.loader(module, function(path) { return loader.require(path, module); });
+  module.loader(module.exports, module, require);
   module.loaded = true;
 
   return module.exports;

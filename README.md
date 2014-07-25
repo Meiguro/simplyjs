@@ -154,11 +154,11 @@ Exporting is possible by modifying or setting `module.exports` within the requir
 
 ### Pebble
 
-The `Pebble` object from [PebbleKit JavaScript](https://developer.getpebble.com/2/guides/javascript-guide.html) is available as a global variable. It's usage is discouraged in Pebble.js, instead you should use the objects documented below who provide a cleaner object interface to the same functionalities.
+The `Pebble` object from [PebbleKit JavaScript](https://developer.getpebble.com/2/guides/javascript-guide.html) is available as a global variable. Its usage is discouraged in Pebble.js, instead you should use the objects documented below who provide a cleaner object interface to the same functionalities.
 
 ### window -- browser
 
-A `window` object is provided with a subset of the standard APIs you would find in a normal browser. It's direct usage is discouraged because available functionalities may differ between the iOS and Android runtime environment. 
+A `window` object is provided with a subset of the standard APIs you would find in a normal browser. Its direct usage is discouraged because available functionalities may differ between the iOS and Android runtime environment. 
 
 More specifically:
 
@@ -195,13 +195,13 @@ var Settings = require('settings');
 ````js
 // Set a configurable with the open callback
 Settings.config(
-  { url: 'http://www.example.com' }
+  { url: 'http://www.example.com' },
   function(e) {
     console.log('opening configurable');
 
     // Reset color to red before opening the webview
     Settings.option('color', 'red');
-  }
+  },
   function(e) {
     console.log('closed configurable');
   }
@@ -213,7 +213,7 @@ Settings.config(
 ````js
 // Set a configurable with just the close callback
 Settings.config(
-  { url: 'http://www.example.com' }
+  { url: 'http://www.example.com' },
   function(e) {
     console.log('closed configurable');
 
@@ -377,7 +377,7 @@ The number of callbacks will depend on the configuration of the accelerometer. W
 Peeks at the current accelerometer value. The callback function will be called with the data point as an event.
 
 ````js
-Accel.peek(function(e)) {
+Accel.peek(function(e) {
   console.log('Current acceleration on axis are: X=' + e.accel.x + ' Y=' + e.accel.y + ' Z=' + e.accel.z);
 });
 ````

@@ -48,6 +48,9 @@ void simply_window_stack_send_show(SimplyWindowStack *self, SimplyWindow *window
 }
 
 void simply_window_stack_send_hide(SimplyWindowStack *self, SimplyWindow *window) {
+  if (!window->id) {
+    return;
+  }
   if (self->is_showing) {
     return;
   }

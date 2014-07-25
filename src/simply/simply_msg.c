@@ -11,76 +11,72 @@
 
 #include "util/dict.h"
 #include "util/list1.h"
+#include "util/math.h"
 #include "util/memory.h"
 #include "util/string.h"
+#include "util/window.h"
 
 #include <pebble.h>
 
 #define SEND_DELAY_MS 10
 
-typedef enum SimplyACmd SimplyACmd;
+static const size_t APP_MSG_SIZE_INBOUND = 2048;
 
-enum SimplyACmd {
-  SimplyACmd_setWindow = 0,
-  SimplyACmd_windowShow,
-  SimplyACmd_windowHide,
-  SimplyACmd_setUi,
-  SimplyACmd_click,
-  SimplyACmd_longClick,
-  SimplyACmd_accelTap,
-  SimplyACmd_vibe,
-  SimplyACmd_accelData,
-  SimplyACmd_getAccelData,
-  SimplyACmd_configAccelData,
-  SimplyACmd_configButtons,
-  SimplyACmd_setMenu,
-  SimplyACmd_setMenuSection,
-  SimplyACmd_getMenuSection,
-  SimplyACmd_setMenuItem,
-  SimplyACmd_getMenuItem,
-  SimplyACmd_menuSelect,
-  SimplyACmd_menuLongSelect,
-  SimplyACmd_image,
-  SimplyACmd_setStage,
-  SimplyACmd_stageElement,
-  SimplyACmd_stageRemove,
-  SimplyACmd_stageAnimate,
-  SimplyACmd_stageAnimateDone,
+static const size_t APP_MSG_SIZE_OUTBOUND = 512;
+
+typedef enum Command Command;
+
+enum Command {
+  CommandWindowShow = 1,
+  CommandWindowHide,
+  CommandWindowShowEvent,
+  CommandWindowHideEvent,
+  CommandWindowProps,
+  CommandWindowButtonConfig,
+  CommandWindowActionBar,
+  CommandClick,
+  CommandLongClick,
+  CommandImagePacket,
+  CommandCardClear,
+  CommandCardText,
+  CommandCardImage,
+  CommandCardStyle,
+  CommandVibe,
+  CommandAccelPeek,
+  CommandAccelConfig,
+  CommandAccelData,
+  CommandAccelTap,
+  CommandMenuClear,
+  CommandMenuClearSection,
+  CommandMenuProps,
+  CommandMenuSection,
+  CommandMenuGetSection,
+  CommandMenuItem,
+  CommandMenuGetItem,
+  CommandMenuSelection,
+  CommandMenuGetSelection,
+  CommandMenuSelectionEvent,
+  CommandMenuSelect,
+  CommandMenuLongSelect,
+  CommandStageClear,
+  CommandElementInsert,
+  CommandElementRemove,
+  CommandElementCommon,
+  CommandElementRadius,
+  CommandElementText,
+  CommandElementTextStyle,
+  CommandElementImage,
+  CommandElementAnimate,
+  CommandElementAnimateDone,
 };
 
-typedef enum SimplySetWindowParam SimplySetWindowParam;
+typedef enum WindowType WindowType;
 
-enum SimplySetWindowParam {
-  SetWindow_clear = 1,
-  SetWindow_id,
-  SetWindow_pushing,
-  SetWindow_action,
-  SetWindow_actionUp,
-  SetWindow_actionSelect,
-  SetWindow_actionDown,
-  SetWindow_actionBackgroundColor,
-  SetWindow_backgroundColor,
-  SetWindow_fullscreen,
-  SetWindow_scrollable,
-  SetWindowLast,
-};
-
-typedef enum SimplySetUiParam SimplySetUiParam;
-
-enum SimplySetUiParam {
-  SetUi_title = SetWindowLast,
-  SetUi_subtitle,
-  SetUi_body,
-  SetUi_icon,
-  SetUi_subicon,
-  SetUi_image,
-  SetUi_style,
-};
-
-typedef enum SimplySetMenuParam SimplySetMenuParam;
-
-enum SimplySetMenuParam {
-  SetMenu_sections = SetWindowLast,
+enum WindowType {
+  WindowTypeWindow = 0,
+  WindowTypeMenu,
+  WindowTypeCard,
+  WindowTypeLast,
 };
 
 typedef enum VibeType VibeType;
@@ -91,27 +87,285 @@ enum VibeType {
   VibeDouble = 2,
 };
 
-typedef enum ElementParam ElementParam;
+typedef struct Packet Packet;
 
-enum ElementParam {
-  ElementId = 1,
-  ElementType,
-  ElementIndex,
-  ElementX,
-  ElementY,
-  ElementWidth,
-  ElementHeight,
-  ElementBackgroundColor,
-  ElementBorderColor,
-  ElementRadius,
-  ElementText,
-  ElementTextFont,
-  ElementTextColor,
-  ElementTextOverflow,
-  ElementTextAlignment,
-  ElementTextUpdateTimeUnit,
-  ElementImage,
-  ElementCompositing,
+struct __attribute__((__packed__)) Packet {
+  Command type:16;
+  uint16_t length;
+};
+
+typedef struct WindowShowPacket WindowShowPacket;
+
+struct __attribute__((__packed__)) WindowShowPacket {
+  Packet packet;
+  WindowType type:8;
+  bool pushing;
+};
+
+typedef struct WindowSignalPacket WindowSignalPacket;
+
+struct __attribute__((__packed__)) WindowSignalPacket {
+  Packet packet;
+  uint32_t id;
+};
+
+typedef WindowSignalPacket WindowHidePacket;
+
+typedef WindowHidePacket WindowEventPacket;
+
+typedef WindowEventPacket WindowShowEventPacket;
+
+typedef WindowEventPacket WindowHideEventPacket;
+
+typedef struct WindowPropsPacket WindowPropsPacket;
+
+struct __attribute__((__packed__)) WindowPropsPacket {
+  Packet packet;
+  uint32_t id;
+  GColor background_color:8;
+  bool fullscreen;
+  bool scrollable;
+};
+
+typedef struct WindowButtonConfigPacket WindowButtonConfigPacket;
+
+struct __attribute__((__packed__)) WindowButtonConfigPacket {
+  Packet packet;
+  uint8_t button_mask;
+};
+
+typedef struct WindowActionBarPacket WindowActionBarPacket;
+
+struct __attribute__((__packed__)) WindowActionBarPacket {
+  Packet packet;
+  uint32_t image[3];
+  GColor background_color:8;
+  bool action;
+};
+
+typedef struct ClickPacket ClickPacket;
+
+struct __attribute__((__packed__)) ClickPacket {
+  Packet packet;
+  ButtonId button:8;
+};
+
+typedef ClickPacket LongClickPacket;
+
+typedef struct ImagePacket ImagePacket;
+
+struct __attribute__((__packed__)) ImagePacket {
+  Packet packet;
+  uint32_t id;
+  int16_t width;
+  int16_t height;
+  uint32_t pixels[];
+};
+
+typedef struct CardClearPacket CardClearPacket;
+
+struct __attribute__((__packed__)) CardClearPacket {
+  Packet packet;
+  uint8_t flags;
+};
+
+typedef struct CardTextPacket CardTextPacket;
+
+struct __attribute__((__packed__)) CardTextPacket {
+  Packet packet;
+  uint8_t index;
+  char text[];
+};
+
+typedef struct CardImagePacket CardImagePacket;
+
+struct __attribute__((__packed__)) CardImagePacket {
+  Packet packet;
+  uint32_t image;
+  uint8_t index;
+};
+
+typedef struct CardStylePacket CardStylePacket;
+
+struct __attribute__((__packed__)) CardStylePacket {
+  Packet packet;
+  uint8_t style;
+};
+
+typedef struct VibePacket VibePacket;
+
+struct __attribute__((__packed__)) VibePacket {
+  Packet packet;
+  VibeType type:8;
+};
+
+typedef Packet AccelPeekPacket;
+
+typedef struct AccelConfigPacket AccelConfigPacket;
+
+struct __attribute__((__packed__)) AccelConfigPacket {
+  Packet packet;
+  uint16_t num_samples;
+  AccelSamplingRate rate:8;
+  bool data_subscribed;
+};
+
+typedef struct AccelTapPacket AccelTapPacket;
+
+struct __attribute__((__packed__)) AccelTapPacket {
+  Packet packet;
+  AccelAxisType axis:8;
+  int8_t direction;
+};
+
+typedef struct AccelDataPacket AccelDataPacket;
+
+struct __attribute__((__packed__)) AccelDataPacket {
+  Packet packet;
+  bool is_peek;
+  uint8_t num_samples;
+  AccelData data[];
+};
+
+typedef Packet MenuClearPacket;
+
+typedef struct MenuClearSectionPacket MenuClearSectionPacket;
+
+struct __attribute__((__packed__)) MenuClearSectionPacket {
+  Packet packet;
+  uint16_t section;
+};
+
+typedef struct MenuPropsPacket MenuPropsPacket;
+
+struct __attribute__((__packed__)) MenuPropsPacket {
+  Packet packet;
+  uint16_t num_sections;
+};
+
+typedef struct MenuSectionPacket MenuSectionPacket;
+
+struct __attribute__((__packed__)) MenuSectionPacket {
+  Packet packet;
+  uint16_t section;
+  uint16_t num_items;
+  uint16_t title_length;
+  char title[];
+};
+
+typedef struct MenuItemPacket MenuItemPacket;
+
+struct __attribute__((__packed__)) MenuItemPacket {
+  Packet packet;
+  uint16_t section;
+  uint16_t item;
+  uint32_t icon;
+  uint16_t title_length;
+  uint16_t subtitle_length;
+  char buffer[];
+};
+
+typedef struct MenuItemEventPacket MenuItemEventPacket;
+
+struct __attribute__((__packed__)) MenuItemEventPacket {
+  Packet packet;
+  uint16_t section;
+  uint16_t item;
+};
+
+typedef Packet MenuGetSelectionPacket;
+
+typedef struct MenuSelectionPacket MenuSelectionPacket;
+
+struct __attribute__((__packed__)) MenuSelectionPacket {
+  Packet packet;
+  uint16_t section;
+  uint16_t item;
+  MenuRowAlign align:8;
+  bool animated;
+};
+
+typedef Packet StageClearPacket;
+
+typedef struct ElementInsertPacket ElementInsertPacket;
+
+struct __attribute__((__packed__)) ElementInsertPacket {
+  Packet packet;
+  uint32_t id;
+  SimplyElementType type:8;
+  uint16_t index;
+};
+
+typedef struct ElementRemovePacket ElementRemovePacket;
+
+struct __attribute__((__packed__)) ElementRemovePacket {
+  Packet packet;
+  uint32_t id;
+};
+
+typedef struct ElementCommonPacket ElementCommonPacket;
+
+struct __attribute__((__packed__)) ElementCommonPacket {
+  Packet packet;
+  uint32_t id;
+  GRect frame;
+  GColor background_color:8;
+  GColor border_color:8;
+};
+
+typedef struct ElementRadiusPacket ElementRadiusPacket;
+
+struct __attribute__((__packed__)) ElementRadiusPacket {
+  Packet packet;
+  uint32_t id;
+  uint16_t radius;
+};
+
+typedef struct ElementTextPacket ElementTextPacket;
+
+struct __attribute__((__packed__)) ElementTextPacket {
+  Packet packet;
+  uint32_t id;
+  TimeUnits time_units:8;
+  char text[];
+};
+
+typedef struct ElementTextStylePacket ElementTextStylePacket;
+
+struct __attribute__((__packed__)) ElementTextStylePacket {
+  Packet packet;
+  uint32_t id;
+  GColor color:8;
+  GTextOverflowMode overflow_mode:8;
+  GTextAlignment alignment:8;
+  uint32_t custom_font;
+  char system_font[];
+};
+
+typedef struct ElementImagePacket ElementImagePacket;
+
+struct __attribute__((__packed__)) ElementImagePacket {
+  Packet packet;
+  uint32_t id;
+  uint32_t image;
+  GCompOp compositing:8;
+};
+
+typedef struct ElementAnimatePacket ElementAnimatePacket;
+
+struct __attribute__((__packed__)) ElementAnimatePacket {
+  Packet packet;
+  uint32_t id;
+  GRect frame;
+  uint32_t duration;
+  AnimationCurve curve:8;
+};
+
+typedef struct ElementAnimateDonePacket ElementAnimateDonePacket;
+
+struct __attribute__((__packed__)) ElementAnimateDonePacket {
+  Packet packet;
+  uint32_t id;
 };
 
 static bool s_has_communicated = false;
@@ -129,401 +383,377 @@ static SimplyWindow *get_top_simply_window(Simply *simply) {
   return window;
 }
 
-static void set_window(SimplyWindow *window, DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  if (&simply->menu->window != window && (tuple = dict_find(iter, SetWindow_clear))) {
-    simply_window_set_action_bar(window, false);
-    simply_window_action_bar_clear(window);
-  }
-  bool is_clear = false;
-  bool is_id = false;
-  bool is_push = false;
-  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
-    switch (tuple->key) {
-      case SetWindow_clear:
-        is_clear = true;
-        break;
-      case SetWindow_id:
-        is_id = true;
-        window->id = tuple->value->uint32;
-        break;
-      case SetWindow_pushing:
-        is_push = true;
-        break;
-      case SetWindow_action:
-        simply_window_set_action_bar(window, tuple->value->int32);
-        break;
-      case SetWindow_actionUp:
-      case SetWindow_actionSelect:
-      case SetWindow_actionDown:
-        simply_window_set_action_bar_icon(window, tuple->key - SetWindow_action, tuple->value->int32);
-        break;
-      case SetWindow_actionBackgroundColor:
-        simply_window_set_action_bar_background_color(window, tuple->value->uint8);
-        break;
-      case SetWindow_backgroundColor:
-        simply_window_set_background_color(window, tuple->value->uint32);
-        break;
-      case SetWindow_fullscreen:
-        simply_window_set_fullscreen(window, tuple->value->int32);
-        break;
-      case SetWindow_scrollable:
-        simply_window_set_scrollable(window, tuple->value->int32);
-        break;
-    }
-  }
-  if (is_clear && is_id) {
-    simply_window_stack_show(simply->window_stack, window, is_push);
-  }
+static void handle_window_show_packet(Simply *simply, Packet *data) {
+  WindowShowPacket *packet = (WindowShowPacket*) data;
+  SimplyWindow *window = simply->windows[MIN(WindowTypeLast - 1, packet->type)];
+  simply_window_stack_show(simply->window_stack, window, packet->pushing);
 }
 
-static void handle_set_window(DictionaryIterator *iter, Simply *simply) {
+static void handle_window_hide_packet(Simply *simply, Packet *data) {
+  WindowHidePacket *packet = (WindowHidePacket*) data;
   SimplyWindow *window = get_top_simply_window(simply);
   if (!window) {
     return;
   }
-  set_window(window, iter, simply);
-}
-
-static void handle_hide_window(DictionaryIterator *iter, Simply *simply) {
-  Window *base_window = window_stack_get_top_window();
-  SimplyWindow *window = window_get_user_data(base_window);
-  if (!window || (void*) window == simply->splash) {
-    return;
-  }
-  Tuple *tuple;
-  uint32_t window_id = 0;
-  if ((tuple = dict_find(iter, 1))) {
-    window_id = tuple->value->uint32;
-  }
-  if (window->id == window_id) {
+  if (window->id == packet->id) {
     simply_window_stack_pop(simply->window_stack, window);
   }
 }
 
-static void handle_set_ui(DictionaryIterator *iter, Simply *simply) {
-  SimplyUi *ui = simply->ui;
-  Tuple *tuple;
-  if ((tuple = dict_find(iter, SetWindow_clear))) {
-    simply_ui_clear(ui, tuple->value->uint32);
-  }
-  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
-    switch (tuple->key) {
-      case SetUi_title:
-      case SetUi_subtitle:
-      case SetUi_body:
-        simply_ui_set_text(ui, tuple->key - SetUi_title, tuple->value->cstring);
-        break;
-      case SetUi_icon:
-      case SetUi_subicon:
-      case SetUi_image:
-        ui->ui_layer.imagefields[tuple->key - SetUi_icon] = tuple->value->uint32;
-        break;
-      case SetUi_style:
-        simply_ui_set_style(simply->ui, tuple->value->int32);
-        break;
-    }
-  }
-  set_window(&ui->window, iter, simply);
-}
-
-static void handle_vibe(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  if ((tuple = dict_find(iter, 1))) {
-    switch ((VibeType) tuple->value->int32) {
-      case VibeShort: vibes_short_pulse(); break;
-      case VibeLong: vibes_short_pulse(); break;
-      case VibeDouble: vibes_double_pulse(); break;
-    }
-  }
-}
-
-static void handle_config_buttons(DictionaryIterator *iter, Simply *simply) {
+static void handle_window_props_packet(Simply *simply, Packet *data) {
+  WindowPropsPacket *packet = (WindowPropsPacket*) data;
   SimplyWindow *window = get_top_simply_window(simply);
   if (!window) {
     return;
   }
-  Tuple *tuple;
-  for (int i = 0; i < NUM_BUTTONS; ++i) {
-    if ((tuple = dict_find(iter, i + 1))) {
-      simply_window_set_button(window, i, tuple->value->int32);
-    }
+  window->id = packet->id;
+  simply_window_set_background_color(window, packet->background_color);
+  simply_window_set_fullscreen(window, packet->fullscreen);
+  simply_window_set_scrollable(window, packet->scrollable);
+}
+
+static void handle_window_button_config_packet(Simply *simply, Packet *data) {
+  WindowButtonConfigPacket *packet = (WindowButtonConfigPacket*) data;
+  SimplyWindow *window = get_top_simply_window(simply);
+  if (!window) {
+    return;
+  }
+  window->button_mask = packet->button_mask;
+}
+
+static void handle_window_action_bar_packet(Simply *simply, Packet *data) {
+  WindowActionBarPacket *packet = (WindowActionBarPacket*) data;
+  SimplyWindow *window = get_top_simply_window(simply);
+  if (!window) {
+    return;
+  }
+  for (unsigned int i = 0; i < ARRAY_LENGTH(packet->image); ++i) {
+    simply_window_set_action_bar_icon(window, i, packet->image[i]);
+  }
+  simply_window_set_action_bar_background_color(window, packet->background_color);
+  simply_window_set_action_bar(window, packet->action);
+}
+
+static void handle_image_packet(Simply *simply, Packet *data) {
+  ImagePacket *packet = (ImagePacket*) data;
+  simply_res_add_image(simply->res, packet->id, packet->width, packet->height, packet->pixels);
+}
+
+static void handle_card_clear_packet(Simply *simply, Packet *data) {
+  CardClearPacket *packet = (CardClearPacket*) data;
+  simply_ui_clear(simply->ui, packet->flags);
+}
+
+static void handle_card_text_packet(Simply *simply, Packet *data) {
+  CardTextPacket *packet = (CardTextPacket*) data;
+  simply_ui_set_text(simply->ui, MIN(NumUiTextfields - 1, packet->index), packet->text);
+}
+
+static void handle_card_image_packet(Simply *simply, Packet *data) {
+  CardImagePacket *packet = (CardImagePacket*) data;
+  simply->ui->ui_layer.imagefields[MIN(NumUiImagefields - 1, packet->index)] = packet->image;
+  window_stack_schedule_top_window_render();
+}
+
+static void handle_card_style_packet(Simply *simply, Packet *data) {
+  CardStylePacket *packet = (CardStylePacket*) data;
+  simply_ui_set_style(simply->ui, packet->style);
+}
+
+static void handle_vibe_packet(Simply *simply, Packet *data) {
+  VibePacket *packet = (VibePacket*) data;
+  switch (packet->type) {
+    case VibeShort: vibes_short_pulse(); break;
+    case VibeLong: vibes_short_pulse(); break;
+    case VibeDouble: vibes_double_pulse(); break;
   }
 }
 
-static void get_accel_data_timer_callback(void *context) {
+static void accel_peek_timer_callback(void *context) {
   Simply *simply = context;
   AccelData data = { .x = 0 };
   simply_accel_peek(simply->accel, &data);
-  if (!simply_msg_accel_data(simply->msg, &data, 1, 0)) {
-    app_timer_register(10, get_accel_data_timer_callback, simply);
+  if (!simply_msg_accel_data(simply->msg, &data, 1, true)) {
+    app_timer_register(10, accel_peek_timer_callback, simply);
   }
 }
 
-static void handle_get_accel_data(DictionaryIterator *iter, Simply *simply) {
-  app_timer_register(10, get_accel_data_timer_callback, simply);
+static void handle_accel_peek_packet(Simply *simply, Packet *data) {
+  app_timer_register(10, accel_peek_timer_callback, simply);
 }
 
-static void handle_set_accel_config(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  if ((tuple = dict_find(iter, 1))) {
-    simply_accel_set_data_rate(simply->accel, tuple->value->int32);
-  }
-  if ((tuple = dict_find(iter, 2))) {
-    simply_accel_set_data_samples(simply->accel, tuple->value->int32);
-  }
-  if ((tuple = dict_find(iter, 3))) {
-    simply_accel_set_data_subscribe(simply->accel, tuple->value->int32);
-  }
+static void handle_accel_config_packet(Simply *simply, Packet *data) {
+  AccelConfigPacket *packet = (AccelConfigPacket*) data;
+  simply->accel->num_samples = packet->num_samples;
+  simply->accel->rate = packet->rate;
+  simply_accel_set_data_subscribe(simply->accel, packet->data_subscribed);
 }
 
-static void handle_set_menu(DictionaryIterator *iter, Simply *simply) {
-  SimplyMenu *menu = simply->menu;
-  Tuple *tuple;
-  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
-    switch (tuple->key) {
-      case SetWindow_clear:
-        simply_menu_clear(menu);
-        break;
-      case SetMenu_sections:
-        simply_menu_set_num_sections(menu, tuple->value->int32);
-        break;
-    }
-  }
-  set_window(&menu->window, iter, simply);
+static void handle_menu_clear_packet(Simply *simply, Packet *data) {
+  simply_menu_clear(simply->menu);
 }
 
-static void handle_set_menu_section(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  uint16_t section_index = 0;
-  uint16_t num_items = 1;
-  char *title = NULL;
-  if ((tuple = dict_find(iter, 2))) {
-    section_index = tuple->value->uint16;
-  }
-  if ((tuple = dict_find(iter, 3))) {
-    num_items = tuple->value->uint16;
-  }
-  if ((tuple = dict_find(iter, 4))) {
-    title = tuple->value->cstring;
-  }
-  if ((tuple = dict_find(iter, 1))) {
-    simply_menu_clear_section_items(simply->menu, section_index);
-  }
+static void handle_menu_clear_section_packet(Simply *simply, Packet *data) {
+  MenuClearSectionPacket *packet = (MenuClearSectionPacket*) data;
+  simply_menu_clear_section_items(simply->menu, packet->section);
+}
+
+static void handle_menu_props_packet(Simply *simply, Packet *data) {
+  MenuPropsPacket *packet = (MenuPropsPacket*) data;
+  simply_menu_set_num_sections(simply->menu, packet->num_sections);
+}
+
+static void handle_menu_section_packet(Simply *simply, Packet *data) {
+  MenuSectionPacket *packet = (MenuSectionPacket*) data;
   SimplyMenuSection *section = malloc(sizeof(*section));
   *section = (SimplyMenuSection) {
-    .section = section_index,
-    .num_items = num_items,
-    .title = strdup2(title),
+    .section = packet->section,
+    .num_items = packet->num_items,
+    .title = packet->title_length ? strdup2(packet->title) : NULL,
   };
   simply_menu_add_section(simply->menu, section);
 }
 
-static void handle_set_menu_item(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  uint16_t section_index = 0;
-  uint16_t row = 0;
-  uint32_t icon = 0;
-  char *title = NULL;
-  char *subtitle = NULL;
-  if ((tuple = dict_find(iter, 1))) {
-    section_index = tuple->value->uint16;
-  }
-  if ((tuple = dict_find(iter, 2))) {
-    row = tuple->value->uint16;
-  }
-  if ((tuple = dict_find(iter, 3))) {
-    title = tuple->value->cstring;
-  }
-  if ((tuple = dict_find(iter, 4))) {
-    subtitle = tuple->value->cstring;
-  }
-  if ((tuple = dict_find(iter, 5))) {
-    icon = tuple->value->uint32;
-  }
+static void handle_menu_item_packet(Simply *simply, Packet *data) {
+  MenuItemPacket *packet = (MenuItemPacket*) data;
   SimplyMenuItem *item = malloc(sizeof(*item));
   *item = (SimplyMenuItem) {
-    .section = section_index,
-    .item = row,
-    .title = strdup2(title),
-    .subtitle = strdup2(subtitle),
-    .icon = icon,
+    .section = packet->section,
+    .item = packet->item,
+    .title = packet->title_length ? strdup2(packet->buffer) : NULL,
+    .subtitle = packet->subtitle_length ? strdup2(packet->buffer + packet->title_length + 1) : NULL,
+    .icon = packet->icon,
   };
   simply_menu_add_item(simply->menu, item);
 }
 
-static void handle_set_image(DictionaryIterator *iter, Simply *simply) {
-  Tuple *tuple;
-  uint32_t id = 0;
-  int16_t width = 0;
-  int16_t height = 0;
-  uint32_t *pixels = NULL;
-  if ((tuple = dict_find(iter, 1))) {
-    id = tuple->value->uint32;
-  }
-  if ((tuple = dict_find(iter, 2))) {
-    width = tuple->value->int16;
-  }
-  if ((tuple = dict_find(iter, 3))) {
-    height = tuple->value->int16;
-  }
-  if ((tuple = dict_find(iter, 4))) {
-    pixels = (uint32_t*) tuple->value->data;
-  }
-  simply_res_add_image(simply->res, id, width, height, pixels);
+static void handle_menu_get_selection_packet(Simply *simply, Packet *data) {
+  simply_msg_send_menu_selection(simply->msg);
 }
 
-static void handle_set_stage(DictionaryIterator *iter, Simply *simply) {
-  SimplyStage *stage = simply->stage;
-  Tuple *tuple;
-  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
-    switch (tuple->key) {
-      case SetWindow_clear:
-        simply_stage_clear(stage);
-        break;
-    }
-  }
-  set_window(&stage->window, iter, simply);
+static void handle_menu_selection_packet(Simply *simply, Packet *data) {
+  MenuSelectionPacket *packet = (MenuSelectionPacket*) data;
+  MenuIndex menu_index = {
+    .section = packet->section,
+    .row = packet->item,
+  };
+  simply_menu_set_selection(simply->menu, menu_index, packet->align, packet->animated);
 }
 
-static void handle_set_stage_element(DictionaryIterator *iter, Simply *simply) {
-  SimplyStage *stage = simply->stage;
-  Tuple *tuple;
-  uint32_t id = 0;
-  SimplyElementType type = SimplyElementTypeNone;
-  if ((tuple = dict_find(iter, ElementId))) {
-    id = tuple->value->uint32;
-  }
-  if ((tuple = dict_find(iter, ElementType))) {
-    type = tuple->value->int32;
-  }
-  SimplyElementCommon *element = simply_stage_auto_element(stage, id, type);
-  if (!element || element->type != type) {
-    return;
-  }
-  GRect frame = element->frame;
-  bool update_frame = false;
-  bool update_ticker = false;
-  for (tuple = dict_read_first(iter); tuple; tuple = dict_read_next(iter)) {
-    switch (tuple->key) {
-      case ElementIndex:
-        simply_stage_insert_element(stage, tuple->value->uint16, element);
-        break;
-      case ElementX:
-        frame.origin.x = tuple->value->int16;
-        update_frame = true;
-        break;
-      case ElementY:
-        frame.origin.y = tuple->value->int16;
-        update_frame = true;
-        break;
-      case ElementWidth:
-        frame.size.w = tuple->value->uint16;
-        update_frame = true;
-        break;
-      case ElementHeight:
-        frame.size.h = tuple->value->uint16;
-        update_frame = true;
-        break;
-      case ElementBackgroundColor:
-        element->background_color = tuple->value->uint8;
-        break;
-      case ElementBorderColor:
-        element->border_color = tuple->value->uint8;
-        break;
-      case ElementRadius:
-        ((SimplyElementRect*) element)->radius = tuple->value->uint16;
-        break;
-      case ElementText:
-        strset(&((SimplyElementText*) element)->text, tuple->value->cstring);
-        break;
-      case ElementTextFont:
-        if (tuple->type == TUPLE_CSTRING) {
-          ((SimplyElementText*) element)->font = fonts_get_system_font(tuple->value->cstring);
-        } else {
-          ((SimplyElementText*) element)->font = simply_res_get_font(simply->res, tuple->value->uint32);
-        }
-        break;
-      case ElementTextColor:
-        ((SimplyElementText*) element)->text_color = tuple->value->uint8;
-        break;
-      case ElementTextOverflow:
-        ((SimplyElementText*) element)->overflow_mode = tuple->value->uint8;
-        break;
-      case ElementTextAlignment:
-        ((SimplyElementText*) element)->alignment = tuple->value->uint8;
-        break;
-      case ElementTextUpdateTimeUnit:
-        ((SimplyElementText*) element)->time_units = tuple->value->uint8;
-        update_ticker = true;
-        break;
-      case ElementImage:
-        ((SimplyElementImage*) element)->image = tuple->value->uint32;
-        break;
-      case ElementCompositing:
-        ((SimplyElementImage*) element)->compositing = tuple->value->uint8;
-        break;
-    }
-  }
-  if (update_frame) {
-    simply_stage_set_element_frame(stage, element, frame);
-  }
-  if (update_ticker) {
-    simply_stage_update_ticker(stage);
-  }
-  simply_stage_update(stage);
+static void handle_stage_clear_packet(Simply *simply, Packet *data) {
+  simply_stage_clear(simply->stage);
 }
 
-static void handle_remove_stage_element(DictionaryIterator *iter, Simply *simply) {
-  SimplyStage *stage = simply->stage;
-  Tuple *tuple;
-  uint32_t id = 0;
-  if ((tuple = dict_find(iter, 1))) {
-    id = tuple->value->uint32;
-  }
-  SimplyElementCommon *element = simply_stage_get_element(stage, id);
+static void handle_element_insert_packet(Simply *simply, Packet *data) {
+  ElementInsertPacket *packet = (ElementInsertPacket*) data;
+  SimplyElementCommon *element = simply_stage_auto_element(simply->stage, packet->id, packet->type);
   if (!element) {
     return;
   }
-  simply_stage_remove_element(stage, element);
-  simply_stage_update(stage);
+  simply_stage_insert_element(simply->stage, packet->index, element);
+  simply_stage_update(simply->stage);
 }
 
-static void handle_animate_stage_element(DictionaryIterator *iter, Simply *simply) {
-  SimplyStage *stage = simply->stage;
-  Tuple *tuple;
-  uint32_t id = 0;
-  if ((tuple = dict_find(iter, 1))) {
-    id = tuple->value->uint32;
-  }
-  SimplyElementCommon *element = simply_stage_get_element(stage, id);
+static void handle_element_remove_packet(Simply *simply, Packet *data) {
+  ElementInsertPacket *packet = (ElementInsertPacket*) data;
+  SimplyElementCommon *element = simply_stage_get_element(simply->stage, packet->id);
   if (!element) {
     return;
   }
-  GRect to_frame = element->frame;
+  simply_stage_remove_element(simply->stage, element);
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_common_packet(Simply *simply, Packet *data) {
+  ElementCommonPacket *packet = (ElementCommonPacket*) data;
+  SimplyElementCommon *element = simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  simply_stage_set_element_frame(simply->stage, element, packet->frame);
+  element->background_color = packet->background_color;
+  element->border_color = packet->border_color;
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_radius_packet(Simply *simply, Packet *data) {
+  ElementRadiusPacket *packet = (ElementRadiusPacket*) data;
+  SimplyElementRect *element = (SimplyElementRect*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->radius = packet->radius;
+  simply_stage_update(simply->stage);
+};
+
+static void handle_element_text_packet(Simply *simply, Packet *data) {
+  ElementTextPacket *packet = (ElementTextPacket*) data;
+  SimplyElementText *element = (SimplyElementText*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  if (element->time_units != packet->time_units) {
+    element->time_units = packet->time_units;
+    simply_stage_update_ticker(simply->stage);
+  }
+  strset(&element->text, packet->text);
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_text_style_packet(Simply *simply, Packet *data) {
+  ElementTextStylePacket *packet = (ElementTextStylePacket*) data;
+  SimplyElementText *element = (SimplyElementText*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->text_color = packet->color;
+  element->overflow_mode = packet->overflow_mode;
+  element->alignment = packet->alignment;
+  if (packet->custom_font) {
+    element->font = simply_res_get_font(simply->res, packet->custom_font);
+  } else if (packet->system_font[0]) {
+    element->font = fonts_get_system_font(packet->system_font);
+  }
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_image_packet(Simply *simply, Packet *data) {
+  ElementImagePacket *packet = (ElementImagePacket*) data;
+  SimplyElementImage *element = (SimplyElementImage*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->image = packet->image;
+  element->compositing = packet->compositing;
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_animate_packet(Simply *simply, Packet *data) {
+  ElementAnimatePacket *packet = (ElementAnimatePacket*) data;
+  SimplyElementCommon *element = simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
   SimplyAnimation *animation = malloc0(sizeof(*animation));
-  if (!animation) {
-    return;
+  animation->duration = packet->duration;
+  animation->curve = packet->curve;
+  simply_stage_animate_element(simply->stage, element, animation, packet->frame);
+}
+
+static void handle_packet(Simply *simply, Packet *packet) {
+  switch (packet->type) {
+    case CommandWindowShow:
+      handle_window_show_packet(simply, packet);
+      break;
+    case CommandWindowHide:
+      handle_window_hide_packet(simply, packet);
+      break;
+    case CommandWindowShowEvent:
+      break;
+    case CommandWindowHideEvent:
+      break;
+    case CommandWindowProps:
+      handle_window_props_packet(simply, packet);
+      break;
+    case CommandWindowButtonConfig:
+      handle_window_button_config_packet(simply, packet);
+      break;
+    case CommandWindowActionBar:
+      handle_window_action_bar_packet(simply, packet);
+      break;
+    case CommandClick:
+      break;
+    case CommandLongClick:
+      break;
+    case CommandImagePacket:
+      handle_image_packet(simply, packet);
+      break;
+    case CommandCardClear:
+      handle_card_clear_packet(simply, packet);
+      break;
+    case CommandCardText:
+      handle_card_text_packet(simply, packet);
+      break;
+    case CommandCardImage:
+      handle_card_image_packet(simply, packet);
+      break;
+    case CommandCardStyle:
+      handle_card_style_packet(simply, packet);
+      break;
+    case CommandVibe:
+      handle_vibe_packet(simply, packet);
+      break;
+    case CommandAccelPeek:
+      handle_accel_peek_packet(simply, packet);
+      break;
+    case CommandAccelConfig:
+      handle_accel_config_packet(simply, packet);
+      break;
+    case CommandAccelData:
+      break;
+    case CommandAccelTap:
+      break;
+    case CommandMenuClear:
+      handle_menu_clear_packet(simply, packet);
+      break;
+    case CommandMenuClearSection:
+      handle_menu_clear_section_packet(simply, packet);
+      break;
+    case CommandMenuProps:
+      handle_menu_props_packet(simply, packet);
+      break;
+    case CommandMenuSection:
+      handle_menu_section_packet(simply, packet);
+      break;
+    case CommandMenuGetSection:
+      break;
+    case CommandMenuItem:
+      handle_menu_item_packet(simply, packet);
+      break;
+    case CommandMenuGetItem:
+      break;
+    case CommandMenuSelection:
+      handle_menu_selection_packet(simply, packet);
+      break;
+    case CommandMenuGetSelection:
+      handle_menu_get_selection_packet(simply, packet);
+      break;
+    case CommandMenuSelectionEvent:
+      break;
+    case CommandMenuSelect:
+      break;
+    case CommandMenuLongSelect:
+      break;
+    case CommandStageClear:
+      handle_stage_clear_packet(simply, packet);
+      break;
+    case CommandElementInsert:
+      handle_element_insert_packet(simply, packet);
+      break;
+    case CommandElementRemove:
+      handle_element_remove_packet(simply, packet);
+      break;
+    case CommandElementCommon:
+      handle_element_common_packet(simply, packet);
+      break;
+    case CommandElementRadius:
+      handle_element_radius_packet(simply, packet);
+      break;
+    case CommandElementText:
+      handle_element_text_packet(simply, packet);
+      break;
+    case CommandElementTextStyle:
+      handle_element_text_style_packet(simply, packet);
+      break;
+    case CommandElementImage:
+      handle_element_image_packet(simply, packet);
+      break;
+    case CommandElementAnimate:
+      handle_element_animate_packet(simply, packet);
+      break;
+    case CommandElementAnimateDone:
+      break;
   }
-  if ((tuple = dict_find(iter, 2))) {
-    to_frame.origin.x = tuple->value->int16;
-  }
-  if ((tuple = dict_find(iter, 3))) {
-    to_frame.origin.y = tuple->value->int16;
-  }
-  if ((tuple = dict_find(iter, 4))) {
-    to_frame.size.w = tuple->value->int16;
-  }
-  if ((tuple = dict_find(iter, 5))) {
-    to_frame.size.h = tuple->value->int16;
-  }
-  if ((tuple = dict_find(iter, 6))) {
-    animation->duration = tuple->value->uint32;
-  }
-  if ((tuple = dict_find(iter, 7))) {
-    animation->curve = tuple->value->uint8;
-  }
-  simply_stage_animate_element(stage, element, animation, to_frame);
 }
 
 static void received_callback(DictionaryIterator *iter, void *context) {
@@ -534,52 +764,18 @@ static void received_callback(DictionaryIterator *iter, void *context) {
 
   s_has_communicated = true;
 
-  switch (tuple->value->uint8) {
-    case SimplyACmd_setWindow:
-      handle_set_window(iter, context);
+  size_t length = tuple->length;
+  uint8_t *buffer = tuple->value->data;
+  while (true) {
+    Packet *packet = (Packet*) buffer;
+    handle_packet(context, packet);
+
+    length -= packet->length;
+    if (length == 0) {
       break;
-    case SimplyACmd_windowHide:
-      handle_hide_window(iter, context);
-      break;
-    case SimplyACmd_setUi:
-      handle_set_ui(iter, context);
-      break;
-    case SimplyACmd_vibe:
-      handle_vibe(iter, context);
-      break;
-    case SimplyACmd_getAccelData:
-      handle_get_accel_data(iter, context);
-      break;
-    case SimplyACmd_configAccelData:
-      handle_set_accel_config(iter, context);
-      break;
-    case SimplyACmd_configButtons:
-      handle_config_buttons(iter, context);
-      break;
-    case SimplyACmd_setMenu:
-      handle_set_menu(iter, context);
-      break;
-    case SimplyACmd_setMenuSection:
-      handle_set_menu_section(iter, context);
-      break;
-    case SimplyACmd_setMenuItem:
-      handle_set_menu_item(iter, context);
-      break;
-    case SimplyACmd_image:
-      handle_set_image(iter, context);
-      break;
-    case SimplyACmd_setStage:
-      handle_set_stage(iter, context);
-      break;
-    case SimplyACmd_stageElement:
-      handle_set_stage_element(iter, context);
-      break;
-    case SimplyACmd_stageRemove:
-      handle_remove_stage_element(iter, context);
-      break;
-    case SimplyACmd_stageAnimate:
-      handle_animate_stage_element(iter, context);
-      break;
+    }
+
+    buffer += packet->length;
   }
 }
 
@@ -605,9 +801,7 @@ SimplyMsg *simply_msg_create(Simply *simply) {
 
   simply->msg = self;
 
-  const uint32_t size_inbound = 2048;
-  const uint32_t size_outbound = 512;
-  app_message_open(size_inbound, size_outbound);
+  app_message_open(APP_MSG_SIZE_INBOUND, APP_MSG_SIZE_OUTBOUND);
 
   app_message_set_context(simply);
 
@@ -631,177 +825,204 @@ void simply_msg_destroy(SimplyMsg *self) {
   free(self);
 }
 
-static void destroy_packet(SimplyPacket *packet) {
+static void destroy_packet(SimplyMsg *self, SimplyPacket *packet) {
   if (!packet) {
     return;
   }
+  list1_remove(&self->queue, &packet->node);
   free(packet->buffer);
   packet->buffer = NULL;
   free(packet);
 }
 
-static bool send_msg(SimplyPacket *packet) {
+static bool send_msg(uint8_t *buffer, size_t length) {
   DictionaryIterator *iter = NULL;
   if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
     return false;
   }
-  dict_copy_from_buffer(iter, packet->buffer, packet->length);
+  dict_write_data(iter, 0, buffer, length);
   return (app_message_outbox_send() == APP_MSG_OK);
+}
+
+static void make_multi_packet(SimplyMsg *self, SimplyPacket *packet) {
+  if (!packet) {
+    return;
+  }
+  size_t length = 0;
+  SimplyPacket *last;
+  for (SimplyPacket *walk = packet;;) {
+    length += walk->length;
+    SimplyPacket *next = (SimplyPacket*) walk->node.next;
+    if (!next || length + next->length > APP_MSG_SIZE_OUTBOUND - 2 * sizeof(Tuple)) {
+      last = next;
+      break;
+    }
+    walk = next;
+  }
+  uint8_t *buffer = malloc(length);
+  if (!buffer) {
+    return;
+  }
+  uint8_t *cursor = buffer;
+  for (SimplyPacket *walk = packet; walk && walk != last;) {
+    memcpy(cursor, walk->buffer, walk->length);
+    cursor += walk->length;
+    SimplyPacket *next = (SimplyPacket*) walk->node.next;
+    destroy_packet(self, walk);
+    walk = next;
+  }
+  self->send_buffer = buffer;
+  self->send_length = length;
 }
 
 static void send_msg_retry(void *data) {
   SimplyMsg *self = data;
-  SimplyPacket *packet = (SimplyPacket*) self->queue;
-  if (!packet) {
+  self->send_timer = NULL;
+  if (!self->send_buffer) {
+    make_multi_packet(self, (SimplyPacket*) self->queue);
+  }
+  if (!self->send_buffer) {
     return;
   }
-  if (!send_msg(packet)){
+  if (send_msg(self->send_buffer, self->send_length)) {
+    free(self->send_buffer);
+    self->send_buffer = NULL;
+    self->send_delay_ms = SEND_DELAY_MS;
+  } else {
     self->send_delay_ms *= 2;
-    app_timer_register(self->send_delay_ms, send_msg_retry, self);
-    return;
   }
-  list1_remove(&self->queue, &packet->node);
-  destroy_packet(packet);
-  self->send_delay_ms = SEND_DELAY_MS;
+  self->send_timer = app_timer_register(self->send_delay_ms, send_msg_retry, self);
 }
 
-static SimplyPacket *add_packet(SimplyMsg *self, void *buffer, size_t length) {
+static SimplyPacket *add_packet(SimplyMsg *self, Packet *buffer, Command type, size_t length) {
   SimplyPacket *packet = malloc0(sizeof(*packet));
   if (!packet) {
     free(buffer);
     return NULL;
   }
+  *buffer = (Packet) {
+    .type = type,
+    .length = length,
+  };
   *packet = (SimplyPacket) {
     .length = length,
     .buffer = buffer,
   };
   list1_append(&self->queue, &packet->node);
-  send_msg_retry(self);
+  if (self->send_delay_ms <= SEND_DELAY_MS) {
+    if (self->send_timer) {
+      app_timer_cancel(self->send_timer);
+    }
+    self->send_timer = app_timer_register(SEND_DELAY_MS, send_msg_retry, self);
+  }
   return packet;
 }
 
-static bool send_click(SimplyMsg *self, SimplyACmd type, ButtonId button) {
-  size_t length = dict_calc_buffer_size(2, 1, 1);
-  void *buffer = malloc0(length);
-  if (!buffer) {
+static bool send_click(SimplyMsg *self, Command type, ButtonId button) {
+  size_t length;
+  ClickPacket *packet = malloc0(length = sizeof(*packet));
+  if (!packet) {
     return false;
   }
-  DictionaryIterator iter;
-  dict_write_begin(&iter, buffer, length);
-  dict_write_uint8(&iter, 0, type);
-  dict_write_uint8(&iter, 1, button);
-  return add_packet(self, buffer, length);
+  packet->button = button;
+  return add_packet(self, (Packet*) packet, type, length);
 }
 
 bool simply_msg_single_click(SimplyMsg *self, ButtonId button) {
-  return send_click(self, SimplyACmd_click, button);
+  return send_click(self, CommandClick, button);
 }
 
 bool simply_msg_long_click(SimplyMsg *self, ButtonId button) {
-  return send_click(self, SimplyACmd_longClick, button);
+  return send_click(self, CommandLongClick, button);
 }
 
-bool send_window(SimplyMsg *self, SimplyACmd type, uint32_t id) {
-  size_t length = dict_calc_buffer_size(2, 1, 4);
-  void *buffer = malloc0(length);
-  if (!buffer) {
+bool send_window(SimplyMsg *self, Command type, uint32_t id) {
+  size_t length;
+  WindowEventPacket *packet = malloc0(length = sizeof(*packet));
+  if (!packet) {
     return false;
   }
-  DictionaryIterator iter;
-  dict_write_begin(&iter, buffer, length);
-  dict_write_uint8(&iter, 0, type);
-  dict_write_uint32(&iter, 1, id);
-  return add_packet(self, buffer, length);
+  packet->id = id;
+  return add_packet(self, (Packet*) packet, type, length);
 }
 
 bool simply_msg_window_show(SimplyMsg *self, uint32_t id) {
-  return send_window(self, SimplyACmd_windowShow, id);
+  return send_window(self, CommandWindowShowEvent, id);
 }
 
 bool simply_msg_window_hide(SimplyMsg *self, uint32_t id) {
-  return send_window(self, SimplyACmd_windowHide, id);
+  return send_window(self, CommandWindowHideEvent, id);
 }
 
 bool simply_msg_accel_tap(SimplyMsg *self, AccelAxisType axis, int32_t direction) {
-  size_t length = dict_calc_buffer_size(3, 1, 1, 1);
-  void *buffer = malloc0(length);
-  if (!buffer) {
+  size_t length;
+  AccelTapPacket *packet = malloc0(length = sizeof(*packet));
+  if (!packet) {
     return false;
   }
-  DictionaryIterator iter;
-  dict_write_begin(&iter, buffer, length);
-  dict_write_uint8(&iter, 0, SimplyACmd_accelTap);
-  dict_write_uint8(&iter, 1, axis);
-  dict_write_int8(&iter, 2, direction);
-  return add_packet(self, buffer, length);
+  packet->axis = axis;
+  packet->direction = direction;
+  return add_packet(self, (Packet*) packet, CommandAccelTap, length);
 }
 
-bool simply_msg_accel_data(SimplyMsg *self, AccelData *data, uint32_t num_samples, int32_t transaction_id) {
-  DictionaryIterator *iter = NULL;
-  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+bool simply_msg_accel_data(SimplyMsg *self, AccelData *data, uint32_t num_samples, bool is_peek) {
+  size_t data_length = sizeof(AccelData) * num_samples;
+  size_t length;
+  AccelDataPacket *packet = malloc(length = sizeof(AccelDataPacket) + data_length);
+  if (!packet) {
     return false;
   }
-  dict_write_uint8(iter, 0, SimplyACmd_accelData);
-  if (transaction_id >= 0) {
-    dict_write_int32(iter, 1, transaction_id);
-  }
-  dict_write_uint8(iter, 2, num_samples);
-  dict_write_data(iter, 3, (uint8_t*) data, sizeof(*data) * num_samples);
-  return (app_message_outbox_send() == APP_MSG_OK);
+  packet->packet = (Packet) {
+    .type = CommandAccelData,
+    .length = length,
+  };
+  packet->is_peek = is_peek;
+  packet->num_samples = num_samples;
+  memcpy(packet->data, data, data_length);
+  bool result = send_msg((uint8_t*) packet, length);
+  free(packet);
+  return result;
 }
 
-static void write_menu_item(DictionaryIterator *iter, SimplyACmd type, uint16_t section, uint16_t index) {
-  dict_write_uint8(iter, 0, type);
-  dict_write_uint16(iter, 1, section);
-  dict_write_uint16(iter, 2, index);
-}
-
-static bool send_menu_item(SimplyMsg *self, SimplyACmd type, uint16_t section, uint16_t index) {
-  DictionaryIterator *iter = NULL;
-  if (app_message_outbox_begin(&iter) != APP_MSG_OK) {
+static bool send_menu_item(SimplyMsg *self, Command type, uint16_t section, uint16_t item) {
+  size_t length;
+  MenuItemEventPacket *packet = malloc0(length = sizeof(*packet));
+  if (!packet) {
     return false;
   }
-  write_menu_item(iter, type, section, index);
-  return (app_message_outbox_send() == APP_MSG_OK);
-}
-
-static bool send_menu_item_retry(SimplyMsg *self, SimplyACmd type, uint16_t section, uint16_t index) {
-  size_t length = dict_calc_buffer_size(3, 1, 2, 2);
-  void *buffer = malloc0(length);
-  if (!buffer) {
-    return false;
-  }
-  DictionaryIterator iter;
-  dict_write_begin(&iter, buffer, length);
-  write_menu_item(&iter, type, section, index);
-  return add_packet(self, buffer, length);
+  packet->section = section;
+  packet->item = item;
+  return add_packet(self, (Packet*) packet, type, length);
 }
 
 bool simply_msg_menu_get_section(SimplyMsg *self, uint16_t index) {
-  return send_menu_item(self, SimplyACmd_getMenuSection, index, 0);
+  return send_menu_item(self, CommandMenuGetSection, index, 0);
 }
 
 bool simply_msg_menu_get_item(SimplyMsg *self, uint16_t section, uint16_t index) {
-  return send_menu_item(self, SimplyACmd_getMenuItem, section, index);
+  return send_menu_item(self, CommandMenuGetItem, section, index);
 }
 
 bool simply_msg_menu_select_click(SimplyMsg *self, uint16_t section, uint16_t index) {
-  return send_menu_item_retry(self, SimplyACmd_menuSelect, section, index);
+  return send_menu_item(self, CommandMenuSelect, section, index);
 }
 
 bool simply_msg_menu_select_long_click(SimplyMsg *self, uint16_t section, uint16_t index) {
-  return send_menu_item_retry(self, SimplyACmd_menuLongSelect, section, index);
+  return send_menu_item(self, CommandMenuLongSelect, section, index);
 }
 
-bool simply_msg_animate_element_done(SimplyMsg *self, uint16_t index) {
-  size_t length = dict_calc_buffer_size(2, 1, 2);
-  void *buffer = malloc0(length);
-  if (!buffer) {
+bool simply_msg_send_menu_selection(SimplyMsg *self) {
+  MenuIndex menu_index = simply_menu_get_selection(self->simply->menu);
+  return send_menu_item(self, CommandMenuSelectionEvent, menu_index.section, menu_index.row);
+}
+
+bool simply_msg_animate_element_done(SimplyMsg *self, uint32_t id) {
+  size_t length;
+  ElementAnimateDonePacket *packet = malloc0(length = sizeof(*packet));
+  if (!packet) {
     return false;
   }
-  DictionaryIterator iter;
-  dict_write_begin(&iter, buffer, length);
-  dict_write_uint8(&iter, 0, SimplyACmd_stageAnimateDone);
-  dict_write_uint16(&iter, 1, index);
-  return add_packet(self, buffer, length);
+  packet->id = id;
+  return add_packet(self, (Packet*) packet, CommandElementAnimateDone, length);
 }
+

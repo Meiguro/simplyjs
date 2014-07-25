@@ -62,8 +62,12 @@ var configProps = [
 var accessorProps = textProps.concat(imageProps).concat(configProps);
 var clearableProps = textProps.concat(imageProps);
 
+var defaults = {
+  backgroundColor: 'white',
+};
+
 var Card = function(cardDef) {
-  Window.call(this, cardDef);
+  Window.call(this, myutil.shadow(defaults, cardDef || {}));
   this._dynamic = false;
 };
 

@@ -37,7 +37,8 @@ def concat_javascript(self, *k, **kw):
 
     def concat_javascript_task(task):
         LOADER_PATH = "loader.js"
-        LOADER_TEMPLATE = "__loader.define({relpath}, {lineno}, function(module, require) {{\n{body}\n}});"
+        LOADER_TEMPLATE = ("__loader.define({relpath}, {lineno}, " +
+                           "function(exports, module, require) {{\n{body}\n}});")
         JSON_TEMPLATE = "module.exports = {body};"
         APPINFO_PATH = "appinfo.json"
 

@@ -182,6 +182,8 @@ Settings.onCloseConfig = function(e) {
       util2.copy(options, state.options);
       Settings.saveOptions();
     }
-    return listener.close(e);
+    if (listener.close) {
+      return listener.close(e);
+    }
   }
 };

@@ -28,10 +28,15 @@ Settings.reset = function() {
   };
 };
 
-Settings.mainScriptUrl = function(scriptUrl) {
-  if (typeof scriptUrl === 'string' && scriptUrl.length && !scriptUrl.match(/^(\w+:)?\/\//)) {
-    scriptUrl = 'http://' + scriptUrl;
+var toHttpUrl = function(url) {
+  if (typeof url === 'string' && url.length && !url.match(/^(\w+:)?\/\//)) {
+    url = 'http://' + url;
   }
+  return url;
+};
+
+Settings.mainScriptUrl = function(scriptUrl) {
+  scriptUrl = toHttpUrl(scriptUrl);
   if (scriptUrl) {
     localStorage.setItem('mainJsUrl', scriptUrl);
   } else {
@@ -86,7 +91,7 @@ var makeDataAccessor = function(type, path) {
     if (arguments.length === 1 && typeof field !== 'object') {
       return data[field];
     }
-    if (typeof field !== 'object' && typeof value === 'undefined' || value === null) {
+    if (typeof field !== 'object' && value === undefined || value === null) {
       delete data[field];
       return;
     }
@@ -105,7 +110,8 @@ Settings.config = function(opt, open, close) {
   if (typeof opt === 'string') {
     opt = { url: opt };
   }
-  if (typeof close === 'undefined') {
+  opt.url = toHttpUrl(opt.url);
+  if (close === undefined) {
     close = open;
     open = util2.noop;
   }
@@ -176,6 +182,8 @@ Settings.onCloseConfig = function(e) {
       util2.copy(options, state.options);
       Settings.saveOptions();
     }
-    return listener.close(e);
+    if (listener.close) {
+      return listener.close(e);
+    }
   }
 };

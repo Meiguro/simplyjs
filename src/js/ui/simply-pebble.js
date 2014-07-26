@@ -14,7 +14,8 @@ var simply = require('ui/simply');
 /**
  * This package provides the underlying implementation for the ui/* classes.
  *
- * This implementation uses PebbleKit JS AppMessage to send commands to a Pebble Watm */
+ * This implementation uses PebbleKit JS AppMessage to send commands to a Pebble Watch.
+ */
 
 /**
  * First part of this file is defining the commands and types that we will use later.
@@ -805,8 +806,9 @@ SimplyPebble.menuItem = function(section, item, def) {
 };
 
 SimplyPebble.menuSelection = function(section, item, align) {
-  if (arguments.length === 0) {
+  if (section === undefined) {
     SimplyPebble.sendPacket(MenuGetSelectionPacket);
+    return;
   }
   SimplyPebble.sendPacket(MenuSelectionPacket.section(section).item(item).align(align || 'center'));
 };

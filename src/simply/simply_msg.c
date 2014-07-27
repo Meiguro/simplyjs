@@ -428,7 +428,7 @@ static void handle_window_action_bar_packet(Simply *simply, Packet *data) {
     return;
   }
   for (unsigned int i = 0; i < ARRAY_LENGTH(packet->image); ++i) {
-    simply_window_set_action_bar_icon(window, i, packet->image[i]);
+    simply_window_set_action_bar_icon(window, i + 1, packet->image[i]);
   }
   simply_window_set_action_bar_background_color(window, packet->background_color);
   simply_window_set_action_bar(window, packet->action);

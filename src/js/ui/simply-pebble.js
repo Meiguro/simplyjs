@@ -26,7 +26,7 @@ var BoolType = function(x) {
 };
 
 var StringType = function(x) {
-  return x || '';
+  return '' + x;
 };
 
 var EnumerableType = function(x) {

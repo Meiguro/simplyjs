@@ -140,9 +140,9 @@ Window.prototype.prop = function(field, value, clear) {
   return this;
 };
 
-Window.prototype._action = function(visible) {
+Window.prototype._action = function(actionDef) {
   if (this === WindowStack.top()) {
-    simply.impl.window({ action: typeof visible === 'boolean' ? visible : this.state.action }, 'action');
+    simply.impl.windowActionBar(actionDef);
   }
 };
 

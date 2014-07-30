@@ -924,6 +924,8 @@ SimplyPebble.stage = function(def, clear, pushing) {
   }
 };
 
+SimplyPebble.window = SimplyPebble.stage;
+
 var toArrayBuffer = function(array, length) {
   length = length || array.length;
   var copy = new DataView(new ArrayBuffer(length));

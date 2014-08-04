@@ -646,7 +646,7 @@ var menu = new UI.Menu({
 
 #### Menu.section(sectionIndex, section)
 
-Define the section to be displayed at sectionIndex.
+Define the section to be displayed at `sectionIndex`. See [Menu] for the properties of a section.
 
 ````js
 var section = {
@@ -658,31 +658,37 @@ var section = {
 menu.section(1, section);
 ````
 
+When called with no `section`, returns the section at the given `sectionIndex`.
+
 #### Menu.items(sectionIndex, items)
 
-Define the items to display in a specific section.
+Define the items to display in a specific section. See [Menu] for the properties of an item.
 
 ````js
 menu.items(0, [ { title: 'new item1' }, { title: 'new item2' } ]);
 ````
 
+Whell called with no `items`, returns the items of the section at the given `sectionIndex`.
+
 #### Menu.item(sectionIndex, itemIndex, item)
 
-Define the item to display at index itemIndex in section sectionIndex.
+Define the item to display at index `itemIndex` in section `sectionIndex`. See [Menu] for the properties of an item.
 
 ````js
 menu.item(0, 0, { title: 'A new item', subtitle: 'replacing the previous one' });
 ````
 
+When called with no `item`, returns the item at the given `sectionIndex` and `itemIndex`.
+
 #### Menu.on('select', callback)
 
 Registers a callback called when an item in the menu is selected. The callback function will be passed an event with the following fields:
 
-* menu: The menu object.
-* section: The menu section object.
-* sectionIndex: The section index of the section of the selected item.
-* item: The menu item object.
-* itemIndex: The item index of the selected item.
+* `menu`: The menu object.
+* `section`: The menu section object.
+* `sectionIndex`: The section index of the section of the selected item.
+* `item`: The menu item object.
+* `itemIndex`: The item index of the selected item.
 
 **Note:** You can also register a callback for 'longSelect' event, triggered when the user long clicks on an item.
 

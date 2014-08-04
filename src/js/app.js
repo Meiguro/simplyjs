@@ -30,7 +30,7 @@ main.on('click', 'up', function(e) {
     }]
   });
   menu.on('select', function(e) {
-    console.log('Selected item: ' + e.section + ' ' + e.item);
+    console.log('Selected item: ' + e.sectionIndex + ' ' + e.itemIndex);
   });
   menu.show();
 });

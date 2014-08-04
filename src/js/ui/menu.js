@@ -9,7 +9,7 @@ var Menu = function(menuDef) {
   Window.call(this, menuDef);
   this._dynamic = false;
   this._sections = {};
-  this._selection = { section: 0, item: 0 };
+  this._selection = { sectionIndex: 0, itemIndex: 0 };
   this._selections = [];
 };
 
@@ -72,24 +72,24 @@ var getSections = function() {
 
 var getSection = function(e, create) {
   var sections = getSections.call(this);
-  var section = sections[e.section];
+  var section = sections[e.sectionIndex];
   if (section) {
     return section;
   }
   if (this.sectionProvider) {
     section = this.sectionProvider.call(this, e);
     if (section) {
-      return (sections[e.section] = section);
+      return (sections[e.sectionIndex] = section);
     }
   }
   if (!create) { return; }
-  return (sections[e.section] = {});
+  return (sections[e.sectionIndex] = {});
 };
 
 var getItems = function(e, create) {
   var section = getSection.call(this, e, create);
   if (!section) {
-    if (e.section > 0) { return; }
+    if (e.sectionIndex > 0) { return; }
     section = this.state.sections[0] = {};
   }
   if (section.items instanceof Array) {
@@ -99,10 +99,10 @@ var getItems = function(e, create) {
     return (section.items = new Array(section.items));
   }
   if (typeof section.items === 'function') {
-    this._sections[e.section] = section.items;
+    this._sections[e.sectionIndex] = section.items;
     delete section.items;
   }
-  var itemsProvider = getMetaSection.call(this, e.section).items || this.itemsProvider;
+  var itemsProvider = getMetaSection.call(this, e.sectionIndex).items || this.itemsProvider;
   if (itemsProvider) {
     var items = itemsProvider.call(this, e);
     if (items) {
@@ -115,19 +115,19 @@ var getItems = function(e, create) {
 
 var getItem = function(e, create) {
   var items = getItems.call(this, e, create);
-  var item = items[e.item];
+  var item = items[e.itemIndex];
   if (item) {
     return item;
   }
-  var itemProvider = getMetaSection.call(this, e.section).item || this.itemProvider;
+  var itemProvider = getMetaSection.call(this, e.sectionIndex).item || this.itemProvider;
   if (itemProvider) {
     item = itemProvider.call(this, e);
     if (item) {
-      return (items[e.item] = item);
+      return (items[e.itemIndex] = item);
     }
   }
   if (!create) { return; }
-  return (items[e.item] = {});
+  return (items[e.itemIndex] = {});
 };
 
 Menu.prototype._resolveMenu = function() {
@@ -143,9 +143,9 @@ Menu.prototype._resolveSection = function(e, clear) {
   if (!section) { return; }
   section.items = getItems.call(this, e);
   if (this === WindowStack.top()) {
-    simply.impl.menuSection.call(this, e.section, section, clear);
+    simply.impl.menuSection.call(this, e.sectionIndex, section, clear);
     var select = this._selection;
-    if (select.section === e.section) {
+    if (select.sectionIndex === e.sectionIndex) {
       this._preloadSection(select);
     }
     return true;
@@ -156,22 +156,22 @@ Menu.prototype._resolveItem = function(e) {
   var item = getItem.call(this, e);
   if (!item) { return; }
   if (this === WindowStack.top()) {
-    simply.impl.menuItem.call(this, e.section, e.item, item);
+    simply.impl.menuItem.call(this, e.sectionIndex, e.itemIndex, item);
     return true;
   }
 };
 
 Menu.prototype._preloadItems = function(e) {
   var select = util2.copy(e);
-  select.item = Math.max(0, select.item - Math.floor(this._numPreloadItems / 2));
+  select.itemIndex = Math.max(0, select.itemIndex - Math.floor(this._numPreloadItems / 2));
   for (var i = 0; i < this._numPreloadItems; ++i) {
     this._resolveItem(select);
-    select.item++;
+    select.itemIndex++;
   }
 };
 
 Menu.prototype._preloadSection = function(e) {
-  simply.impl.menuSelection(e.section, e.item);
+  simply.impl.menuSelection(e.sectionIndex, e.itemIndex);
   this._preloadItems(e);
 };
 
@@ -224,12 +224,12 @@ Menu.prototype.sections = function(sections) {
 
 Menu.prototype.section = function(sectionIndex, section) {
   if (typeof sectionIndex === 'object') {
-    sectionIndex = sectionIndex.section || 0;
+    sectionIndex = sectionIndex.sectionIndex || 0;
   } else if (typeof sectionIndex === 'function') {
     this.sectionProvider = sectionIndex;
     return this;
   }
-  var menuIndex = { section: sectionIndex };
+  var menuIndex = { sectionIndex: sectionIndex };
   if (!section) {
     return getSection.call(this, menuIndex);
   }
@@ -245,7 +245,7 @@ Menu.prototype.section = function(sectionIndex, section) {
 
 Menu.prototype.items = function(sectionIndex, items) {
   if (typeof sectionIndex === 'object') {
-    sectionIndex = sectionIndex.section || 0;
+    sectionIndex = sectionIndex.sectionIndex || 0;
   } else if (typeof sectionIndex === 'function') {
     this.itemsProvider = sectionIndex;
     return this;
@@ -254,7 +254,7 @@ Menu.prototype.items = function(sectionIndex, items) {
     getMetaSection.call(this, sectionIndex).items = items;
     return this;
   }
-  var menuIndex = { section: sectionIndex };
+  var menuIndex = { sectionIndex: sectionIndex };
   if (!items) {
     return getItems.call(this, menuIndex);
   }
@@ -267,8 +267,8 @@ Menu.prototype.items = function(sectionIndex, items) {
 Menu.prototype.item = function(sectionIndex, itemIndex, item) {
   if (typeof sectionIndex === 'object') {
     item = itemIndex || item;
-    itemIndex = sectionIndex.item;
-    sectionIndex = sectionIndex.section || 0;
+    itemIndex = sectionIndex.itemIndex;
+    sectionIndex = sectionIndex.sectionIndex || 0;
   } else if (typeof sectionIndex === 'function') {
     this.itemProvider = sectionIndex;
     return this;
@@ -281,7 +281,7 @@ Menu.prototype.item = function(sectionIndex, itemIndex, item) {
     getMetaSection.call(this, sectionIndex).item = item;
     return this;
   }
-  var menuIndex = { section: sectionIndex, item: itemIndex };
+  var menuIndex = { sectionIndex: sectionIndex, itemIndex: itemIndex };
   if (!item) {
     return getItem.call(this, menuIndex);
   }
@@ -304,11 +304,11 @@ Menu.emit = function(type, subtype, e) {
   Window.emit(type, subtype, e, Menu);
 };
 
-Menu.emitSection = function(section) {
+Menu.emitSection = function(sectionIndex) {
   var menu = WindowStack.top();
   if (!(menu instanceof Menu)) { return; }
   var e = {
-    section: section
+    sectionIndex: sectionIndex
   };
   if (Menu.emit('section', null, e) === false) {
     return false;
@@ -316,12 +316,12 @@ Menu.emitSection = function(section) {
   menu._resolveSection(e);
 };
 
-Menu.emitItem = function(section, item) {
+Menu.emitItem = function(sectionIndex, itemIndex) {
   var menu = WindowStack.top();
   if (!(menu instanceof Menu)) { return; }
   var e = {
-    section: section,
-    item: item,
+    sectionIndex: sectionIndex,
+    itemIndex: itemIndex,
   };
   if (Menu.emit('item', null, e) === false) {
     return false;
@@ -329,12 +329,12 @@ Menu.emitItem = function(section, item) {
   menu._resolveItem(e);
 };
 
-Menu.emitSelect = function(type, section, item) {
+Menu.emitSelect = function(type, sectionIndex, itemIndex) {
   var menu = WindowStack.top();
   if (!(menu instanceof Menu)) { return; }
   var e = {
-    section: section,
-    item: item,
+    sectionIndex: sectionIndex,
+    itemIndex: itemIndex,
   };
   switch (type) {
     case 'menuSelect': type = 'select'; break;

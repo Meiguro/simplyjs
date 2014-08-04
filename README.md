@@ -5,6 +5,8 @@ Pebble.js lets you write beautiful Pebble applications completely in JavaScript.
 
 Pebble.js applications run on your phone. They have access to all the resources of your phone (Internet connectivity, GPS, almost unlimited memory, etc). Because they are written in JavaScript they are also perfect to make HTTP requests and connect your Pebble to the Internet.
 
+**Note:** Pebble.js is still in beta meaning API changes are possible. Pebble.js is suited towards applications that inherently require heavy communication with the Phone such as using resources on the Internet. In other cases, please be aware of the additional usage of Bluetooth in order for JavaScript to perform actions on the Pebble.
+
 > ![JSConf 2014](http://2014.jsconf.us/img/logo.png)
 >
 > Pebble.js was announced during JSConf 2014!

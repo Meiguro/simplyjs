@@ -310,6 +310,7 @@ Menu.emitSection = function(sectionIndex) {
   var e = {
     sectionIndex: sectionIndex
   };
+  e.section = menu._getSection(e);
   if (Menu.emit('section', null, e) === false) {
     return false;
   }
@@ -323,6 +324,8 @@ Menu.emitItem = function(sectionIndex, itemIndex) {
     sectionIndex: sectionIndex,
     itemIndex: itemIndex,
   };
+  e.section = menu._getSection(e);
+  e.item = menu._getItem(e);
   if (Menu.emit('item', null, e) === false) {
     return false;
   }
@@ -336,6 +339,8 @@ Menu.emitSelect = function(type, sectionIndex, itemIndex) {
     sectionIndex: sectionIndex,
     itemIndex: itemIndex,
   };
+  e.section = menu._getSection(e);
+  e.item = menu._getItem(e);
   switch (type) {
     case 'menuSelect': type = 'select'; break;
     case 'menuLongSelect': type = 'longSelect'; break;

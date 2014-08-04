@@ -676,14 +676,17 @@ menu.item(0, 0, { title: 'A new item', subtitle: 'replacing the previous one' })
 
 Registers a callback called when an item in the menu is selected. The callback function will be passed an event with the following fields:
 
+* section: The menu section object.
 * sectionIndex: The section index of the section of the selected item.
+* item: The menu item object.
 * itemIndex: The item index of the selected item.
 
 **Note:** You can also register a callback for 'longSelect' event, triggered when the user long clicks on an item.
 
 ````js
 menu.on('select', function(e) {
- console.log('Selected item #' + e.itemIndex + ' of section #' + e.sectionIndex);
+  console.log('Selected item #' + e.itemIndex + ' of section #' + e.sectionIndex);
+  console.log('The item is titled "' + e.item.title + '"');
 });
 ````
 

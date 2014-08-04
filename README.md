@@ -676,6 +676,7 @@ menu.item(0, 0, { title: 'A new item', subtitle: 'replacing the previous one' })
 
 Registers a callback called when an item in the menu is selected. The callback function will be passed an event with the following fields:
 
+* menu: The menu object.
 * section: The menu section object.
 * sectionIndex: The section index of the section of the selected item.
 * item: The menu item object.

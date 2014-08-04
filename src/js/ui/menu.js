@@ -308,6 +308,7 @@ Menu.emitSection = function(sectionIndex) {
   var menu = WindowStack.top();
   if (!(menu instanceof Menu)) { return; }
   var e = {
+    menu: menu,
     sectionIndex: sectionIndex
   };
   e.section = menu._getSection(e);
@@ -321,6 +322,7 @@ Menu.emitItem = function(sectionIndex, itemIndex) {
   var menu = WindowStack.top();
   if (!(menu instanceof Menu)) { return; }
   var e = {
+    menu: menu,
     sectionIndex: sectionIndex,
     itemIndex: itemIndex,
   };
@@ -336,6 +338,7 @@ Menu.emitSelect = function(type, sectionIndex, itemIndex) {
   var menu = WindowStack.top();
   if (!(menu instanceof Menu)) { return; }
   var e = {
+    menu: menu,
     sectionIndex: sectionIndex,
     itemIndex: itemIndex,
   };

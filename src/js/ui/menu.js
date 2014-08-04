@@ -43,11 +43,11 @@ Menu.prototype.buttonConfig = function() {
 
 Menu.prototype._buttonAutoConfig = function() {};
 
-var getMetaSection = function(sectionIndex) {
+Menu.prototype._getMetaSection = function(sectionIndex) {
   return (this._sections[sectionIndex] || ( this._sections[sectionIndex] = {} ));
 };
 
-var getSections = function() {
+Menu.prototype._getSections = function() {
   var sections = this.state.sections;
   if (sections instanceof Array) {
     return sections;
@@ -64,14 +64,14 @@ var getSections = function() {
     sections = this.sectionsProvider.call(this);
     if (sections) {
       this.state.sections = sections;
-      return getSections.call(this);
+      return this._getSections();
     }
   }
   return (this.state.sections = []);
 };
 
-var getSection = function(e, create) {
-  var sections = getSections.call(this);
+Menu.prototype._getSection = function(e, create) {
+  var sections = this._getSections();
   var section = sections[e.sectionIndex];
   if (section) {
     return section;
@@ -86,8 +86,8 @@ var getSection = function(e, create) {
   return (sections[e.sectionIndex] = {});
 };
 
-var getItems = function(e, create) {
-  var section = getSection.call(this, e, create);
+Menu.prototype._getItems = function(e, create) {
+  var section = this._getSection(e, create);
   if (!section) {
     if (e.sectionIndex > 0) { return; }
     section = this.state.sections[0] = {};
@@ -102,24 +102,24 @@ var getItems = function(e, create) {
     this._sections[e.sectionIndex] = section.items;
     delete section.items;
   }
-  var itemsProvider = getMetaSection.call(this, e.sectionIndex).items || this.itemsProvider;
+  var itemsProvider = this._getMetaSection(e.sectionIndex).items || this.itemsProvider;
   if (itemsProvider) {
     var items = itemsProvider.call(this, e);
     if (items) {
       section.items = items;
-      return getItems.call(this, e, create);
+      return this._getItems(e, create);
     }
   }
   return (section.items = []);
 };
 
-var getItem = function(e, create) {
-  var items = getItems.call(this, e, create);
+Menu.prototype._getItem = function(e, create) {
+  var items = this._getItems(e, create);
   var item = items[e.itemIndex];
   if (item) {
     return item;
   }
-  var itemProvider = getMetaSection.call(this, e.sectionIndex).item || this.itemProvider;
+  var itemProvider = this._getMetaSection(e.sectionIndex).item || this.itemProvider;
   if (itemProvider) {
     item = itemProvider.call(this, e);
     if (item) {
@@ -131,7 +131,7 @@ var getItem = function(e, create) {
 };
 
 Menu.prototype._resolveMenu = function() {
-  var sections = getSections.call(this);
+  var sections = this._getSections(this);
   if (this === WindowStack.top()) {
     simply.impl.menu.call(this, this.state);
     return true;
@@ -139,9 +139,9 @@ Menu.prototype._resolveMenu = function() {
 };
 
 Menu.prototype._resolveSection = function(e, clear) {
-  var section = getSection.call(this, e);
+  var section = this._getSection(e);
   if (!section) { return; }
-  section.items = getItems.call(this, e);
+  section.items = this._getItems(e);
   if (this === WindowStack.top()) {
     simply.impl.menuSection.call(this, e.sectionIndex, section, clear);
     var select = this._selection;
@@ -153,7 +153,7 @@ Menu.prototype._resolveSection = function(e, clear) {
 };
 
 Menu.prototype._resolveItem = function(e) {
-  var item = getItem.call(this, e);
+  var item = this._getItem(e);
   if (!item) { return; }
   if (this === WindowStack.top()) {
     simply.impl.menuItem.call(this, e.sectionIndex, e.itemIndex, item);
@@ -177,7 +177,7 @@ Menu.prototype._preloadSection = function(e) {
 
 Menu.prototype._emitSelect = function(e) {
   this._selection = e;
-  var item = getItem.call(this, e);
+  var item = this._getItem(e);
   switch (e.type) {
     case 'select':
       if (item && typeof item.select === 'function') {
@@ -231,9 +231,9 @@ Menu.prototype.section = function(sectionIndex, section) {
   }
   var menuIndex = { sectionIndex: sectionIndex };
   if (!section) {
-    return getSection.call(this, menuIndex);
+    return this._getSection(menuIndex);
   }
-  var sections = getSections.call(this);
+  var sections = this._getSections();
   var prevLength = sections.length;
   sections[sectionIndex] = util2.copy(section, sections[sectionIndex]);
   if (sections.length !== prevLength) {
@@ -251,14 +251,14 @@ Menu.prototype.items = function(sectionIndex, items) {
     return this;
   }
   if (typeof items === 'function') {
-    getMetaSection.call(this, sectionIndex).items = items;
+    this._getMetaSection(sectionIndex).items = items;
     return this;
   }
   var menuIndex = { sectionIndex: sectionIndex };
   if (!items) {
-    return getItems.call(this, menuIndex);
+    return this._getItems(menuIndex);
   }
-  var section = getSection.call(this, menuIndex, true);
+  var section = this._getSection(menuIndex, true);
   section.items = items;
   this._resolveSection(menuIndex, true);
   return this;
@@ -278,14 +278,14 @@ Menu.prototype.item = function(sectionIndex, itemIndex, item) {
     itemIndex = null;
   }
   if (typeof item === 'function') {
-    getMetaSection.call(this, sectionIndex).item = item;
+    this._getMetaSection(sectionIndex).item = item;
     return this;
   }
   var menuIndex = { sectionIndex: sectionIndex, itemIndex: itemIndex };
   if (!item) {
-    return getItem.call(this, menuIndex);
+    return this._getItem(menuIndex);
   }
-  var items = getItems.call(this, menuIndex, true);
+  var items = this._getItems(menuIndex, true);
   var prevLength = items.length;
   items[itemIndex] = util2.copy(item, items[itemIndex]);
   if (items.length !== prevLength) {

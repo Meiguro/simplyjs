@@ -43,6 +43,9 @@ static SimplyStyle STYLES[] = {
 };
 
 void simply_ui_clear(SimplyUi *self, uint32_t clear_mask) {
+  if (clear_mask & (1 << ClearAction)) {
+    simply_window_action_bar_clear(&self->window);
+  }
   if (clear_mask & (1 << ClearText)) {
     for (SimplyUiTextfield textfield = 0; textfield < NumUiTextfields; ++textfield) {
       simply_ui_set_text(self, textfield, NULL);

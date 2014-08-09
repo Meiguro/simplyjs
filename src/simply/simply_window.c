@@ -77,10 +77,6 @@ void simply_window_set_background_color(SimplyWindow *self, GColor background_co
 }
 
 void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
-  if (self->is_action_bar == is_action_bar) {
-    return;
-  }
-
   self->is_action_bar = is_action_bar;
 
   if (!self->action_bar_layer) {

@@ -48,6 +48,8 @@ static void destroy_animation(SimplyStage *self, SimplyAnimation *animation) {
 }
 
 void simply_stage_clear(SimplyStage *self) {
+  simply_window_action_bar_clear(&self->window);
+
   while (self->stage_layer.elements) {
     destroy_element(self, (SimplyElementCommon*) self->stage_layer.elements);
   }

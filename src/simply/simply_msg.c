@@ -125,7 +125,6 @@ struct __attribute__((__packed__)) WindowPropsPacket {
   GColor background_color:8;
   bool fullscreen;
   bool scrollable;
-  bool action;
 };
 
 typedef struct WindowButtonConfigPacket WindowButtonConfigPacket;
@@ -140,6 +139,7 @@ typedef struct WindowActionBarPacket WindowActionBarPacket;
 struct __attribute__((__packed__)) WindowActionBarPacket {
   Packet packet;
   uint32_t image[3];
+  bool action;
   GColor background_color:8;
 };
 
@@ -410,7 +410,6 @@ static void handle_window_props_packet(Simply *simply, Packet *data) {
   simply_window_set_background_color(window, packet->background_color);
   simply_window_set_fullscreen(window, packet->fullscreen);
   simply_window_set_scrollable(window, packet->scrollable);
-  simply_window_set_action_bar(window, packet->action);
 }
 
 static void handle_window_button_config_packet(Simply *simply, Packet *data) {
@@ -432,6 +431,7 @@ static void handle_window_action_bar_packet(Simply *simply, Packet *data) {
   for (unsigned int i = 0; i < ARRAY_LENGTH(packet->image); ++i) {
     simply_window_set_action_bar_icon(window, i + 1, packet->image[i]);
   }
+  simply_window_set_action_bar(window, packet->action);
 }
 
 static void handle_image_packet(Simply *simply, Packet *data) {

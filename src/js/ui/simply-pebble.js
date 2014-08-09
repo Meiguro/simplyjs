@@ -250,7 +250,6 @@ var WindowPropsPacket = new struct([
   ['uint8', 'backgroundColor', Color],
   ['bool', 'fullscreen', BoolType],
   ['bool', 'scrollable', BoolType],
-  ['uint8', 'action', BoolType],
 ]);
 
 var WindowButtonConfigPacket = new struct([
@@ -263,6 +262,7 @@ var WindowActionBarPacket = new struct([
   ['uint32', 'up', ImageType],
   ['uint32', 'select', ImageType],
   ['uint32', 'down', ImageType],
+  ['uint8', 'action', BoolType],
   ['uint8', 'backgroundColor', Color],
 ]);
 
@@ -681,9 +681,6 @@ SimplyPebble.windowHide = function(id) {
 };
 
 SimplyPebble.windowProps = function(def) {
-  WindowPropsPacket
-    .prop(def)
-    .action('action' in def && def.action !== false);
   SimplyPebble.sendPacket(WindowPropsPacket.prop(def));
 };
 
@@ -701,6 +698,7 @@ var toActionDef = function(actionDef) {
 SimplyPebble.windowActionBar = function(def) {
   WindowActionBarPacket
     .prop(toActionDef(def))
+    .action(typeof def === 'boolean' ? def : true)
     .backgroundColor(def.backgroundColor || 'black');
   SimplyPebble.sendPacket(WindowActionBarPacket);
 };

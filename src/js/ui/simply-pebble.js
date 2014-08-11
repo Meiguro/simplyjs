@@ -696,10 +696,13 @@ var toActionDef = function(actionDef) {
 };
 
 SimplyPebble.windowActionBar = function(def) {
+  var actionDef = toActionDef(def);
   WindowActionBarPacket
-    .prop(toActionDef(def))
+    .up(actionDef.up)
+    .select(actionDef.select)
+    .down(actionDef.down)
     .action(typeof def === 'boolean' ? def : true)
-    .backgroundColor(def.backgroundColor || 'black');
+    .backgroundColor(actionDef.backgroundColor || 'black');
   SimplyPebble.sendPacket(WindowActionBarPacket);
 };
 

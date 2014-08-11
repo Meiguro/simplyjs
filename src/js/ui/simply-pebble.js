@@ -696,10 +696,13 @@ var toActionDef = function(actionDef) {
 };
 
 SimplyPebble.windowActionBar = function(def) {
+  var actionDef = toActionDef(def);
   WindowActionBarPacket
-    .prop(toActionDef(def))
+    .up(actionDef.up)
+    .select(actionDef.select)
+    .down(actionDef.down)
     .action(typeof def === 'boolean' ? def : true)
-    .backgroundColor(def.backgroundColor || 'black');
+    .backgroundColor(actionDef.backgroundColor || 'black');
   SimplyPebble.sendPacket(WindowActionBarPacket);
 };
 
@@ -708,10 +711,7 @@ SimplyPebble.image = function(id, gbitmap) {
 };
 
 var toClearFlags = function(clear) {
-  if (clear === true) {
-    clear = 'all';
-  }
-  if (clear === 'all') {
+  if (clear === true || clear === 'all') {
     clear = ~0;
   } else if (typeof clear === 'string') {
     clear = clearFlagMap[clear];

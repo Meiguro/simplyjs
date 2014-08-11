@@ -46,7 +46,7 @@ Propable.prototype.prop = function(field, value, clear) {
     clear = value;
   }
   if (clear) {
-    this._clear('all');
+    this._clear(true);
   }
   var def = myutil.toObject(field, value);
   util2.copy(def, this.state);

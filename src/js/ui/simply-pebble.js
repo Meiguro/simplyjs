@@ -708,10 +708,7 @@ SimplyPebble.image = function(id, gbitmap) {
 };
 
 var toClearFlags = function(clear) {
-  if (clear === true) {
-    clear = 'all';
-  }
-  if (clear === 'all') {
+  if (clear === true || clear === 'all') {
     clear = ~0;
   } else if (typeof clear === 'string') {
     clear = clearFlagMap[clear];

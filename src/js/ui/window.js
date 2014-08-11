@@ -132,7 +132,7 @@ Window.prototype.prop = function(field, value, clear) {
     clear = value;
   }
   if (clear) {
-    this._clear('all');
+    this._clear(true);
   }
   var windowDef = myutil.toObject(field, value);
   util2.copy(windowDef, this.state);

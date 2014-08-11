@@ -87,9 +87,10 @@ Card.prototype._prop = function() {
 
 Card.prototype._clear = function(flags) {
   flags = myutil.toFlags(flags);
-  if (myutil.flag(flags, 'all')) {
+  if (flags === true) {
     clearableProps.forEach(myutil.unset.bind(this));
-  } else if (myutil.flag(flags, 'action')) {
+  }
+  if (myutil.flag(flags, 'action')) {
     this._clearAction();
   }
 };

@@ -793,6 +793,8 @@ static void sent_callback(DictionaryIterator *iter, void *context) {
 static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, Simply *simply) {
   SimplyUi *ui = simply->ui;
   if (reason == APP_MSG_NOT_CONNECTED) {
+    s_has_communicated = false;
+
     simply_ui_clear(ui, ~0);
     simply_ui_set_text(ui, UiSubtitle, "Disconnected");
     simply_ui_set_text(ui, UiBody, "Run the Pebble Phone App");

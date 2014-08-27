@@ -370,12 +370,17 @@ struct __attribute__((__packed__)) ElementAnimateDonePacket {
 
 static bool s_has_communicated = false;
 
+static bool s_broadcast_window = true;
+
 bool simply_msg_has_communicated() {
   return s_has_communicated;
 }
 
 static SimplyWindow *get_top_simply_window(Simply *simply) {
   Window *base_window = window_stack_get_top_window();
+  if (!base_window) {
+    return NULL;
+  }
   SimplyWindow *window = window_get_user_data(base_window);
   if (!window || (void*) window == simply->splash) {
     return NULL;
@@ -791,7 +796,13 @@ static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, S
     simply_ui_clear(ui, ~0);
     simply_ui_set_text(ui, UiSubtitle, "Disconnected");
     simply_ui_set_text(ui, UiBody, "Run the Pebble Phone App");
-    simply_window_stack_show(simply->window_stack, &ui->window, true);
+
+    if (get_top_simply_window(simply) != &ui->window) {
+      bool was_broadcast = s_broadcast_window;
+      s_broadcast_window = false;
+      simply_window_stack_show(simply->window_stack, &ui->window, true);
+      s_broadcast_window = was_broadcast;
+    }
   }
 }
 
@@ -937,6 +948,9 @@ bool simply_msg_long_click(SimplyMsg *self, ButtonId button) {
 }
 
 bool send_window(SimplyMsg *self, Command type, uint32_t id) {
+  if (!s_broadcast_window) {
+    return false;
+  }
   size_t length;
   WindowEventPacket *packet = malloc0(length = sizeof(*packet));
   if (!packet) {

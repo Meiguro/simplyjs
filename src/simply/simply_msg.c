@@ -791,20 +791,26 @@ static void sent_callback(DictionaryIterator *iter, void *context) {
 }
 
 static void failed_callback(DictionaryIterator *iter, AppMessageResult reason, Simply *simply) {
-  SimplyUi *ui = simply->ui;
   if (reason == APP_MSG_NOT_CONNECTED) {
     s_has_communicated = false;
 
-    simply_ui_clear(ui, ~0);
-    simply_ui_set_text(ui, UiSubtitle, "Disconnected");
-    simply_ui_set_text(ui, UiBody, "Run the Pebble Phone App");
+    simply_msg_show_disconnected(simply->msg);
+  }
+}
 
-    if (get_top_simply_window(simply) != &ui->window) {
-      bool was_broadcast = s_broadcast_window;
-      s_broadcast_window = false;
-      simply_window_stack_show(simply->window_stack, &ui->window, true);
-      s_broadcast_window = was_broadcast;
-    }
+void simply_msg_show_disconnected(SimplyMsg *self) {
+  Simply *simply = self->simply;
+  SimplyUi *ui = simply->ui;
+
+  simply_ui_clear(ui, ~0);
+  simply_ui_set_text(ui, UiSubtitle, "Disconnected");
+  simply_ui_set_text(ui, UiBody, "Run the Pebble Phone App");
+
+  if (get_top_simply_window(simply) != &ui->window) {
+    bool was_broadcast = s_broadcast_window;
+    s_broadcast_window = false;
+    simply_window_stack_show(simply->window_stack, &ui->window, true);
+    s_broadcast_window = was_broadcast;
   }
 }
 

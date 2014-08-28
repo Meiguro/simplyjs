@@ -230,11 +230,7 @@ static void show_welcome_text(SimplyUi *self) {
     return;
   }
 
-  simply_ui_set_text(self, UiTitle, "Pebble.js");
-  simply_ui_set_text(self, UiSubtitle, "Write apps with JS!");
-  simply_ui_set_text(self, UiBody, "pebble.github.io/pebblejs");
-
-  simply_window_stack_show(self->window.simply->window_stack, &self->window, true);
+  simply_msg_show_disconnected(self->window.simply->msg);
 }
 
 static void window_load(Window *window) {

@@ -22,6 +22,8 @@ util2.copy(Emitter.prototype, Menu.prototype);
 Menu.prototype._show = function() {
   this._resolveMenu();
   Window.prototype._show.apply(this, arguments);
+  var select = this._selection;
+  simply.impl.menuSelection(select.sectionIndex, select.itemIndex);
 };
 
 Menu.prototype._numPreloadItems = 5;
@@ -146,7 +148,7 @@ Menu.prototype._resolveSection = function(e, clear) {
     simply.impl.menuSection.call(this, e.sectionIndex, section, clear);
     var select = this._selection;
     if (select.sectionIndex === e.sectionIndex) {
-      this._preloadSection(select);
+      this._preloadItems(select);
     }
     return true;
   }
@@ -168,11 +170,6 @@ Menu.prototype._preloadItems = function(e) {
     this._resolveItem(select);
     select.itemIndex++;
   }
-};
-
-Menu.prototype._preloadSection = function(e) {
-  simply.impl.menuSelection(e.sectionIndex, e.itemIndex);
-  this._preloadItems(e);
 };
 
 Menu.prototype._emitSelect = function(e) {

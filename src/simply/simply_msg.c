@@ -20,7 +20,7 @@
 
 #define SEND_DELAY_MS 10
 
-static const size_t APP_MSG_SIZE_INBOUND = 2048;
+static const size_t APP_MSG_SIZE_INBOUND = 2044;
 
 static const size_t APP_MSG_SIZE_OUTBOUND = 512;
 

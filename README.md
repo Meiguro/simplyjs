@@ -120,8 +120,8 @@ var Vector2 = require('vector2');
 
 var wind = new UI.Window();
 var textfield = new UI.Text({
- position: Vector2(0, 0),
- size: Vector2(144, 168),
+ position: new Vector2(0, 0),
+ size: new Vector2(144, 168),
  font: 'GOTHIC_18_BOLD',
  text: 'Gothic 18 Bold'
 });
@@ -553,7 +553,7 @@ A [Window] instantiated directly is a dynamic window that can display a complete
 var wind = new UI.Window();
 
 // Add a rect element
-var rect = new UI.Rect({ size: Vector2(20, 20) });
+var rect = new UI.Rect({ size: new Vector2(20, 20) });
 wind.add(rect);
 
 wind.show();

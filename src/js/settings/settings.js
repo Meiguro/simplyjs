@@ -25,6 +25,7 @@ Settings.reset = function() {
     options: {},
     data: {},
     listeners: [],
+    ignoreCancelled: 0,
   };
 };
 
@@ -152,10 +153,18 @@ Settings.onOpenConfig = function(e) {
 };
 
 Settings.onCloseConfig = function(e) {
+  // Work around for PebbleKit JS Android
+  // On Android, an extra cancelled event occurs after a normal close
+  if (e.response !== 'CANCELLED') {
+    state.ignoreCancelled++;
+  } else if (state.ignoreCancelled > 0) {
+    state.ignoreCancelled--;
+    return;
+  }
   var listener = util2.last(state.listeners);
   var options = {};
   var format;
-  if (e.response && e.response !== 'CANCELLED') {
+  if (e.response) {
     try {
       options = JSON.parse(decodeURIComponent(e.response));
       format = 'json';

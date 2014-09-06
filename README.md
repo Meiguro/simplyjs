@@ -113,16 +113,16 @@ card.icon('IMAGE_CHOOSE_A_UNIQUE_IDENTIFIER');
 
 ## Using Fonts
 
-You can use any of the Pebble system fonts in your Pebble.js applications. Please refer to [this Pebble Developer's blog post](https://developer.getpebble.com/blog/2013/07/24/Using-Pebble-System-Fonts/) for a list of all the Pebble system fonts.
+You can use any of the Pebble system fonts in your Pebble.js applications. Please refer to [this Pebble Developer's blog post](https://developer.getpebble.com/blog/2013/07/24/Using-Pebble-System-Fonts/) for a list of all the Pebble system fonts. When referring to a font, using lowercase with dashes is recommended. For example, `GOTHIC_18_BOLD` becomes `gothic-18-bold`.
 
 ````js
 var Vector2 = require('vector2');
 
 var wind = new UI.Window();
 var textfield = new UI.Text({
- position: Vector2(0, 0),
- size: Vector2(144, 168),
- font: 'GOTHIC_18_BOLD',
+ position: new Vector2(0, 0),
+ size: new Vector2(144, 168),
+ font: 'gothic-18-bold',
  text: 'Gothic 18 Bold'
 });
 wind.add(textfield);
@@ -553,7 +553,7 @@ A [Window] instantiated directly is a dynamic window that can display a complete
 var wind = new UI.Window();
 
 // Add a rect element
-var rect = new UI.Rect({ size: Vector2(20, 20) });
+var rect = new UI.Rect({ size: new Vector2(20, 20) });
 wind.add(rect);
 
 wind.show();

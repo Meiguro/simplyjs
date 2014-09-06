@@ -28,6 +28,7 @@ struct SimplyPacket {
 SimplyMsg *simply_msg_create(Simply *simply);
 void simply_msg_destroy(SimplyMsg *self);
 bool simply_msg_has_communicated();
+void simply_msg_show_disconnected(SimplyMsg *self);
 
 bool simply_msg_single_click(SimplyMsg *self, ButtonId button);
 bool simply_msg_long_click(SimplyMsg *self, ButtonId button);

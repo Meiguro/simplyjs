@@ -113,7 +113,7 @@ card.icon('IMAGE_CHOOSE_A_UNIQUE_IDENTIFIER');
 
 ## Using Fonts
 
-You can use any of the Pebble system fonts in your Pebble.js applications. Please refer to [this Pebble Developer's blog post](https://developer.getpebble.com/blog/2013/07/24/Using-Pebble-System-Fonts/) for a list of all the Pebble system fonts.
+You can use any of the Pebble system fonts in your Pebble.js applications. Please refer to [this Pebble Developer's blog post](https://developer.getpebble.com/blog/2013/07/24/Using-Pebble-System-Fonts/) for a list of all the Pebble system fonts. When referring to a font, using lowercase with dashes is recommended. For example, `GOTHIC_18_BOLD` becomes `gothic-18-bold`.
 
 ````js
 var Vector2 = require('vector2');
@@ -122,7 +122,7 @@ var wind = new UI.Window();
 var textfield = new UI.Text({
  position: new Vector2(0, 0),
  size: new Vector2(144, 168),
- font: 'GOTHIC_18_BOLD',
+ font: 'gothic-18-bold',
  text: 'Gothic 18 Bold'
 });
 wind.add(textfield);

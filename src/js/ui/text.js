@@ -16,6 +16,7 @@ var defaults = {
   backgroundColor: 'clear',
   borderColor: 'clear',
   color: 'white',
+  font: 'gothic-24',
 };
 
 var Text = function(elementDef) {

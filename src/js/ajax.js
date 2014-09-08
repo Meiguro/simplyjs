@@ -84,9 +84,11 @@ var ajax = function(opt, success, failure) {
       if (opt.type == 'json') {
         body = JSON.parse(body);
       }
-      var callback = req.status == 200 ? success : failure;
+      var status = req.status;
+      var okay = status >= 200 && status < 300 || status === 304;
+      var callback = status ? success : failure;
       if (callback) {
-        callback(body, req.status, req);
+        callback(body, status, req);
       }
     }
   };

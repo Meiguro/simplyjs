@@ -680,8 +680,11 @@ SimplyPebble.windowHide = function(id) {
   SimplyPebble.sendPacket(WindowHidePacket.id(id));
 };
 
-SimplyPebble.windowProps = function(def) {
-  SimplyPebble.sendPacket(WindowPropsPacket.prop(def));
+SimplyPebble.windowProps = function(def, backgroundColor) {
+  WindowPropsPacket
+    .prop(def)
+    .backgroundColor(backgroundColor);
+  SimplyPebble.sendPacket(WindowPropsPacket);
 };
 
 SimplyPebble.windowButtonConfig = function(def) {
@@ -746,7 +749,7 @@ SimplyPebble.card = function(def, clear, pushing) {
   if (clear !== undefined) {
     SimplyPebble.cardClear(clear);
   }
-  SimplyPebble.windowProps(def);
+  SimplyPebble.windowProps(def, 'white');
   if (def.action !== undefined) {
     SimplyPebble.windowActionBar(def.action);
   }

@@ -92,7 +92,8 @@ var ajax = function(opt, success, failure) {
   req.onreadystatechange = function(e) {
     if (req.readyState === 4) {
       var body = req.responseText;
-      var okay = req.status === 200;
+      var okay = req.status >= 200 && req.status < 300 || req.status === 304;
+
       try {
         if (opt.type === 'json') {
           body = JSON.parse(body);

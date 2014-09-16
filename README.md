@@ -416,7 +416,7 @@ Subscribe to the accel 'data' event. The callback function will be passed an eve
 One accelerometer data point is an object with the following properties:
 
 | Property | Type    | Description                                                                                                                                                               |
-| -------- | : ---:  | ------------                                                                                                                                                              |
+| -------- | :----:  | ------------                                                                                                                                                              |
 | `x`      | Number  | The acceleration across the x-axis (from left to right when facing your Pebble)                                                                                           |
 | `y`      | Number  | The acceleration across the y-axis (from the bottom of the screen to the top of the screen)                                                                               |
 | `z`      | Number  | The acceleration across the z-axis (going through your Pebble from the back side of your Pebble to the front side - and then through your head if Pebble is facing you ;) |

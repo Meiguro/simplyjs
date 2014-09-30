@@ -13,6 +13,7 @@ typedef struct SimplyRes SimplyRes;
 struct SimplyRes {
   List1Node *images;
   List1Node *fonts;
+  uint32_t num_bundled_res;
 };
 
 typedef struct SimplyResItemCommon SimplyResItemCommon;

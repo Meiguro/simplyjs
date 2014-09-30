@@ -88,7 +88,7 @@ GBitmap *simply_res_auto_image(SimplyRes *self, uint32_t id, bool is_placeholder
   if (image) {
     return &image->bitmap;
   }
-  if (id <= ARRAY_LENGTH(resource_crc_table)) {
+  if (id <= self->num_bundled_res) {
     return simply_res_add_bundled_image(self, id);
   }
   if (!image && is_placeholder) {
@@ -103,12 +103,7 @@ GFont simply_res_add_custom_font(SimplyRes *self, uint32_t id) {
     return NULL;
   }
 
-  ResHandle handle = resource_get_handle(id);
-  if (!handle) {
-    return NULL;
-  }
-
-  GFont custom_font = fonts_load_custom_font(handle);
+  GFont custom_font = fonts_load_custom_font(id);
   if (!custom_font) {
     free(font);
     return NULL;
@@ -131,7 +126,7 @@ GFont simply_res_auto_font(SimplyRes *self, uint32_t id) {
   if (font) {
     return font->font;
   }
-  if (id <= ARRAY_LENGTH(resource_crc_table)) {
+  if (id <= self->num_bundled_res) {
     return simply_res_add_custom_font(self, id);
   }
   return NULL;
@@ -150,6 +145,11 @@ void simply_res_clear(SimplyRes *self) {
 SimplyRes *simply_res_create() {
   SimplyRes *self = malloc(sizeof(*self));
   *self = (SimplyRes) { .images = NULL };
+
+  while (resource_get_handle(self->num_bundled_res + 1)) {
+    ++self->num_bundled_res;
+  }
+
   return self;
 }
 

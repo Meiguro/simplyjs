@@ -106,7 +106,7 @@ static void text_element_draw(GContext *ctx, SimplyStage *self, SimplyElementTex
     if (element->time_units) {
       text = format_time(text);
     }
-    GFont font = element->font ? element->font : fonts_get_system_font(FONT_KEY_FONT_FALLBACK);
+    GFont font = element->font ? element->font : fonts_get_system_font(FONT_KEY_GOTHIC_14);
     graphics_context_set_text_color(ctx, element->text_color);
     graphics_draw_text(ctx, text, font, element->frame, element->overflow_mode, element->alignment, NULL);
   }

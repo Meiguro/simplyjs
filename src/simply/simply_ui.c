@@ -64,7 +64,7 @@ void simply_ui_set_style(SimplyUi *self, int style_index) {
   self->ui_layer.style = &STYLES[style_index];
   if (self->ui_layer.style->custom_body_font_id) {
     self->ui_layer.custom_body_font = fonts_load_custom_font(
-        resource_get_handle(self->ui_layer.style->custom_body_font_id));
+        self->ui_layer.style->custom_body_font_id);
   }
   layer_mark_dirty(self->ui_layer.layer);
 }

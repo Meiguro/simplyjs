@@ -103,7 +103,12 @@ GFont simply_res_add_custom_font(SimplyRes *self, uint32_t id) {
     return NULL;
   }
 
-  GFont custom_font = fonts_load_custom_font(id);
+  ResHandle handle = resource_get_handle(id);
+  if (!handle) {
+    return NULL;
+  }
+
+  GFont custom_font = fonts_load_custom_font(handle);
   if (!custom_font) {
     free(font);
     return NULL;

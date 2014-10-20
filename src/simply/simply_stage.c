@@ -117,7 +117,11 @@ static void image_element_draw(GContext *ctx, SimplyStage *self, SimplyElementIm
   rect_element_draw_background(ctx, self, (SimplyElementRect*) element);
   GBitmap *bitmap = simply_res_get_image(self->window.simply->res, element->image);
   if (bitmap) {
-    graphics_draw_bitmap_centered(ctx, bitmap, element->frame);
+    GRect frame = element->frame;
+    if (frame.size.w == 0 && frame.size.h == 0) {
+      frame = bitmap->bounds;
+    }
+    graphics_draw_bitmap_centered(ctx, bitmap, frame);
   }
   rect_element_draw_border(ctx, self, (SimplyElementRect*) element);
   graphics_context_set_compositing_mode(ctx, GCompOpAssign);

@@ -38,7 +38,7 @@ var textProps = [
 var imageProps = [
   'icon',
   'subicon',
-  'image',
+  'banner',
 ];
 
 var actionProps = [

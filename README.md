@@ -101,7 +101,7 @@ To add an image in your application, edit the `appinfo.json` file and add your i
 }
 ````
 
-> If you are using CloudPebble, you can add images in your project configuration (coming soon!).
+> If you are using CloudPebble, you can add images in your project configuration.
 
 To reference your image in Pebble.js, you can use the `name` field or the `file` field.
 
@@ -109,6 +109,23 @@ To reference your image in Pebble.js, you can use the `name` field or the `file`
 // These two examples are both valid ways to show the image declared above in a Card
 card.icon('images/your_image.png');
 card.icon('IMAGE_CHOOSE_A_UNIQUE_IDENTIFIER');
+````
+
+You can also display images with [Image] when using a dynamic [Window].
+
+````js
+// This is an example of using an image with Image and Window
+var UI = require('ui');
+var Vector2 = require('vector2');
+
+var wind = new UI.Window({ fullscreen: true });
+var image = new UI.Image({
+  position: new Vector2(0, 0),
+  size: new Vector2(144, 168),
+  image: 'images/your_image.png'
+});
+wind.add(image);
+wind.show();
 ````
 
 ## Using Fonts
@@ -908,6 +925,36 @@ Sets the borderColor property. See [Text].
 
 Sets the backgroundColor property. See [Text].
 
+### Image
+
+An [Element] that displays an image on the screen.
+
+The [Image] element has the following properties. Just like any other [Element] you can initialize those properties when creating the object or use the accessors.
+
+| Name              | Type      | Default   | Description                                                                                                                                                                                                                                                                                                                                                |
+| ------------      | :-------: | --------- | -------------                                                                                                                                                                                                                                                                                                                                              |
+| `image`           | string    | ""        | The resource name or path to the image to display in this element. See [Using Images] for more information and how to add your own images. |
+| `compositing`     | string    | "normal"  | The compositing operation used to display the image. See [Image.compositing(compop)] for a list of possible compositing operations.                |
+
+
+#### Image.image(image)
+
+Sets the image property. See [Image].
+
+<a id="image-compositing"></a>
+#### Image.compositing(compop)
+
+Sets the compositing operation to be used when rendering. Specify the compositing operation as a string such as `"invert"`. The following is a list of compositing operations available.
+
+| Compositing | Description                                                            |
+| ----------- | :--------------------------------------------------------------------: |
+| `"normal"`  | Display the image normally. This is the default.                       |
+| `"invert"`  | Display the image with inverted colors.                                |
+| `"or"`      | White pixels are shown, black pixels are clear.                        |
+| `"and"`     | Black pixels are shown, white pixels are clear.                        |
+| `"clear"`   | The image's white pixels are painted as black, and the rest are clear. |
+| `"set"`     | The image's black pixels are painted as white, and the rest are clear. |
+
 ### Vibe
 
 `Vibe` allows you to trigger vibration on the user wrist.
@@ -998,5 +1045,6 @@ For more information, see [Vector2 in the three.js reference documentation][thre
 [Window.show()]: #window-show
 [Window.hide()]: #window-hide
 [Element.queue(callback(next))]: #element-queue-callback-next
+[Image.compositing(compop)]: #image-compositing
 [Menu.on('select, callback)]: #menu-on-select-callback
 [three.js Vector2]: http://threejs.org/docs/#Reference/Math/Vector2

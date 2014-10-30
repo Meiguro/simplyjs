@@ -130,11 +130,20 @@ static void image_element_draw(GContext *ctx, SimplyStage *self, SimplyElementIm
 static void layer_update_callback(Layer *layer, GContext *ctx) {
   SimplyStage *self = *(void**) layer_get_data(layer);
 
+  GRect frame = layer_get_frame(layer);
+  frame.origin = scroll_layer_get_content_offset(self->window.scroll_layer);
+  frame.origin.x = -frame.origin.x;
+  frame.origin.y = -frame.origin.y;
+
   graphics_context_set_fill_color(ctx, self->window.background_color);
-  graphics_fill_rect(ctx, layer_get_frame(layer), 0, GCornerNone);
+  graphics_fill_rect(ctx, frame, 0, GCornerNone);
 
   SimplyElementCommon *element = (SimplyElementCommon*) self->stage_layer.elements;
   while (element) {
+    int16_t max_y = element->frame.origin.y + element->frame.size.h;
+    if (max_y > frame.size.h) {
+      frame.size.h = max_y;
+    }
     switch (element->type) {
       case SimplyElementTypeNone:
         break;
@@ -154,6 +163,12 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
         break;
     }
     element = (SimplyElementCommon*) element->node.next;
+  }
+
+  if (self->window.is_scrollable) {
+    frame.origin = GPointZero;
+    layer_set_frame(layer, frame);
+    scroll_layer_set_content_size(self->window.scroll_layer, frame.size);
   }
 }
 

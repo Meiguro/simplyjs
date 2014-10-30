@@ -8,11 +8,21 @@
 #include "simply.h"
 
 #include "util/graphics.h"
+#include "util/scroll_layer.h"
 #include "util/string.h"
 
 #include <pebble.h>
 
 static void click_config_provider(void *data);
+
+static void set_scroll_layer_click_config(SimplyWindow *self) {
+  if (!self->scroll_layer) {
+    return;
+  }
+
+  scroll_layer_set_click_config_provider_onto_window(
+      self->scroll_layer, click_config_provider, self->window, self);
+}
 
 void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
   if (self->is_scrollable == is_scrollable) {
@@ -21,11 +31,7 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
 
   self->is_scrollable = is_scrollable;
 
-  if (!self->scroll_layer) {
-    return;
-  }
-
-  scroll_layer_set_click_config_onto_window(self->scroll_layer, self->window);
+  set_scroll_layer_click_config(self);
 
   if (!self->layer) {
     return;
@@ -84,12 +90,16 @@ void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
   }
 
   action_bar_layer_remove_from_window(self->action_bar_layer);
-  if (is_action_bar) {
-    action_bar_layer_add_to_window(self->action_bar_layer, self->window);
-    action_bar_layer_set_click_config_provider(self->action_bar_layer, click_config_provider);
-  } else {
-    scroll_layer_set_click_config_onto_window(self->scroll_layer, self->window);
+
+  set_scroll_layer_click_config(self);
+
+  if (!is_action_bar) {
+    return;
   }
+
+  action_bar_layer_set_context(self->action_bar_layer, self);
+  action_bar_layer_set_click_config_provider(self->action_bar_layer, click_config_provider);
+  action_bar_layer_add_to_window(self->action_bar_layer, self->window);
 }
 
 void simply_window_set_action_bar_icon(SimplyWindow *self, ButtonId button, uint32_t id) {
@@ -166,6 +176,9 @@ static void click_config_provider(void *context) {
       window_long_click_subscribe(i, 500, (ClickHandler) long_click_handler, NULL);
     }
   }
+  if (self->is_scrollable) {
+    scroll_layer_click_config(self->scroll_layer);
+  }
 }
 
 void simply_window_load(SimplyWindow *self) {
@@ -180,13 +193,8 @@ void simply_window_load(SimplyWindow *self) {
   layer_add_child(window_layer, scroll_base_layer);
 
   scroll_layer_set_context(scroll_layer, self);
-  scroll_layer_set_callbacks(scroll_layer, (ScrollLayerCallbacks) {
-    .click_config_provider = click_config_provider,
-  });
 
-  if (self->is_action_bar) {
-    simply_window_set_action_bar(self, true);
-  }
+  simply_window_set_action_bar(self, self->is_action_bar);
 }
 
 void simply_window_unload(SimplyWindow *self) {
@@ -205,7 +213,7 @@ SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply) {
 
   Window *window = self->window = window_create();
   window_set_background_color(window, GColorClear);
-  window_set_click_config_provider(window, click_config_provider);
+  window_set_click_config_provider_with_context(window, click_config_provider, self);
 
   ActionBarLayer *action_bar_layer = self->action_bar_layer = action_bar_layer_create();
   action_bar_layer_set_context(action_bar_layer, self);

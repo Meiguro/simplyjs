@@ -469,7 +469,7 @@ Pebble.js provides three types of Windows:
 | `clear`        | boolean   |           |                                                                                                 |
 | `action`       | actionDef | None      | An action bar will be shown when configured with an `actionDef`.                                |
 | `fullscreen`   | boolean   | false     | When true, the Pebble status bar will not be visible and the window will use the entire screen. |
-| `scrollable`   | boolean   | false     | When true, the up and down button will scroll the content of this Card.                         |
+| `scrollable`   | boolean   | false     | Whether the user can scroll this Window with the up and down button. When this is enabled, single and long click events on the up and down button will not be transmitted to your app. |
 
 <a id="window-actiondef"></a>
 #### Window actionDef
@@ -625,7 +625,7 @@ The properties available on a [Card] are:
 | `icon`       | Image     | null      | An image to display before the title text. Refer to [Using Images] for instructions on how to include images in your app.                                                                     |
 | `subicon`    | Image     | null      | An image to display before the subtitle text. Refer to [Using Images] for instructions on how to include images in your app.                                                                     |
 | `banner`     | Image     | null      | An image to display in the center of the screen. Refer to [Using Images] for instructions on how to include images in your app.                                                                     |
-| `scrollable` | boolean   | false     | Whether the user can scroll this card with the up and down button. When this is enabled, click events on the up and down button will not be transmitted to your app. |
+| `scrollable` | boolean   | false     | Whether the user can scroll this card with the up and down button. When this is enabled, single and long click events on the up and down button will not be transmitted to your app. |
 | `style`      | string    | "small"   | Selects the font used to display the body. This can be 'small', 'large' or 'mono'                                                                                    |
 
 The small and large styles correspond to the system notification styles. Mono sets a monospace font for the body textfield, enabling more complex text UIs or ASCII art.

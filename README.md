@@ -7,7 +7,7 @@ Pebble.js applications run on your phone. They have access to all the resources 
 
 **Warning:** Pebble.js is still in beta, so breaking API changes are possible. Pebble.js is best suited for prototyping and applications that inherently require communication in response to user actions, such as accessing the internet. Please be aware that as a result of Bluetooth round-trips for all actions, Pebble.js apps will use more power and respond slower to user interaction than a similar native app.
 
-> ![JSConf 2014](http://2014.jsconf.us/img/logo.png)
+> ![JSConf 2014](//jsconf.github.io/jsconfus2014/img/logo.png)
 >
 > Pebble.js was announced during JSConf 2014!
 

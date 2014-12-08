@@ -752,7 +752,7 @@ Removes the element from its [Window].
 
 #### Element.animate(animateDef, [duration=400])
 
-The `position` and `size` properties can be animated. An `animateDef` is object with any supported properties specified. See [Element] for a description of those properties. The default animation duration is 400 milliseconds.
+The `position` and `size` are currently the only Element properties that can be animated. An `animateDef` is object with any supported properties specified. See [Element] for a description of those properties. The default animation duration is 400 milliseconds.
 
 ````js
 // Use the element's position and size to avoid allocating more vectors.
@@ -767,7 +767,7 @@ size.addSelf(size);
 element.animate({ position: pos, size: size });
 ````
 
-Animations are queued when `Element.animate` is called multiple times at once. The animations will occur in order, and the first animation will occur immediately.
+Each element has its own animation queue. Animations are queued when `Element.animate` is called multiple times at once with the same element. The animations will occur in order, and the first animation will occur immediately. Note that because each element has its own queue, calling `Element.animate` across different elements will result all elements animating the same time. To queue animations across multiple elements, see [Element.queue(callback(next))].
 
 When an animation begins, its destination values are saved immediately to the [Element].
 
@@ -786,7 +786,7 @@ element.animate('position', pos, 1000);
 <a id="element-queue-callback-next"></a>
 #### Element.queue(callback(next))
 
-`Element.queue` can be used to perform tasks that are dependent upon an animation completing, such as preparing the element for a different animation. It is recommended to use `Element.queue` instead of a timeout if the same element will be animated after the custom task.
+`Element.queue` can be used to perform tasks that are dependent upon an animation completing, such as preparing the element for a different animation. `Element.queue` can also be used to coordinate animations across different elements. It is recommended to use `Element.queue` instead of a timeout if the same element will be animated after the custom task.
 
 The `callback` you pass to `Element.queue` will be called with a function `next` as the first parameter. When `next` is called, the next item in the animation queue will begin. Items includes callbacks added by `Element.queue` or animations added by `Element.animate` before an animation is complete. Calling `next` is equivalent to calling `Element.dequeue`.
 
@@ -797,7 +797,7 @@ element
     this.backgroundColor('white');
     next();
   })
-  .animate('position', new Vector2(0, 50)
+  .animate('position', new Vector2(0, 50));
 ````
 
 `Element.queue` is chainable.

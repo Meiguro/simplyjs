@@ -742,6 +742,10 @@ SimplyPebble.cardImage = function(field, image) {
   SimplyPebble.sendPacket(CardImagePacket.index(field).image(image));
 };
 
+SimplyPebble.cardStyle = function(field, style) {
+  SimplyPebble.sendPacket(CardStylePacket.style(style));
+};
+
 SimplyPebble.card = function(def, clear, pushing) {
   if (arguments.length === 3) {
     SimplyPebble.windowShow({ type: 'card', pushing: pushing });
@@ -758,6 +762,8 @@ SimplyPebble.card = function(def, clear, pushing) {
       SimplyPebble.cardText(k, def[k]);
     } else if (cardImageTypes.indexOf(k) !== -1) {
       SimplyPebble.cardImage(k, def[k]);
+    } else if (k === 'style') {
+      SimplyPebble.cardStyle(k, def[k]);
     }
   }
 };

@@ -81,6 +81,7 @@ struct.types.cstring.get = function(offset) {
 };
 
 struct.types.cstring.set = function(offset, value) {
+  value = unescape(encodeURIComponent(value));
   this._grow(offset + value.length + 1);
   var i = offset;
   var buffer = this._view;

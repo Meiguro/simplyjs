@@ -12,6 +12,17 @@ var formify = function(data) {
   return params.join('&');
 };
 
+var deformify = function(form) {
+  var params = {};
+  form.replace(/(?:([^=&]*)=?([^&]*)?)(?:&|$)/g, function(_, name, value) {
+    if (name) {
+      params[name] = value || true;
+    }
+    return _;
+  });
+  return params;
+};
+
 /**
  * ajax options. There are various properties with url being the only required property.
  * @typedef ajaxOptions
@@ -79,16 +90,22 @@ var ajax = function(opt, success, failure) {
   }
 
   req.onreadystatechange = function(e) {
-    if (req.readyState == 4) {
+    if (req.readyState === 4) {
       var body = req.responseText;
-      if (opt.type == 'json') {
-        body = JSON.parse(body);
+      var okay = req.status >= 200 && req.status < 300 || req.status === 304;
+
+      try {
+        if (opt.type === 'json') {
+          body = JSON.parse(body);
+        } else if (opt.type === 'form') {
+          body = deformify(body);
+        }
+      } catch (err) {
+        okay = false;
       }
-      var status = req.status;
-      var okay = status >= 200 && status < 300 || status === 304;
-      var callback = status ? success : failure;
+      var callback = okay ? success : failure;
       if (callback) {
-        callback(body, status, req);
+        callback(body, req.status, req);
       }
     }
   };
@@ -97,6 +114,7 @@ var ajax = function(opt, success, failure) {
 };
 
 ajax.formify = formify;
+ajax.deformify = deformify;
 
 return ajax;
 

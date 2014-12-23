@@ -79,12 +79,13 @@ var ajax = function(opt, success, failure) {
     }
   }
 
-  var data = null;
-  if (opt.data) {
+  var data = opt.data;
+  if (data) {
     if (opt.type === 'json') {
       req.setRequestHeader('Content-Type', 'application/json');
       data = JSON.stringify(opt.data);
-    } else {
+    } else if (opt.type !== 'text') {
+      req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       data = formify(opt.data);
     }
   }

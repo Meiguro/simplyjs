@@ -16,7 +16,7 @@ simply.on('accelTap', function(e) {
   simply.subtitle('Tapped ' + (e.direction > 0 ? '+' : '-') + e.axis + '!');
 });
 
-simply.setText({
+simply.text({
   title: 'Simply Demo!',
   body: 'This is a demo. Press buttons or tap the watch!',
 }, true);

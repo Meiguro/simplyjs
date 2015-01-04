@@ -469,7 +469,7 @@ static void handle_vibe_packet(Simply *simply, Packet *data) {
   VibePacket *packet = (VibePacket*) data;
   switch (packet->type) {
     case VibeShort: vibes_short_pulse(); break;
-    case VibeLong: vibes_short_pulse(); break;
+    case VibeLong: vibes_long_pulse(); break;
     case VibeDouble: vibes_double_pulse(); break;
   }
 }

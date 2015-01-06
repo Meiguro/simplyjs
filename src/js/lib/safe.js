@@ -93,7 +93,7 @@ safe.translateStack = function(stack) {
 
 safe.translateError = function(err) {
   var name = err.name;
-  var message = err.message;
+  var message = err.message || err.toString();
   var stack = err.stack;
   var result = ['JavaScript Error:'];
   if (message && (!stack || !stack.match(message))) {

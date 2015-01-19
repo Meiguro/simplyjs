@@ -982,6 +982,7 @@ SimplyPebble.onPacket = function(buffer, offset) {
   packet._offset = offset;
   switch (packet) {
     case WindowHideEventPacket:
+      ImageService.markAllUnloaded();
       WindowStack.emitHide(packet.id());
       break;
     case ClickPacket:

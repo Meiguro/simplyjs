@@ -10,7 +10,8 @@ typedef struct SimplyMsg SimplyMsg;
 
 struct SimplyMsg {
   Simply *simply;
-  List1Node *queue;
+  List1Node *send_queue;
+  List1Node *receive_queue;
   uint32_t send_delay_ms;
   AppTimer *send_timer;
   uint8_t *send_buffer;

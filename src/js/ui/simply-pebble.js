@@ -29,8 +29,14 @@ var StringType = function(x) {
   return '' + x;
 };
 
+var UTF8ByteLength = function(x) {
+  return unescape(encodeURIComponent(x)).length;
+};
+
 var EnumerableType = function(x) {
-  if (x && x.hasOwnProperty('length')) {
+  if (typeof x === 'string') {
+    return UTF8ByteLength(x);
+  } else if (x && x.hasOwnProperty('length')) {
     return x.length;
   }
   return x ? Number(x) : 0;

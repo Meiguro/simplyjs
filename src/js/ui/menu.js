@@ -297,9 +297,7 @@ Menu.prototype.selection = function(callback) {
   simply.impl.menuSelection();
 };
 
-Menu.emit = function(type, subtype, e) {
-  Window.emit(type, subtype, e, Menu);
-};
+Menu.emit = Window.emit;
 
 Menu.emitSection = function(sectionIndex) {
   var menu = WindowStack.top();

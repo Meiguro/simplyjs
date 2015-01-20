@@ -538,6 +538,32 @@ You can register a handler for the 'up', 'select', 'down', and 'back' buttons.
 
 Just like `Window.on('click', button, handler)` but for 'longClick' events.
 
+#### Window.on('show', handler)
+
+Registers a handler to call when the window is shown. This is useful for knowing when a user returns to your window from another. This event is also emitted when programmatically showing the window. This does not include when a Pebble notification popup is exited, revealing your window.
+
+````js
+// Define the handler before showing.
+wind.on('show', function() {
+  console.log('Window is shown!');
+});
+
+// The show event will emit, and the handler will be called.
+wind.show();
+````
+
+#### Window.on('hide', handler)
+
+Registers a handler to call when the window is hidden. This is useful for knowing when a user exits out of your window or when your window is no longer visible because a different window is pushed on top. This event is also emitted when programmatically hiding the window. This does not include when a Pebble notification popup obstructs your window.
+
+It is recommended to use this instead of overriding the back button when appropriate.
+
+````js
+wind.on('hide', function() {
+  console.log('Window is hidden!');
+});
+````
+
 #### Window.action(actionDef)
 
 This is a special nested accessor to the `action` property which takes an `actionDef`. It can be used to set a new `actionDef`. See [Window actionDef].

@@ -229,6 +229,12 @@ var Packet = new struct([
   ['uint16', 'length'],
 ]);
 
+var SegmentPacket = new struct([
+  [Packet, 'packet'],
+  ['bool', 'isLast'],
+  ['data', 'buffer'],
+]);
+
 var WindowShowPacket = new struct([
   [Packet, 'packet'],
   ['uint8', 'type', WindowType],
@@ -508,6 +514,7 @@ var ElementAnimateDonePacket = new struct([
 
 var CommandPackets = [
   Packet,
+  SegmentPacket,
   WindowShowPacket,
   WindowHidePacket,
   WindowShowEventPacket,
@@ -657,11 +664,11 @@ var PacketQueue = function() {
   this._send = this.send.bind(this);
 };
 
-PacketQueue.prototype._maxPayloadSize = 2048 - 20;
+PacketQueue.prototype._maxPayloadSize = 2044 - 32;
 
 PacketQueue.prototype.add = function(packet) {
   var byteArray = toByteArray(packet);
-  if (this._message.length + byteArray.length >= this._maxPayloadSize) {
+  if (this._message.length + byteArray.length > this._maxPayloadSize) {
     this.send();
   }
   Array.prototype.push.apply(this._message, byteArray);
@@ -670,12 +677,31 @@ PacketQueue.prototype.add = function(packet) {
 };
 
 PacketQueue.prototype.send = function() {
+  if (this._message.length === 0) {
+    return;
+  }
   state.messageQueue.send({ 0: this._message });
   this._message = [];
 };
 
+SimplyPebble.sendMultiPacket = function(packet) {
+  var byteArray = toByteArray(packet);
+  var totalSize = byteArray.length;
+  var segmentSize = state.packetQueue._maxPayloadSize - Packet._size;
+  for (var i = 0; i < totalSize; i += segmentSize) {
+    var isLast = (i + segmentSize) >= totalSize;
+    var buffer = byteArray.slice(i, Math.min(totalSize, i + segmentSize));
+    SegmentPacket.isLast((i + segmentSize) >= totalSize).buffer(buffer);
+    state.packetQueue.add(SegmentPacket);
+  }
+};
+
 SimplyPebble.sendPacket = function(packet) {
-  state.packetQueue.add(packet);
+  if (packet._cursor < state.packetQueue._maxPayloadSize) {
+    state.packetQueue.add(packet);
+  } else {
+    SimplyPebble.sendMultiPacket(packet);
+  }
 };
 
 SimplyPebble.windowShow = function(def) {
@@ -962,6 +988,7 @@ SimplyPebble.onPacket = function(buffer, offset) {
   packet._offset = offset;
   switch (packet) {
     case WindowHideEventPacket:
+      ImageService.markAllUnloaded();
       WindowStack.emitHide(packet.id());
       break;
     case ClickPacket:

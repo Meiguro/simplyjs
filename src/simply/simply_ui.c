@@ -260,6 +260,8 @@ static void window_appear(Window *window) {
 static void window_disappear(Window *window) {
   SimplyUi *self = window_get_user_data(window);
   simply_window_stack_send_hide(self->window.simply->window_stack, &self->window);
+
+  simply_res_clear(self->window.simply->res);
 }
 
 static void window_unload(Window *window) {

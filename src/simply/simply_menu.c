@@ -264,6 +264,7 @@ static void window_disappear(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
   simply_window_stack_send_hide(self->window.simply->window_stack, &self->window);
 
+  simply_res_clear(self->window.simply->res);
   simply_menu_clear(self);
 }
 

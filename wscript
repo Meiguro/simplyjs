@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 from waflib.Configure import conf
 
@@ -30,7 +31,8 @@ def build(ctx):
 def concat_javascript(self, *k, **kw):
     js_path = kw['js_path']
     js_nodes = (self.path.ant_glob(js_path + '/**/*.js') +
-                self.path.ant_glob(js_path + '/**/*.json'))
+                self.path.ant_glob(js_path + '/**/*.json') +
+                self.path.ant_glob(js_path + '/**/*.coffee'))
 
     if not js_nodes:
         return []
@@ -48,6 +50,19 @@ def concat_javascript(self, *k, **kw):
                     lineno=lineno,
                     body=source['body'])
 
+        def coffeescript_compile(relpath, body):
+            try:
+                import coffeescript
+            except ImportError:
+                self.fatal("""
+    Coffeescript file '%s' found but coffeescript module isn't installed.
+    You may try `pip install coffeescript` or `easy_install coffeescript`.
+                """ % (relpath))
+            body = coffeescript.compile(body)
+            # change ".coffee" or ".js.coffee" extensions to ".js"
+            relpath = re.sub('(\.js)?\.coffee$', '.js', relpath)
+            return relpath, body
+
         sources = []
         for node in task.inputs:
             relpath = os.path.relpath(node.abspath(), js_path)
@@ -55,6 +70,9 @@ def concat_javascript(self, *k, **kw):
                 body = f.read()
                 if relpath.endswith('.json'):
                     body = JSON_TEMPLATE.format(body=body)
+                elif relpath.endswith('.coffee'):
+                    relpath, body = coffeescript_compile(relpath, body)
+
                 if relpath == LOADER_PATH:
                     sources.insert(0, body)
                 elif relpath.startswith('vendor/'):

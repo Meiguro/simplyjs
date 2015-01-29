@@ -1,6 +1,12 @@
 import json
 import os
 
+try:
+    import coffeescript
+    import re # only needed for coffeescript files
+except ImportError:
+    pass # allow coffeescript module to be optional
+
 from waflib.Configure import conf
 
 top = '.'
@@ -30,7 +36,8 @@ def build(ctx):
 def concat_javascript(self, *k, **kw):
     js_path = kw['js_path']
     js_nodes = (self.path.ant_glob(js_path + '/**/*.js') +
-                self.path.ant_glob(js_path + '/**/*.json'))
+                self.path.ant_glob(js_path + '/**/*.json') +
+                self.path.ant_glob(js_path + '/**/*.coffee'))
 
     if not js_nodes:
         return []
@@ -60,6 +67,17 @@ def concat_javascript(self, *k, **kw):
                 elif relpath.startswith('vendor/'):
                     sources.append(body)
                 else:
+                    if relpath.endswith('.coffee'):
+                        try:
+                            body = coffeescript.compile(body)
+                        except NameError:
+                            self.fatal("""
+    Coffeescript file '%s' found but coffeescript module isn't installed.
+    You may try `pip install coffeescript` or `easy_install coffeescript`.
+                            """ % (relpath))
+                        # change ".coffee" or ".js.coffee" extensions to ".js"
+                        relpath = re.sub('(\.js)?\.coffee$', '.js', relpath)
+
                     sources.append({ 'relpath': relpath, 'body': body })
 
         with open(APPINFO_PATH, 'r') as f:

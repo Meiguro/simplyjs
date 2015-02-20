@@ -43,6 +43,7 @@ enum Command {
   CommandCardImage,
   CommandCardStyle,
   CommandVibe,
+  CommandLight,
   CommandAccelPeek,
   CommandAccelConfig,
   CommandAccelData,
@@ -86,6 +87,14 @@ enum VibeType {
   VibeShort = 0,
   VibeLong = 1,
   VibeDouble = 2,
+};
+
+typedef enum LightType LightType;
+
+enum LightType {
+  LightOn = 0,
+  LightAuto = 1,
+  LightTrigger = 2,
 };
 
 typedef struct Packet Packet;
@@ -206,6 +215,13 @@ typedef struct VibePacket VibePacket;
 struct __attribute__((__packed__)) VibePacket {
   Packet packet;
   VibeType type:8;
+};
+
+typedef struct LightPacket LightPacket;
+
+struct __attribute__((__packed__)) LightPacket {
+  Packet packet;
+  LightType type:8;
 };
 
 typedef Packet AccelPeekPacket;
@@ -546,6 +562,15 @@ static void handle_vibe_packet(Simply *simply, Packet *data) {
   }
 }
 
+static void handle_light_packet(Simply *simply, Packet *data) {
+  LightPacket *packet = (LightPacket*) data;
+  switch (packet->type) {
+    case LightOn: light_enable(true); break;
+    case LightAuto: light_enable(false); break;
+    case LightTrigger: light_enable_interaction(); break;
+  }
+}
+
 static void accel_peek_timer_callback(void *context) {
   Simply *simply = context;
   AccelData data = { .x = 0 };
@@ -762,6 +787,9 @@ static void handle_packet(Simply *simply, Packet *packet) {
       break;
     case CommandVibe:
       handle_vibe_packet(simply, packet);
+      break;
+    case CommandLight:
+      handle_light_packet(simply, packet);
       break;
     case CommandAccelPeek:
       handle_accel_peek_packet(simply, packet);

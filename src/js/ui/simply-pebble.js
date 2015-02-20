@@ -224,6 +224,14 @@ var vibeTypes = [
 
 var VibeType = makeArrayType(vibeTypes);
 
+var LightTypes = [
+  'on',
+  'auto',
+  'trigger'
+];
+
+var LightType = makeArrayType(LightTypes);
+
 var Packet = new struct([
   ['uint16', 'type'],
   ['uint16', 'length'],
@@ -321,6 +329,11 @@ var CardStylePacket = new struct([
 var VibePacket = new struct([
   [Packet, 'packet'],
   ['uint8', 'type', VibeType],
+]);
+
+var LightPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'type', LightType],
 ]);
 
 var AccelPeekPacket = new struct([
@@ -530,6 +543,7 @@ var CommandPackets = [
   CardImagePacket,
   CardStylePacket,
   VibePacket,
+  LightPacket,
   AccelPeekPacket,
   AccelConfigPacket,
   AccelDataPacket,
@@ -802,6 +816,10 @@ SimplyPebble.card = function(def, clear, pushing) {
 
 SimplyPebble.vibe = function(type) {
   SimplyPebble.sendPacket(VibePacket.type(type));
+};
+
+SimplyPebble.light = function(type) {
+  SimplyPebble.sendPacket(LightPacket.type(type));
 };
 
 var accelListeners = [];

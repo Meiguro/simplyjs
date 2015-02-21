@@ -998,6 +998,25 @@ Vibe.vibrate('long');
 | ---- |:----:|:--------:|---------|-------------|
 | `type` | string | optional | `short` | The duration of the vibration. `short`, `long` or `double`. |
 
+### Light
+
+`Light` allows you to control the Pebble's backlight.
+````js
+var Light = require('ui/light');
+
+// Turn on the light
+Light.on('long');
+````
+
+#### Light.on()
+Turn on the light indefinitely.
+
+#### Light.auto()
+Restore the normal behaviour.
+
+#### Light.trigger()
+Trigger the backlight, just like if the user shook his wrist.
+
 ## Libraries
 
 Pebble.js includes several libraries to help you write applications.

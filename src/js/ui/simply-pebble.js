@@ -173,56 +173,56 @@ var makeFlagsType = function(types) {
   };
 };
 
-var windowTypes = [
+var WindowTypes = [
   'window',
   'menu',
   'card',
 ];
 
-var WindowType = makeArrayType(windowTypes);
+var WindowType = makeArrayType(WindowTypes);
 
-var buttonTypes = [
+var ButtonTypes = [
   'back',
   'up',
   'select',
   'down',
 ];
 
-var ButtonType = makeArrayType(buttonTypes);
+var ButtonType = makeArrayType(ButtonTypes);
 
-var ButtonFlagsType = makeFlagsType(buttonTypes);
+var ButtonFlagsType = makeFlagsType(ButtonTypes);
 
-var cardTextTypes = [
+var CardTextTypes = [
   'title',
   'subtitle',
   'body',
 ];
 
-var CardTextType = makeArrayType(cardTextTypes);
+var CardTextType = makeArrayType(CardTextTypes);
 
-var cardImageTypes = [
+var CardImageTypes = [
   'icon',
   'subicon',
   'banner',
 ];
 
-var CardImageType = makeArrayType(cardImageTypes);
+var CardImageType = makeArrayType(CardImageTypes);
 
-var cardStyleTypes = [
+var CardStyleTypes = [
   'small',
   'large',
   'mono',
 ];
 
-var CardStyleType = makeArrayType(cardStyleTypes);
+var CardStyleType = makeArrayType(CardStyleTypes);
 
-var vibeTypes = [
+var VibeTypes = [
   'short',
   'long',
   'double',
 ];
 
-var VibeType = makeArrayType(vibeTypes);
+var VibeType = makeArrayType(VibeTypes);
 
 var LightTypes = [
   'on',
@@ -804,9 +804,9 @@ SimplyPebble.card = function(def, clear, pushing) {
     SimplyPebble.windowActionBar(def.action);
   }
   for (var k in def) {
-    if (cardTextTypes.indexOf(k) !== -1) {
+    if (CardTextTypes.indexOf(k) !== -1) {
       SimplyPebble.cardText(k, def[k]);
-    } else if (cardImageTypes.indexOf(k) !== -1) {
+    } else if (CardImageTypes.indexOf(k) !== -1) {
       SimplyPebble.cardImage(k, def[k]);
     } else if (k === 'style') {
       SimplyPebble.cardStyle(k, def[k]);
@@ -1010,10 +1010,10 @@ SimplyPebble.onPacket = function(buffer, offset) {
       WindowStack.emitHide(packet.id());
       break;
     case ClickPacket:
-      Window.emitClick('click', buttonTypes[packet.button()]);
+      Window.emitClick('click', ButtonTypes[packet.button()]);
       break;
     case LongClickPacket:
-      Window.emitClick('longClick', buttonTypes[packet.button()]);
+      Window.emitClick('longClick', ButtonTypes[packet.button()]);
       break;
     case AccelDataPacket:
       var samples = packet.samples();

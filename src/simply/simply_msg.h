@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simply_msg_commands.h"
+
 #include "simply.h"
 
 #include "util/list1.h"
@@ -26,25 +28,19 @@ struct SimplyPacket {
   void *buffer;
 };
 
+typedef struct Packet Packet;
+
+struct __attribute__((__packed__)) Packet {
+  uint16_t type;
+  uint16_t length;
+};
+
+typedef void (*PacketHandler)(Simply *simply, Packet *packet);
+
 SimplyMsg *simply_msg_create(Simply *simply);
 void simply_msg_destroy(SimplyMsg *self);
 bool simply_msg_has_communicated();
 void simply_msg_show_disconnected(SimplyMsg *self);
 
-bool simply_msg_single_click(SimplyMsg *self, ButtonId button);
-bool simply_msg_long_click(SimplyMsg *self, ButtonId button);
-
-bool simply_msg_window_show(SimplyMsg *self, uint32_t id);
-bool simply_msg_window_hide(SimplyMsg *self, uint32_t id);
-
-bool simply_msg_accel_tap(SimplyMsg *self, AccelAxisType axis, int32_t direction);
-bool simply_msg_accel_data(SimplyMsg *self, AccelData *accel, uint32_t num_samples, bool is_peek);
-
-bool simply_msg_menu_get_section(SimplyMsg *self, uint16_t index);
-bool simply_msg_menu_get_item(SimplyMsg *self, uint16_t section, uint16_t index);
-bool simply_msg_menu_select_click(SimplyMsg *self, uint16_t section, uint16_t index);
-bool simply_msg_menu_select_long_click(SimplyMsg *self, uint16_t section, uint16_t index);
-bool simply_msg_menu_hide(SimplyMsg *self, uint16_t section, uint16_t index);
-bool simply_msg_send_menu_selection(SimplyMsg *self);
-
-bool simply_msg_animate_element_done(SimplyMsg *self, uint32_t id);
+bool simply_msg_send(uint8_t *buffer, size_t length);
+bool simply_msg_send_packet(Packet *packet);

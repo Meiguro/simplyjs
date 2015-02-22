@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simply_msg.h"
+
 #include "simply.h"
 
 #include <pebble.h>
@@ -40,3 +42,5 @@ void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar);
 void simply_window_set_action_bar_icon(SimplyWindow *self, ButtonId button, uint32_t id);
 void simply_window_set_action_bar_background_color(SimplyWindow *self, GColor background_color);
 void simply_window_action_bar_clear(SimplyWindow *self);
+
+bool simply_window_handle_packet(Simply *simply, Packet *packet);

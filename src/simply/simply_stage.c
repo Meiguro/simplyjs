@@ -14,6 +14,112 @@
 
 #include <pebble.h>
 
+typedef Packet StageClearPacket;
+
+typedef struct ElementInsertPacket ElementInsertPacket;
+
+struct __attribute__((__packed__)) ElementInsertPacket {
+  Packet packet;
+  uint32_t id;
+  SimplyElementType type:8;
+  uint16_t index;
+};
+
+typedef struct ElementRemovePacket ElementRemovePacket;
+
+struct __attribute__((__packed__)) ElementRemovePacket {
+  Packet packet;
+  uint32_t id;
+};
+
+typedef struct ElementCommonPacket ElementCommonPacket;
+
+struct __attribute__((__packed__)) ElementCommonPacket {
+  Packet packet;
+  uint32_t id;
+  GRect frame;
+  GColor background_color:8;
+  GColor border_color:8;
+};
+
+typedef struct ElementRadiusPacket ElementRadiusPacket;
+
+struct __attribute__((__packed__)) ElementRadiusPacket {
+  Packet packet;
+  uint32_t id;
+  uint16_t radius;
+};
+
+typedef struct ElementTextPacket ElementTextPacket;
+
+struct __attribute__((__packed__)) ElementTextPacket {
+  Packet packet;
+  uint32_t id;
+  TimeUnits time_units:8;
+  char text[];
+};
+
+typedef struct ElementTextStylePacket ElementTextStylePacket;
+
+struct __attribute__((__packed__)) ElementTextStylePacket {
+  Packet packet;
+  uint32_t id;
+  GColor color:8;
+  GTextOverflowMode overflow_mode:8;
+  GTextAlignment alignment:8;
+  uint32_t custom_font;
+  char system_font[];
+};
+
+typedef struct ElementImagePacket ElementImagePacket;
+
+struct __attribute__((__packed__)) ElementImagePacket {
+  Packet packet;
+  uint32_t id;
+  uint32_t image;
+  GCompOp compositing:8;
+};
+
+typedef struct ElementAnimatePacket ElementAnimatePacket;
+
+struct __attribute__((__packed__)) ElementAnimatePacket {
+  Packet packet;
+  uint32_t id;
+  GRect frame;
+  uint32_t duration;
+  AnimationCurve curve:8;
+};
+
+typedef struct ElementAnimateDonePacket ElementAnimateDonePacket;
+
+struct __attribute__((__packed__)) ElementAnimateDonePacket {
+  Packet packet;
+  uint32_t id;
+};
+
+static void simply_stage_clear(SimplyStage *self);
+
+static void simply_stage_update(SimplyStage *self);
+static void simply_stage_update_ticker(SimplyStage *self);
+
+static SimplyElementCommon* simply_stage_auto_element(SimplyStage *self, uint32_t id, SimplyElementType type);
+static SimplyElementCommon* simply_stage_insert_element(SimplyStage *self, int index, SimplyElementCommon *element);
+static SimplyElementCommon* simply_stage_remove_element(SimplyStage *self, SimplyElementCommon *element);
+
+static void simply_stage_set_element_frame(SimplyStage *self, SimplyElementCommon *element, GRect frame);
+
+static SimplyAnimation *simply_stage_animate_element(SimplyStage *self,
+    SimplyElementCommon *element, SimplyAnimation* animation, GRect to_frame);
+
+static bool send_animate_element_done(SimplyMsg *self, uint32_t id) {
+  ElementAnimateDonePacket packet = {
+    .packet.type = CommandElementAnimateDone,
+    .packet.length = sizeof(packet),
+    .id = id,
+  };
+  return simply_msg_send_packet(&packet.packet);
+}
+
 static bool id_filter(List1Node *node, void *data) {
   return (((SimplyElementCommon*) node)->id == (uint32_t)(uintptr_t) data);
 }
@@ -260,7 +366,7 @@ static void animation_stopped(Animation *base_animation, bool finished, void *co
   }
   SimplyElementCommon *element = animation->element;
   destroy_animation(self, animation);
-  simply_msg_animate_element_done(self->window.simply->msg, element->id);
+  send_animate_element_done(self->window.simply->msg, element->id);
 }
 
 SimplyAnimation *simply_stage_animate_element(SimplyStage *self,
@@ -359,7 +465,7 @@ void simply_stage_update(SimplyStage *self) {
   }
 }
 
-void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   window_stack_schedule_top_window_render();
 }
 
@@ -379,6 +485,139 @@ void simply_stage_update_ticker(SimplyStage *self) {
   } else {
     tick_timer_service_unsubscribe();
   }
+}
+
+static void handle_stage_clear_packet(Simply *simply, Packet *data) {
+  simply_stage_clear(simply->stage);
+}
+
+static void handle_element_insert_packet(Simply *simply, Packet *data) {
+  ElementInsertPacket *packet = (ElementInsertPacket*) data;
+  SimplyElementCommon *element = simply_stage_auto_element(simply->stage, packet->id, packet->type);
+  if (!element) {
+    return;
+  }
+  simply_stage_insert_element(simply->stage, packet->index, element);
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_remove_packet(Simply *simply, Packet *data) {
+  ElementInsertPacket *packet = (ElementInsertPacket*) data;
+  SimplyElementCommon *element = simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  simply_stage_remove_element(simply->stage, element);
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_common_packet(Simply *simply, Packet *data) {
+  ElementCommonPacket *packet = (ElementCommonPacket*) data;
+  SimplyElementCommon *element = simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  simply_stage_set_element_frame(simply->stage, element, packet->frame);
+  element->background_color = packet->background_color;
+  element->border_color = packet->border_color;
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_radius_packet(Simply *simply, Packet *data) {
+  ElementRadiusPacket *packet = (ElementRadiusPacket*) data;
+  SimplyElementRect *element = (SimplyElementRect*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->radius = packet->radius;
+  simply_stage_update(simply->stage);
+};
+
+static void handle_element_text_packet(Simply *simply, Packet *data) {
+  ElementTextPacket *packet = (ElementTextPacket*) data;
+  SimplyElementText *element = (SimplyElementText*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  if (element->time_units != packet->time_units) {
+    element->time_units = packet->time_units;
+    simply_stage_update_ticker(simply->stage);
+  }
+  strset(&element->text, packet->text);
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_text_style_packet(Simply *simply, Packet *data) {
+  ElementTextStylePacket *packet = (ElementTextStylePacket*) data;
+  SimplyElementText *element = (SimplyElementText*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->text_color = packet->color;
+  element->overflow_mode = packet->overflow_mode;
+  element->alignment = packet->alignment;
+  if (packet->custom_font) {
+    element->font = simply_res_get_font(simply->res, packet->custom_font);
+  } else if (packet->system_font[0]) {
+    element->font = fonts_get_system_font(packet->system_font);
+  }
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_image_packet(Simply *simply, Packet *data) {
+  ElementImagePacket *packet = (ElementImagePacket*) data;
+  SimplyElementImage *element = (SimplyElementImage*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->image = packet->image;
+  element->compositing = packet->compositing;
+  simply_stage_update(simply->stage);
+}
+
+static void handle_element_animate_packet(Simply *simply, Packet *data) {
+  ElementAnimatePacket *packet = (ElementAnimatePacket*) data;
+  SimplyElementCommon *element = simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  SimplyAnimation *animation = malloc0(sizeof(*animation));
+  animation->duration = packet->duration;
+  animation->curve = packet->curve;
+  simply_stage_animate_element(simply->stage, element, animation, packet->frame);
+}
+
+bool simply_stage_handle_packet(Simply *simply, Packet *packet) {
+  switch (packet->type) {
+    case CommandStageClear:
+      handle_stage_clear_packet(simply, packet);
+      return true;
+    case CommandElementInsert:
+      handle_element_insert_packet(simply, packet);
+      return true;
+    case CommandElementRemove:
+      handle_element_remove_packet(simply, packet);
+      return true;
+    case CommandElementCommon:
+      handle_element_common_packet(simply, packet);
+      return true;
+    case CommandElementRadius:
+      handle_element_radius_packet(simply, packet);
+      return true;
+    case CommandElementText:
+      handle_element_text_packet(simply, packet);
+      return true;
+    case CommandElementTextStyle:
+      handle_element_text_style_packet(simply, packet);
+      return true;
+    case CommandElementImage:
+      handle_element_image_packet(simply, packet);
+      return true;
+    case CommandElementAnimate:
+      handle_element_animate_packet(simply, packet);
+      return true;
+  }
+  return false;
 }
 
 SimplyStage *simply_stage_create(Simply *simply) {

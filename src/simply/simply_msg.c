@@ -6,6 +6,7 @@
 #include "simply_menu.h"
 #include "simply_ui.h"
 #include "simply_window_stack.h"
+#include "simply_wakeup.h"
 
 #include "simply.h"
 
@@ -193,6 +194,7 @@ static bool simply_base_handle_packet(Simply *simply, Packet *packet) {
 
 static void handle_packet(Simply *simply, Packet *packet) {
   if (simply_base_handle_packet(simply, packet)) { return; }
+  if (simply_wakeup_handle_packet(simply, packet)) { return; }
   if (simply_window_stack_handle_packet(simply, packet)) { return; }
   if (simply_window_handle_packet(simply, packet)) { return; }
   if (simply_ui_handle_packet(simply, packet)) { return; }

@@ -8,6 +8,7 @@
 #include "simply_msg.h"
 #include "simply_ui.h"
 #include "simply_window_stack.h"
+#include "simply_wakeup.h"
 
 #include <pebble.h>
 
@@ -21,6 +22,8 @@ Simply *simply_init(void) {
   simply->msg = simply_msg_create(simply);
   simply->ui = simply_ui_create(simply);
   simply->window_stack = simply_window_stack_create(simply);
+
+  simply_wakeup_init(simply);
 
   bool animated = false;
   window_stack_push(simply->splash->window, animated);

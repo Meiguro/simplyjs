@@ -4,6 +4,12 @@ typedef enum Command Command;
 
 enum Command {
   CommandSegment = 1,
+  CommandReady,
+  CommandLaunchReason,
+  CommandWakeupSet,
+  CommandWakeupSetResult,
+  CommandWakeupCancel,
+  CommandWakeupEvent,
   CommandWindowShow,
   CommandWindowHide,
   CommandWindowShowEvent,

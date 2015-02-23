@@ -243,6 +243,41 @@ var SegmentPacket = new struct([
   ['data', 'buffer'],
 ]);
 
+var ReadyPacket = new struct([
+  [Packet, 'packet'],
+]);
+
+var LaunchReasonPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'reason'],
+  ['uint32', 'time'],
+  ['bool', 'isTimezone'],
+]);
+
+var WakeupSetPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'timestamp'],
+  ['int32', 'cookie'],
+  ['uint8', 'notifyIfMissed'],
+]);
+
+var WakeupSetResultPacket = new struct([
+  [Packet, 'packet'],
+  ['int32', 'id'],
+  ['int32', 'cookie'],
+]);
+
+var WakeupCancelPacket = new struct([
+  [Packet, 'packet'],
+  ['int32', 'id'],
+]);
+
+var WakeupEventPacket = new struct([
+  [Packet, 'packet'],
+  ['int32', 'id'],
+  ['int32', 'cookie'],
+]);
+
 var WindowShowPacket = new struct([
   [Packet, 'packet'],
   ['uint8', 'type', WindowType],
@@ -528,6 +563,12 @@ var ElementAnimateDonePacket = new struct([
 var CommandPackets = [
   Packet,
   SegmentPacket,
+  ReadyPacket,
+  LaunchReasonPacket,
+  WakeupSetPacket,
+  WakeupSetResultPacket,
+  WakeupCancelPacket,
+  WakeupEventPacket,
   WindowShowPacket,
   WindowHidePacket,
   WindowShowEventPacket,

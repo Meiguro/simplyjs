@@ -1033,10 +1033,10 @@ ajax(
     url: 'http://api.theysaidso.com/qod.json',
     type: 'json'
   },
-  function(data) {
+  function(data, status, request) {
     console.log('Quote of the day is: ' + data.contents.quote);
   },
-  function(error) {
+  function(error, status, request) {
     console.log('The ajax request failed: ' + error);
   }
 );
@@ -1056,9 +1056,9 @@ The supported options are:
 | `async`   | boolean | (optional) | true      | Whether the request will be asynchronous. Specify `false` for a blocking, synchronous request.
 | `cache`   | boolean | (optional) | true      | Whether the result may be cached. Specify `false` to use the internal cache buster which appends the URL with the query parameter `_set` to the current time in milliseconds. |
 
-The `success` callback will be called if the HTTP request is successful (When the status code is 200). The only parameter is the data received from the server. If the option `type: 'json'` was set, the response will automatically be converted to an object; otherwise `data` is a string.
+The `success` callback will be called if the HTTP request is successful (when the status code is inside [200, 300) or 304). The parameters are the data received from the server, the status code, and the request object. If the option `type: 'json'` was set, the response will automatically be converted to an object, otherwise `data` is a string.
 
-The `failure` callback is called when an error occurred. The only parameter is a description of the error.
+The `failure` callback is called when an error occurred. The parameters are the same as `success`.
 
 ### Vector2
 

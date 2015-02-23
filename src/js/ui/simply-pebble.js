@@ -1,6 +1,7 @@
 var struct = require('struct');
 var util2 = require('util2');
 var myutil = require('myutil');
+var Wakeup = require('wakeup');
 var Resource = require('ui/resource');
 var Accel = require('ui/accel');
 var ImageService = require('ui/imageservice');
@@ -21,6 +22,8 @@ var simply = require('ui/simply');
  * First part of this file is defining the commands and types that we will use later.
  */
 
+var state;
+
 var BoolType = function(x) {
   return x ? 1 : 0;
 };
@@ -40,6 +43,13 @@ var EnumerableType = function(x) {
     return x.length;
   }
   return x ? Number(x) : 0;
+};
+
+var TimeType = function(x) {
+  if (x instanceof Date) {
+    x = x.getTime() / 1000;
+  }
+  return (x ? Number(x) : 0) + state.timeOffset;
 };
 
 var ImageType = function(x) {
@@ -256,7 +266,7 @@ var LaunchReasonPacket = new struct([
 
 var WakeupSetPacket = new struct([
   [Packet, 'packet'],
-  ['uint32', 'timestamp'],
+  ['uint32', 'timestamp', TimeType],
   ['int32', 'cookie'],
   ['uint8', 'notifyIfMissed'],
 ]);
@@ -631,8 +641,6 @@ var clearFlagMap = {
  * It's an implementation of an abstract interface used by all the other classes.
  */
 
-var state;
-
 var SimplyPebble = {};
 
 SimplyPebble.init = function() {
@@ -644,11 +652,16 @@ SimplyPebble.init = function() {
 
   state = SimplyPebble.state = {};
 
+  state.timeOffset = new Date().getTimezoneOffset() * -60;
+
   // Initialize the app message queue
   state.messageQueue = new MessageQueue();
 
   // Initialize the packet queue
   state.packetQueue = new PacketQueue();
+
+  // Signal the Pebble that the Phone's app message is ready
+  SimplyPebble.ready();
 };
 
 /**
@@ -757,6 +770,22 @@ SimplyPebble.sendPacket = function(packet) {
   } else {
     SimplyPebble.sendMultiPacket(packet);
   }
+};
+
+SimplyPebble.ready = function() {
+  SimplyPebble.sendPacket(ReadyPacket);
+};
+
+SimplyPebble.wakeupSet = function(timestamp, cookie, notifyIfMissed) {
+  WakeupSetPacket
+    .timestamp(timestamp)
+    .cookie(cookie)
+    .notifyIfMissed(notifyIfMissed);
+  SimplyPebble.sendPacket(WakeupSetPacket);
+};
+
+SimplyPebble.wakeupCancel = function(id) {
+  SimplyPebble.sendPacket(WakeupCancelPacket.id(id === 'all' ? -1 : id));
 };
 
 SimplyPebble.windowShow = function(def) {
@@ -1046,6 +1075,30 @@ SimplyPebble.onPacket = function(buffer, offset) {
   packet._view = Packet._view;
   packet._offset = offset;
   switch (packet) {
+    case LaunchReasonPacket:
+      var remoteTime = LaunchReasonPacket.time();
+      var isTimezone = LaunchReasonPacket.isTimezone();
+      if (isTimezone) {
+        state.timeOffset = 0;
+      } else {
+        var time = new Date().getTime() / 1000;
+        var resolution = 60 * 30;
+        state.timeOffset = Math.round((remoteTime - time) / resolution) * resolution;
+      }
+      break;
+    case WakeupSetResultPacket:
+      var id = packet.id();
+      switch (id) {
+        case -8: id = 'range'; break;
+        case -4: id = 'invalid-argument'; break;
+        case -7: id = 'out-of-resources'; break;
+        case -3: id = 'internal'; break;
+      }
+      Wakeup.emitSetResult(id, packet.cookie());
+      break;
+    case WakeupEventPacket:
+      Wakeup.emitWakeup(packet.id(), packet.cookie());
+      break;
     case WindowHideEventPacket:
       ImageService.markAllUnloaded();
       WindowStack.emitHide(packet.id());

@@ -279,7 +279,7 @@ var WakeupSetPacket = new struct([
   [Packet, 'packet'],
   ['uint32', 'timestamp', TimeType],
   ['int32', 'cookie'],
-  ['uint8', 'notifyIfMissed'],
+  ['uint8', 'notifyIfMissed', BoolType],
 ]);
 
 var WakeupSetResultPacket = new struct([

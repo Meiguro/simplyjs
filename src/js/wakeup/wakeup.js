@@ -51,7 +51,7 @@ Wakeup.get = function(id) {
       cookie: wakeup.cookie,
       data: wakeup.data,
       time: wakeup.params.time,
-      notifyIfMissed: wakeup.params.notifyIfMissed,
+      notifyIfMissed: !!wakeup.params.notifyIfMissed,
     };
   }
 };
@@ -64,10 +64,8 @@ Wakeup.each = function(callback) {
 };
 
 Wakeup.schedule = function(opt, callback) {
-  if (typeof opt === 'number') {
+  if (typeof opt !== 'object' || opt instanceof Date) {
     opt = { time: opt };
-  } else if (opt instanceof Date) {
-    opt = { time: opt.getTime() / 1000 };
   }
   var cookie = opt.cookie || 0;
   this._setRequests.push({
@@ -75,7 +73,7 @@ Wakeup.schedule = function(opt, callback) {
     data: opt.data,
     callback: callback,
   });
-  simply.impl.wakeupSet(opt.time, opt.cookie, opt.notifyIfMissed);
+  simply.impl.wakeupSet(opt.time, cookie, opt.notifyIfMissed);
 };
 
 Wakeup.cancel = function(id) {

@@ -67,11 +67,8 @@ Wakeup.prototype.cancel = function(id) {
   simply.impl.wakeupCancel(id);
 };
 
-Wakeup.prototype._makeWakeupEvent = function(id, cookie, remove) {
+Wakeup.prototype._makeWakeupEvent = function(id, cookie) {
   var wakeup = this.state.wakeups[id];
-  if (remove) {
-    delete this.state.wakeups[id];
-  }
   var e = {
     id: id,
     cookie: cookie,
@@ -110,7 +107,9 @@ Wakeup.prototype.emitSetResult = function(id, cookie) {
 };
 
 Wakeup.prototype.emitWakeup = function(id, cookie) {
-  var e = this._makeWakeupEvent(id, cookie, true);
+  var e = this._makeWakeupEvent(id, cookie);
+  delete this.state.wakeups[id];
+  this._saveData();
   this.emit('wakeup', e);
 };
 

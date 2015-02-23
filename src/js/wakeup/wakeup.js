@@ -57,8 +57,9 @@ Wakeup.get = function(id) {
 };
 
 Wakeup.each = function(callback) {
+  var i = 0;
   for (var id in this.state.wakeups) {
-    callback(this.get(id));
+    callback(this.get(id), i++);
   }
 };
 
@@ -134,7 +135,15 @@ Wakeup.emitSetResult = function(id, cookie) {
 };
 
 Wakeup.emitWakeup = function(id, cookie) {
-  var e = this._makeWakeupEvent(id, cookie);
+  var e;
+  if (typeof id === 'number') {
+    e = this._makeWakeupEvent(id, cookie);
+    e.wakeup = true;
+  } else {
+    e = {
+      wakeup: false,
+    };
+  }
 
   delete this.state.wakeups[id];
   this._saveData();

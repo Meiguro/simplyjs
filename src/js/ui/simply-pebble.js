@@ -183,6 +183,17 @@ var makeFlagsType = function(types) {
   };
 };
 
+var LaunchReasonTypes = [
+  'system',
+  'user',
+  'phone',
+  'wakeup',
+  'worker',
+  'quickLaunch',
+];
+
+var LaunchReasonType = makeArrayType(LaunchReasonTypes);
+
 var WindowTypes = [
   'window',
   'menu',
@@ -259,7 +270,7 @@ var ReadyPacket = new struct([
 
 var LaunchReasonPacket = new struct([
   [Packet, 'packet'],
-  ['uint32', 'reason'],
+  ['uint32', 'reason', LaunchReasonType],
   ['uint32', 'time'],
   ['bool', 'isTimezone'],
 ]);
@@ -1062,6 +1073,53 @@ var toArrayBuffer = function(array, length) {
   return copy;
 };
 
+SimplyPebble.onLaunchReason = function(packet) {
+  var reason = LaunchReasonTypes[packet.reason()];
+  var remoteTime = packet.time();
+  var isTimezone = packet.isTimezone();
+  if (isTimezone) {
+    state.timeOffset = 0;
+  } else {
+    var time = new Date().getTime() / 1000;
+    var resolution = 60 * 30;
+    state.timeOffset = Math.round((remoteTime - time) / resolution) * resolution;
+  }
+  if (reason !== 'wakeup') {
+    Wakeup.emitWakeup('noWakeup', 0);
+  }
+};
+
+SimplyPebble.onWakeupSetResult = function(packet) {
+  var id = packet.id();
+  switch (id) {
+    case -8: id = 'range'; break;
+    case -4: id = 'invalidArgument'; break;
+    case -7: id = 'outOfResources'; break;
+    case -3: id = 'internal'; break;
+  }
+  Wakeup.emitSetResult(id, packet.cookie());
+};
+
+SimplyPebble.onAccelData = function(packet) {
+  var samples = packet.samples();
+  var accels = [];
+  AccelData._view = packet._view;
+  AccelData._offset = packet._size;
+  for (var i = 0; i < samples; ++i) {
+    accels.push(AccelData.prop());
+    AccelData._offset += AccelData._size;
+  }
+  if (!packet.peek()) {
+    Accel.emitAccelData(accels);
+  } else {
+    var handlers = accelListeners;
+    accelListeners = [];
+    for (var j = 0, jj = handlers.length; j < jj; ++j) {
+      Accel.emitAccelData(accels, handlers[j]);
+    }
+  }
+};
+
 SimplyPebble.onPacket = function(buffer, offset) {
   Packet._view = buffer;
   Packet._offset = offset;
@@ -1076,25 +1134,10 @@ SimplyPebble.onPacket = function(buffer, offset) {
   packet._offset = offset;
   switch (packet) {
     case LaunchReasonPacket:
-      var remoteTime = LaunchReasonPacket.time();
-      var isTimezone = LaunchReasonPacket.isTimezone();
-      if (isTimezone) {
-        state.timeOffset = 0;
-      } else {
-        var time = new Date().getTime() / 1000;
-        var resolution = 60 * 30;
-        state.timeOffset = Math.round((remoteTime - time) / resolution) * resolution;
-      }
+      SimplyPebble.onLaunchReason(packet);
       break;
     case WakeupSetResultPacket:
-      var id = packet.id();
-      switch (id) {
-        case -8: id = 'range'; break;
-        case -4: id = 'invalid-argument'; break;
-        case -7: id = 'out-of-resources'; break;
-        case -3: id = 'internal'; break;
-      }
-      Wakeup.emitSetResult(id, packet.cookie());
+      SimplyPebble.onWakeupSetResult(packet);
       break;
     case WakeupEventPacket:
       Wakeup.emitWakeup(packet.id(), packet.cookie());
@@ -1110,23 +1153,7 @@ SimplyPebble.onPacket = function(buffer, offset) {
       Window.emitClick('longClick', ButtonTypes[packet.button()]);
       break;
     case AccelDataPacket:
-      var samples = packet.samples();
-      var accels = [];
-      AccelData._view = packet._view;
-      AccelData._offset = packet._size;
-      for (var i = 0; i < samples; ++i) {
-        accels.push(AccelData.prop());
-        AccelData._offset += AccelData._size;
-      }
-      if (!packet.peek()) {
-        Accel.emitAccelData(accels);
-      } else {
-        var handlers = accelListeners;
-        accelListeners = [];
-        for (var j = 0, jj = handlers.length; j < jj; ++j) {
-          Accel.emitAccelData(accels, handlers[j]);
-        }
-      }
+      SimplyPebble.onAccelData(packet);
       break;
     case AccelTapPacket:
       Accel.emitAccelTap(accelAxes[packet.axis()], packet.direction());

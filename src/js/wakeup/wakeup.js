@@ -12,6 +12,7 @@ util2.copy(Emitter.prototype, Wakeup.prototype);
 Wakeup.prototype.init = function() {
   this.off();
   this._setRequests = [];
+  this._launchCallbacks = [];
   this._loadData();
 };
 
@@ -67,6 +68,14 @@ Wakeup.prototype.cancel = function(id) {
   simply.impl.wakeupCancel(id);
 };
 
+Wakeup.prototype.launch = function(callback) {
+  if (this._launchEvent) {
+    callback(this._launchEvent);
+  } else {
+    this._launchCallbacks.push(callback);
+  }
+};
+
 Wakeup.prototype._makeWakeupEvent = function(id, cookie) {
   var wakeup = this.state.wakeups[id];
   var e = {
@@ -103,14 +112,25 @@ Wakeup.prototype.emitSetResult = function(id, cookie) {
       data: req.data,
     };
   }
-  req.callback(e);
+  return req.callback(e);
 };
 
 Wakeup.prototype.emitWakeup = function(id, cookie) {
   var e = this._makeWakeupEvent(id, cookie);
+
   delete this.state.wakeups[id];
   this._saveData();
-  this.emit('wakeup', e);
+  this._launchEvent = e;
+
+  var callbacks = this._launchCallbacks;
+  this._launchCallbacks = [];
+  for (var i = 0, ii = callbacks.length; i < ii; ++i) {
+    if (callbacks[i](e) === false) {
+      return false;
+    }
+  }
+
+  return this.emit('wakeup', e);
 };
 
 module.exports = new Wakeup();

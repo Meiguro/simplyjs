@@ -364,18 +364,14 @@ static void send_msg_retry(void *data) {
   self->send_timer = app_timer_register(self->send_delay_ms, send_msg_retry, self);
 }
 
-static SimplyPacket *add_packet(SimplyMsg *self, Packet *buffer, Command type, size_t length) {
-  SimplyPacket *packet = malloc0(sizeof(*packet));
+static SimplyPacket *add_packet(SimplyMsg *self, Packet *buffer) {
+  SimplyPacket *packet = malloc(sizeof(*packet));
   if (!packet) {
     free(buffer);
     return NULL;
   }
-  *buffer = (Packet) {
-    .type = type,
-    .length = length,
-  };
   *packet = (SimplyPacket) {
-    .length = length,
+    .length = buffer->length,
     .buffer = buffer,
   };
   list1_append(&self->send_queue, &packet->node);
@@ -394,5 +390,5 @@ bool simply_msg_send_packet(Packet *packet) {
     return false;
   }
   memcpy(copy, packet, packet->length);
-  return add_packet(s_msg, copy, packet->type, packet->length);
+  return add_packet(s_msg, copy);
 }

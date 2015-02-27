@@ -1080,7 +1080,7 @@ SimplyPebble.onLaunchReason = function(packet) {
   if (isTimezone) {
     state.timeOffset = 0;
   } else {
-    var time = new Date().getTime() / 1000;
+    var time = Date.now() / 1000;
     var resolution = 60 * 30;
     state.timeOffset = Math.round((remoteTime - time) / resolution) * resolution;
   }

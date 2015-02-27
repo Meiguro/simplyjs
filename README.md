@@ -752,12 +752,12 @@ There are four types of [Element] that can be instantiated at the moment: [Circl
 
 They all share some common properties:
 
-| Name              | Type      | Default   | Description                                                        |
-| ------------      | :-------: | --------- | -------------                                                      |
-| `position`        | Vector2   |           | Position of this element in the window.                            |
-| `size`            | Vector2   |           | Size of this element in this window.                               |
-| `borderColor`     | string    | ''        | Color of the border of this element ('clear', 'black',or 'white'). |
-| `backgroundColor` | string    | ''        | Background color of this element ('clear', 'black' or 'white').    |
+| Name              | Type      | Default   | Description                                                                    |
+| ------------      | :-------: | --------- | -------------                                                                  |
+| `position`        | Vector2   |           | Position of this element in the window.                                        |
+| `size`            | Vector2   |           | Size of this element in this window. Note that [Circle] uses `radius` instead. |
+| `borderColor`     | string    | ''        | Color of the border of this element ('clear', 'black',or 'white').             |
+| `backgroundColor` | string    | ''        | Background color of this element ('clear', 'black' or 'white').                |
 
 All properties can be initialized by passing an object when creating the Element, and changed with accessors functions who have the name of the properties. Calling an accessor without a parameter will return the current value.
 
@@ -856,6 +856,25 @@ Default properties value:
 
  * `backgroundColor`: 'white'
  * `borderColor`: 'clear'
+
+[Circle] also has the additional property `radius` which it uses for size rather than `size`. [Circle] is also different in that it positions its origin at the position, rather than anchoring by its top left. These differences are to keep the graphics operation characteristics that it is built upon.
+
+````js
+var wind = new UI.Window();
+
+var circle = new UI.Circle({
+  position: new Vector2(72, 84),
+  radius: 25,
+  backgroundColor: 'white',
+});
+
+wind.add(circle);
+wind.show(circle);
+````
+
+#### Circle.radius(radius)
+
+Accessor to the `radius` property. See [Circle]
 
 ### Rect
 

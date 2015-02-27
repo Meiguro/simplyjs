@@ -1,6 +1,7 @@
 var struct = require('struct');
 var util2 = require('util2');
 var myutil = require('myutil');
+var Wakeup = require('wakeup');
 var Resource = require('ui/resource');
 var Accel = require('ui/accel');
 var ImageService = require('ui/imageservice');
@@ -21,6 +22,8 @@ var simply = require('ui/simply');
  * First part of this file is defining the commands and types that we will use later.
  */
 
+var state;
+
 var BoolType = function(x) {
   return x ? 1 : 0;
 };
@@ -40,6 +43,13 @@ var EnumerableType = function(x) {
     return x.length;
   }
   return x ? Number(x) : 0;
+};
+
+var TimeType = function(x) {
+  if (x instanceof Date) {
+    x = x.getTime() / 1000;
+  }
+  return (x ? Number(x) : 0) + state.timeOffset;
 };
 
 var ImageType = function(x) {
@@ -173,56 +183,67 @@ var makeFlagsType = function(types) {
   };
 };
 
-var windowTypes = [
+var LaunchReasonTypes = [
+  'system',
+  'user',
+  'phone',
+  'wakeup',
+  'worker',
+  'quickLaunch',
+];
+
+var LaunchReasonType = makeArrayType(LaunchReasonTypes);
+
+var WindowTypes = [
   'window',
   'menu',
   'card',
 ];
 
-var WindowType = makeArrayType(windowTypes);
+var WindowType = makeArrayType(WindowTypes);
 
-var buttonTypes = [
+var ButtonTypes = [
   'back',
   'up',
   'select',
   'down',
 ];
 
-var ButtonType = makeArrayType(buttonTypes);
+var ButtonType = makeArrayType(ButtonTypes);
 
-var ButtonFlagsType = makeFlagsType(buttonTypes);
+var ButtonFlagsType = makeFlagsType(ButtonTypes);
 
-var cardTextTypes = [
+var CardTextTypes = [
   'title',
   'subtitle',
   'body',
 ];
 
-var CardTextType = makeArrayType(cardTextTypes);
+var CardTextType = makeArrayType(CardTextTypes);
 
-var cardImageTypes = [
+var CardImageTypes = [
   'icon',
   'subicon',
   'banner',
 ];
 
-var CardImageType = makeArrayType(cardImageTypes);
+var CardImageType = makeArrayType(CardImageTypes);
 
-var cardStyleTypes = [
+var CardStyleTypes = [
   'small',
   'large',
   'mono',
 ];
 
-var CardStyleType = makeArrayType(cardStyleTypes);
+var CardStyleType = makeArrayType(CardStyleTypes);
 
-var vibeTypes = [
+var VibeTypes = [
   'short',
   'long',
   'double',
 ];
 
-var VibeType = makeArrayType(vibeTypes);
+var VibeType = makeArrayType(VibeTypes);
 
 var LightTypes = [
   'on',
@@ -241,6 +262,41 @@ var SegmentPacket = new struct([
   [Packet, 'packet'],
   ['bool', 'isLast'],
   ['data', 'buffer'],
+]);
+
+var ReadyPacket = new struct([
+  [Packet, 'packet'],
+]);
+
+var LaunchReasonPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'reason', LaunchReasonType],
+  ['uint32', 'time'],
+  ['bool', 'isTimezone'],
+]);
+
+var WakeupSetPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'timestamp', TimeType],
+  ['int32', 'cookie'],
+  ['uint8', 'notifyIfMissed', BoolType],
+]);
+
+var WakeupSetResultPacket = new struct([
+  [Packet, 'packet'],
+  ['int32', 'id'],
+  ['int32', 'cookie'],
+]);
+
+var WakeupCancelPacket = new struct([
+  [Packet, 'packet'],
+  ['int32', 'id'],
+]);
+
+var WakeupEventPacket = new struct([
+  [Packet, 'packet'],
+  ['int32', 'id'],
+  ['int32', 'cookie'],
 ]);
 
 var WindowShowPacket = new struct([
@@ -528,6 +584,12 @@ var ElementAnimateDonePacket = new struct([
 var CommandPackets = [
   Packet,
   SegmentPacket,
+  ReadyPacket,
+  LaunchReasonPacket,
+  WakeupSetPacket,
+  WakeupSetResultPacket,
+  WakeupCancelPacket,
+  WakeupEventPacket,
   WindowShowPacket,
   WindowHidePacket,
   WindowShowEventPacket,
@@ -590,8 +652,6 @@ var clearFlagMap = {
  * It's an implementation of an abstract interface used by all the other classes.
  */
 
-var state;
-
 var SimplyPebble = {};
 
 SimplyPebble.init = function() {
@@ -603,11 +663,16 @@ SimplyPebble.init = function() {
 
   state = SimplyPebble.state = {};
 
+  state.timeOffset = new Date().getTimezoneOffset() * -60;
+
   // Initialize the app message queue
   state.messageQueue = new MessageQueue();
 
   // Initialize the packet queue
   state.packetQueue = new PacketQueue();
+
+  // Signal the Pebble that the Phone's app message is ready
+  SimplyPebble.ready();
 };
 
 /**
@@ -718,6 +783,22 @@ SimplyPebble.sendPacket = function(packet) {
   }
 };
 
+SimplyPebble.ready = function() {
+  SimplyPebble.sendPacket(ReadyPacket);
+};
+
+SimplyPebble.wakeupSet = function(timestamp, cookie, notifyIfMissed) {
+  WakeupSetPacket
+    .timestamp(timestamp)
+    .cookie(cookie)
+    .notifyIfMissed(notifyIfMissed);
+  SimplyPebble.sendPacket(WakeupSetPacket);
+};
+
+SimplyPebble.wakeupCancel = function(id) {
+  SimplyPebble.sendPacket(WakeupCancelPacket.id(id === 'all' ? -1 : id));
+};
+
 SimplyPebble.windowShow = function(def) {
   SimplyPebble.sendPacket(WindowShowPacket.prop(def));
 };
@@ -804,9 +885,9 @@ SimplyPebble.card = function(def, clear, pushing) {
     SimplyPebble.windowActionBar(def.action);
   }
   for (var k in def) {
-    if (cardTextTypes.indexOf(k) !== -1) {
+    if (CardTextTypes.indexOf(k) !== -1) {
       SimplyPebble.cardText(k, def[k]);
-    } else if (cardImageTypes.indexOf(k) !== -1) {
+    } else if (CardImageTypes.indexOf(k) !== -1) {
       SimplyPebble.cardImage(k, def[k]);
     } else if (k === 'style') {
       SimplyPebble.cardStyle(k, def[k]);
@@ -992,6 +1073,53 @@ var toArrayBuffer = function(array, length) {
   return copy;
 };
 
+SimplyPebble.onLaunchReason = function(packet) {
+  var reason = LaunchReasonTypes[packet.reason()];
+  var remoteTime = packet.time();
+  var isTimezone = packet.isTimezone();
+  if (isTimezone) {
+    state.timeOffset = 0;
+  } else {
+    var time = Date.now() / 1000;
+    var resolution = 60 * 30;
+    state.timeOffset = Math.round((remoteTime - time) / resolution) * resolution;
+  }
+  if (reason !== 'wakeup') {
+    Wakeup.emitWakeup('noWakeup', 0);
+  }
+};
+
+SimplyPebble.onWakeupSetResult = function(packet) {
+  var id = packet.id();
+  switch (id) {
+    case -8: id = 'range'; break;
+    case -4: id = 'invalidArgument'; break;
+    case -7: id = 'outOfResources'; break;
+    case -3: id = 'internal'; break;
+  }
+  Wakeup.emitSetResult(id, packet.cookie());
+};
+
+SimplyPebble.onAccelData = function(packet) {
+  var samples = packet.samples();
+  var accels = [];
+  AccelData._view = packet._view;
+  AccelData._offset = packet._size;
+  for (var i = 0; i < samples; ++i) {
+    accels.push(AccelData.prop());
+    AccelData._offset += AccelData._size;
+  }
+  if (!packet.peek()) {
+    Accel.emitAccelData(accels);
+  } else {
+    var handlers = accelListeners;
+    accelListeners = [];
+    for (var j = 0, jj = handlers.length; j < jj; ++j) {
+      Accel.emitAccelData(accels, handlers[j]);
+    }
+  }
+};
+
 SimplyPebble.onPacket = function(buffer, offset) {
   Packet._view = buffer;
   Packet._offset = offset;
@@ -1005,34 +1133,27 @@ SimplyPebble.onPacket = function(buffer, offset) {
   packet._view = Packet._view;
   packet._offset = offset;
   switch (packet) {
+    case LaunchReasonPacket:
+      SimplyPebble.onLaunchReason(packet);
+      break;
+    case WakeupSetResultPacket:
+      SimplyPebble.onWakeupSetResult(packet);
+      break;
+    case WakeupEventPacket:
+      Wakeup.emitWakeup(packet.id(), packet.cookie());
+      break;
     case WindowHideEventPacket:
       ImageService.markAllUnloaded();
       WindowStack.emitHide(packet.id());
       break;
     case ClickPacket:
-      Window.emitClick('click', buttonTypes[packet.button()]);
+      Window.emitClick('click', ButtonTypes[packet.button()]);
       break;
     case LongClickPacket:
-      Window.emitClick('longClick', buttonTypes[packet.button()]);
+      Window.emitClick('longClick', ButtonTypes[packet.button()]);
       break;
     case AccelDataPacket:
-      var samples = packet.samples();
-      var accels = [];
-      AccelData._view = packet._view;
-      AccelData._offset = packet._size;
-      for (var i = 0; i < samples; ++i) {
-        accels.push(AccelData.prop());
-        AccelData._offset += AccelData._size;
-      }
-      if (!packet.peek()) {
-        Accel.emitAccelData(accels);
-      } else {
-        var handlers = accelListeners;
-        accelListeners = [];
-        for (var j = 0, jj = handlers.length; j < jj; ++j) {
-          Accel.emitAccelData(accels, handlers[j]);
-        }
-      }
+      SimplyPebble.onAccelData(packet);
       break;
     case AccelTapPacket:
       Accel.emitAccelTap(accelAxes[packet.axis()], packet.direction());

@@ -5,7 +5,81 @@
 
 #include "simply.h"
 
+#include "util/math.h"
+
 #include <pebble.h>
+
+typedef enum WindowType WindowType;
+
+enum WindowType {
+  WindowTypeWindow = 0,
+  WindowTypeMenu,
+  WindowTypeCard,
+  WindowTypeLast,
+};
+
+typedef struct WindowShowPacket WindowShowPacket;
+
+struct __attribute__((__packed__)) WindowShowPacket {
+  Packet packet;
+  WindowType type:8;
+  bool pushing;
+};
+
+typedef struct WindowSignalPacket WindowSignalPacket;
+
+struct __attribute__((__packed__)) WindowSignalPacket {
+  Packet packet;
+  uint32_t id;
+};
+
+typedef WindowSignalPacket WindowHidePacket;
+
+typedef WindowHidePacket WindowEventPacket;
+
+typedef WindowEventPacket WindowShowEventPacket;
+
+typedef WindowEventPacket WindowHideEventPacket;
+
+static bool s_broadcast_window = true;
+
+static bool send_window(SimplyMsg *self, Command type, uint32_t id) {
+  if (!s_broadcast_window) {
+    return false;
+  }
+  WindowEventPacket packet = {
+    .packet.type = type,
+    .packet.length = sizeof(packet),
+    .id = id,
+  };
+  return simply_msg_send_packet(&packet.packet);
+}
+
+static bool send_window_show(SimplyMsg *self, uint32_t id) {
+  return send_window(self, CommandWindowShowEvent, id);
+}
+
+static bool send_window_hide(SimplyMsg *self, uint32_t id) {
+  return send_window(self, CommandWindowHideEvent, id);
+}
+
+bool simply_window_stack_set_broadcast(bool broadcast) {
+  bool was_broadcast = s_broadcast_window;
+  s_broadcast_window = broadcast;
+  return was_broadcast;
+}
+
+SimplyWindow *simply_window_stack_get_top_window(Simply *simply) {
+  Window *base_window = window_stack_get_top_window();
+  if (!base_window) {
+    return NULL;
+  }
+  SimplyWindow *window = window_get_user_data(base_window);
+  if (!window || (void*) window == simply->splash) {
+    return NULL;
+  }
+  return window;
+}
 
 void simply_window_stack_show(SimplyWindowStack *self, SimplyWindow *window, bool is_push) {
   bool animated = (self->simply->splash == NULL);
@@ -44,7 +118,7 @@ void simply_window_stack_send_show(SimplyWindowStack *self, SimplyWindow *window
   if (self->is_showing) {
     return;
   }
-  simply_msg_window_show(self->simply->msg, window->id);
+  send_window_show(self->simply->msg, window->id);
 }
 
 void simply_window_stack_send_hide(SimplyWindowStack *self, SimplyWindow *window) {
@@ -54,10 +128,39 @@ void simply_window_stack_send_hide(SimplyWindowStack *self, SimplyWindow *window
   if (self->is_showing) {
     return;
   }
-  simply_msg_window_hide(self->simply->msg, window->id);
+  send_window_hide(self->simply->msg, window->id);
   if (!self->is_hiding) {
     window_stack_push(self->pusher, false);
   }
+}
+
+static void handle_window_show_packet(Simply *simply, Packet *data) {
+  WindowShowPacket *packet = (WindowShowPacket*) data;
+  SimplyWindow *window = simply->windows[MIN(WindowTypeLast - 1, packet->type)];
+  simply_window_stack_show(simply->window_stack, window, packet->pushing);
+}
+
+static void handle_window_hide_packet(Simply *simply, Packet *data) {
+  WindowHidePacket *packet = (WindowHidePacket*) data;
+  SimplyWindow *window = simply_window_stack_get_top_window(simply);
+  if (!window) {
+    return;
+  }
+  if (window->id == packet->id) {
+    simply_window_stack_pop(simply->window_stack, window);
+  }
+}
+
+bool simply_window_stack_handle_packet(Simply *simply, Packet *packet) {
+  switch (packet->type) {
+    case CommandWindowShow:
+      handle_window_show_packet(simply, packet);
+      return true;
+    case CommandWindowHide:
+      handle_window_hide_packet(simply, packet);
+      return true;
+  }
+  return false;
 }
 
 SimplyWindowStack *simply_window_stack_create(Simply *simply) {

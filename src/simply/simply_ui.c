@@ -7,7 +7,9 @@
 #include "simply.h"
 
 #include "util/graphics.h"
+#include "util/math.h"
 #include "util/string.h"
+#include "util/window.h"
 
 #include <pebble.h>
 
@@ -40,6 +42,36 @@ static SimplyStyle STYLES[] = {
     .subtitle_font = FONT_KEY_GOTHIC_18_BOLD,
     .custom_body_font_id = RESOURCE_ID_MONO_FONT_14,
   },
+};
+
+typedef struct CardClearPacket CardClearPacket;
+
+struct __attribute__((__packed__)) CardClearPacket {
+  Packet packet;
+  uint8_t flags;
+};
+
+typedef struct CardTextPacket CardTextPacket;
+
+struct __attribute__((__packed__)) CardTextPacket {
+  Packet packet;
+  uint8_t index;
+  char text[];
+};
+
+typedef struct CardImagePacket CardImagePacket;
+
+struct __attribute__((__packed__)) CardImagePacket {
+  Packet packet;
+  uint32_t image;
+  uint8_t index;
+};
+
+typedef struct CardStylePacket CardStylePacket;
+
+struct __attribute__((__packed__)) CardStylePacket {
+  Packet packet;
+  uint8_t style;
 };
 
 void simply_ui_clear(SimplyUi *self, uint32_t clear_mask) {
@@ -271,6 +303,45 @@ static void window_unload(Window *window) {
   self->window.layer = self->ui_layer.layer = NULL;
 
   simply_window_unload(&self->window);
+}
+
+static void handle_card_clear_packet(Simply *simply, Packet *data) {
+  CardClearPacket *packet = (CardClearPacket*) data;
+  simply_ui_clear(simply->ui, packet->flags);
+}
+
+static void handle_card_text_packet(Simply *simply, Packet *data) {
+  CardTextPacket *packet = (CardTextPacket*) data;
+  simply_ui_set_text(simply->ui, MIN(NumUiTextfields - 1, packet->index), packet->text);
+}
+
+static void handle_card_image_packet(Simply *simply, Packet *data) {
+  CardImagePacket *packet = (CardImagePacket*) data;
+  simply->ui->ui_layer.imagefields[MIN(NumUiImagefields - 1, packet->index)] = packet->image;
+  window_stack_schedule_top_window_render();
+}
+
+static void handle_card_style_packet(Simply *simply, Packet *data) {
+  CardStylePacket *packet = (CardStylePacket*) data;
+  simply_ui_set_style(simply->ui, packet->style);
+}
+
+bool simply_ui_handle_packet(Simply *simply, Packet *packet) {
+  switch (packet->type) {
+    case CommandCardClear:
+      handle_card_clear_packet(simply, packet);
+      return true;
+    case CommandCardText:
+      handle_card_text_packet(simply, packet);
+      return true;
+    case CommandCardImage:
+      handle_card_image_packet(simply, packet);
+      return true;
+    case CommandCardStyle:
+      handle_card_style_packet(simply, packet);
+      return true;
+  }
+  return false;
 }
 
 SimplyUi *simply_ui_create(Simply *simply) {

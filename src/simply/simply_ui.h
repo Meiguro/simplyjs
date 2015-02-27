@@ -51,3 +51,4 @@ void simply_ui_clear(SimplyUi *self, uint32_t clear_mask);
 void simply_ui_set_style(SimplyUi *self, int style_index);
 void simply_ui_set_text(SimplyUi *self, SimplyUiTextfield textfield, const char *str);
 
+bool simply_ui_handle_packet(Simply *simply, Packet *packet);

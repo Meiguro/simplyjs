@@ -2,6 +2,8 @@
 
 #include "simply_window.h"
 
+#include "simply_msg.h"
+
 #include "simply.h"
 
 #include "util/list1.h"
@@ -67,13 +69,4 @@ struct SimplyMenuItem {
 SimplyMenu *simply_menu_create(Simply *simply);
 void simply_menu_destroy(SimplyMenu *self);
 
-void simply_menu_clear_section_items(SimplyMenu *self, int section_index);
-void simply_menu_clear(SimplyMenu *self);
-
-void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections);
-void simply_menu_add_section(SimplyMenu *self, SimplyMenuSection *section);
-void simply_menu_add_item(SimplyMenu *self, SimplyMenuItem *item);
-
-MenuIndex simply_menu_get_selection(SimplyMenu *self);
-void simply_menu_set_selection(SimplyMenu *self, MenuIndex menu_index, MenuRowAlign align, bool animated);
-
+bool simply_menu_handle_packet(Simply *simply, Packet *packet);

@@ -2,6 +2,8 @@
 
 #include "simply_window.h"
 
+#include "simply_msg.h"
+
 #include "simply.h"
 
 #include <pebble.h>
@@ -18,9 +20,15 @@ struct SimplyWindowStack {
 SimplyWindowStack *simply_window_stack_create(Simply *simply);
 void simply_window_stack_destroy(SimplyWindowStack *self);
 
+bool simply_window_stack_set_broadcast(bool broadcast);
+
+SimplyWindow *simply_window_stack_get_top_window(Simply *simply);
+
 void simply_window_stack_show(SimplyWindowStack *self, SimplyWindow *window, bool is_push);
 void simply_window_stack_pop(SimplyWindowStack *self, SimplyWindow *window);
 void simply_window_stack_back(SimplyWindowStack *self, SimplyWindow *window);
 
 void simply_window_stack_send_show(SimplyWindowStack *self, SimplyWindow *window);
 void simply_window_stack_send_hide(SimplyWindowStack *self, SimplyWindow *window);
+
+bool simply_window_stack_handle_packet(Simply *simply, Packet *packet);

@@ -69,7 +69,7 @@ var ajax = function(opt, success, failure) {
 
   if (opt.cache === false) {
     var appendSymbol = url.indexOf('?') === -1 ? '?' : '&';
-    url += appendSymbol + '_=' + new Date().getTime();
+    url += appendSymbol + '_=' + Date.now();
   }
 
   var req = new XMLHttpRequest();

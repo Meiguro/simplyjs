@@ -213,7 +213,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_rect(ctx, frame, 0, GCornerNone);
 
-  if (self->window.background_color == GColorWhite) {
+  if (GColor8Eq(self->window.background_color, GColorWhite)) {
     graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_rect(ctx, frame, 4, GCornersAll);
   }
@@ -349,7 +349,7 @@ SimplyUi *simply_ui_create(Simply *simply) {
   *self = (SimplyUi) { .window.layer = NULL };
 
   simply_window_init(&self->window, simply);
-  simply_window_set_background_color(&self->window, GColorWhite);
+  simply_window_set_background_color(&self->window, GColor8White);
 
   window_set_user_data(self->window.window, self);
   window_set_window_handlers(self->window.window, (WindowHandlers) {

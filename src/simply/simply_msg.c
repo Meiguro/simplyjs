@@ -55,7 +55,7 @@ struct __attribute__((__packed__)) ImagePacket {
   uint32_t id;
   int16_t width;
   int16_t height;
-  uint32_t pixels[];
+  uint8_t pixels[];
 };
 
 typedef struct VibePacket VibePacket;

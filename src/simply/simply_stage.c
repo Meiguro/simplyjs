@@ -226,7 +226,7 @@ static void image_element_draw(GContext *ctx, SimplyStage *self, SimplyElementIm
   if (bitmap) {
     GRect frame = element->frame;
     if (frame.size.w == 0 && frame.size.h == 0) {
-      frame = bitmap->bounds;
+      frame = gbitmap_get_bounds(bitmap);
     }
     graphics_draw_bitmap_centered(ctx, bitmap, frame);
   }

@@ -35,7 +35,8 @@ typedef struct SimplyImage SimplyImage;
 
 struct SimplyImage {
   SimplyResItemCommonMember;
-  GBitmap bitmap;
+  uint8_t *bitmap_data;
+  GBitmap *bitmap;
 };
 
 typedef struct SimplyFont SimplyFont;
@@ -50,7 +51,7 @@ void simply_res_destroy(SimplyRes *self);
 void simply_res_clear(SimplyRes *self);
 
 GBitmap *simply_res_add_bundled_image(SimplyRes *self, uint32_t id);
-GBitmap *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, int16_t height, uint32_t *pixels);
+GBitmap *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, int16_t height, uint8_t *pixels);
 GBitmap *simply_res_auto_image(SimplyRes *self, uint32_t id, bool is_placeholder);
 
 GFont simply_res_add_custom_font(SimplyRes *self, uint32_t id);

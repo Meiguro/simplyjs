@@ -16,15 +16,32 @@ def configure(ctx):
 def build(ctx):
     ctx.load('pebble_sdk')
 
-    ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'),
-                    cflags=['-Wno-address',
-                            '-Wno-type-limits',
-                            '-Wno-missing-field-initializers'],
-                    target='pebble-app.elf')
+    cflags = ['-Wno-address',
+              '-Wno-type-limits',
+              '-Wno-missing-field-initializers']
+
+    build_worker = os.path.exists('worker_src')
+    binaries = []
+
+    for p in ctx.env.TARGET_PLATFORMS:
+        ctx.set_env(ctx.all_envs[p])
+        app_elf='{}/pebble-app.elf'.format(ctx.env.BUILD_DIR)
+        ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'),
+                        cflags=cflags,
+                        target=app_elf)
+
+        if build_worker:
+            worker_elf='{}/pebble-worker.elf'.format(ctx.env.BUILD_DIR)
+            binaries.append({'platform': p, 'app_elf': app_elf, 'worker_elf': worker_elf})
+            ctx.pbl_worker(source=ctx.path.ant_glob('worker_src/**/*.c'),
+                           cflags=cflags,
+                           target=worker_elf)
+        else:
+            binaries.append({'platform': p, 'app_elf': app_elf})
 
     js_target = ctx.concat_javascript(js_path='src/js')
 
-    ctx.pbl_bundle(elf='pebble-app.elf',
+    ctx.pbl_bundle(binaries=binaries,
                    js=js_target)
 
 @conf

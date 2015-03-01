@@ -7,6 +7,7 @@
 
 #include "simply.h"
 
+#include "util/animation.h"
 #include "util/color.h"
 #include "util/graphics.h"
 #include "util/memory.h"
@@ -401,8 +402,8 @@ SimplyAnimation *simply_stage_animate_element(SimplyStage *self,
     return NULL;
   }
 
-  property_animation->values.from.grect = element->frame;
-  property_animation->values.to.grect = to_frame;
+  property_animation_set_from_grect(property_animation, &element->frame);
+  property_animation_set_to_grect(property_animation, &to_frame);
 
   animation->animation = property_animation;
   list1_append(&self->stage_layer.animations, &animation->node);

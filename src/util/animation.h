@@ -2,7 +2,7 @@
 
 #include <pebble.h>
 
-#ifdef PBL_BW
+#ifndef PBL_COLOR
 
 static inline void property_animation_set_from_grect(PropertyAnimation *property_animation, GRect *from) {
   property_animation->values.from.grect = *from;

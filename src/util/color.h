@@ -6,7 +6,7 @@
 #define GColor8Black (GColor8){.argb=GColorBlackARGB8}
 #define GColor8Clear (GColor8){.argb=GColorClearARGB8}
 
-#ifdef PBL_BW
+#ifndef PBL_COLOR
 
 #define GColorWhiteARGB8 ((uint8_t)0b11111111)
 #define GColorBlackARGB8 ((uint8_t)0b11000000)

@@ -2,7 +2,7 @@
 
 #include <pebble.h>
 
-#ifdef PBL_BW
+#ifndef PBL_COLOR
 
 typedef enum GBitmapFormat {
   GBitmapFormat1Bit = 0, //<! 1-bit black and white. 0 = black, 1 = white.

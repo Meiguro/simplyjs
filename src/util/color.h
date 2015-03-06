@@ -38,6 +38,7 @@ static inline GColor8 GColorGet8(GColor color) {
   }
 }
 
+#undef GColorEq
 static inline bool GColorEq(GColor color, GColor other) {
   return (color == other);
 }

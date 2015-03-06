@@ -14,14 +14,17 @@ static inline GBitmap *gbitmap_create_blank_with_format(GSize size, GBitmapForma
 
 #define gbitmap_create_blank gbitmap_create_blank_with_format
 
+#undef gbitmap_get_bounds
 static inline GRect gbitmap_get_bounds(GBitmap *bitmap) {
   return bitmap->bounds;
 }
 
+#undef gbitmap_get_data
 static inline uint8_t *gbitmap_get_data(GBitmap *bitmap) {
   return bitmap->addr;
 }
 
+#undef gbitmap_set_data
 static inline void gbitmap_set_data(GBitmap *bitmap, uint8_t *data, GBitmapFormat format,
     uint16_t row_size_bytes, bool free_on_destroy) {
   bitmap->is_heap_allocated = free_on_destroy;
@@ -29,6 +32,7 @@ static inline void gbitmap_set_data(GBitmap *bitmap, uint8_t *data, GBitmapForma
   bitmap->addr = data;
 }
 
+#undef gbitmap_get_bytes_per_row
 static inline uint16_t gbitmap_get_bytes_per_row(GBitmap *bitmap) {
   return bitmap->row_size_bytes;
 }

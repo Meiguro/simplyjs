@@ -92,23 +92,25 @@ def concat_javascript(ctx, js_path=None):
                 """ % (relpath))
             body = coffeescript.compile(body)
             # change ".coffee" or ".js.coffee" extensions to ".js"
-            relpath = re.sub('(\.js)?\.coffee$', '.build.js', relpath)
+            relpath = re.sub('(\.js)?\.coffee$', '.js', relpath)
             return relpath, body
 
         sources = []
         for node in task.inputs:
             relpath = os.path.relpath(node.abspath(), js_path)
             with open(node.abspath(), 'r') as f:
-                if relpath.endswith('.build.js'):
-                    continue
                 body = f.read()
                 if relpath.endswith('.json'):
                     body = JSON_TEMPLATE.format(body=body)
                 elif relpath.endswith('.coffee'):
                     relpath, body = coffeescript_compile(relpath, body)
-                    compiled_js_path = os.path.join(js_path, relpath)
-                    with open(compiled_js_path, 'w') as out:
-                        out.write(body)
+
+                    compiled_js_path = os.path.join(out, js_path, relpath)
+                    compiled_js_dir = os.path.dirname(compiled_js_path)
+                    if not os.path.exists(compiled_js_dir):
+                        os.makedirs(compiled_js_dir)
+                    with open(compiled_js_path, 'w') as f:
+                        f.write(body)
 
                 if relpath == LOADER_PATH:
                     sources.insert(0, body)
@@ -127,11 +129,11 @@ def concat_javascript(ctx, js_path=None):
             lineno = 1
             for source in sources:
                 if type(source) is dict:
-                    out = loader_translate(source, lineno)
+                    body = loader_translate(source, lineno)
                 else:
-                    out = source
-                f.write(out + '\n')
-                lineno += out.count('\n') + 1
+                    body = source
+                f.write(body + '\n')
+                lineno += body.count('\n') + 1
 
     js_target = ctx.path.make_node('build/src/js/pebble-js-app.js')
 

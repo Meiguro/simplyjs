@@ -92,18 +92,23 @@ def concat_javascript(ctx, js_path=None):
                 """ % (relpath))
             body = coffeescript.compile(body)
             # change ".coffee" or ".js.coffee" extensions to ".js"
-            relpath = re.sub('(\.js)?\.coffee$', '.js', relpath)
+            relpath = re.sub('(\.js)?\.coffee$', '.build.js', relpath)
             return relpath, body
 
         sources = []
         for node in task.inputs:
             relpath = os.path.relpath(node.abspath(), js_path)
             with open(node.abspath(), 'r') as f:
+                if relpath.endswith('.build.js'):
+                    continue
                 body = f.read()
                 if relpath.endswith('.json'):
                     body = JSON_TEMPLATE.format(body=body)
                 elif relpath.endswith('.coffee'):
                     relpath, body = coffeescript_compile(relpath, body)
+                    compiled_js_path = os.path.join(js_path, relpath)
+                    with open(compiled_js_path, 'w') as out:
+                        out.write(body)
 
                 if relpath == LOADER_PATH:
                     sources.insert(0, body)

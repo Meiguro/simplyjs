@@ -7,8 +7,8 @@
 
 #include "simply.h"
 
-#include "util/animation.h"
 #include "util/color.h"
+#include "util/compat.h"
 #include "util/graphics.h"
 #include "util/memory.h"
 #include "util/string.h"

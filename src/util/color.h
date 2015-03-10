@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util/compat.h"
+
 #include <pebble.h>
 
 #define GColor8White (GColor8){.argb=GColorWhiteARGB8}
@@ -7,20 +9,6 @@
 #define GColor8Clear (GColor8){.argb=GColorClearARGB8}
 
 #ifndef PBL_COLOR
-
-#define GColorWhiteARGB8 ((uint8_t)0b11111111)
-#define GColorBlackARGB8 ((uint8_t)0b11000000)
-#define GColorClearARGB8 ((uint8_t)0b00000000)
-
-typedef union GColor8 {
-  uint8_t argb;
-  struct {
-    uint8_t b:2; //!< Blue
-    uint8_t g:2; //!< Green
-    uint8_t r:2; //!< Red
-    uint8_t a:2; //!< Alpha. 3 = 100% opaque, 2 = 66% opaque, 1 = 33% opaque, 0 = transparent.
-  };
-} GColor8;
 
 static inline GColor GColor8Get(GColor8 color) {
   switch (color.argb) {
@@ -36,11 +24,6 @@ static inline GColor8 GColorGet8(GColor color) {
     case GColorBlack: return GColor8Black;
     default: return GColor8Clear;
   }
-}
-
-#undef GColorEq
-static inline bool GColorEq(GColor color, GColor other) {
-  return (color == other);
 }
 
 static inline bool GColor8Eq(GColor8 color, GColor other) {

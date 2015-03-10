@@ -1,41 +1,16 @@
 #pragma once
 
+#include "util/compat.h"
+
 #include <pebble.h>
 
 #ifndef PBL_COLOR
-
-typedef enum GBitmapFormat {
-  GBitmapFormat1Bit = 0, //<! 1-bit black and white. 0 = black, 1 = white.
-} GBitmapFormat;
 
 static inline GBitmap *gbitmap_create_blank_with_format(GSize size, GBitmapFormat format) {
   return gbitmap_create_blank(size);
 }
 
 #define gbitmap_create_blank gbitmap_create_blank_with_format
-
-#undef gbitmap_get_bounds
-static inline GRect gbitmap_get_bounds(GBitmap *bitmap) {
-  return bitmap->bounds;
-}
-
-#undef gbitmap_get_data
-static inline uint8_t *gbitmap_get_data(GBitmap *bitmap) {
-  return bitmap->addr;
-}
-
-#undef gbitmap_set_data
-static inline void gbitmap_set_data(GBitmap *bitmap, uint8_t *data, GBitmapFormat format,
-    uint16_t row_size_bytes, bool free_on_destroy) {
-  bitmap->is_heap_allocated = free_on_destroy;
-  bitmap->row_size_bytes = row_size_bytes;
-  bitmap->addr = data;
-}
-
-#undef gbitmap_get_bytes_per_row
-static inline uint16_t gbitmap_get_bytes_per_row(GBitmap *bitmap) {
-  return bitmap->row_size_bytes;
-}
 
 #endif
 

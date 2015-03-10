@@ -105,6 +105,13 @@ def concat_javascript(ctx, js_path=None):
                 elif relpath.endswith('.coffee'):
                     relpath, body = coffeescript_compile(relpath, body)
 
+                    compiled_js_path = os.path.join(out, js_path, relpath)
+                    compiled_js_dir = os.path.dirname(compiled_js_path)
+                    if not os.path.exists(compiled_js_dir):
+                        os.makedirs(compiled_js_dir)
+                    with open(compiled_js_path, 'w') as f:
+                        f.write(body)
+
                 if relpath == LOADER_PATH:
                     sources.insert(0, body)
                 elif relpath.startswith('vendor/'):
@@ -122,11 +129,11 @@ def concat_javascript(ctx, js_path=None):
             lineno = 1
             for source in sources:
                 if type(source) is dict:
-                    out = loader_translate(source, lineno)
+                    body = loader_translate(source, lineno)
                 else:
-                    out = source
-                f.write(out + '\n')
-                lineno += out.count('\n') + 1
+                    body = source
+                f.write(body + '\n')
+                lineno += body.count('\n') + 1
 
     js_target = ctx.path.make_node('build/src/js/pebble-js-app.js')
 

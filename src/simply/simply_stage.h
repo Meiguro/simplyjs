@@ -7,6 +7,7 @@
 #include "simply.h"
 
 #include "util/list1.h"
+#include "util/color.h"
 
 #include <pebble.h>
 
@@ -47,8 +48,8 @@ typedef struct SimplyElementCommon SimplyElementCommon;
   uint32_t id;                   \
   SimplyElementType type;        \
   GRect frame;                   \
-  GColor background_color:2;     \
-  GColor border_color:2;         \
+  GColor8 background_color;      \
+  GColor8 border_color;          \
 }
 
 struct SimplyElementCommon SimplyElementCommonDef;
@@ -78,7 +79,7 @@ struct SimplyElementText {
   char *text;
   GFont font;
   TimeUnits time_units:8;
-  GColor text_color:2;
+  GColor8 text_color;
   GTextOverflowMode overflow_mode:2;
   GTextAlignment alignment:2;
 };

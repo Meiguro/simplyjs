@@ -16,23 +16,55 @@ def configure(ctx):
 def build(ctx):
     ctx.load('pebble_sdk')
 
-    ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'),
-                    cflags=['-Wno-address',
-                            '-Wno-type-limits',
-                            '-Wno-missing-field-initializers'],
-                    target='pebble-app.elf')
-
+    binaries = []
     js_target = ctx.concat_javascript(js_path='src/js')
 
-    ctx.pbl_bundle(elf='pebble-app.elf',
-                   js=js_target)
+    if ctx.env.TARGET_PLATFORMS:
+        for platform in ctx.env.TARGET_PLATFORMS:
+            ctx.build_platform(platform, binaries=binaries)
+
+        ctx.pbl_bundle(binaries=binaries,
+                       js=js_target)
+    else:
+        ctx.env.BUILD_DIR = 'aplite'
+        ctx.build_platform(binaries=binaries)
+
+        elfs = binaries[0]
+        ctx.pbl_bundle(elf=elfs['app_elf'],
+                       worker_elf=elfs['worker_elf'] if 'worker_elf' in elfs else None,
+                       js=js_target)
 
 @conf
-def concat_javascript(self, *k, **kw):
-    js_path = kw['js_path']
-    js_nodes = (self.path.ant_glob(js_path + '/**/*.js') +
-                self.path.ant_glob(js_path + '/**/*.json') +
-                self.path.ant_glob(js_path + '/**/*.coffee'))
+def build_platform(ctx, platform=None, binaries=None):
+    if platform is not None:
+        ctx.set_env(ctx.all_envs[platform])
+
+    cflags = ['-Wno-address',
+              '-Wno-type-limits',
+              '-Wno-missing-field-initializers']
+
+    build_worker = os.path.exists('worker_src')
+
+    app_elf='{}/pebble-app.elf'.format(ctx.env.BUILD_DIR)
+    ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'),
+                    cflags=cflags,
+                    target=app_elf)
+
+    if build_worker:
+        worker_elf='{}/pebble-worker.elf'.format(ctx.env.BUILD_DIR)
+        binaries.append({'platform': platform, 'app_elf': app_elf, 'worker_elf': worker_elf})
+        ctx.pbl_worker(source=ctx.path.ant_glob('worker_src/**/*.c'),
+                       cflags=cflags,
+                       target=worker_elf)
+    else:
+        binaries.append({'platform': platform, 'app_elf': app_elf})
+
+
+@conf
+def concat_javascript(ctx, js_path=None):
+    js_nodes = (ctx.path.ant_glob(js_path + '/**/*.js') +
+                ctx.path.ant_glob(js_path + '/**/*.json') +
+                ctx.path.ant_glob(js_path + '/**/*.coffee'))
 
     if not js_nodes:
         return []
@@ -54,7 +86,7 @@ def concat_javascript(self, *k, **kw):
             try:
                 import coffeescript
             except ImportError:
-                self.fatal("""
+                ctx.fatal("""
     Coffeescript file '%s' found but coffeescript module isn't installed.
     You may try `pip install coffeescript` or `easy_install coffeescript`.
                 """ % (relpath))
@@ -73,6 +105,13 @@ def concat_javascript(self, *k, **kw):
                 elif relpath.endswith('.coffee'):
                     relpath, body = coffeescript_compile(relpath, body)
 
+                    compiled_js_path = os.path.join(out, js_path, relpath)
+                    compiled_js_dir = os.path.dirname(compiled_js_path)
+                    if not os.path.exists(compiled_js_dir):
+                        os.makedirs(compiled_js_dir)
+                    with open(compiled_js_path, 'w') as f:
+                        f.write(body)
+
                 if relpath == LOADER_PATH:
                     sources.insert(0, body)
                 elif relpath.startswith('vendor/'):
@@ -90,15 +129,15 @@ def concat_javascript(self, *k, **kw):
             lineno = 1
             for source in sources:
                 if type(source) is dict:
-                    out = loader_translate(source, lineno)
+                    body = loader_translate(source, lineno)
                 else:
-                    out = source
-                f.write(out + '\n')
-                lineno += out.count('\n') + 1
+                    body = source
+                f.write(body + '\n')
+                lineno += body.count('\n') + 1
 
-    js_target = self.path.make_node('build/src/js/pebble-js-app.js')
+    js_target = ctx.path.make_node('build/src/js/pebble-js-app.js')
 
-    self(rule=concat_javascript_task,
+    ctx(rule=concat_javascript_task,
         source=js_nodes,
         target=js_target)
 

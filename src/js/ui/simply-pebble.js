@@ -71,9 +71,9 @@ var SizeType = function(x) {
 
 var Color = function(x) {
   switch (x) {
-    case 'clear': return ~0;
-    case 'black': return 0;
-    case 'white': return 1;
+    case 'clear': return 0x00;
+    case 'black': return 0xC0;
+    case 'white': return 0xFF;
   }
   return Number(x);
 };
@@ -808,9 +808,10 @@ SimplyPebble.windowHide = function(id) {
 };
 
 SimplyPebble.windowProps = function(def, backgroundColor) {
-  WindowPropsPacket
-    .prop(def)
-    .backgroundColor(backgroundColor);
+  WindowPropsPacket.prop(def);
+  if (backgroundColor) {
+    WindowPropsPacket.backgroundColor(backgroundColor);
+  }
   SimplyPebble.sendPacket(WindowPropsPacket);
 };
 

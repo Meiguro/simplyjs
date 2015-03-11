@@ -18,7 +18,7 @@ typedef struct WindowPropsPacket WindowPropsPacket;
 struct __attribute__((__packed__)) WindowPropsPacket {
   Packet packet;
   uint32_t id;
-  GColor background_color:8;
+  GColor8 background_color;
   bool fullscreen;
   bool scrollable;
 };
@@ -36,7 +36,7 @@ struct __attribute__((__packed__)) WindowActionBarPacket {
   Packet packet;
   uint32_t image[3];
   bool action;
-  GColor background_color:8;
+  GColor8 background_color;
 };
 
 typedef struct ClickPacket ClickPacket;
@@ -130,7 +130,7 @@ void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
   self->id = id;
 }
 
-void simply_window_set_background_color(SimplyWindow *self, GColor background_color) {
+void simply_window_set_background_color(SimplyWindow *self, GColor8 background_color) {
   self->background_color = background_color;
 }
 
@@ -168,12 +168,12 @@ void simply_window_set_action_bar_icon(SimplyWindow *self, ButtonId button, uint
   }
 }
 
-void simply_window_set_action_bar_background_color(SimplyWindow *self, GColor background_color) {
+void simply_window_set_action_bar_background_color(SimplyWindow *self, GColor8 background_color) {
   if (!self->action_bar_layer) {
     return;
   }
 
-  action_bar_layer_set_background_color(self->action_bar_layer, background_color);
+  action_bar_layer_set_background_color(self->action_bar_layer, GColor8Get(background_color));
   simply_window_set_action_bar(self, true);
 }
 

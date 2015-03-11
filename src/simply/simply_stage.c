@@ -7,6 +7,8 @@
 
 #include "simply.h"
 
+#include "util/color.h"
+#include "util/compat.h"
 #include "util/graphics.h"
 #include "util/memory.h"
 #include "util/string.h"
@@ -38,8 +40,8 @@ struct __attribute__((__packed__)) ElementCommonPacket {
   Packet packet;
   uint32_t id;
   GRect frame;
-  GColor background_color:8;
-  GColor border_color:8;
+  GColor8 background_color;
+  GColor8 border_color;
 };
 
 typedef struct ElementRadiusPacket ElementRadiusPacket;
@@ -64,7 +66,7 @@ typedef struct ElementTextStylePacket ElementTextStylePacket;
 struct __attribute__((__packed__)) ElementTextStylePacket {
   Packet packet;
   uint32_t id;
-  GColor color:8;
+  GColor8 color;
   GTextOverflowMode overflow_mode:8;
   GTextAlignment alignment:8;
   uint32_t custom_font;
@@ -168,15 +170,15 @@ void simply_stage_clear(SimplyStage *self) {
 }
 
 static void rect_element_draw_background(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
-  if (element->background_color != GColorClear) {
-    graphics_context_set_fill_color(ctx, element->background_color);
+  if (element->background_color.a) {
+    graphics_context_set_fill_color(ctx, GColor8Get(element->background_color));
     graphics_fill_rect(ctx, element->frame, element->radius, GCornersAll);
   }
 }
 
 static void rect_element_draw_border(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
-  if (element->border_color != GColorClear) {
-    graphics_context_set_stroke_color(ctx, element->border_color);
+  if (element->border_color.a) {
+    graphics_context_set_stroke_color(ctx, GColor8Get(element->border_color));
     graphics_draw_round_rect(ctx, element->frame, element->radius);
   }
 }
@@ -187,12 +189,12 @@ static void rect_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRec
 }
 
 static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementCircle *element) {
-  if (element->background_color != GColorClear) {
-    graphics_context_set_fill_color(ctx, element->background_color);
+  if (element->background_color.a) {
+    graphics_context_set_fill_color(ctx, GColor8Get(element->background_color));
     graphics_fill_circle(ctx, element->frame.origin, element->radius);
   }
-  if (element->border_color != GColorClear) {
-    graphics_context_set_stroke_color(ctx, element->border_color);
+  if (element->border_color.a) {
+    graphics_context_set_stroke_color(ctx, GColor8Get(element->border_color));
     graphics_draw_circle(ctx, element->frame.origin, element->radius);
   }
 }
@@ -208,12 +210,12 @@ static char *format_time(char *format) {
 static void text_element_draw(GContext *ctx, SimplyStage *self, SimplyElementText *element) {
   rect_element_draw(ctx, self, (SimplyElementRect*) element);
   char *text = element->text;
-  if (element->text_color != GColorClear && is_string(text)) {
+  if (element->text_color.a && is_string(text)) {
     if (element->time_units) {
       text = format_time(text);
     }
     GFont font = element->font ? element->font : fonts_get_system_font(FONT_KEY_GOTHIC_14);
-    graphics_context_set_text_color(ctx, element->text_color);
+    graphics_context_set_text_color(ctx, GColor8Get(element->text_color));
     graphics_draw_text(ctx, text, font, element->frame, element->overflow_mode, element->alignment, NULL);
   }
 }
@@ -225,7 +227,7 @@ static void image_element_draw(GContext *ctx, SimplyStage *self, SimplyElementIm
   if (bitmap) {
     GRect frame = element->frame;
     if (frame.size.w == 0 && frame.size.h == 0) {
-      frame = bitmap->bounds;
+      frame = gbitmap_get_bounds(bitmap);
     }
     graphics_draw_bitmap_centered(ctx, bitmap, frame);
   }
@@ -241,7 +243,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   frame.origin.x = -frame.origin.x;
   frame.origin.y = -frame.origin.y;
 
-  graphics_context_set_fill_color(ctx, self->window.background_color);
+  graphics_context_set_fill_color(ctx, GColor8Get(self->window.background_color));
   graphics_fill_rect(ctx, frame, 0, GCornerNone);
 
   SimplyElementCommon *element = (SimplyElementCommon*) self->stage_layer.elements;
@@ -400,8 +402,8 @@ SimplyAnimation *simply_stage_animate_element(SimplyStage *self,
     return NULL;
   }
 
-  property_animation->values.from.grect = element->frame;
-  property_animation->values.to.grect = to_frame;
+  property_animation_set_from_grect(property_animation, &element->frame);
+  property_animation_set_to_grect(property_animation, &to_frame);
 
   animation->animation = property_animation;
   list1_append(&self->stage_layer.animations, &animation->node);
@@ -625,7 +627,7 @@ SimplyStage *simply_stage_create(Simply *simply) {
   *self = (SimplyStage) { .window.simply = simply };
 
   simply_window_init(&self->window, simply);
-  simply_window_set_background_color(&self->window, GColorBlack);
+  simply_window_set_background_color(&self->window, GColor8Black);
 
   window_set_user_data(self->window.window, self);
   window_set_window_handlers(self->window.window, (WindowHandlers) {

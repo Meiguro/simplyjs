@@ -473,6 +473,7 @@ Pebble.js provides three types of Windows:
 
 <a id="window-actiondef"></a>
 #### Window actionDef
+[Window actionDef]: #window-actiondef
 
 A `Window` action bar can be displayed by setting its Window `action` property to an `actionDef`:
 
@@ -723,7 +724,9 @@ menu.item(0, 0, { title: 'A new item', subtitle: 'replacing the previous one' })
 
 When called with no `item`, returns the item at the given `sectionIndex` and `itemIndex`.
 
+<a id="menu-on-select-callback"></a>
 #### Menu.on('select', callback)
+[Menu.on('select', callback)]: #menu-on-select-callback
 
 Registers a callback called when an item in the menu is selected. The callback function will be passed an event with the following fields:
 
@@ -744,7 +747,7 @@ menu.on('select', function(e) {
 
 #### Menu.on('longSelect', callback)
 
-See `Menu.on('select, callback)`
+Similar to the select callback, except for long select presses. See [Menu.on('select', callback)].
 
 ### Element
 
@@ -811,6 +814,7 @@ element.animate('position', pos, 1000);
 
 <a id="element-queue-callback-next"></a>
 #### Element.queue(callback(next))
+[Element.queue(callback(next))]: #element-queue-callback-next
 
 `Element.queue` can be used to perform tasks that are dependent upon an animation completing, such as preparing the element for a different animation. `Element.queue` can also be used to coordinate animations across different elements. It is recommended to use `Element.queue` instead of a timeout if the same element will be animated after the custom task.
 
@@ -988,6 +992,7 @@ Sets the image property. See [Image].
 
 <a id="image-compositing"></a>
 #### Image.compositing(compop)
+[Image.compositing(compop)]: #image-compositing
 
 Sets the compositing operation to be used when rendering. Specify the compositing operation as a string such as `"invert"`. The following is a list of compositing operations available.
 
@@ -1044,7 +1049,7 @@ Pebble.js includes several libraries to help you write applications.
 
 This module gives you a very simple and easy way to make HTTP requests.
 
-````
+````js
 var ajax = require('ajax');
 
 ajax(
@@ -1105,10 +1110,4 @@ For more information, see [Vector2 in the three.js reference documentation][thre
 [Rect]: #rect
 [Text]: #text
 [TimeText]: #timetext
-[Window actionDef]: #window-actiondef
-[Window.show()]: #window-show
-[Window.hide()]: #window-hide
-[Element.queue(callback(next))]: #element-queue-callback-next
-[Image.compositing(compop)]: #image-compositing
-[Menu.on('select, callback)]: #menu-on-select-callback
 [three.js Vector2]: http://threejs.org/docs/#Reference/Math/Vector2

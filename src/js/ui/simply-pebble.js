@@ -944,7 +944,7 @@ SimplyPebble.card = function(def, clear, pushing) {
   if (clear !== undefined) {
     SimplyPebble.cardClear(clear);
   }
-  SimplyPebble.windowProps(def, 'white');
+  SimplyPebble.windowProps(def);
   if (def.action !== undefined) {
     SimplyPebble.windowActionBar(def.action);
   }

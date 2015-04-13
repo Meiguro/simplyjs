@@ -871,11 +871,10 @@ SimplyPebble.windowHide = function(id) {
   SimplyPebble.sendPacket(WindowHidePacket.id(id));
 };
 
-SimplyPebble.windowProps = function(def, backgroundColor) {
-  WindowPropsPacket.prop(def);
-  if (backgroundColor) {
-    WindowPropsPacket.backgroundColor(backgroundColor);
-  }
+SimplyPebble.windowProps = function(def) {
+  WindowPropsPacket
+    .prop(def)
+    .backgroundColor(def.backgroundColor || 'white');
   SimplyPebble.sendPacket(WindowPropsPacket);
 };
 

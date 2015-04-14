@@ -225,7 +225,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_rect(ctx, frame, 0, GCornerNone);
 
-  graphics_context_set_fill_color(ctx, GColor8Get(self->window.background_color));
+  graphics_context_set_fill_color(ctx, GColor8GetOr(self->window.background_color, GColorWhite));
   graphics_fill_rect(ctx, frame, 4, GCornersAll);
 
   if (title_icon) {

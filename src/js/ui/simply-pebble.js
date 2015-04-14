@@ -69,13 +69,76 @@ var SizeType = function(x) {
   this.sizeH(x.y);
 };
 
-var Color = function(x) {
-  switch (x) {
-    case 'clear': return 0x00;
-    case 'black': return 0xC0;
-    case 'white': return 0xFF;
-  }
-  return Number(x);
+var colorMap = {
+    'clear': 0x00,
+    'black': 0xC0,
+    'oxfordBlue': 0xC1,
+    'dukeBlue': 0xC2,
+    'blue': 0xC3,
+    'darkGreen': 0xC4,
+    'midnightGreen': 0xC5,
+    'colbaltBlue': 0xC6,
+    'blueMoon': 0xC7,
+    'islamicGreen': 0xC8,
+    'jaegerGreen': 0xC9,
+    'tiffanyBlue': 0xCA,
+    'vividCerulean': 0xCB,
+    'green': 0xCC,
+    'malachite': 0xCD,
+    'mediumSpringGreen': 0xCE,
+    'cyan': 0xCF,
+    'bulgarianRose': 0xD0,
+    'imperialPurple': 0xD1,
+    'indigo': 0xD2,
+    'electricUltramarine': 0xD3,
+    'armyGreen': 0xD4,
+    'darkGray': 0xD5,
+    'liberty': 0xD6,
+    'veryLightBlue': 0xD7,
+    'kellyGreen': 0xD8,
+    'mayGreen': 0xD9,
+    'cadetBlue': 0xDA,
+    'pictonBlue': 0xDB,
+    'brightGreen': 0xDC,
+    'screaminGreen': 0xDD,
+    'mediumAquamarine': 0xDE,
+    'electricBlue': 0xDF,
+    'darkCandyAppleRed': 0xE0,
+    'jazzberryJam': 0xE1,
+    'purple': 0xE2,
+    'vividViolet': 0xE3,
+    'windsorTan': 0xE4,
+    'roseVale': 0xE5,
+    'purpureus': 0xE6,
+    'lavenderIndigo': 0xE7,
+    'limerick': 0xE8,
+    'brass': 0xE9,
+    'lightGray': 0xEA,
+    'babyBlueEyes': 0xEB,
+    'springBud': 0xEC,
+    'inchworm': 0xED,
+    'mintGreen': 0xEE,
+    'celeste': 0xEF,
+    'red': 0xF0,
+    'folly': 0xF1,
+    'fashionMagenta': 0xF2,
+    'magenta': 0xF3,
+    'orange': 0xF4,
+    'sunsetOrange': 0xF5,
+    'brilliantRose': 0xF6,
+    'shockingPink': 0xF7,
+    'chromeYellow': 0xF8,
+    'rajah': 0xF9,
+    'melon': 0xFA,
+    'richBrilliantLavender': 0xFB,
+    'yellow': 0xFC,
+    'icterine': 0xFD,
+    'pastelYellow': 0xFE,
+    'white': 0xFF
+};
+
+var Color = function(color) {
+  return colorMap[color] ? colorMap[color] : colorMap['clear'];
 };
 
 var Font = function(x) {
@@ -435,6 +498,7 @@ var MenuClearSectionPacket = new struct([
 var MenuPropsPacket = new struct([
   [Packet, 'packet'],
   ['uint16', 'sections', EnumerableType],
+  ['uint8', 'backgroundColor', Color]
 ]);
 
 var MenuSectionPacket = new struct([
@@ -807,11 +871,10 @@ SimplyPebble.windowHide = function(id) {
   SimplyPebble.sendPacket(WindowHidePacket.id(id));
 };
 
-SimplyPebble.windowProps = function(def, backgroundColor) {
-  WindowPropsPacket.prop(def);
-  if (backgroundColor) {
-    WindowPropsPacket.backgroundColor(backgroundColor);
-  }
+SimplyPebble.windowProps = function(def) {
+  WindowPropsPacket
+    .prop(def)
+    .backgroundColor(def.backgroundColor || 'white');
   SimplyPebble.sendPacket(WindowPropsPacket);
 };
 
@@ -881,7 +944,7 @@ SimplyPebble.card = function(def, clear, pushing) {
   if (clear !== undefined) {
     SimplyPebble.cardClear(clear);
   }
-  SimplyPebble.windowProps(def, 'white');
+  SimplyPebble.windowProps(def);
   if (def.action !== undefined) {
     SimplyPebble.windowActionBar(def.action);
   }

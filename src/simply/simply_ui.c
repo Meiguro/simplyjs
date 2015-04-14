@@ -225,10 +225,8 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_rect(ctx, frame, 0, GCornerNone);
 
-  if (GColor8Eq(self->window.background_color, GColorWhite)) {
-    graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_fill_rect(ctx, frame, 4, GCornersAll);
-  }
+  graphics_context_set_fill_color(ctx, GColor8GetOr(self->window.background_color, GColorWhite));
+  graphics_fill_rect(ctx, frame, 4, GCornersAll);
 
   if (title_icon) {
     GRect icon_frame = (GRect) {

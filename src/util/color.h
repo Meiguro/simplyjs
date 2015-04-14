@@ -18,6 +18,15 @@ static inline GColor GColor8Get(GColor8 color) {
   }
 }
 
+static inline GColor GColor8GetOr(GColor8 color, GColor fallback) {
+  switch (color.argb) {
+    case GColorWhiteARGB8: return GColorWhite;
+    case GColorBlackARGB8: return GColorBlack;
+    case GColorClearARGB8: return GColorClear;
+    default: return fallback;
+  }
+}
+
 static inline GColor8 GColorGet8(GColor color) {
   switch (color) {
     case GColorWhite: return GColor8White;
@@ -32,12 +41,16 @@ static inline bool GColor8Eq(GColor8 color, GColor other) {
 
 #else
 
-static inline bool GColor8Eq(GColor8 color, GColor other) {
-  return (color.argb == other.argb);
-}
-
 static inline GColor GColor8Get(GColor8 color) {
   return color;
+}
+
+static inline GColor GColor8GetOr(GColor8 color, GColor8 fallback) {
+  return color;
+}
+
+static inline bool GColor8Eq(GColor8 color, GColor other) {
+  return (color.argb == other.argb);
 }
 
 #endif

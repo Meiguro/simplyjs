@@ -57,6 +57,7 @@ var actionProps = [
 
 var configProps = [
   'style',
+  'backgroundColor'
 ];
 
 var accessorProps = textProps.concat(imageProps).concat(configProps);

@@ -5,8 +5,12 @@ var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
 var simply = require('ui/simply');
 
+var defaults = {
+  backgroundColor: 'white',
+};
+
 var Menu = function(menuDef) {
-  Window.call(this, menuDef);
+  Window.call(this, myutil.shadow(defaults, menuDef || {}));
   this._dynamic = false;
   this._sections = {};
   this._selection = { sectionIndex: 0, itemIndex: 0 };

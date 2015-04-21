@@ -11,6 +11,7 @@ typedef struct LaunchReasonPacket LaunchReasonPacket;
 struct __attribute__((__packed__)) LaunchReasonPacket {
   Packet packet;
   uint32_t reason;
+  uint32_t args;
   uint32_t time;
   uint8_t is_timezone:8;
 };
@@ -46,11 +47,12 @@ struct WakeupSetContext {
   int32_t cookie;
 };
 
-static bool send_launch_reason(AppLaunchReason reason) {
+static bool send_launch_reason(AppLaunchReason reason, uint32_t args) {
   LaunchReasonPacket packet = {
     .packet.type = CommandLaunchReason,
     .packet.length = sizeof(packet),
     .reason = reason,
+    .args = args,
     .time = time(NULL),
     .is_timezone = clock_is_timezone_set(),
   };
@@ -78,8 +80,12 @@ static void wakeup_set_timer_callback(void *data) {
 
 static void process_launch_reason() {
   AppLaunchReason reason = launch_reason();
+  uint32_t args = 0;
+#ifdef PBL_PLATFORM_BASALT
+  args =  launch_get_args();
+#endif
 
-  send_launch_reason(reason);
+  send_launch_reason(reason, args);
 
   WakeupId wakeup_id;
   int32_t cookie;

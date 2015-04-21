@@ -106,12 +106,10 @@ var makeDataAccessor = function(type, path) {
     }
     if (typeof field !== 'object' && value === undefined || value === null) {
       delete data[field];
-      return;
     }
     var def = myutil.toObject(field, value);
     util2.copy(def, data);
     Settings._saveData(path, type);
-    return value;
   };
 };
 

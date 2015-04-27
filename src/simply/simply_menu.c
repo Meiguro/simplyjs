@@ -6,6 +6,7 @@
 
 #include "simply.h"
 
+#include "util/graphics.h"
 #include "util/menu_layer.h"
 #include "util/string.h"
 
@@ -305,6 +306,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   list1_prepend(&self->menu_layer.items, &item->node);
 
   GBitmap *bitmap = simply_res_get_image(self->window.simply->res, item->icon);
+  graphics_context_set_alpha_blended(ctx, true);
   menu_cell_basic_draw(ctx, cell_layer, item->title, item->subtitle, bitmap);
 }
 

@@ -6,11 +6,17 @@
 
 #ifndef PBL_COLOR
 
+#define GCompOpAlphaBlend GCompOpAnd
+
 static inline GBitmap *gbitmap_create_blank_with_format(GSize size, GBitmapFormat format) {
   return gbitmap_create_blank(size);
 }
 
 #define gbitmap_create_blank gbitmap_create_blank_with_format
+
+#else
+
+#define GCompOpAlphaBlend GCompOpSet
 
 #endif
 
@@ -28,3 +34,12 @@ static inline void graphics_draw_bitmap_centered(GContext *ctx, GBitmap *bitmap,
   GRect bounds = gbitmap_get_bounds(bitmap);
   graphics_draw_bitmap_in_rect(ctx, bitmap, grect_center_rect(&frame, &bounds));
 }
+
+static inline void graphics_context_set_alpha_blended(GContext *ctx, bool enable) {
+  if (enable) {
+    graphics_context_set_compositing_mode(ctx, GCompOpAlphaBlend);
+  } else {
+    graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+  }
+}
+

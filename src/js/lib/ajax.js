@@ -87,6 +87,8 @@ var ajax = function(opt, success, failure) {
     if (opt.type === 'json') {
       req.setRequestHeader('Content-Type', 'application/json');
       data = JSON.stringify(opt.data);
+    } else if (opt.type === 'xml') {
+      req.setRequestHeader('Content-Type', 'text/xml');
     } else if (opt.type !== 'text') {
       req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       data = formify(opt.data);
@@ -101,6 +103,8 @@ var ajax = function(opt, success, failure) {
       try {
         if (opt.type === 'json') {
           body = JSON.parse(body);
+        } else if (op.type === 'xml') {
+          body = req.responseXML;
         } else if (opt.type === 'form') {
           body = deformify(body);
         }

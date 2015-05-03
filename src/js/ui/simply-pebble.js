@@ -77,7 +77,7 @@ var colorMap = {
     'blue': 0xC3,
     'darkGreen': 0xC4,
     'midnightGreen': 0xC5,
-    'colbaltBlue': 0xC6,
+    'cobaltBlue': 0xC6,
     'blueMoon': 0xC7,
     'islamicGreen': 0xC8,
     'jaegerGreen': 0xC9,

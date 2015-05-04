@@ -389,7 +389,7 @@ SimplyAnimation *simply_stage_animate_element(SimplyStage *self,
   static const PropertyAnimationImplementation implementation = {
     .base = {
       .update = (AnimationUpdateImplementation) property_animation_update_grect,
-      .teardown = (AnimationTeardownImplementation) free,
+      .teardown = (AnimationTeardownImplementation) animation_destroy,
     },
     .accessors = {
       .setter = { .grect = (const GRectSetter) element_frame_setter },

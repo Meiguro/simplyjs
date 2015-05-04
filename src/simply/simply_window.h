@@ -5,6 +5,7 @@
 #include "simply.h"
 
 #include "util/color.h"
+#include "util/status_bar_layer.h"
 
 #include <pebble.h>
 
@@ -13,6 +14,7 @@ typedef struct SimplyWindow SimplyWindow;
 struct SimplyWindow {
   Simply *simply;
   Window *window;
+  StatusBarLayer *status_bar_layer;
   ScrollLayer *scroll_layer;
   Layer *layer;
   ActionBarLayer *action_bar_layer;

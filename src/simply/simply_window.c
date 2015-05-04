@@ -9,6 +9,7 @@
 
 #include "util/graphics.h"
 #include "util/scroll_layer.h"
+#include "util/status_bar_layer.h"
 #include "util/string.h"
 
 #include <pebble.h>
@@ -106,7 +107,11 @@ void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
     return;
   }
 
-  window_set_fullscreen(self->window, is_fullscreen);
+  if (is_fullscreen) {
+    status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
+  } else {
+    status_bar_layer_add_to_window(self->window, self->status_bar_layer);
+  }
 
   if (!self->layer) {
     return;
@@ -316,6 +321,9 @@ SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply) {
   window_set_background_color(window, GColorClear);
   window_set_click_config_provider_with_context(window, click_config_provider, self);
 
+  self->status_bar_layer = status_bar_layer_create();
+  status_bar_layer_add_to_window(window, self->status_bar_layer);
+
   ActionBarLayer *action_bar_layer = self->action_bar_layer = action_bar_layer_create();
   action_bar_layer_set_context(action_bar_layer, self);
 
@@ -329,6 +337,9 @@ void simply_window_deinit(SimplyWindow *self) {
 
   action_bar_layer_destroy(self->action_bar_layer);
   self->action_bar_layer = NULL;
+
+  status_bar_layer_destroy(self->status_bar_layer);
+  self->status_bar_layer = NULL;
 
   window_destroy(self->window);
   self->window = NULL;

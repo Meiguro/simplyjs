@@ -7,6 +7,7 @@ var simply = require('ui/simply');
 
 var defaults = {
   backgroundColor: 'white',
+  fullscreen: false,
 };
 
 var Menu = function(menuDef) {

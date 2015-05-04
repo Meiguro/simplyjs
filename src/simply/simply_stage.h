@@ -6,6 +6,7 @@
 
 #include "simply.h"
 
+#include "util/inverter_layer.h"
 #include "util/list1.h"
 #include "util/color.h"
 

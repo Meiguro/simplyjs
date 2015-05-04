@@ -358,12 +358,12 @@ static void window_load(Window *window) {
 
 static void window_appear(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
-  simply_window_stack_send_show(self->window.simply->window_stack, &self->window);
+  simply_window_appear(&self->window);
 }
 
 static void window_disappear(Window *window) {
   SimplyMenu *self = window_get_user_data(window);
-  simply_window_stack_send_hide(self->window.simply->window_stack, &self->window);
+  simply_window_disappear(&self->window);
 
   simply_res_clear(self->window.simply->res);
   simply_menu_clear(self);
@@ -410,7 +410,7 @@ static void handle_menu_clear_section_packet(Simply *simply, Packet *data) {
 static void handle_menu_props_packet(Simply *simply, Packet *data) {
   MenuPropsPacket *packet = (MenuPropsPacket*) data;
   simply_menu_set_num_sections(simply->menu, packet->num_sections);
-  window_set_background_color(simply->menu->window.window, GColor8Get(packet->background_color));
+  window_set_background_color(simply->menu->window.window, gcolor8_get(packet->background_color));
 }
 
 static void handle_menu_section_packet(Simply *simply, Packet *data) {

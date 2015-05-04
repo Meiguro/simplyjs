@@ -9,6 +9,7 @@
 
 #include "util/graphics.h"
 #include "util/scroll_layer.h"
+#include "util/status_bar_layer.h"
 #include "util/string.h"
 
 #include <pebble.h>
@@ -90,7 +91,7 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
   }
 
   if (!is_scrollable) {
-    GRect bounds = layer_get_bounds(window_get_root_layer(self->window));
+    GRect bounds = { GPointZero, layer_get_bounds(window_get_root_layer(self->window)).size };
     layer_set_bounds(self->layer, bounds);
     // TODO: change back to animated when a closing animated scroll doesn't cause a crash
     const bool animated = false;
@@ -102,20 +103,23 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
 }
 
 void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
-  if (self->is_fullscreen == is_fullscreen) {
-    return;
+  if (is_fullscreen && self->is_status_bar) {
+    status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
+    self->is_status_bar = false;
+  } else if (!is_fullscreen && !self->is_status_bar) {
+    status_bar_layer_add_to_window(self->window, self->status_bar_layer);
+    self->is_status_bar = true;
   }
-
-  window_set_fullscreen(self->window, is_fullscreen);
 
   if (!self->layer) {
     return;
   }
 
-  GRect frame = layer_get_frame(window_get_root_layer(self->window));
+  GRect frame = { GPointZero, layer_get_frame(window_get_root_layer(self->window)).size };
   scroll_layer_set_frame(self->scroll_layer, frame);
   layer_set_frame(self->layer, frame);
 
+#ifdef PBL_SDK_2
   if (!window_stack_contains_window(self->window)) {
     return;
   }
@@ -128,6 +132,7 @@ void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
   window_stack_remove(window, false);
   window_destroy(window);
   self->id = id;
+#endif
 }
 
 void simply_window_set_background_color(SimplyWindow *self, GColor8 background_color) {
@@ -173,7 +178,7 @@ void simply_window_set_action_bar_background_color(SimplyWindow *self, GColor8 b
     return;
   }
 
-  action_bar_layer_set_background_color(self->action_bar_layer, GColor8Get(background_color));
+  action_bar_layer_set_background_color(self->action_bar_layer, gcolor8_get(background_color));
   simply_window_set_action_bar(self, true);
 }
 
@@ -245,8 +250,21 @@ void simply_window_load(SimplyWindow *self) {
   layer_add_child(window_layer, scroll_base_layer);
 
   scroll_layer_set_context(scroll_layer, self);
+  scroll_layer_set_shadow_hidden(scroll_layer, true);
 
   simply_window_set_action_bar(self, self->is_action_bar);
+}
+
+void simply_window_appear(SimplyWindow *self) {
+  simply_window_stack_send_show(self->simply->window_stack, self);
+}
+
+void simply_window_disappear(SimplyWindow *self) {
+  simply_window_stack_send_hide(self->simply->window_stack, self);
+
+#ifdef PBL_PLATFORM_BASALT
+  simply_window_set_fullscreen(self, true);
+#endif
 }
 
 void simply_window_unload(SimplyWindow *self) {
@@ -316,6 +334,11 @@ SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply) {
   window_set_background_color(window, GColorClear);
   window_set_click_config_provider_with_context(window, click_config_provider, self);
 
+  self->status_bar_layer = status_bar_layer_create();
+  status_bar_layer_remove_from_window(window, self->status_bar_layer);
+  self->is_status_bar = false;
+  self->is_fullscreen = true;
+
   ActionBarLayer *action_bar_layer = self->action_bar_layer = action_bar_layer_create();
   action_bar_layer_set_context(action_bar_layer, self);
 
@@ -329,6 +352,9 @@ void simply_window_deinit(SimplyWindow *self) {
 
   action_bar_layer_destroy(self->action_bar_layer);
   self->action_bar_layer = NULL;
+
+  status_bar_layer_destroy(self->status_bar_layer);
+  self->status_bar_layer = NULL;
 
   window_destroy(self->window);
   self->window = NULL;

@@ -118,7 +118,8 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   const SimplyStyle *style = self->ui_layer.style;
   GFont title_font = fonts_get_system_font(style->title_font);
   GFont subtitle_font = fonts_get_system_font(style->subtitle_font);
-  GFont body_font = self->ui_layer.custom_body_font ? self->ui_layer.custom_body_font : fonts_get_system_font(style->body_font);
+  GFont body_font = self->ui_layer.custom_body_font ?
+      self->ui_layer.custom_body_font : fonts_get_system_font(style->body_font);
 
   const int16_t margin_x = 5;
   const int16_t margin_y = 2;
@@ -225,7 +226,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_rect(ctx, frame, 0, GCornerNone);
 
-  graphics_context_set_fill_color(ctx, GColor8GetOr(self->window.background_color, GColorWhite));
+  graphics_context_set_fill_color(ctx, gcolor8_get_or(self->window.background_color, GColorWhite));
   graphics_fill_rect(ctx, frame, 4, GCornersAll);
 
   if (title_icon) {
@@ -296,12 +297,12 @@ static void window_load(Window *window) {
 
 static void window_appear(Window *window) {
   SimplyUi *self = window_get_user_data(window);
-  simply_window_stack_send_show(self->window.simply->window_stack, &self->window);
+  simply_window_appear(&self->window);
 }
 
 static void window_disappear(Window *window) {
   SimplyUi *self = window_get_user_data(window);
-  simply_window_stack_send_hide(self->window.simply->window_stack, &self->window);
+  simply_window_disappear(&self->window);
 
   simply_res_clear(self->window.simply->res);
 }

@@ -6,6 +6,31 @@
  * When possible, they are copied directly without modification.
  */
 
+// Compatibility definitions for 2.9
+#if !defined(PBL_PLATFORM_APLITE) && !defined(PBL_PLATFORM_BASALT)
+
+#define PBL_SDK_2
+
+//! The format of a GBitmap can either be 1-bit or 8-bit.
+typedef enum GBitmapFormat {
+  GBitmapFormat1Bit = 0, //<! 1-bit black and white. 0 = black, 1 = white.
+  GBitmapFormat8Bit,      //<! 6-bit color + 2 bit alpha channel. See \ref GColor8 for pixel format.
+  GBitmapFormat1BitPalette,
+  GBitmapFormat2BitPalette,
+  GBitmapFormat4BitPalette,
+} GBitmapFormat;
+
+#define GBITMAP_NATIVE_FORMAT GBitmapFormat1Bit
+
+static inline GBitmap *gbitmap_create_blank_with_format(GSize size, GBitmapFormat format) {
+  return gbitmap_create_blank(size);
+}
+
+#define gbitmap_create_blank gbitmap_create_blank_with_format
+
+#endif
+
+// Compatibility definitions for aplite on 3.0
 #ifndef PBL_COLOR
 
 #define GColorWhiteARGB8 ((uint8_t)0b11111111)
@@ -23,19 +48,8 @@ typedef union GColor8 {
 } GColor8;
 
 //! Convenience macro to enable use of SDK 3.0 function to compare equality of two colors.
-#define GColorEq(a, b) ((a) == (b))
+#define gcolor_equal(a, b) ((a) == (b))
 
-
-//! The format of a GBitmap can either be 1-bit or 8-bit.
-typedef enum GBitmapFormat {
-  GBitmapFormat1Bit = 0, //<! 1-bit black and white. 0 = black, 1 = white.
-  GBitmapFormat8Bit,      //<! 6-bit color + 2 bit alpha channel. See \ref GColor8 for pixel format.
-  GBitmapFormat1BitPalette,
-  GBitmapFormat2BitPalette,
-  GBitmapFormat4BitPalette,
-} GBitmapFormat;
-
-#define GBITMAP_NATIVE_FORMAT GBitmapFormat1Bit
 
 //! Convenience function to use SDK 3.0 function to get a `GBitmap`'s `row_size_bytes` field.
 #ifndef gbitmap_get_bytes_per_row
@@ -82,5 +96,13 @@ typedef enum GBitmapFormat {
 #define property_animation_set_to_grect(prop_anim, value_ptr) \
   ((prop_anim)->values.to.grect = *(value_ptr))
 #endif
+
+#endif
+
+// Legacy definitions for basalt on 3.0
+// These should eventually be removed in the future
+#ifdef PBL_PLATFORM_BASALT
+
+#define window_set_fullscreen(window, fullscreen)
 
 #endif

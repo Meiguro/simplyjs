@@ -9,6 +9,8 @@
 // Compatibility definitions for 2.9
 #if !defined(PBL_PLATFORM_APLITE) && !defined(PBL_PLATFORM_BASALT)
 
+#define PBL_SDK_2
+
 //! The format of a GBitmap can either be 1-bit or 8-bit.
 typedef enum GBitmapFormat {
   GBitmapFormat1Bit = 0, //<! 1-bit black and white. 0 = black, 1 = white.

@@ -24,6 +24,7 @@ struct SimplyWindow {
   bool is_fullscreen:1;
   bool is_scrollable:1;
   bool is_action_bar:1;
+  bool is_status_bar:1;
 };
 
 SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply);
@@ -33,11 +34,13 @@ void simply_window_hide(SimplyWindow *self);
 
 void simply_window_load(SimplyWindow *self);
 void simply_window_unload(SimplyWindow *self);
+void simply_window_appear(SimplyWindow *self);
+void simply_window_disappear(SimplyWindow *self);
 
 void simply_window_single_click_handler(ClickRecognizerRef recognizer, void *context);
 
 void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable);
-void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen);
+void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen, bool force);
 void simply_window_set_background_color(SimplyWindow *self, GColor8 background_color);
 
 void simply_window_set_button(SimplyWindow *self, ButtonId button, bool enable);

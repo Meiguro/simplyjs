@@ -8,12 +8,6 @@
 
 #define GCompOpAlphaBlend GCompOpAnd
 
-static inline GBitmap *gbitmap_create_blank_with_format(GSize size, GBitmapFormat format) {
-  return gbitmap_create_blank(size);
-}
-
-#define gbitmap_create_blank gbitmap_create_blank_with_format
-
 #else
 
 #define GCompOpAlphaBlend GCompOpSet

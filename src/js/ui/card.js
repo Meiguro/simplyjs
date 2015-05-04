@@ -65,6 +65,7 @@ var clearableProps = textProps.concat(imageProps);
 
 var defaults = {
   backgroundColor: 'white',
+  fullscreen: false,
 };
 
 var Card = function(cardDef) {

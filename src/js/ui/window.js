@@ -282,7 +282,7 @@ Window.prototype._emitShow = function(type) {
 
 Window.emit = function(type, subtype, e) {
   var wind = WindowStack.top();
-  if (window) {
+  if (wind) {
     return wind._emit(type, subtype, e);
   }
 };

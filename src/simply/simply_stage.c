@@ -172,14 +172,14 @@ void simply_stage_clear(SimplyStage *self) {
 
 static void rect_element_draw_background(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
   if (element->background_color.a) {
-    graphics_context_set_fill_color(ctx, GColor8Get(element->background_color));
+    graphics_context_set_fill_color(ctx, gcolor8_get(element->background_color));
     graphics_fill_rect(ctx, element->frame, element->radius, GCornersAll);
   }
 }
 
 static void rect_element_draw_border(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
   if (element->border_color.a) {
-    graphics_context_set_stroke_color(ctx, GColor8Get(element->border_color));
+    graphics_context_set_stroke_color(ctx, gcolor8_get(element->border_color));
     graphics_draw_round_rect(ctx, element->frame, element->radius);
   }
 }
@@ -191,11 +191,11 @@ static void rect_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRec
 
 static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementCircle *element) {
   if (element->background_color.a) {
-    graphics_context_set_fill_color(ctx, GColor8Get(element->background_color));
+    graphics_context_set_fill_color(ctx, gcolor8_get(element->background_color));
     graphics_fill_circle(ctx, element->frame.origin, element->radius);
   }
   if (element->border_color.a) {
-    graphics_context_set_stroke_color(ctx, GColor8Get(element->border_color));
+    graphics_context_set_stroke_color(ctx, gcolor8_get(element->border_color));
     graphics_draw_circle(ctx, element->frame.origin, element->radius);
   }
 }
@@ -216,7 +216,7 @@ static void text_element_draw(GContext *ctx, SimplyStage *self, SimplyElementTex
       text = format_time(text);
     }
     GFont font = element->font ? element->font : fonts_get_system_font(FONT_KEY_GOTHIC_14);
-    graphics_context_set_text_color(ctx, GColor8Get(element->text_color));
+    graphics_context_set_text_color(ctx, gcolor8_get(element->text_color));
     graphics_draw_text(ctx, text, font, element->frame, element->overflow_mode, element->alignment, NULL);
   }
 }
@@ -244,7 +244,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   frame.origin.x = -frame.origin.x;
   frame.origin.y = -frame.origin.y;
 
-  graphics_context_set_fill_color(ctx, GColor8Get(self->window.background_color));
+  graphics_context_set_fill_color(ctx, gcolor8_get(self->window.background_color));
   graphics_fill_rect(ctx, frame, 0, GCornerNone);
 
   SimplyElementCommon *element = (SimplyElementCommon*) self->stage_layer.elements;

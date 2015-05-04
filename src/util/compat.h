@@ -48,7 +48,7 @@ typedef union GColor8 {
 } GColor8;
 
 //! Convenience macro to enable use of SDK 3.0 function to compare equality of two colors.
-#define GColorEq(a, b) ((a) == (b))
+#define gcolor_equal(a, b) ((a) == (b))
 
 
 //! Convenience function to use SDK 3.0 function to get a `GBitmap`'s `row_size_bytes` field.

@@ -178,7 +178,7 @@ void simply_window_set_action_bar_background_color(SimplyWindow *self, GColor8 b
     return;
   }
 
-  action_bar_layer_set_background_color(self->action_bar_layer, GColor8Get(background_color));
+  action_bar_layer_set_background_color(self->action_bar_layer, gcolor8_get(background_color));
   simply_window_set_action_bar(self, true);
 }
 

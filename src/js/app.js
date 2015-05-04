@@ -37,9 +37,11 @@ main.on('click', 'up', function(e) {
 });
 
 main.on('click', 'select', function(e) {
-  var wind = new UI.Window();
+  var wind = new UI.Window({
+    fullscreen: true,
+  });
   var textfield = new UI.Text({
-    position: new Vector2(0, 50),
+    position: new Vector2(0, 65),
     size: new Vector2(144, 30),
     font: 'gothic-24-bold',
     text: 'Text Anywhere!',

@@ -9,6 +9,7 @@
 
 #include "util/graphics.h"
 #include "util/scroll_layer.h"
+#include "util/status_bar_layer.h"
 #include "util/string.h"
 
 #include <pebble.h>
@@ -101,21 +102,26 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
   layer_mark_dirty(self->layer);
 }
 
-void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
-  if (self->is_fullscreen == is_fullscreen) {
+void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen, bool force) {
+  if (!force && self->is_fullscreen == is_fullscreen) {
     return;
   }
 
-  window_set_fullscreen(self->window, is_fullscreen);
+  if (is_fullscreen) {
+    status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
+  } else {
+    status_bar_layer_add_to_window(self->window, self->status_bar_layer);
+  }
 
   if (!self->layer) {
     return;
   }
 
-  GRect frame = layer_get_frame(window_get_root_layer(self->window));
+  GRect frame = { GPointZero, layer_get_frame(window_get_root_layer(self->window)).size };
   scroll_layer_set_frame(self->scroll_layer, frame);
   layer_set_frame(self->layer, frame);
 
+#ifdef PBL_SDK_2
   if (!window_stack_contains_window(self->window)) {
     return;
   }
@@ -128,6 +134,7 @@ void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
   window_stack_remove(window, false);
   window_destroy(window);
   self->id = id;
+#endif
 }
 
 void simply_window_set_background_color(SimplyWindow *self, GColor8 background_color) {
@@ -245,8 +252,21 @@ void simply_window_load(SimplyWindow *self) {
   layer_add_child(window_layer, scroll_base_layer);
 
   scroll_layer_set_context(scroll_layer, self);
+  scroll_layer_set_shadow_hidden(scroll_layer, true);
 
   simply_window_set_action_bar(self, self->is_action_bar);
+}
+
+void simply_window_appear(SimplyWindow *self) {
+  simply_window_stack_send_show(self->simply->window_stack, self);
+  if (self->is_status_bar) {
+    simply_window_set_fullscreen(self, false, true);
+  }
+}
+
+void simply_window_disappear(SimplyWindow *self) {
+  simply_window_stack_send_hide(self->simply->window_stack, self);
+  simply_window_set_fullscreen(self, true, true);
 }
 
 void simply_window_unload(SimplyWindow *self) {
@@ -261,8 +281,9 @@ static void handle_window_props_packet(Simply *simply, Packet *data) {
     return;
   }
   window->id = packet->id;
+  window->is_status_bar = !packet->fullscreen;
   simply_window_set_background_color(window, packet->background_color);
-  simply_window_set_fullscreen(window, packet->fullscreen);
+  simply_window_set_fullscreen(window, packet->fullscreen, false);
   simply_window_set_scrollable(window, packet->scrollable);
 }
 
@@ -316,6 +337,10 @@ SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply) {
   window_set_background_color(window, GColorClear);
   window_set_click_config_provider_with_context(window, click_config_provider, self);
 
+  self->status_bar_layer = status_bar_layer_create();
+  status_bar_layer_add_to_window(window, self->status_bar_layer);
+  self->is_status_bar = true;
+
   ActionBarLayer *action_bar_layer = self->action_bar_layer = action_bar_layer_create();
   action_bar_layer_set_context(action_bar_layer, self);
 
@@ -329,6 +354,9 @@ void simply_window_deinit(SimplyWindow *self) {
 
   action_bar_layer_destroy(self->action_bar_layer);
   self->action_bar_layer = NULL;
+
+  status_bar_layer_destroy(self->status_bar_layer);
+  self->status_bar_layer = NULL;
 
   window_destroy(self->window);
   self->window = NULL;

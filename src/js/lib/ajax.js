@@ -87,6 +87,8 @@ var ajax = function(opt, success, failure) {
     if (opt.type === 'json') {
       req.setRequestHeader('Content-Type', 'application/json');
       data = JSON.stringify(opt.data);
+    } else if (opt.type === 'xml') {
+      req.setRequestHeader('Content-Type', 'text/xml');
     } else if (opt.type !== 'text') {
       req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       data = formify(opt.data);

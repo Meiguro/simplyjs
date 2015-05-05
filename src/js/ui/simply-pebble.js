@@ -253,6 +253,7 @@ var LaunchReasonTypes = [
   'wakeup',
   'worker',
   'quickLaunch',
+  'timelineAction'
 ];
 
 var LaunchReasonType = makeArrayType(LaunchReasonTypes);
@@ -334,6 +335,7 @@ var ReadyPacket = new struct([
 var LaunchReasonPacket = new struct([
   [Packet, 'packet'],
   ['uint32', 'reason', LaunchReasonType],
+  ['uint32', 'args'],
   ['uint32', 'time'],
   ['bool', 'isTimezone'],
 ]);
@@ -1139,6 +1141,7 @@ var toArrayBuffer = function(array, length) {
 
 SimplyPebble.onLaunchReason = function(packet) {
   var reason = LaunchReasonTypes[packet.reason()];
+  var args = packet.args()
   var remoteTime = packet.time();
   var isTimezone = packet.isTimezone();
   if (isTimezone) {
@@ -1149,7 +1152,7 @@ SimplyPebble.onLaunchReason = function(packet) {
     state.timeOffset = Math.round((remoteTime - time) / resolution) * resolution;
   }
   if (reason !== 'wakeup') {
-    Wakeup.emitWakeup('noWakeup', 0);
+    Wakeup.emitWakeup({reason: reason, args: args});
   }
 };
 
@@ -1204,7 +1207,7 @@ SimplyPebble.onPacket = function(buffer, offset) {
       SimplyPebble.onWakeupSetResult(packet);
       break;
     case WakeupEventPacket:
-      Wakeup.emitWakeup(packet.id(), packet.cookie());
+      Wakeup.emitWakeup({reason: 'wakeup', id: packet.id(), cookie: packet.cookie()});
       break;
     case WindowHideEventPacket:
       ImageService.markAllUnloaded();

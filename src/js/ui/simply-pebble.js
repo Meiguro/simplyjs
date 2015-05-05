@@ -1157,6 +1157,9 @@ SimplyPebble.onLaunchReason = function(packet) {
   } else {
     Timeline.emitAction();
   }
+  if (reason !== 'wakeup') {
+    Wakeup.emitWakeup();
+  }
 };
 
 SimplyPebble.onWakeupSetResult = function(packet) {

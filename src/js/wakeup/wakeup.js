@@ -134,7 +134,9 @@ Wakeup.emitSetResult = function(id, cookie) {
 
 Wakeup.emitWakeup = function(id, cookie) {
   var e;
-  if (typeof id === 'number') {
+  if (id !== undefined) {
+    delete this.state.wakeups[id];
+
     e = this._makeWakeupEvent(id, cookie);
     e.wakeup = true;
   } else {
@@ -143,7 +145,6 @@ Wakeup.emitWakeup = function(id, cookie) {
     };
   }
 
-  delete this.state.wakeups[id];
   this._saveData();
   this._launchEvent = e;
 

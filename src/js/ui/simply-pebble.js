@@ -2,6 +2,7 @@ var struct = require('struct');
 var util2 = require('util2');
 var myutil = require('myutil');
 var Wakeup = require('wakeup');
+var Timeline = require('timeline');
 var Resource = require('ui/resource');
 var Accel = require('ui/accel');
 var ImageService = require('ui/imageservice');
@@ -253,6 +254,7 @@ var LaunchReasonTypes = [
   'wakeup',
   'worker',
   'quickLaunch',
+  'timelineAction'
 ];
 
 var LaunchReasonType = makeArrayType(LaunchReasonTypes);
@@ -334,6 +336,7 @@ var ReadyPacket = new struct([
 var LaunchReasonPacket = new struct([
   [Packet, 'packet'],
   ['uint32', 'reason', LaunchReasonType],
+  ['uint32', 'args'],
   ['uint32', 'time'],
   ['bool', 'isTimezone'],
 ]);
@@ -1139,6 +1142,7 @@ var toArrayBuffer = function(array, length) {
 
 SimplyPebble.onLaunchReason = function(packet) {
   var reason = LaunchReasonTypes[packet.reason()];
+  var args = packet.args()
   var remoteTime = packet.time();
   var isTimezone = packet.isTimezone();
   if (isTimezone) {
@@ -1148,8 +1152,10 @@ SimplyPebble.onLaunchReason = function(packet) {
     var resolution = 60 * 30;
     state.timeOffset = Math.round((remoteTime - time) / resolution) * resolution;
   }
-  if (reason !== 'wakeup') {
-    Wakeup.emitWakeup('noWakeup', 0);
+  if (reason === 'timelineAction') {
+    Timeline.emitAction(args);
+  } else {
+    Timeline.emitAction();
   }
 };
 

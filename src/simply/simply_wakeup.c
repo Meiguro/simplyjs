@@ -80,10 +80,7 @@ static void wakeup_set_timer_callback(void *data) {
 
 static void process_launch_reason() {
   AppLaunchReason reason = launch_reason();
-  uint32_t args = 0;
-#ifdef PBL_PLATFORM_BASALT
-  args =  launch_get_args();
-#endif
+  uint32_t args = launch_get_args();
 
   send_launch_reason(reason, args);
 

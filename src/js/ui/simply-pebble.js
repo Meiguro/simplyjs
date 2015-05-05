@@ -2,6 +2,7 @@ var struct = require('struct');
 var util2 = require('util2');
 var myutil = require('myutil');
 var Wakeup = require('wakeup');
+var Timeline = require('timeline');
 var Resource = require('ui/resource');
 var Accel = require('ui/accel');
 var ImageService = require('ui/imageservice');
@@ -1151,8 +1152,10 @@ SimplyPebble.onLaunchReason = function(packet) {
     var resolution = 60 * 30;
     state.timeOffset = Math.round((remoteTime - time) / resolution) * resolution;
   }
-  if (reason !== 'wakeup') {
-    Wakeup.emitWakeup({reason: reason, args: args});
+  if (reason === 'timelineAction') {
+    Timeline.emitAction(args);
+  } else {
+    Timeline.emitAction();
   }
 };
 
@@ -1207,7 +1210,7 @@ SimplyPebble.onPacket = function(buffer, offset) {
       SimplyPebble.onWakeupSetResult(packet);
       break;
     case WakeupEventPacket:
-      Wakeup.emitWakeup({reason: 'wakeup', id: packet.id(), cookie: packet.cookie()});
+      Wakeup.emitWakeup(packet.id(), packet.cookie());
       break;
     case WindowHideEventPacket:
       ImageService.markAllUnloaded();

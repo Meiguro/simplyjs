@@ -132,19 +132,17 @@ Wakeup.emitSetResult = function(id, cookie) {
   return req.callback(e);
 };
 
-Wakeup.emitWakeup = function(opt) {
+Wakeup.emitWakeup = function(id, cookie) {
   var e;
-  if (opt.reason === 'wakeup'){
-    e = this._makeWakeupEvent(opt.id, opt.cookie);
-    e.wakeup = true;
+  if (id !== undefined) {
+    delete this.state.wakeups[id];
 
-    delete this.state.wakeups[opt.id];
+    e = this._makeWakeupEvent(id, cookie);
+    e.wakeup = true;
   } else {
     e = {
       wakeup: false,
-      reason: opt.reason,
-      args: opt.args
-    }
+    };
   }
 
   this._saveData();

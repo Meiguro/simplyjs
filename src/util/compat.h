@@ -6,7 +6,7 @@
  * When possible, they are copied directly without modification.
  */
 
-// Compatibility definitions for 2.9
+// Compatibility definitions for aplite on 2.9
 #if !defined(PBL_PLATFORM_APLITE) && !defined(PBL_PLATFORM_BASALT)
 
 #define PBL_SDK_2
@@ -27,6 +27,8 @@ static inline GBitmap *gbitmap_create_blank_with_format(GSize size, GBitmapForma
 }
 
 #define gbitmap_create_blank gbitmap_create_blank_with_format
+
+#define launch_get_args() ((uint32_t)0)
 
 #endif
 

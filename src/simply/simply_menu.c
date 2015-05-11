@@ -78,6 +78,10 @@ struct __attribute__((__packed__)) MenuSelectionPacket {
 };
 
 
+static GColor8 s_normal_palette[] = { { GColorBlackARGB8 }, { GColorClearARGB8 } };
+static GColor8 s_inverted_palette[] = { { GColorWhiteARGB8 }, { GColorClearARGB8 } };
+
+
 static void simply_menu_clear_section_items(SimplyMenu *self, int section_index);
 static void simply_menu_clear(SimplyMenu *self);
 
@@ -308,9 +312,22 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   list1_prepend(&self->menu_layer.items, &item->node);
 
   SimplyImage *image = simply_res_get_image(self->window.simply->res, item->icon);
+  GColor8 *palette = NULL;
+
+  if (image && image->is_palette_black_and_white) {
+    palette = gbitmap_get_palette(image->bitmap);
+    MenuIndex selected_index = menu_layer_get_selected_index(self->menu_layer.menu_layer);
+    const bool is_selected = (selected_index.section == cell_index->section &&
+                              selected_index.row == cell_index->row);
+    gbitmap_set_palette(image->bitmap, is_selected ? s_inverted_palette : s_normal_palette, false);
+  }
 
   graphics_context_set_alpha_blended(ctx, true);
   menu_cell_basic_draw(ctx, cell_layer, item->title, item->subtitle, image ? image->bitmap : NULL);
+
+  if (palette) {
+    gbitmap_set_palette(image->bitmap, palette, false);
+  }
 }
 
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {

@@ -23,6 +23,20 @@ static void destroy_font(SimplyRes *self, SimplyFont *font) {
   free(font);
 }
 
+static void setup_image(SimplyImage *image) {
+  image->is_palette_black_and_white = gbitmap_is_palette_black_and_white(image->bitmap);
+
+  if (!image->is_palette_black_and_white) {
+    return;
+  }
+
+  GColor8 *palette = gbitmap_get_palette(image->bitmap);
+  GColor8 *palette_copy = malloc0(2 * sizeof(GColor8));
+  memcpy(palette_copy, palette, 2 * sizeof(GColor8));
+  gbitmap_set_palette(image->bitmap, palette_copy, false);
+  image->palette = palette_copy;
+}
+
 SimplyImage *simply_res_add_bundled_image(SimplyRes *self, uint32_t id) {
   SimplyImage *image = malloc(sizeof(*image));
   if (!image) {
@@ -41,6 +55,8 @@ SimplyImage *simply_res_add_bundled_image(SimplyRes *self, uint32_t id) {
   };
 
   list1_prepend(&self->images, &image->node);
+
+  setup_image(image);
 
   window_stack_schedule_top_window_render();
 
@@ -68,6 +84,8 @@ SimplyImage *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, i
     uint16_t row_size_bytes = gbitmap_get_bytes_per_row(image->bitmap);
     size_t pixels_size = height * row_size_bytes;
     memcpy(image->bitmap_data, pixels, pixels_size);
+
+    setup_image(image);
   }
 
   window_stack_schedule_top_window_render();

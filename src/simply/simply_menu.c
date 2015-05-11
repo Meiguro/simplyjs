@@ -77,6 +77,7 @@ struct __attribute__((__packed__)) MenuSelectionPacket {
   bool animated;
 };
 
+
 static void simply_menu_clear_section_items(SimplyMenu *self, int section_index);
 static void simply_menu_clear(SimplyMenu *self);
 
@@ -296,6 +297,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
     request_menu_section(self, cell_index->section);
     return;
   }
+
   SimplyMenuItem *item = get_menu_item(self, cell_index->section, cell_index->row);
   if (!item) {
     request_menu_item(self, cell_index->section, cell_index->row);
@@ -305,9 +307,10 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   list1_remove(&self->menu_layer.items, &item->node);
   list1_prepend(&self->menu_layer.items, &item->node);
 
-  GBitmap *bitmap = simply_res_get_image(self->window.simply->res, item->icon);
+  SimplyImage *image = simply_res_get_image(self->window.simply->res, item->icon);
+
   graphics_context_set_alpha_blended(ctx, true);
-  menu_cell_basic_draw(ctx, cell_layer, item->title, item->subtitle, bitmap);
+  menu_cell_basic_draw(ctx, cell_layer, item->title, item->subtitle, image ? image->bitmap : NULL);
 }
 
 static void menu_select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {

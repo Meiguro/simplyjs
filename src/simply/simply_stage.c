@@ -224,13 +224,13 @@ static void text_element_draw(GContext *ctx, SimplyStage *self, SimplyElementTex
 static void image_element_draw(GContext *ctx, SimplyStage *self, SimplyElementImage *element) {
   graphics_context_set_compositing_mode(ctx, element->compositing);
   rect_element_draw_background(ctx, self, (SimplyElementRect*) element);
-  GBitmap *bitmap = simply_res_get_image(self->window.simply->res, element->image);
-  if (bitmap) {
+  SimplyImage *image = simply_res_get_image(self->window.simply->res, element->image);
+  if (image && image->bitmap) {
     GRect frame = element->frame;
     if (frame.size.w == 0 && frame.size.h == 0) {
-      frame = gbitmap_get_bounds(bitmap);
+      frame = gbitmap_get_bounds(image->bitmap);
     }
-    graphics_draw_bitmap_centered(ctx, bitmap, frame);
+    graphics_draw_bitmap_centered(ctx, image->bitmap, frame);
   }
   rect_element_draw_border(ctx, self, (SimplyElementRect*) element);
   graphics_context_set_compositing_mode(ctx, GCompOpAssign);

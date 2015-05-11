@@ -149,11 +149,11 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   GPoint title_pos, subtitle_pos, image_pos = GPointZero;
   GRect body_rect;
 
-  GBitmap *title_icon = simply_res_get_image(
+  SimplyImage *title_icon = simply_res_get_image(
       self->window.simply->res, self->ui_layer.imagefields[UiTitleIcon]);
-  GBitmap *subtitle_icon = simply_res_get_image(
+  SimplyImage *subtitle_icon = simply_res_get_image(
       self->window.simply->res, self->ui_layer.imagefields[UiSubtitleIcon]);
-  GBitmap *body_image = simply_res_get_image(
+  SimplyImage *body_image = simply_res_get_image(
       self->window.simply->res, self->ui_layer.imagefields[UiBodyImage]);
 
   GRect title_icon_bounds;
@@ -161,10 +161,10 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   GRect body_image_bounds;
 
   if (title_icon) {
-    title_icon_bounds = gbitmap_get_bounds(title_icon);
+    title_icon_bounds = gbitmap_get_bounds(title_icon->bitmap);
   }
   if (subtitle_icon) {
-    subtitle_icon_bounds = gbitmap_get_bounds(title_icon);
+    subtitle_icon_bounds = gbitmap_get_bounds(subtitle_icon->bitmap);
   }
 
   if (has_title) {
@@ -200,7 +200,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   }
 
   if (body_image) {
-    body_image_bounds = gbitmap_get_bounds(body_image);
+    body_image_bounds = gbitmap_get_bounds(body_image->bitmap);
     image_pos = cursor;
     cursor.y += body_image_bounds.size.h;
   }
@@ -234,7 +234,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       .origin = { margin_x, title_pos.y + image_offset_y },
       .size = { title_icon_bounds.size.w, title_size.h }
     };
-    graphics_draw_bitmap_centered(ctx, title_icon, icon_frame);
+    graphics_draw_bitmap_centered(ctx, title_icon->bitmap, icon_frame);
   }
   if (has_title) {
     graphics_draw_text(ctx, title_text, title_font,
@@ -247,7 +247,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       .origin = { margin_x, subtitle_pos.y + image_offset_y },
       .size = { subtitle_icon_bounds.size.w, subtitle_size.h }
     };
-    graphics_draw_bitmap_centered(ctx, subtitle_icon, subicon_frame);
+    graphics_draw_bitmap_centered(ctx, subtitle_icon->bitmap, subicon_frame);
   }
   if (has_subtitle) {
     graphics_draw_text(ctx, subtitle_text, subtitle_font,
@@ -260,7 +260,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       .origin = { 0, image_pos.y + image_offset_y },
       .size = { window_frame.size.w, body_image_bounds.size.h }
     };
-    graphics_draw_bitmap_centered(ctx, body_image, image_frame);
+    graphics_draw_bitmap_centered(ctx, body_image->bitmap, image_frame);
   }
   if (has_body) {
     graphics_draw_text(ctx, body_text, body_font, body_rect,

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <pebble.h>
+
 /**
  * aplite and SDK 2.9 compatibility utilities
  * These are a collection of types and compatibility macros taken from SDK 3.0.

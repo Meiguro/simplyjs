@@ -164,9 +164,10 @@ void simply_window_set_action_bar_icon(SimplyWindow *self, ButtonId button, uint
     return;
   }
 
-  if (id) {
-    GBitmap *icon = simply_res_auto_image(self->simply->res, id, true);
-    action_bar_layer_set_icon(self->action_bar_layer, button, icon);
+  SimplyImage *icon = simply_res_auto_image(self->simply->res, id, true);
+
+  if (icon && icon->bitmap) {
+    action_bar_layer_set_icon(self->action_bar_layer, button, icon->bitmap);
     simply_window_set_action_bar(self, true);
   } else {
     action_bar_layer_clear_icon(self->action_bar_layer, button);

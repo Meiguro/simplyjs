@@ -28,30 +28,44 @@ safe.translatePos = function(name, lineno, colno) {
   return name + ':' + lineno + ':' + colno;
 };
 
+/* Translates a node style stack trace line */
+var translateLineV8 = function(line, msg, name, lineno, colno) {
+  var pos = safe.translatePos(name, lineno, colno);
+  return msg + '(' + pos + ')';
+};
 
-/* Translates an iOS stack tace line to node style */
-safe.translateLineIOS = function(line, scope, name, lineno, colno) {
+var makeTranslateStack = function(stackLineRegExp, translateLine) {
+  return function(stack) {
+    var lines = stack.split('\n');
+    for (var i = lines.length - 1; i >= 0; --i) {
+      var line = lines[i];
+      var m = line.match(stackLineRegExp);
+      if (m) {
+        line = lines[i] = translateLine.apply(this, m);
+      }
+      if (line.match(module.filename)) {
+        lines.splice(--i, 2);
+      }
+    }
+    return lines.join('\n');
+  };
+};
+
+/* Matches <msg> '(' <name> ':' <lineno> ':' <colno> ')' */
+var stackLineRegExpV8 = /(.*)\(([^\s@:]+):(\d+):(\d+)\)/;
+
+safe.translateStackV8 = makeTranslateStack(stackLineRegExpV8, translateLineV8);
+
+/* Translates an iOS stack trace line to node style */
+var translateLineIOS = function(line, scope, name, lineno, colno) {
   var pos = safe.translatePos(name, lineno, colno);
   return safe.indent + 'at ' + (scope ? scope  + ' (' + pos + ')' : pos);
 };
 
 /* Matches (<scope> '@' )? <name> ':' <lineno> ':' <colno> */
-var stackLineRegExp = /(?:([^\s@]+)@)?([^\s@:]+):(\d+):(\d+)/;
+var stackLineRegExpIOS = /(?:([^\s@]+)@)?([^\s@:]+):(\d+):(\d+)/;
 
-safe.translateStackIOS = function(stack) {
-  var lines = stack.split('\n');
-  for (var i = lines.length - 1; i >= 0; --i) {
-    var line = lines[i];
-    var m = line.match(stackLineRegExp);
-    if (m) {
-      line = lines[i] = safe.translateLineIOS.apply(this, m);
-    }
-    if (line.match(module.filename)) {
-      lines.splice(--i, 2);
-    }
-  }
-  return lines.join('\n');
-};
+safe.translateStackIOS = makeTranslateStack(stackLineRegExpIOS, translateLineIOS);
 
 safe.translateStackAndroid = function(stack) {
   var lines = stack.split('\n');
@@ -84,7 +98,9 @@ safe.translateStackAndroid = function(stack) {
 
 /* Translates a stack trace to the originating files */
 safe.translateStack = function(stack) {
-  if (stack.match('com.getpebble.android')) {
+  if (Pebble.platform === 'pypkjs') {
+    return safe.translateStackV8(stack);
+  } else if (stack.match('com.getpebble.android')) {
     return safe.translateStackAndroid(stack);
   } else {
     return safe.translateStackIOS(stack);

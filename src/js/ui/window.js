@@ -111,7 +111,7 @@ Window.prototype._remove = function() {
 };
 
 Window.prototype._clearAction = function() {
-  actionProps.forEach(myutil.unset.bind(this, this.state.action));
+  actionProps.forEach(Propable.unset.bind(this.state.action));
 };
 
 Window.prototype._clear = function(flags) {

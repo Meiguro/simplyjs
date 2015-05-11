@@ -8,35 +8,42 @@
 
 typedef struct SimplyStyle SimplyStyle;
 
-typedef struct SimplyUiLayer SimplyUiLayer;
+typedef enum SimplyUiTextfieldId SimplyUiTextfieldId;
 
-typedef struct SimplyUi SimplyUi;
-
-typedef enum SimplyUiTextfield SimplyUiTextfield;
-
-typedef enum SimplyUiImagefield SimplyUiImagefield;
-
-enum SimplyUiTextfield {
+enum SimplyUiTextfieldId {
   UiTitle = 0,
   UiSubtitle,
   UiBody,
   NumUiTextfields,
 };
 
-enum SimplyUiImagefield {
+typedef enum SimplyUiImagefieldId SimplyUiImagefieldId;
+
+enum SimplyUiImagefieldId {
   UiTitleIcon,
   UiSubtitleIcon,
   UiBodyImage,
   NumUiImagefields,
 };
 
+typedef struct SimplyUiTextfield SimplyUiTextfield;
+
+struct SimplyUiTextfield {
+  char *text;
+  GColor8 color;
+};
+
+typedef struct SimplyUiLayer SimplyUiLayer;
+
 struct SimplyUiLayer {
   Layer *layer;
   const SimplyStyle *style;
-  char *textfields[3];
+  SimplyUiTextfield textfields[3];
   uint32_t imagefields[3];
   GFont custom_body_font;
 };
+
+typedef struct SimplyUi SimplyUi;
 
 struct SimplyUi {
   SimplyWindow window;
@@ -49,6 +56,7 @@ void simply_ui_destroy(SimplyUi *self);
 void simply_ui_clear(SimplyUi *self, uint32_t clear_mask);
 
 void simply_ui_set_style(SimplyUi *self, int style_index);
-void simply_ui_set_text(SimplyUi *self, SimplyUiTextfield textfield, const char *str);
+void simply_ui_set_text(SimplyUi *self, SimplyUiTextfieldId textfield_id, const char *str);
+void simply_ui_set_text_color(SimplyUi *self, SimplyUiTextfieldId textfield_id, GColor8 color);
 
 bool simply_ui_handle_packet(Simply *simply, Packet *packet);

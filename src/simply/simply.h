@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef PBL_SDK_3
+#include "basalt/src/resource_ids.auto.h"
+#endif
+
 #define LOG(...) APP_LOG(APP_LOG_LEVEL_DEBUG, __VA_ARGS__)
 
 typedef struct Simply Simply;

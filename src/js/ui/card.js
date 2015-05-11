@@ -12,6 +12,12 @@ var textProps = [
   'body',
 ];
 
+var textColorProps = [
+  'titleColor',
+  'subtitleColor',
+  'bodyColor',
+];
+
 var imageProps = [
   'icon',
   'subicon',
@@ -29,7 +35,7 @@ var configProps = [
   'backgroundColor'
 ];
 
-var accessorProps = textProps.concat(imageProps).concat(configProps);
+var accessorProps = textProps.concat(textColorProps).concat(imageProps).concat(configProps);
 var clearableProps = textProps.concat(imageProps);
 
 var defaults = {
@@ -59,7 +65,7 @@ Card.prototype._prop = function() {
 Card.prototype._clear = function(flags) {
   flags = myutil.toFlags(flags);
   if (flags === true) {
-    clearableProps.forEach(myutil.unset.bind(this));
+    clearableProps.forEach(Propable.unset.bind(this));
   }
   if (myutil.flag(flags, 'action')) {
     this._clearAction();

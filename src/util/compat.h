@@ -98,6 +98,10 @@ typedef union GColor8 {
   ((void)(bitmap), (void)(palette), (void)(free_on_destroy))
 #endif
 
+#ifndef gbitmap_get_format
+#define gbitmap_get_format(bitmap) \
+  (GBitmapFormat1Bit)
+#endif
 
 //! Convenience macro to use SDK 3.0 function to set a `PropertyAnimation`'s
 //! `values.from.grect` field.

@@ -4,6 +4,8 @@
 
 #include "simply.h"
 
+#include "util/compat.h"
+
 #include <pebble.h>
 
 typedef struct LaunchReasonPacket LaunchReasonPacket;

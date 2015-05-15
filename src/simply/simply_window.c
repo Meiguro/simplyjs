@@ -107,15 +107,18 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
 }
 
 void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
+  bool changed = false;
   if (is_fullscreen && self->is_status_bar) {
     status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
     self->is_status_bar = false;
+    changed = true;
   } else if (!is_fullscreen && !self->is_status_bar) {
     status_bar_layer_add_to_window(self->window, self->status_bar_layer);
     self->is_status_bar = true;
+    changed = true;
   }
 
-  if (!self->layer) {
+  if (!changed || !self->layer) {
     return;
   }
 
@@ -267,16 +270,25 @@ void simply_window_load(SimplyWindow *self) {
   simply_window_set_action_bar(self, self->is_action_bar);
 }
 
-void simply_window_appear(SimplyWindow *self) {
+bool simply_window_appear(SimplyWindow *self) {
+  if (!self->id) {
+    return false;
+  }
   simply_window_stack_send_show(self->simply->window_stack, self);
+  return true;
 }
 
-void simply_window_disappear(SimplyWindow *self) {
+bool simply_window_disappear(SimplyWindow *self) {
+  if (!self->id) {
+    return false;
+  }
   simply_window_stack_send_hide(self->simply->window_stack, self);
 
 #ifdef PBL_PLATFORM_BASALT
   simply_window_set_fullscreen(self, true);
 #endif
+
+  return true;
 }
 
 void simply_window_unload(SimplyWindow *self) {

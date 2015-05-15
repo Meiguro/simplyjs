@@ -447,10 +447,10 @@ static void window_appear(Window *window) {
 
 static void window_disappear(Window *window) {
   SimplyStage *self = window_get_user_data(window);
-  simply_window_disappear(&self->window);
-
-  simply_res_clear(self->window.simply->res);
-  simply_stage_clear(self);
+  if (simply_window_disappear(&self->window)) {
+    simply_res_clear(self->window.simply->res);
+    simply_stage_clear(self);
+  }
 }
 
 static void window_unload(Window *window) {

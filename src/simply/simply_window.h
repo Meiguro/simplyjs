@@ -34,8 +34,8 @@ void simply_window_hide(SimplyWindow *self);
 
 void simply_window_load(SimplyWindow *self);
 void simply_window_unload(SimplyWindow *self);
-void simply_window_appear(SimplyWindow *self);
-void simply_window_disappear(SimplyWindow *self);
+bool simply_window_appear(SimplyWindow *self);
+bool simply_window_disappear(SimplyWindow *self);
 
 void simply_window_single_click_handler(ClickRecognizerRef recognizer, void *context);
 

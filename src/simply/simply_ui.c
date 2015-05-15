@@ -317,9 +317,9 @@ static void window_appear(Window *window) {
 
 static void window_disappear(Window *window) {
   SimplyUi *self = window_get_user_data(window);
-  simply_window_disappear(&self->window);
-
-  simply_res_clear(self->window.simply->res);
+  if (simply_window_disappear(&self->window)) {
+    simply_res_clear(self->window.simply->res);
+  }
 }
 
 static void window_unload(Window *window) {

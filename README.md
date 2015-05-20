@@ -992,7 +992,7 @@ Sets the font property. See [Text].
 
 #### Text.color(color)
 
-Sets the textOverflow property. See [Text].
+Sets the color property. See [Text].
 
 #### Text.textOverflow(textOverflow)
 

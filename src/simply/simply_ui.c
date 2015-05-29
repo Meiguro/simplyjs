@@ -246,6 +246,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       .origin = { margin_x, title_pos.y + image_offset_y },
       .size = { title_icon_bounds.size.w, title_size.h }
     };
+    graphics_context_set_alpha_blended(ctx, true);
     graphics_draw_bitmap_centered(ctx, title_icon->bitmap, icon_frame);
   }
   if (has_title) {
@@ -260,6 +261,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       .origin = { margin_x, subtitle_pos.y + image_offset_y },
       .size = { subtitle_icon_bounds.size.w, subtitle_size.h }
     };
+    graphics_context_set_alpha_blended(ctx, true);
     graphics_draw_bitmap_centered(ctx, subtitle_icon->bitmap, subicon_frame);
   }
   if (has_subtitle) {
@@ -274,6 +276,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       .origin = { 0, image_pos.y + image_offset_y },
       .size = { window_frame.size.w, body_image_bounds.size.h }
     };
+    graphics_context_set_alpha_blended(ctx, true);
     graphics_draw_bitmap_centered(ctx, body_image->bitmap, image_frame);
   }
   if (has_body) {

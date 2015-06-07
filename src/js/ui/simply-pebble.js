@@ -508,7 +508,10 @@ var MenuClearSectionPacket = new struct([
 var MenuPropsPacket = new struct([
   [Packet, 'packet'],
   ['uint16', 'sections', EnumerableType],
-  ['uint8', 'backgroundColor', Color]
+  ['uint8', 'backgroundColor', Color],
+    ['uint8', 'textColor', Color],
+    ['uint8', 'highlightBackgroundColor', Color],
+    ['uint8', 'highlightTextColor', Color],
 ]);
 
 var MenuSectionPacket = new struct([

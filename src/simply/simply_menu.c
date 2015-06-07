@@ -434,7 +434,7 @@ static void handle_menu_clear_section_packet(Simply *simply, Packet *data) {
 static void handle_menu_props_packet(Simply *simply, Packet *data) {
   MenuPropsPacket *packet = (MenuPropsPacket*) data;
   simply_menu_set_num_sections(simply->menu, packet->num_sections);
-  #ifdef PBL_SDK_3
+  #ifdef PBL_PLATFORM_BASALT
     window_set_background_color(simply->menu->window.window, gcolor8_get(packet->background_color));
     menu_layer_set_highlight_colors(simply->menu->menu_layer.menu_layer, gcolor8_get(packet->highlight_background_color), gcolor8_get(packet->highlight_text_color));
     menu_layer_set_normal_colors(simply->menu->menu_layer.menu_layer, gcolor8_get(packet->background_color), gcolor8_get(packet->text_color));

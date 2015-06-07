@@ -707,14 +707,22 @@ Just like any window, you can initialize a Menu by passing an object to the cons
 
 The properties available on a [Menu] are:
 
-| Name         | Type    | Default | Description |
-| ----         |:-------:|---------|-------------|
-| `sections`   | Array   | `[]`        | A list of all the sections to display.            |
+| Name                        | Type    | Default | Description |
+| ----                        |:-------:|---------|-------------|
+| `sections`                  | Array   | `[]`    | A list of all the sections to display.            |
+| `backgroundColor`           | Color   | `white` | The background color of a menu item.              |
+| `textColor`                 | Color   | `black` | The text color of a menu item.                    |
+| `highlightBackgroundColor`  | Color   | `black` | The background color of a selected menu item.     |
+| `highlightTextColor`        | Color   | `white` | The text color of a selected menu item.           |
 
 A menu contains one or more sections. Each section has a title and contains zero or more items. An item must have a title. It can also have a subtitle and an icon.
 
 ````js
 var menu = new UI.Menu({
+  backgroundColor: 'black',
+  textColor: 'blue',
+  highlightBackgroundColor: 'blue',
+  highlightTextColor: 'black',
   sections: [{
     title: 'First section',
     items: [{

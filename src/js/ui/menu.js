@@ -7,6 +7,9 @@ var simply = require('ui/simply');
 
 var defaults = {
   backgroundColor: 'white',
+    textColor: 'black',
+    highlightBackgroundColor: 'black',
+    highlightTextColor: 'white',
   fullscreen: false,
 };
 
@@ -31,7 +34,7 @@ Menu.prototype._show = function() {
   simply.impl.menuSelection(select.sectionIndex, select.itemIndex);
 };
 
-Menu.prototype._numPreloadItems = 5;
+Menu.prototype._numPreloadItems = 50;
 
 Menu.prototype._prop = function(state, clear, pushing) {
   if (this === WindowStack.top()) {

@@ -6,6 +6,7 @@
 
 #include "simply.h"
 
+#include "util/color.h"
 #include "util/graphics.h"
 #include "util/menu_layer.h"
 #include "util/string.h"
@@ -33,6 +34,9 @@ struct __attribute__((__packed__)) MenuPropsPacket {
   Packet packet;
   uint16_t num_sections;
   GColor8 background_color;
+  GColor8 text_color;
+  GColor8 highlight_background_color;
+  GColor8 highlight_text_color;
 };
 
 typedef struct MenuSectionPacket MenuSectionPacket;
@@ -431,6 +435,12 @@ static void handle_menu_props_packet(Simply *simply, Packet *data) {
   MenuPropsPacket *packet = (MenuPropsPacket*) data;
   simply_menu_set_num_sections(simply->menu, packet->num_sections);
   window_set_background_color(simply->menu->window.window, gcolor8_get(packet->background_color));
+  menu_layer_set_highlight_colors(simply->menu->menu_layer.menu_layer,
+                                  gcolor8_get(packet->highlight_background_color),
+                                  gcolor8_get(packet->highlight_text_color));
+  menu_layer_set_normal_colors(simply->menu->menu_layer.menu_layer,
+                               gcolor8_get(packet->background_color),
+                               gcolor8_get(packet->text_color));
 }
 
 static void handle_menu_section_packet(Simply *simply, Packet *data) {

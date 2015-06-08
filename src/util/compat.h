@@ -103,6 +103,14 @@ typedef union GColor8 {
   (GBitmapFormat1Bit)
 #endif
 
+#ifndef menu_layer_set_normal_colors
+#define menu_layer_set_normal_colors(menu_layer, background_color, text_color)
+#endif
+
+#ifndef menu_layer_set_highlight_colors
+#define menu_layer_set_highlight_colors(menu_layer, background_color, text_color)
+#endif
+
 //! Convenience macro to use SDK 3.0 function to set a `PropertyAnimation`'s
 //! `values.from.grect` field.
 #ifndef property_animation_set_from_grect

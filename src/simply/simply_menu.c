@@ -434,13 +434,16 @@ static void handle_menu_clear_section_packet(Simply *simply, Packet *data) {
 static void handle_menu_props_packet(Simply *simply, Packet *data) {
   MenuPropsPacket *packet = (MenuPropsPacket*) data;
   simply_menu_set_num_sections(simply->menu, packet->num_sections);
-  window_set_background_color(simply->menu->window.window, gcolor8_get(packet->background_color));
+  window_set_background_color(simply->menu->window.window, gcolor8_get_or(packet->background_color, GColorWhite));
+  if (!simply->menu->menu_layer.menu_layer) {
+    return;
+  }
   menu_layer_set_highlight_colors(simply->menu->menu_layer.menu_layer,
-                                  gcolor8_get(packet->highlight_background_color),
-                                  gcolor8_get(packet->highlight_text_color));
+                                  gcolor8_get_or(packet->highlight_background_color, GColorBlack),
+                                  gcolor8_get_or(packet->highlight_text_color, GColorWhite));
   menu_layer_set_normal_colors(simply->menu->menu_layer.menu_layer,
-                               gcolor8_get(packet->background_color),
-                               gcolor8_get(packet->text_color));
+                               gcolor8_get_or(packet->background_color, GColorWhite),
+                               gcolor8_get_or(packet->text_color, GColorBlack));
 }
 
 static void handle_menu_section_packet(Simply *simply, Packet *data) {

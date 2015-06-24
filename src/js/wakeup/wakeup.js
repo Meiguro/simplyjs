@@ -59,7 +59,9 @@ Wakeup.get = function(id) {
 Wakeup.each = function(callback) {
   var i = 0;
   for (var id in this.state.wakeups) {
-    callback(this.get(id), i++);
+    if (callback(this.get(id), i++) === false) {
+      break;
+    }
   }
 };
 

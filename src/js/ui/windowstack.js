@@ -101,6 +101,15 @@ WindowStack.prototype.get = function(windowId) {
   }
 };
 
+WindowStack.prototype.each = function(callback) {
+  var items = this._items;
+  for (var i = 0, ii = items.length; i < ii; ++i) {
+    if (callback(items[i], i) === false) {
+      break;
+    }
+  }
+};
+
 WindowStack.prototype.emitHide = function(windowId) {
   var wind = this.get(windowId);
   if (wind !== this.top()) { return; }

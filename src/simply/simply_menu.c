@@ -15,9 +15,7 @@
 
 #define MAX_CACHED_SECTIONS 10
 
-#define MAX_CACHED_ITEMS 6
-
-#define REQUEST_DELAY_MS 10
+#define MAX_CACHED_ITEMS 51
 
 typedef Packet MenuClearPacket;
 
@@ -97,6 +95,7 @@ static MenuIndex simply_menu_get_selection(SimplyMenu *self);
 static void simply_menu_set_selection(SimplyMenu *self, MenuIndex menu_index, MenuRowAlign align, bool animated);
 
 static char EMPTY_TITLE[] = "";
+static char LOADING_TEXT[] = "Loading...";
 
 static bool send_menu_item(Command type, uint16_t section, uint16_t item) {
   MenuItemEventPacket packet = {
@@ -220,6 +219,7 @@ static void request_menu_item(SimplyMenu *self, uint16_t section_index, uint16_t
   *item = (SimplyMenuItem) {
     .section = section_index,
     .item = item_index,
+    .title = strdup2(LOADING_TEXT)
   };
   add_item(self, item);
   send_menu_get_item(section_index, item_index);
@@ -434,13 +434,16 @@ static void handle_menu_clear_section_packet(Simply *simply, Packet *data) {
 static void handle_menu_props_packet(Simply *simply, Packet *data) {
   MenuPropsPacket *packet = (MenuPropsPacket*) data;
   simply_menu_set_num_sections(simply->menu, packet->num_sections);
-  window_set_background_color(simply->menu->window.window, gcolor8_get(packet->background_color));
+  window_set_background_color(simply->menu->window.window, gcolor8_get_or(packet->background_color, GColorWhite));
+  if (!simply->menu->menu_layer.menu_layer) {
+    return;
+  }
   menu_layer_set_highlight_colors(simply->menu->menu_layer.menu_layer,
-                                  gcolor8_get(packet->highlight_background_color),
-                                  gcolor8_get(packet->highlight_text_color));
+                                  gcolor8_get_or(packet->highlight_background_color, GColorBlack),
+                                  gcolor8_get_or(packet->highlight_text_color, GColorWhite));
   menu_layer_set_normal_colors(simply->menu->menu_layer.menu_layer,
-                               gcolor8_get(packet->background_color),
-                               gcolor8_get(packet->text_color));
+                               gcolor8_get_or(packet->background_color, GColorWhite),
+                               gcolor8_get_or(packet->text_color, GColorBlack));
 }
 
 static void handle_menu_section_packet(Simply *simply, Packet *data) {

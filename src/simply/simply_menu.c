@@ -230,7 +230,7 @@ static void mark_dirty(SimplyMenu *self) {
   menu_layer_reload_data(self->menu_layer.menu_layer);
 }
 
-void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections) {
+static void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections) {
   if (num_sections == 0) {
     num_sections = 1;
   }
@@ -238,7 +238,7 @@ void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections) {
   mark_dirty(self);
 }
 
-void simply_menu_add_section(SimplyMenu *self, SimplyMenuSection *section) {
+static void simply_menu_add_section(SimplyMenu *self, SimplyMenuSection *section) {
   if (section->title == NULL) {
     section->title = EMPTY_TITLE;
   }
@@ -246,7 +246,7 @@ void simply_menu_add_section(SimplyMenu *self, SimplyMenuSection *section) {
   mark_dirty(self);
 }
 
-void simply_menu_add_item(SimplyMenu *self, SimplyMenuItem *item) {
+static void simply_menu_add_item(SimplyMenu *self, SimplyMenuItem *item) {
   if (item->title == NULL) {
     item->title = EMPTY_TITLE;
   }
@@ -254,11 +254,11 @@ void simply_menu_add_item(SimplyMenu *self, SimplyMenuItem *item) {
   mark_dirty(self);
 }
 
-MenuIndex simply_menu_get_selection(SimplyMenu *self) {
+static MenuIndex simply_menu_get_selection(SimplyMenu *self) {
   return menu_layer_get_selected_index(self->menu_layer.menu_layer);
 }
 
-void simply_menu_set_selection(SimplyMenu *self, MenuIndex menu_index, MenuRowAlign align, bool animated) {
+static void simply_menu_set_selection(SimplyMenu *self, MenuIndex menu_index, MenuRowAlign align, bool animated) {
   menu_layer_set_selected_index(self->menu_layer.menu_layer, menu_index, align, animated);
 }
 
@@ -284,7 +284,7 @@ static int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t s
   return section && section->title && section->title != EMPTY_TITLE ? MENU_CELL_BASIC_HEADER_HEIGHT : 0;
 }
 
-static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
+static void menu_draw_header_callback(GContext *ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
   SimplyMenu *self = data;
   SimplyMenuSection *section = get_menu_section(self, section_index);
   if (!section) {
@@ -402,7 +402,7 @@ static void window_unload(Window *window) {
   simply_window_unload(&self->window);
 }
 
-void simply_menu_clear_section_items(SimplyMenu *self, int section_index) {
+static void simply_menu_clear_section_items(SimplyMenu *self, int section_index) {
   SimplyMenuItem *item = NULL;
   do {
     item = (SimplyMenuItem*) list1_find(self->menu_layer.items, section_filter, (void*)(uintptr_t) section_index);
@@ -410,7 +410,7 @@ void simply_menu_clear_section_items(SimplyMenu *self, int section_index) {
   } while (item);
 }
 
-void simply_menu_clear(SimplyMenu *self) {
+static void simply_menu_clear(SimplyMenu *self) {
   while (self->menu_layer.sections) {
     destroy_section(self, (SimplyMenuSection*) self->menu_layer.sections);
   }

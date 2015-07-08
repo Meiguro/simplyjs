@@ -40,19 +40,20 @@ struct SimplyMenu {
 
 typedef struct SimplyMenuCommon SimplyMenuCommon;
 
-#define SimplyMenuCommonDef { \
-  List1Node node;             \
-  uint16_t section;           \
-  char *title;                \
-}
+struct SimplyMenuCommon {
+  List1Node node;
+  uint16_t section;
+  char *title;
+};
 
-struct SimplyMenuCommon SimplyMenuCommonDef;
+typedef struct SimplyMenuCommonMember SimplyMenuCommonMember;
 
-#define SimplyMenuCommonMember      \
-  union {                           \
-    struct SimplyMenuCommon common; \
-    struct SimplyMenuCommonDef;     \
-  }
+struct SimplyMenuCommonMember {
+  union {
+    SimplyMenuCommon common;
+    SimplyMenuCommon;
+  };
+};
 
 struct SimplyMenuSection {
   SimplyMenuCommonMember;

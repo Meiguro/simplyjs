@@ -57,6 +57,9 @@ typedef union GColor8 {
 //! Convenience macro to enable use of SDK 3.0 function to compare equality of two colors.
 #define gcolor_equal(a, b) ((a) == (b))
 
+#ifndef graphics_context_set_antialiased
+#define graphics_context_set_antialiased(ctx, enable)
+#endif
 
 //! Convenience function to use SDK 3.0 function to get a `GBitmap`'s `row_size_bytes` field.
 #ifndef gbitmap_get_bytes_per_row
@@ -109,6 +112,10 @@ typedef union GColor8 {
 
 #ifndef menu_layer_set_highlight_colors
 #define menu_layer_set_highlight_colors(menu_layer, background_color, text_color)
+#endif
+
+#ifndef menu_cell_layer_is_highlighted
+#define menu_cell_layer_is_highlighted(cell_layer) (false)
 #endif
 
 //! Convenience macro to use SDK 3.0 function to set a `PropertyAnimation`'s

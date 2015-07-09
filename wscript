@@ -13,6 +13,12 @@ def options(ctx):
 def configure(ctx):
     ctx.load('pebble_sdk')
 
+    if ctx.env.TARGET_PLATFORMS:
+        for platform in ctx.env.TARGET_PLATFORMS:
+            ctx.configure_platform(platform)
+    else:
+        ctx.configure_platform()
+
 def build(ctx):
     ctx.load('pebble_sdk')
 
@@ -35,30 +41,38 @@ def build(ctx):
                        js=js_target)
 
 @conf
+def configure_platform(ctx, platform=None):
+    if platform is not None:
+        ctx.setenv(platform, ctx.all_envs[platform])
+
+    cflags = ctx.env.CFLAGS
+    cflags = [ x for x in cflags if not x.startswith('-std=') ]
+    cflags.extend(['-std=c11',
+                   '-fms-extensions',
+                   '-Wno-address',
+                   '-Wno-type-limits',
+                   '-Wno-missing-field-initializers'])
+
+    ctx.env.CFLAGS = cflags
+
+@conf
 def build_platform(ctx, platform=None, binaries=None):
     if platform is not None:
         ctx.set_env(ctx.all_envs[platform])
-
-    cflags = ['-Wno-address',
-              '-Wno-type-limits',
-              '-Wno-missing-field-initializers']
 
     build_worker = os.path.exists('worker_src')
 
     app_elf='{}/pebble-app.elf'.format(ctx.env.BUILD_DIR)
     ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'),
-                    cflags=cflags,
                     target=app_elf)
 
     if build_worker:
         worker_elf='{}/pebble-worker.elf'.format(ctx.env.BUILD_DIR)
         binaries.append({'platform': platform, 'app_elf': app_elf, 'worker_elf': worker_elf})
         ctx.pbl_worker(source=ctx.path.ant_glob('worker_src/**/*.c'),
-                       cflags=cflags,
                        target=worker_elf)
     else:
         binaries.append({'platform': platform, 'app_elf': app_elf})
-
 
 @conf
 def concat_javascript(ctx, js_path=None):

@@ -10,14 +10,6 @@
 
 #include <pebble.h>
 
-typedef struct SimplyMenuLayer SimplyMenuLayer;
-
-typedef struct SimplyMenu SimplyMenu;
-
-typedef struct SimplyMenuSection SimplyMenuSection;
-
-typedef struct SimplyMenuItem SimplyMenuItem;
-
 typedef enum SimplyMenuType SimplyMenuType;
 
 enum SimplyMenuType {
@@ -26,38 +18,52 @@ enum SimplyMenuType {
   SimplyMenuTypeItem,
 };
 
+typedef struct SimplyMenuLayer SimplyMenuLayer;
+
 struct SimplyMenuLayer {
   MenuLayer *menu_layer;
   List1Node *sections;
   List1Node *items;
   uint16_t num_sections;
+  GColor8 normal_foreground;
+  GColor8 normal_background;
+  GColor8 highlight_foreground;
+  GColor8 highlight_background;
 };
+
+typedef struct SimplyMenu SimplyMenu;
 
 struct SimplyMenu {
   SimplyWindow window;
   SimplyMenuLayer menu_layer;
+  AppTimer *spinner_timer;
 };
 
 typedef struct SimplyMenuCommon SimplyMenuCommon;
 
-#define SimplyMenuCommonDef { \
-  List1Node node;             \
-  uint16_t section;           \
-  char *title;                \
-}
+struct SimplyMenuCommon {
+  List1Node node;
+  uint16_t section;
+  char *title;
+};
 
-struct SimplyMenuCommon SimplyMenuCommonDef;
+typedef struct SimplyMenuCommonMember SimplyMenuCommonMember;
 
-#define SimplyMenuCommonMember      \
-  union {                           \
-    struct SimplyMenuCommon common; \
-    struct SimplyMenuCommonDef;     \
-  }
+struct SimplyMenuCommonMember {
+  union {
+    SimplyMenuCommon common;
+    SimplyMenuCommon;
+  };
+};
+
+typedef struct SimplyMenuSection SimplyMenuSection;
 
 struct SimplyMenuSection {
   SimplyMenuCommonMember;
   uint16_t num_items;
 };
+
+typedef struct SimplyMenuItem SimplyMenuItem;
 
 struct SimplyMenuItem {
   SimplyMenuCommonMember;

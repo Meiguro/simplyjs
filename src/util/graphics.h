@@ -15,6 +15,15 @@
 
 #endif
 
+static inline GPoint gpoint_add(const GPoint a, const GPoint b) {
+  return GPoint(a.x + b.x, a.y + b.y);
+}
+
+static GPoint gpoint_polar(int32_t angle, int16_t radius) {
+  return GPoint(sin_lookup(angle) * radius / TRIG_MAX_RATIO,
+                cos_lookup(angle) * radius / TRIG_MAX_RATIO);
+}
+
 static inline GRect grect_center_rect(const GRect *rect_a, const GRect *rect_b) {
   return (GRect) {
     .origin = {

@@ -271,7 +271,7 @@ static void simply_menu_add_item(SimplyMenu *self, SimplyMenuItem *item) {
     item->title = EMPTY_TITLE;
   }
   add_item(self, item);
-  reload_data(self);
+  mark_dirty(self);
 }
 
 static MenuIndex simply_menu_get_selection(SimplyMenu *self) {

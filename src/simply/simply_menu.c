@@ -294,11 +294,16 @@ static void spinner_timer_callback(void *data) {
   refresh_spinner_timer(self);
 }
 
+static SimplyMenuItem *get_first_request_item(SimplyMenu *self) {
+  return (SimplyMenuItem*) list1_find(self->menu_layer.items, request_item_filter, NULL);
+}
+
+static SimplyMenuItem *get_last_request_item(SimplyMenu *self) {
+  return (SimplyMenuItem*) list1_find_last(self->menu_layer.items, request_item_filter, NULL);
+}
+
 static void refresh_spinner_timer(SimplyMenu *self) {
-  if (!list1_find(self->menu_layer.items, request_item_filter, NULL)) {
-    return;
-  }
-  if (!self->spinner_timer) {
+  if (!self->spinner_timer && get_first_request_item(self)) {
     self->spinner_timer = app_timer_register(SPINNER_MS, spinner_timer_callback, self);
   }
 }
@@ -375,8 +380,11 @@ static void menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuI
   }
 
   if (item->title == NULL) {
-    simply_menu_draw_row_spinner(self, ctx, cell_layer);
-    refresh_spinner_timer(self);
+    SimplyMenuItem *last_request = get_last_request_item(self);
+    if (last_request == item) {
+      simply_menu_draw_row_spinner(self, ctx, cell_layer);
+      refresh_spinner_timer(self);
+    }
     return;
   }
 

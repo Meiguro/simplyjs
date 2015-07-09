@@ -12,12 +12,20 @@ static bool id_filter(List1Node *node, void *data) {
 }
 
 static void destroy_image(SimplyRes *self, SimplyImage *image) {
+  if (!image) {
+    return;
+  }
+
   list1_remove(&self->images, &image->node);
   gbitmap_destroy(image->bitmap);
   free(image->palette);
 }
 
 static void destroy_font(SimplyRes *self, SimplyFont *font) {
+  if (!font) {
+    return;
+  }
+
   list1_remove(&self->fonts, &font->node);
   fonts_unload_custom_font(font->font);
   free(font);
@@ -37,30 +45,69 @@ static void setup_image(SimplyImage *image) {
   image->palette = palette_copy;
 }
 
-SimplyImage *simply_res_add_bundled_image(SimplyRes *self, uint32_t id) {
-  SimplyImage *image = malloc(sizeof(*image));
-  if (!image) {
-    return NULL;
+static bool evict_image(SimplyRes *self) {
+  SimplyImage *last_image = (SimplyImage *)list1_last(self->images);
+  if (!last_image) {
+    return false;
   }
 
-  GBitmap *bitmap = gbitmap_create_with_resource(id);
-  if (!bitmap) {
-    free(image);
-    return NULL;
-  }
+  destroy_image(self, last_image);
+  return true;
+}
 
-  *image = (SimplyImage) {
-    .id = id,
-    .bitmap = bitmap,
-  };
-
+static void add_image(SimplyRes *self, SimplyImage *image) {
   list1_prepend(&self->images, &image->node);
 
   setup_image(image);
 
   window_stack_schedule_top_window_render();
+}
+
+typedef GBitmap *(*GBitmapCreator)(SimplyImage *image, void *data);
+
+static SimplyImage *create_image(SimplyRes *self, GBitmapCreator creator, void *data) {
+  SimplyImage *image = NULL;
+  if (!(image = malloc0(sizeof(*image)))) {
+    if (!evict_image(self)) {
+      return NULL;
+    }
+  }
+
+  GBitmap *bitmap = NULL;
+  while (!(bitmap = creator(image, data))) {
+    if (!evict_image(self)) {
+      free(image);
+      return NULL;
+    }
+  }
+
+  image->bitmap = bitmap;
 
   return image;
+}
+
+static GBitmap *create_bitmap_with_id(SimplyImage *image, void *data) {
+  const uint32_t id = (uint32_t)(uintptr_t) data;
+  GBitmap *bitmap = gbitmap_create_with_resource(id);
+  if (bitmap) {
+    image->id = id;
+  }
+  return bitmap;
+}
+
+SimplyImage *simply_res_add_bundled_image(SimplyRes *self, uint32_t id) {
+  SimplyImage *image = create_image(self, create_bitmap_with_id, (void*)(uintptr_t) id);
+  add_image(self, image);
+  return image;
+}
+
+static GBitmap *create_blank_bitmap(SimplyImage *image, void *data) {
+  GSize *size = data;
+  GBitmap *bitmap = gbitmap_create_blank(*size, GBitmapFormat1Bit);
+  if (bitmap) {
+    image->bitmap_data = gbitmap_get_data(bitmap);
+  }
+  return bitmap;
 }
 
 SimplyImage *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, int16_t height, uint8_t *pixels) {
@@ -71,24 +118,19 @@ SimplyImage *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, i
     uint16_t row_size_bytes = gbitmap_get_bytes_per_row(image->bitmap);
     gbitmap_set_data(image->bitmap, pixels, GBitmapFormat1Bit, row_size_bytes, true);
     image->bitmap_data = pixels;
-  } else {
-    image = malloc(sizeof(*image));
-    if (!image) {
-      return NULL;
-    }
-    *image = (SimplyImage) { .id = id };
-    list1_prepend(&self->images, &image->node);
 
-    image->bitmap = gbitmap_create_blank(GSize(width, height), GBitmapFormat1Bit);
-    image->bitmap_data = gbitmap_get_data(image->bitmap);
-    uint16_t row_size_bytes = gbitmap_get_bytes_per_row(image->bitmap);
-    size_t pixels_size = height * row_size_bytes;
-    memcpy(image->bitmap_data, pixels, pixels_size);
+    window_stack_schedule_top_window_render();
 
-    setup_image(image);
+    return image;
   }
 
-  window_stack_schedule_top_window_render();
+  image = create_image(self, create_blank_bitmap, &GSize(width, height));
+
+  uint16_t row_size_bytes = gbitmap_get_bytes_per_row(image->bitmap);
+  size_t pixels_size = height * row_size_bytes;
+  memcpy(image->bitmap_data, pixels, pixels_size);
+
+  add_image(self, image);
 
   return image;
 }

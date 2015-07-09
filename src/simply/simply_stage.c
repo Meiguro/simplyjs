@@ -244,6 +244,8 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   frame.origin.x = -frame.origin.x;
   frame.origin.y = -frame.origin.y;
 
+  graphics_context_set_antialiased(ctx, true);
+
   graphics_context_set_fill_color(ctx, gcolor8_get(self->window.background_color));
   graphics_fill_rect(ctx, frame, 0, GCornerNone);
 

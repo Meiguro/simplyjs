@@ -90,6 +90,16 @@ static inline List1Node *list1_find_prev(List1Node *node,
   return NULL;
 }
 
+static inline List1Node *list1_find_last(List1Node *node, List1FilterCallback callback, void *data) {
+  List1Node *match = NULL;
+  for (; node; node = node->next) {
+    if (callback(node, data)) {
+      match = node;
+    }
+  }
+  return match;
+}
+
 static inline List1Node *list1_find(List1Node *node, List1FilterCallback callback, void *data) {
   return list1_find_prev(node, callback, data, NULL);
 }

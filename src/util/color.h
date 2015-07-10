@@ -35,7 +35,7 @@ static inline GColor8 gcolor_get8(GColor color) {
   }
 }
 
-static inline bool gcolor8_equal(GColor8 color, GColor other) {
+static inline bool gcolor8_equal_native(GColor8 color, GColor other) {
   return (color.argb == gcolor_get8(other).argb);
 }
 
@@ -49,9 +49,10 @@ static inline GColor gcolor8_get_or(GColor8 color, GColor8 fallback) {
   return color;
 }
 
-static inline bool gcolor8_equal(GColor8 color, GColor other) {
-  return (color.argb == other.argb);
-}
+#define gcolor8_equal_native gcolor8_equal
 
 #endif
 
+static inline bool gcolor8_equal(GColor8 color, GColor8 other) {
+  return (color.argb == other.argb);
+}

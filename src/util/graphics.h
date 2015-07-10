@@ -52,6 +52,6 @@ static inline bool gbitmap_is_palette_black_and_white(GBitmap *bitmap) {
     return false;
   }
   const GColor8 *palette = gbitmap_get_palette(bitmap);
-  return (gcolor8_equal(palette[0], GColorWhite) && gcolor8_equal(palette[1], GColorBlack)) ||
-         (gcolor8_equal(palette[0], GColorBlack) && gcolor8_equal(palette[1], GColorWhite));
+  return (gcolor8_equal(palette[0], GColor8White) && gcolor8_equal(palette[1], GColor8Black)) ||
+         (gcolor8_equal(palette[0], GColor8Black) && gcolor8_equal(palette[1], GColor8White));
 }

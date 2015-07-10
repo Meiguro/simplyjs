@@ -191,7 +191,7 @@ void simply_window_set_action_bar_background_color(SimplyWindow *self, GColor8 b
     return;
   }
 
-  s_button_palette[0] = gcolor8_equal(background_color, GColorWhite) ? GColor8Black : GColor8White;
+  s_button_palette[0] = gcolor8_equal(background_color, GColor8White) ? GColor8Black : GColor8White;
 
   action_bar_layer_set_background_color(self->action_bar_layer, gcolor8_get(background_color));
   simply_window_set_action_bar(self, true);

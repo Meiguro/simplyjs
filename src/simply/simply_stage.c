@@ -292,6 +292,9 @@ static SimplyElementCommon *alloc_element(SimplyElementType type) {
     case SimplyElementTypeImage: return malloc0(sizeof(SimplyElementImage));
     case SimplyElementTypeInverter: {
       SimplyElementInverter *element = malloc0(sizeof(SimplyElementInverter));
+      if (!element) {
+        return NULL;
+      }
       element->inverter_layer = inverter_layer_create(GRect(0, 0, 0, 0));
       return &element->common;
     }
@@ -308,9 +311,10 @@ SimplyElementCommon *simply_stage_auto_element(SimplyStage *self, uint32_t id, S
   if (element) {
     return element;
   }
-  element = alloc_element(type);
-  if (!element) {
-    return NULL;
+  while (!(element = alloc_element(type))) {
+    if (!simply_res_evict_image(self->window.simply->res)) {
+      return NULL;
+    }
   }
   element->id = id;
   element->type = type;
@@ -586,7 +590,12 @@ static void handle_element_animate_packet(Simply *simply, Packet *data) {
   if (!element) {
     return;
   }
-  SimplyAnimation *animation = malloc0(sizeof(*animation));
+  SimplyAnimation *animation = NULL;
+  while (!(animation = malloc0(sizeof(*animation)))) {
+    if (!simply_res_evict_image(simply->res)) {
+      return;
+    }
+  }
   animation->duration = packet->duration;
   animation->curve = packet->curve;
   simply_stage_animate_element(simply->stage, element, animation, packet->frame);

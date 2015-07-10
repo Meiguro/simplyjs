@@ -56,6 +56,7 @@ void simply_res_clear(SimplyRes *self);
 SimplyImage *simply_res_add_bundled_image(SimplyRes *self, uint32_t id);
 SimplyImage *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, int16_t height, uint8_t *pixels);
 SimplyImage *simply_res_auto_image(SimplyRes *self, uint32_t id, bool is_placeholder);
+bool simply_res_evict_image(SimplyRes *self);
 
 GFont simply_res_add_custom_font(SimplyRes *self, uint32_t id);
 GFont simply_res_auto_font(SimplyRes *self, uint32_t id);

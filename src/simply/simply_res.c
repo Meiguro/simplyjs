@@ -45,7 +45,7 @@ static void setup_image(SimplyImage *image) {
   image->palette = palette_copy;
 }
 
-static bool evict_image(SimplyRes *self) {
+bool simply_res_evict_image(SimplyRes *self) {
   SimplyImage *last_image = (SimplyImage *)list1_last(self->images);
   if (!last_image) {
     return false;
@@ -68,14 +68,14 @@ typedef GBitmap *(*GBitmapCreator)(SimplyImage *image, void *data);
 static SimplyImage *create_image(SimplyRes *self, GBitmapCreator creator, void *data) {
   SimplyImage *image = NULL;
   if (!(image = malloc0(sizeof(*image)))) {
-    if (!evict_image(self)) {
+    if (!simply_res_evict_image(self)) {
       return NULL;
     }
   }
 
   GBitmap *bitmap = NULL;
   while (!(bitmap = creator(image, data))) {
-    if (!evict_image(self)) {
+    if (!simply_res_evict_image(self)) {
       free(image);
       return NULL;
     }

@@ -79,9 +79,9 @@ StageElement.prototype.animate = function(field, value, duration) {
     duration = value;
   }
   var animateDef = myutil.toObject(field, value);
-  util2.copy(animateDef, this.state);
   function animate() {
     this._animate(animateDef, duration);
+    util2.copy(animateDef, this.state);
   }
   if (this._queue.length === 0) {
     animate.call(this);

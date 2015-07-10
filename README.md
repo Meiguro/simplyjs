@@ -88,7 +88,7 @@ You can use images in your Pebble.js application. Currently all images must be e
 We recommend that you follow these guidelines when preparing your images for Pebble:
 
  * Resize all images for the screen of Pebble. A fullscreen image will be 144 pixels wide by 168 pixels high.
- * Use an image editor or [HyperDither](http://www.tinrocket.com/hyperdither/) to dither your image in black and white.
+ * Use an image editor or [HyperDither](http://2002-2010.tinrocket.com/software/hyperdither/index.html) to dither your image in black and white.
  * Remember that the maximum size for a Pebble application is 100kB. You will quickly reach that limit if you add too many images.
 
 To add an image in your application, edit the `appinfo.json` file and add your image:

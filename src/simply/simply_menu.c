@@ -396,10 +396,8 @@ static void menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuI
 
   if (image && image->is_palette_black_and_white) {
     palette = gbitmap_get_palette(image->bitmap);
-    MenuIndex selected_index = menu_layer_get_selected_index(self->menu_layer.menu_layer);
-    const bool is_selected = (selected_index.section == cell_index->section &&
-                              selected_index.row == cell_index->row);
-    gbitmap_set_palette(image->bitmap, is_selected ? s_inverted_palette : s_normal_palette, false);
+    const bool is_highlighted = menu_cell_layer_is_highlighted(cell_layer);
+    gbitmap_set_palette(image->bitmap, is_highlighted ? s_inverted_palette : s_normal_palette, false);
   }
 
   graphics_context_set_alpha_blended(ctx, true);

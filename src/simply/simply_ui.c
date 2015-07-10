@@ -346,7 +346,9 @@ static void handle_card_text_packet(Simply *simply, Packet *data) {
     return;
   }
   simply_ui_set_text(simply->ui, textfield_id, packet->text);
-  simply_ui_set_text_color(simply->ui, textfield_id, packet->color);
+  if (!gcolor8_equal(packet->color, GColor8ClearWhite)) {
+    simply_ui_set_text_color(simply->ui, textfield_id, packet->color);
+  }
 }
 
 static void handle_card_image_packet(Simply *simply, Packet *data) {

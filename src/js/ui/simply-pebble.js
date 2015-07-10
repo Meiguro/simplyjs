@@ -135,7 +135,8 @@ var colorMap = {
     'yellow': 0xFC,
     'icterine': 0xFD,
     'pastelYellow': 0xFE,
-    'white': 0xFF
+    'white': 0xFF,
+    'clearWhite': 0x3F,
 };
 
 var Color = function(color) {
@@ -941,7 +942,7 @@ SimplyPebble.cardClear = function(clear) {
 SimplyPebble.cardText = function(field, text, color) {
   CardTextPacket
     .index(field)
-    .color(color || 'black')
+    .color(color || 'clearWhite')
     .text(text || '');
   SimplyPebble.sendPacket(CardTextPacket);
 };

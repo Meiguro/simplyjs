@@ -217,12 +217,12 @@ void simply_window_single_click_handler(ClickRecognizerRef recognizer, void *con
   SimplyWindow *self = context;
   ButtonId button = click_recognizer_get_button_id(recognizer);
   bool is_enabled = (self->button_mask & (1 << button));
-  if (button == BUTTON_ID_BACK && !is_enabled) {
-    if (simply_msg_has_communicated()) {
-      simply_window_stack_back(self->simply->window_stack, self);
-    } else {
+  if (button == BUTTON_ID_BACK) {
+    if (!simply_msg_has_communicated()) {
       bool animated = true;
       window_stack_pop(animated);
+    } else if (!is_enabled) {
+      simply_window_stack_back(self->simply->window_stack, self);
     }
   }
   if (is_enabled) {
@@ -274,7 +274,9 @@ bool simply_window_appear(SimplyWindow *self) {
   if (!self->id) {
     return false;
   }
-  simply_window_stack_send_show(self->simply->window_stack, self);
+  if (simply_msg_has_communicated()) {
+    simply_window_stack_send_show(self->simply->window_stack, self);
+  }
   return true;
 }
 
@@ -282,7 +284,9 @@ bool simply_window_disappear(SimplyWindow *self) {
   if (!self->id) {
     return false;
   }
-  simply_window_stack_send_hide(self->simply->window_stack, self);
+  if (simply_msg_has_communicated()) {
+    simply_window_stack_send_hide(self->simply->window_stack, self);
+  }
 
 #ifdef PBL_PLATFORM_BASALT
   simply_window_set_fullscreen(self, true);

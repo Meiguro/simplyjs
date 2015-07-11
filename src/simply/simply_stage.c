@@ -441,7 +441,6 @@ static void window_load(Window *window) {
   *(void**) layer_get_data(layer) = self;
   layer_set_update_proc(layer, layer_update_callback);
   scroll_layer_add_child(self->window.scroll_layer, layer);
-  scroll_layer_set_click_config_onto_window(self->window.scroll_layer, window);
 }
 
 static void window_appear(Window *window) {

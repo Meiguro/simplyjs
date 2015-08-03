@@ -75,7 +75,9 @@ Wakeup.schedule = function(opt, callback) {
     data: opt.data,
     callback: callback,
   });
-  simply.impl.wakeupSet(opt.time, cookie, opt.notifyIfMissed);
+  Wakeup.launch(function() {
+    simply.impl.wakeupSet(opt.time, cookie, opt.notifyIfMissed);
+  });
 };
 
 Wakeup.cancel = function(id) {

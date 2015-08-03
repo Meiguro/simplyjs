@@ -1089,6 +1089,44 @@ Restore the normal behaviour.
 #### Light.trigger()
 Trigger the backlight to turn on momentarily, just like if the user shook their wrist.
 
+## Timeline
+
+The Timeline module allows your app to handle a launch via a timeline action. This allows you to write a custom handler to manage launch events outside of the app menu. With the Timeline module, you can preform a specific set of actions based on the action which launched the app.
+
+### Timeline
+
+`Timeline` provides a single module of the same name `Timeline`.
+
+````js
+var Timeline = require('timeline');
+````
+
+<a id="timeline-launch"></a>
+#### Timeline.launch(callback(event))
+[Timeline.launch]: #timeline-launch
+
+If you wish to change the behavior of your app depending on whether it was launched by a timeline event, and further configure the behavior based on the data associated with the timeline event, use `Timeline.launch` on startup. `Timeline.launch` will immediately call your launch callback asynchronously with a launch event detailing whether or not your app was launched by a timeline event.
+
+````js
+// Query whether we were launched by a timeline event
+Timeline.launch(function(e) {
+  if (e.action) {
+    console.log('Woke up to timeline event: ' + e.launchCode + '!');
+  } else {
+    console.log('Regular launch not by a timeline event.');
+  }
+});
+````
+
+The `callback` will be called with a timeline launch event. The event has the following properties:
+
+| Name             | Type    | Description   |
+| ----             | :----:  | ------------- |
+| `action`         | boolean | `true` if the app woke up by a timeline event, otherwise `false`. |
+| `launchCode`     | number  | If woken by a timeline event, the code of the action. |
+
+Note that this means you may have to move portions of your startup logic into the `Timeline.launch` callback or a function called by the callback. This can also add a very small delay to startup behavior because the underlying implementation must query the watch for the launch information.
+
 ## Wakeup
 
 The Wakeup module allows you to schedule your app to wakeup at a specified time using Pebble's wakeup functionality. Whether the user is in a watchface or in a different app, your app while launch by the specified time. This allows you to write a custom alarm app, for example. With the Wakeup module, you can save data to be read on launch and configure your app to behave differently based on launch data. The Wakeup module, like the Settings module, is backed by localStorage.
@@ -1160,10 +1198,10 @@ Finally, there are multiple reasons why setting a wakeup event can fail. When a 
 #### Wakeup.launch(callback(event))
 [Wakeup.launch]: #wakeup-launch
 
-If you wish to change the behavior of your app depending on whether it was launched by a wakeup event, and further configure the behavior based on the data associated with the wakeup event, use `Wakeup.launch` on startup. `Wakeup.launch` will immediately called your launch callback asynchronously with a launch event detailing whether or not your app was launched by a wakeup event.
+If you wish to change the behavior of your app depending on whether it was launched by a wakeup event, and further configure the behavior based on the data associated with the wakeup event, use `Wakeup.launch` on startup. `Wakeup.launch` will immediately call your launch callback asynchronously with a launch event detailing whether or not your app was launched by a wakeup event.
 
 ````js
-// Query whether we launched by a wakeup event
+// Query whether we were launched by a wakeup event
 Wakeup.launch(function(e) {
   if (e.wakeup) {
     console.log('Woke up to ' + e.id + '! data: ' + JSON.stringify(e.data));

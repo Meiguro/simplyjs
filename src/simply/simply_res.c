@@ -67,7 +67,7 @@ typedef GBitmap *(*GBitmapCreator)(SimplyImage *image, void *data);
 
 static SimplyImage *create_image(SimplyRes *self, GBitmapCreator creator, void *data) {
   SimplyImage *image = NULL;
-  if (!(image = malloc0(sizeof(*image)))) {
+  while (!(image = malloc0(sizeof(*image)))) {
     if (!simply_res_evict_image(self)) {
       return NULL;
     }
@@ -97,7 +97,9 @@ static GBitmap *create_bitmap_with_id(SimplyImage *image, void *data) {
 
 SimplyImage *simply_res_add_bundled_image(SimplyRes *self, uint32_t id) {
   SimplyImage *image = create_image(self, create_bitmap_with_id, (void*)(uintptr_t) id);
-  add_image(self, image);
+  if (image) {
+    add_image(self, image);
+  }
   return image;
 }
 
@@ -125,12 +127,15 @@ SimplyImage *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, i
   }
 
   image = create_image(self, create_blank_bitmap, &GSize(width, height));
+  if (image) {
+    image->id = id;
 
-  uint16_t row_size_bytes = gbitmap_get_bytes_per_row(image->bitmap);
-  size_t pixels_size = height * row_size_bytes;
-  memcpy(image->bitmap_data, pixels, pixels_size);
+    uint16_t row_size_bytes = gbitmap_get_bytes_per_row(image->bitmap);
+    size_t pixels_size = height * row_size_bytes;
+    memcpy(image->bitmap_data, pixels, pixels_size);
 
-  add_image(self, image);
+    add_image(self, image);
+  }
 
   return image;
 }

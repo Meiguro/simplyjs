@@ -75,6 +75,7 @@ safe.translateStackAndroid = function(stack) {
     if (line.match(/jskit_startup\.html/)) {
       lines.splice(i, 1);
     } else {
+      /* Matches <name> ':' <lineno> ':' <colno> */
       var m = line.match(/^.*\/(.*?):(\d+):(\d+)/);
       if (m) {
         name = m[1];
@@ -84,7 +85,6 @@ safe.translateStackAndroid = function(stack) {
     }
     if (name) {
       var pos = safe.translatePos(name, lineno, colno);
-      console.log(pos, name, lineno, colno);
       if (line.match(/\(.*\)/)) {
         line = line.replace(/\(.*\)/, '(' + pos + ')');
       } else {

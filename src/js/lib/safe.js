@@ -135,14 +135,13 @@ safe.dumpError = function(err) {
 
 /* Takes a function and return a new function with a call to it wrapped in a try/catch statement */
 safe.protect = function(fn) {
-  return function() {
+  return fn ? function() {
     try {
-      return fn.apply(this, arguments);
-    }
-    catch (err) {
+      fn.apply(this, arguments);
+    } catch (err) {
       safe.dumpError(err);
     }
-  };
+  } : undefined;
 };
 
 /* Wrap event handlers added by Pebble.addEventListener */

@@ -7,8 +7,6 @@
 
 /* global __loader */
 
-var ajax = require('ajax');
-
 var safe = {};
 
 /* The name of the concatenated file to translate */
@@ -183,19 +181,29 @@ window.setInterval = function(callback, delay) {
   return originalSetInterval(safe.protect(callback), delay);
 };
 
-/* Wrap the success and failure callback of the ajax library */
-ajax.onHandler = function(eventName, callback) {
-  return safe.protect(callback);
-};
-
 /* Wrap the geolocation API Callbacks */
 var watchPosition = navigator.geolocation.watchPosition;
 navigator.geolocation.watchPosition = function(success, error, options) {
   return watchPosition.call(this, safe.protect(success), safe.protect(error), options);
 };
+
 var getCurrentPosition = navigator.geolocation.getCurrentPosition;
 navigator.geolocation.getCurrentPosition = function(success, error, options) {
   return getCurrentPosition.call(this, safe.protect(success), safe.protect(error), options);
 };
+
+var ajax;
+
+/* Try to load the ajax library if available and silently fail if it is not found. */
+try {
+  ajax = require('ajax');
+} catch (err) {}
+
+/* Wrap the success and failure callback of the ajax library */
+if (ajax) {
+  ajax.onHandler = function(eventName, callback) {
+    return safe.protect(callback);
+  };
+}
 
 module.exports = safe;

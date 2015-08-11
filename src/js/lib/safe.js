@@ -165,10 +165,21 @@ Pebble.sendAppMessage = function(message, success, failure) {
 /* Wrap setTimeout and setInterval */
 var originalSetTimeout = setTimeout;
 window.setTimeout = function(callback, delay) {
+  if (safe.warnSetTimeoutNotFunction !== false && typeof callback !== 'function') {
+    safe.warn('setTimeout was called with a `' + (typeof callback) + '` type. ' +
+              'Did you mean to pass a function?');
+    safe.warnSetTimeoutNotFunction = false;
+  }
   return originalSetTimeout(safe.protect(callback), delay);
 };
+
 var originalSetInterval = setInterval;
 window.setInterval = function(callback, delay) {
+  if (safe.warnSetIntervalNotFunction !== false && typeof callback !== 'function') {
+    safe.warn('setInterval was called with a `' + (typeof callback) + '` type. ' +
+              'Did you mean to pass a function?');
+    safe.warnSetIntervalNotFunction = false;
+  }
   return originalSetInterval(safe.protect(callback), delay);
 };
 

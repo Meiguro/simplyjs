@@ -107,11 +107,11 @@ safe.translateStack = function(stack) {
   }
 };
 
-safe.translateError = function(err) {
+safe.translateError = function(err, intro) {
   var name = err.name;
   var message = err.message || err.toString();
   var stack = err.stack;
-  var result = ['JavaScript Error:'];
+  var result = [intro || 'JavaScript Error:'];
   if (message && (!stack || !stack.match(message))) {
     if (name && !message.match(message)) {
       message = name + ': ' + message;
@@ -124,13 +124,20 @@ safe.translateError = function(err) {
   return result.join('\n');
 };
 
-/* We use this function to dump error messages to the console. */
-safe.dumpError = function(err) {
+/* Dumps error messages to the console. */
+safe.dumpError = function(err, intro) {
   if (typeof err === 'object') {
-      console.log(safe.translateError(err));
+    console.log(safe.translateError(err, intro));
   } else {
-    console.log('dumpError :: argument is not an object');
+    console.log('Error: dumpError argument is not an object');
   }
+};
+
+/* Logs runtime warnings to the console. */
+safe.warn = function(message, name) {
+  var err = new Error(message);
+  err.name = name || 'Warning';
+  safe.dumpError(err, 'Warning:');
 };
 
 /* Takes a function and return a new function with a call to it wrapped in a try/catch statement */

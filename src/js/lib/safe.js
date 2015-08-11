@@ -26,12 +26,6 @@ safe.translatePos = function(name, lineno, colno) {
   return name + ':' + lineno + ':' + colno;
 };
 
-/* Translates a node style stack trace line */
-var translateLineV8 = function(line, msg, name, lineno, colno) {
-  var pos = safe.translatePos(name, lineno, colno);
-  return msg + '(' + pos + ')';
-};
-
 var makeTranslateStack = function(stackLineRegExp, translateLine) {
   return function(stack) {
     var lines = stack.split('\n');
@@ -42,15 +36,21 @@ var makeTranslateStack = function(stackLineRegExp, translateLine) {
         line = lines[i] = translateLine.apply(this, m);
       }
       if (line.match(module.filename)) {
-        lines.splice(--i, 2);
+        lines.splice(i, 1);
       }
     }
     return lines.join('\n');
   };
 };
 
-/* Matches <msg> '(' <name> ':' <lineno> ':' <colno> ')' */
-var stackLineRegExpV8 = /(.*)\(([^\s@:]+):(\d+):(\d+)\)/;
+/* Translates a node style stack trace line */
+var translateLineV8 = function(line, msg, scope, name, lineno, colno) {
+  var pos = safe.translatePos(name, lineno, colno);
+  return msg + (scope ? ' ' + scope + ' (' + pos + ')' : pos);
+};
+
+/* Matches <msg> (<scope> '(')? <name> ':' <lineno> ':' <colno> ')'? */
+var stackLineRegExpV8 = /(.+?)(?:\s+([^\s]+)\s+\()?([^\s@:]+):(\d+):(\d+)\)?/;
 
 safe.translateStackV8 = makeTranslateStack(stackLineRegExpV8, translateLineV8);
 

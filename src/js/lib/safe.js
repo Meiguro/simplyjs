@@ -90,6 +90,9 @@ safe.translateStackAndroid = function(stack) {
       }
       lines[i] = line;
     }
+    if (line.match(module.filename)) {
+      lines.splice(i, 1);
+    }
   }
   return lines.join('\n');
 };

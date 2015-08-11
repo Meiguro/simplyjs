@@ -344,6 +344,7 @@ SimplyElementCommon *simply_stage_remove_element(SimplyStage *self, SimplyElemen
 }
 
 void simply_stage_set_element_frame(SimplyStage *self, SimplyElementCommon *element, GRect frame) {
+  grect_standardize(&frame);
   element->frame = frame;
   switch (element->type) {
     default: break;

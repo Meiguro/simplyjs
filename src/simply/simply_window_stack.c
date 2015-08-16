@@ -92,6 +92,7 @@ void simply_window_stack_show(SimplyWindowStack *self, SimplyWindow *window, boo
     window_stack_push(self->pusher, false);
   }
 
+  simply_window_preload(window);
   window_stack_push(window->window, animated);
 
   if (is_push) {

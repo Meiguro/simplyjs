@@ -389,16 +389,16 @@ SimplyUi *simply_ui_create(Simply *simply) {
   SimplyUi *self = malloc(sizeof(*self));
   *self = (SimplyUi) { .window.layer = NULL };
 
-  simply_window_init(&self->window, simply);
-  simply_window_set_background_color(&self->window, GColor8White);
-
-  window_set_user_data(self->window.window, self);
-  window_set_window_handlers(self->window.window, (WindowHandlers) {
+  static const WindowHandlers s_window_handlers = {
     .load = window_load,
     .appear = window_appear,
     .disappear = window_disappear,
     .unload = window_unload,
-  });
+  };
+  self->window.window_handlers = &s_window_handlers;
+
+  simply_window_init(&self->window, simply);
+  simply_window_set_background_color(&self->window, GColor8White);
 
   app_timer_register(10000, (AppTimerCallback) show_welcome_text, self);
 

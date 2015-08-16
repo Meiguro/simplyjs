@@ -253,6 +253,20 @@ static void click_config_provider(void *context) {
   }
 }
 
+void simply_window_preload(SimplyWindow *self) {
+  if (self->window) {
+    return;
+  }
+
+  Window *window = self->window = window_create();
+  window_set_background_color(window, GColorClear);
+  window_set_click_config_provider_with_context(window, click_config_provider, self);
+  window_set_user_data(window, self);
+  if (self->window_handlers) {
+    window_set_window_handlers(window, *self->window_handlers);
+  }
+}
+
 void simply_window_load(SimplyWindow *self) {
   Window *window = self->window;
 
@@ -298,6 +312,9 @@ bool simply_window_disappear(SimplyWindow *self) {
 void simply_window_unload(SimplyWindow *self) {
   scroll_layer_destroy(self->scroll_layer);
   self->scroll_layer = NULL;
+
+  window_destroy(self->window);
+  self->window = NULL;
 }
 
 static void handle_window_props_packet(Simply *simply, Packet *data) {
@@ -358,12 +375,10 @@ SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply) {
     }
   }
 
-  Window *window = self->window = window_create();
-  window_set_background_color(window, GColorClear);
-  window_set_click_config_provider_with_context(window, click_config_provider, self);
+  simply_window_preload(self);
 
   self->status_bar_layer = status_bar_layer_create();
-  status_bar_layer_remove_from_window(window, self->status_bar_layer);
+  status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
   self->is_status_bar = false;
   self->is_fullscreen = true;
 
@@ -383,7 +398,4 @@ void simply_window_deinit(SimplyWindow *self) {
 
   status_bar_layer_destroy(self->status_bar_layer);
   self->status_bar_layer = NULL;
-
-  window_destroy(self->window);
-  self->window = NULL;
 }

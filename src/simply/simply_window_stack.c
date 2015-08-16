@@ -88,16 +88,20 @@ void simply_window_stack_show(SimplyWindowStack *self, SimplyWindow *window, boo
   window_stack_pop_all(!is_push);
   self->is_showing = false;
 
+#ifdef PBK_SDK_2
   if (is_push) {
     window_stack_push(self->pusher, false);
   }
+#endif
 
   simply_window_preload(window);
   window_stack_push(window->window, animated);
 
+#ifdef PBK_SDK_2
   if (is_push) {
     window_stack_remove(self->pusher, false);
   }
+#endif
 }
 
 void simply_window_stack_pop(SimplyWindowStack *self, SimplyWindow *window) {
@@ -130,9 +134,11 @@ void simply_window_stack_send_hide(SimplyWindowStack *self, SimplyWindow *window
     return;
   }
   send_window_hide(self->simply->msg, window->id);
+#ifdef PBK_SDK_2
   if (!self->is_hiding) {
     window_stack_push(self->pusher, false);
   }
+#endif
 }
 
 static void handle_window_show_packet(Simply *simply, Packet *data) {
@@ -168,7 +174,9 @@ SimplyWindowStack *simply_window_stack_create(Simply *simply) {
   SimplyWindowStack *self = malloc(sizeof(*self));
   *self = (SimplyWindowStack) { .simply = simply };
 
+#ifdef PBK_SDK_2
   self->pusher = window_create();
+#endif
 
   return self;
 }
@@ -178,8 +186,10 @@ void simply_window_stack_destroy(SimplyWindowStack *self) {
     return;
   }
 
+#ifdef PBK_SDK_2
   window_destroy(self->pusher);
   self->pusher = NULL;
+#endif
 
   free(self);
 }

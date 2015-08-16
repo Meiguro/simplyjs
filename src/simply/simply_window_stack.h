@@ -12,7 +12,9 @@ typedef struct SimplyWindowStack SimplyWindowStack;
 
 struct SimplyWindowStack {
   Simply *simply;
+#ifdef PBK_SDK_2
   Window *pusher;
+#endif
   bool is_showing:1;
   bool is_hiding:1;
 };

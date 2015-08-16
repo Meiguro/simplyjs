@@ -97,8 +97,7 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
   if (!is_scrollable) {
     GRect bounds = { GPointZero, layer_get_bounds(window_get_root_layer(self->window)).size };
     layer_set_bounds(self->layer, bounds);
-    // TODO: change back to animated when a closing animated scroll doesn't cause a crash
-    const bool animated = false;
+    const bool animated = true;
     scroll_layer_set_content_offset(self->scroll_layer, GPointZero, animated);
     scroll_layer_set_content_size(self->scroll_layer, bounds.size);
   }

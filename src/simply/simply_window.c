@@ -107,14 +107,15 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
 }
 
 void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
+  const bool was_status_bar = self->is_status_bar;
+  self->is_status_bar = !is_fullscreen;
+
   bool changed = false;
-  if (is_fullscreen && self->is_status_bar) {
+  if (is_fullscreen && was_status_bar) {
     status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
-    self->is_status_bar = false;
     changed = true;
-  } else if (!is_fullscreen && !self->is_status_bar) {
+  } else if (!is_fullscreen && !was_status_bar) {
     status_bar_layer_add_to_window(self->window, self->status_bar_layer);
-    self->is_status_bar = true;
     changed = true;
   }
 

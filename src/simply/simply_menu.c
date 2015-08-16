@@ -241,13 +241,15 @@ static void request_menu_item(SimplyMenu *self, uint16_t section_index, uint16_t
 }
 
 static void mark_dirty(SimplyMenu *self) {
-  if (!self->menu_layer.menu_layer) { return; }
-  layer_mark_dirty(menu_layer_get_layer(self->menu_layer.menu_layer));
+  if (self->menu_layer.menu_layer) {
+    layer_mark_dirty(menu_layer_get_layer(self->menu_layer.menu_layer));
+  }
 }
 
 static void reload_data(SimplyMenu *self) {
-  if (!self->menu_layer.menu_layer) { return; }
-  menu_layer_reload_data(self->menu_layer.menu_layer);
+  if (self->menu_layer.menu_layer) {
+    menu_layer_reload_data(self->menu_layer.menu_layer);
+  }
 }
 
 static void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections) {

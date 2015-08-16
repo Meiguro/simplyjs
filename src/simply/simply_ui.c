@@ -76,6 +76,12 @@ struct __attribute__((__packed__)) CardStylePacket {
   uint8_t style;
 };
 
+static void mark_dirty(SimplyUi *self) {
+  if (self->ui_layer.layer) {
+    layer_mark_dirty(self->ui_layer.layer);
+  }
+}
+
 void simply_ui_clear(SimplyUi *self, uint32_t clear_mask) {
   if (clear_mask & (1 << ClearAction)) {
     simply_window_action_bar_clear(&self->window);
@@ -101,24 +107,20 @@ void simply_ui_set_style(SimplyUi *self, int style_index) {
     self->ui_layer.custom_body_font = fonts_load_custom_font(
         resource_get_handle(self->ui_layer.style->custom_body_font_id));
   }
-  layer_mark_dirty(self->ui_layer.layer);
+  mark_dirty(self);
 }
 
 void simply_ui_set_text(SimplyUi *self, SimplyUiTextfieldId textfield_id, const char *str) {
   SimplyUiTextfield *textfield = &self->ui_layer.textfields[textfield_id];
   char **str_field = &textfield->text;
   strset(str_field, str);
-  if (self->ui_layer.layer) {
-    layer_mark_dirty(self->ui_layer.layer);
-  }
+  mark_dirty(self);
 }
 
 void simply_ui_set_text_color(SimplyUi *self, SimplyUiTextfieldId textfield_id, GColor8 color) {
   SimplyUiTextfield *textfield = &self->ui_layer.textfields[textfield_id];
   textfield->color = color;
-  if (self->ui_layer.layer) {
-    layer_mark_dirty(self->ui_layer.layer);
-  }
+  mark_dirty(self);
 }
 
 static void layer_update_callback(Layer *layer, GContext *ctx) {

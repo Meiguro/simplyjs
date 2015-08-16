@@ -260,7 +260,6 @@ void simply_window_preload(SimplyWindow *self) {
 
   Window *window = self->window = window_create();
   window_set_background_color(window, GColorClear);
-  window_set_click_config_provider_with_context(window, click_config_provider, self);
   window_set_user_data(window, self);
   if (self->window_handlers) {
     window_set_window_handlers(window, *self->window_handlers);
@@ -281,6 +280,7 @@ void simply_window_load(SimplyWindow *self) {
   scroll_layer_set_context(scroll_layer, self);
   scroll_layer_set_shadow_hidden(scroll_layer, true);
 
+  window_set_click_config_provider_with_context(window, click_config_provider, self);
   simply_window_set_action_bar(self, self->is_action_bar);
 }
 

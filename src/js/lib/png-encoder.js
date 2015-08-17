@@ -6,6 +6,8 @@
  * @license MIT
  */
 
+var Zlib = require('vendor/zlib');
+
 var png = {};
 
 png.Bytes = function(data, optional) {
@@ -14,7 +16,7 @@ png.Bytes = function(data, optional) {
 
   if (!optional) {
 
-    if (data instanceof Array) {
+    if (data instanceof Array || data instanceof Uint8Array) {
       for (i = 0; i < data.length; i++) {
         datum = data[i];
         if (datum !== null) { // nulls and undefineds are silently skipped.
@@ -362,80 +364,9 @@ png.Raster_rgb = function(bit_depth, color_type, raster) {
   };
 };
 
-png.Raster.Zlib = function(buffer) {
-  // implementing http://www.ietf.org/rfc/rfc1950.txt
-
-  var compression_method = 8;
-  // The only value defined by the RFC.
-  var compression_info = 0;
-  // "CINFO is the base-2 logarithm of the LZ77 window size, minus eight"
-  // so, 0 means 256. (Not that it matters, since I'm planning just to do literal data.)
-
-  var fdict = 0;
-  // no preset dictionary.
-  var flevel = 0;
-  // "compressor used fastest algorithm"
-  // "The information in FLEVEL is not needed for decompression; it
-  //  is there to indicate if recompression might be worthwhile."
-
-  var fcheck = 31 - (
-          (compression_info << 12) |
-          (compression_method << 8) |
-          (flevel << 5) |
-          (fdict << 4)
-        ) % 31;
-
-  this.checksum = adler32(buffer);
-
-  function deflate(bytes) {
-    // implementing a bit of http://www.ietf.org/rfc/rfc1951.txt
-    // returns the compressed data block as a string.
-    var header_char = String.fromCharCode(1);
-    // (5 bits unused, 2 bits type (uncompressed), 1 bit final flag (on))
-    // * little endian *
-    var len = bytes.length;
-    var len_string = String.fromCharCode(len & 0xFF,(len & 0xFF00)>>8);
-    var nlen = ~bytes.length;
-    var nlen_string = String.fromCharCode(nlen & 0xFF,(nlen & 0xFF00)>>8);
-
-    return header_char +
-      len_string +
-      nlen_string +
-      String.fromCharCode.apply(null, bytes);
-  }
-
-  function adler32(bytes) {
-    var s1 = 1;
-    var s2 = 0;
-    for (var i = 0; i < bytes.length; i++) {
-      s1 += bytes[i];
-      s1 %= 65521;
-      s2 += s1;
-      s2 %= 65521;
-    } // This could be made more efficient by defering the modulos.
-    return (s2 << 16) | s1;
-  }
-
-  this.compression_method_char = String.fromCharCode(
-    compression_method | (compression_info << 4)
-  );
-  this.additional_flags_char = String.fromCharCode(
-    fcheck | (fdict << 4) | (flevel << 5)
-  );
-  this.compressed_data_blocks = deflate(buffer);
-
-  this.compress = function() {
-    // TODO: return Bytes
-    return this.compression_method_char +
-      this.additional_flags_char +
-      this.compressed_data_blocks +
-      new png.Bytes(this.checksum>>>0,{bytes:4}).serialize();
-  };
-};
-
 png.Chunk.IDAT = function(raster) {
   var encoded = raster.encode();
-  var zipped = new png.Raster.Zlib(encoded).compress();
+  var zipped = new Zlib.Deflate(encoded).compress();
   return new png.Chunk("IDAT", new png.Bytes(zipped));
 };
 

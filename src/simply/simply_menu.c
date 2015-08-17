@@ -512,6 +512,11 @@ static void handle_menu_props_packet(Simply *simply, Packet *data) {
   SimplyMenu *self = simply->menu;
 
   simply_menu_set_num_sections(self, packet->num_sections);
+
+  if (!self->window.window) {
+    return;
+  }
+
   window_set_background_color(self->window.window, gcolor8_get_or(packet->background_color, GColorWhite));
 
   if (!self->menu_layer.menu_layer) {

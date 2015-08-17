@@ -28,7 +28,6 @@ util2.inherit(Menu, Window);
 util2.copy(Emitter.prototype, Menu.prototype);
 
 Menu.prototype._show = function() {
-  this._resolveMenu();
   Window.prototype._show.apply(this, arguments);
   var select = this._selection;
   simply.impl.menuSelection(select.sectionIndex, select.itemIndex);
@@ -38,7 +37,7 @@ Menu.prototype._numPreloadItems = 50;
 
 Menu.prototype._prop = function(state, clear, pushing) {
   if (this === WindowStack.top()) {
-    simply.impl.menu.call(this, state, clear, pushing);
+    this._resolveMenu(clear, pushing);
     this._resolveSection(this._selection);
   }
 };
@@ -140,10 +139,10 @@ Menu.prototype._getItem = function(e, create) {
   return (items[e.itemIndex] = {});
 };
 
-Menu.prototype._resolveMenu = function() {
+Menu.prototype._resolveMenu = function(clear, pushing) {
   var sections = this._getSections(this);
   if (this === WindowStack.top()) {
-    simply.impl.menu.call(this, this.state);
+    simply.impl.menu(this.state, clear, pushing);
     return true;
   }
 };

@@ -1042,7 +1042,7 @@ SimplyPebble.menuSelection = function(section, item, align) {
 };
 
 SimplyPebble.menu = function(def, clear, pushing) {
-  if (arguments.length === 3) {
+  if (typeof pushing === 'boolean') {
     SimplyPebble.windowShow({ type: 'menu', pushing: pushing });
   }
   if (clear !== undefined) {

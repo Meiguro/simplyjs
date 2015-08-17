@@ -86,7 +86,7 @@ Window.prototype.hide = function() {
 };
 
 Window.prototype._show = function(pushing) {
-  this._prop(this.state, true, pushing);
+  this._prop(this.state, true, pushing || false);
   this._buttonConfig({});
   if (this._dynamic) {
     Stage.prototype._show.call(this, pushing);

@@ -20,9 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-var FlateStream;
+var Zlib;
 if (typeof require !== 'undefined') {
-  FlateStream = require('zlib').FlateStream;
+  Zlib = require('zlib');
+} else {
+  Zlib = window.Zlib;
 }
 
 (function() {
@@ -228,9 +230,8 @@ if (typeof require !== 'undefined') {
       if (data.length === 0) {
         return new Uint8Array(0);
       }
-      var flateStream = FlateStream || window.FlateStream;
-      data = new flateStream(data);
-      data = data.getBytes();
+      data = new Zlib.Inflate(data);
+      data = data.decompress();
       pixelBytes = this.pixelBitlength / 8;
       scanlineLength = pixelBytes * this.width;
       pixels = new Uint8Array(scanlineLength * this.height);

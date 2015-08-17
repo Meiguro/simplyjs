@@ -241,13 +241,15 @@ static void request_menu_item(SimplyMenu *self, uint16_t section_index, uint16_t
 }
 
 static void mark_dirty(SimplyMenu *self) {
-  if (!self->menu_layer.menu_layer) { return; }
-  layer_mark_dirty(menu_layer_get_layer(self->menu_layer.menu_layer));
+  if (self->menu_layer.menu_layer) {
+    layer_mark_dirty(menu_layer_get_layer(self->menu_layer.menu_layer));
+  }
 }
 
 static void reload_data(SimplyMenu *self) {
-  if (!self->menu_layer.menu_layer) { return; }
-  menu_layer_reload_data(self->menu_layer.menu_layer);
+  if (self->menu_layer.menu_layer) {
+    menu_layer_reload_data(self->menu_layer.menu_layer);
+  }
 }
 
 static void simply_menu_set_num_sections(SimplyMenu *self, uint16_t num_sections) {
@@ -510,6 +512,11 @@ static void handle_menu_props_packet(Simply *simply, Packet *data) {
   SimplyMenu *self = simply->menu;
 
   simply_menu_set_num_sections(self, packet->num_sections);
+
+  if (!self->window.window) {
+    return;
+  }
+
   window_set_background_color(self->window.window, gcolor8_get_or(packet->background_color, GColorWhite));
 
   if (!self->menu_layer.menu_layer) {
@@ -602,16 +609,16 @@ SimplyMenu *simply_menu_create(Simply *simply) {
     .menu_layer.num_sections = 1,
   };
 
-  simply_window_init(&self->window, simply);
-
-  window_set_user_data(self->window.window, self);
-  window_set_background_color(self->window.window, GColorWhite);
-  window_set_window_handlers(self->window.window, (WindowHandlers) {
+  static const WindowHandlers s_window_handlers = {
     .load = window_load,
     .appear = window_appear,
     .disappear = window_disappear,
     .unload = window_unload,
-  });
+  };
+  self->window.window_handlers = &s_window_handlers;
+
+  simply_window_init(&self->window, simply);
+  simply_window_set_background_color(&self->window, GColor8White);
 
   return self;
 }

@@ -638,16 +638,16 @@ SimplyStage *simply_stage_create(Simply *simply) {
   SimplyStage *self = malloc(sizeof(*self));
   *self = (SimplyStage) { .window.simply = simply };
 
-  simply_window_init(&self->window, simply);
-  simply_window_set_background_color(&self->window, GColor8Black);
-
-  window_set_user_data(self->window.window, self);
-  window_set_window_handlers(self->window.window, (WindowHandlers) {
+  static const WindowHandlers s_window_handlers = {
     .load = window_load,
     .appear = window_appear,
     .disappear = window_disappear,
     .unload = window_unload,
-  });
+  };
+  self->window.window_handlers = &s_window_handlers;
+
+  simply_window_init(&self->window, simply);
+  simply_window_set_background_color(&self->window, GColor8Black);
 
   return self;
 }

@@ -152,6 +152,15 @@ png.fromRaster = function(raster, optional_palette, optional_transparency) {
   return signature.add(ihdr).add(plte).add(trns).add(idat).add(iend);
 };
 
+png.encode = function(raster, bit_depth, color_type, optional_palette, optional_transparency) {
+  if (color_type === 0 || color_type === 3) {
+    raster = new png.Raster(bit_depth, color_type, raster);
+  } else if (color_type === 2 || color_type === 6) {
+    raster = new png.Raster_rgb(bit_depth, color_type, raster);
+  }
+  return png.fromRaster(raster, optional_palette, optional_transparency);
+};
+
 png.Chunk = function(type, data) {
   // given a four character type, and Bytes,
   // calculates the length and the checksum, and creates

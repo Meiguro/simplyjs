@@ -430,6 +430,7 @@ var ImagePacket = new struct([
   ['uint32', 'id'],
   ['int16', 'width'],
   ['int16', 'height'],
+  ['uint16', 'pixelsLength'],
   ['data', 'pixels'],
 ]);
 

@@ -55,6 +55,7 @@ struct __attribute__((__packed__)) ImagePacket {
   uint32_t id;
   int16_t width;
   int16_t height;
+  uint16_t pixels_length;
   uint8_t pixels[];
 };
 
@@ -153,7 +154,8 @@ static void handle_segment_packet(Simply *simply, Packet *data) {
 
 static void handle_image_packet(Simply *simply, Packet *data) {
   ImagePacket *packet = (ImagePacket*) data;
-  simply_res_add_image(simply->res, packet->id, packet->width, packet->height, packet->pixels);
+  simply_res_add_image(simply->res, packet->id, packet->width, packet->height, packet->pixels,
+                       packet->pixels_length);
 }
 
 static void handle_vibe_packet(Simply *simply, Packet *data) {

@@ -3,6 +3,7 @@
 #include "util/color.h"
 #include "util/graphics.h"
 #include "util/memory.h"
+#include "util/sdk.h"
 #include "util/window.h"
 
 #include <pebble.h>
@@ -103,40 +104,45 @@ SimplyImage *simply_res_add_bundled_image(SimplyRes *self, uint32_t id) {
   return image;
 }
 
-static GBitmap *create_blank_bitmap(SimplyImage *image, void *data) {
-  GSize *size = data;
-  GBitmap *bitmap = gbitmap_create_blank(*size, GBitmapFormat1Bit);
+typedef struct {
+  GSize size;
+  size_t data_length;
+  const uint8_t *data;
+} CreateDataContext;
+
+static GBitmap *create_bitmap_with_data(SimplyImage *image, void *data) {
+  CreateDataContext *ctx = data;
+  GBitmap *bitmap = gbitmap_create_blank(ctx->size, GBitmapFormat1Bit);
   if (bitmap) {
     image->bitmap_data = gbitmap_get_data(bitmap);
+    memcpy(image->bitmap_data, data, ctx->data_length);
   }
   return bitmap;
 }
 
-SimplyImage *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, int16_t height, uint8_t *pixels) {
+static GBitmap *create_bitmap_with_png_data(SimplyImage *image, void *data) {
+  CreateDataContext *ctx = data;
+  return ctx->data ? gbitmap_create_from_png_data(ctx->data, ctx->data_length) : NULL;
+}
+
+SimplyImage *simply_res_add_image(SimplyRes *self, uint32_t id, int16_t width, int16_t height,
+                                  uint8_t *pixels, uint16_t pixels_length) {
   SimplyImage *image = (SimplyImage*) list1_find(self->images, id_filter, (void*)(uintptr_t) id);
-
   if (image) {
-    free(gbitmap_get_data(image->bitmap));
-    uint16_t row_size_bytes = gbitmap_get_bytes_per_row(image->bitmap);
-    gbitmap_set_data(image->bitmap, pixels, GBitmapFormat1Bit, row_size_bytes, true);
-    image->bitmap_data = pixels;
-
-    window_stack_schedule_top_window_render();
-
-    return image;
+    destroy_image(self, image);
   }
 
-  image = create_image(self, create_blank_bitmap, &GSize(width, height));
+  CreateDataContext context = {
+    .size = GSize(width, height),
+    .data_length = pixels_length,
+    .data = pixels,
+  };
+  image = SDK_SELECT(create_image(self, create_bitmap_with_png_data, &context),
+                     create_image(self, create_bitmap_with_data, &context));
   if (image) {
     image->id = id;
-
-    uint16_t row_size_bytes = gbitmap_get_bytes_per_row(image->bitmap);
-    size_t pixels_size = height * row_size_bytes;
-    memcpy(image->bitmap_data, pixels, pixels_size);
-
     add_image(self, image);
   }
-
   return image;
 }
 
@@ -159,7 +165,7 @@ SimplyImage *simply_res_auto_image(SimplyRes *self, uint32_t id, bool is_placeho
     return simply_res_add_bundled_image(self, id);
   }
   if (is_placeholder) {
-    return simply_res_add_image(self, id, 0, 0, NULL);
+    return simply_res_add_image(self, id, 0, 0, NULL, 0);
   }
   return NULL;
 }

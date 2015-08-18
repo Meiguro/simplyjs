@@ -90,35 +90,45 @@ image.dithers.sierra = [
 
 image.dithers['default'] = image.dithers.sierra;
 
-image.dither = function(pixels, width, height, dithers) {
+//! Get the nearest normalized grey color
+var getChannelGrey = function(color) {
+  return color >= 128 ? 255 : 0;
+};
+
+//! Get the nearest normalized 2 bitdepth color
+var getChannel2 = function(color) {
+  return Math.min(Math.max(parseInt(color / 64 + 0.5), 0) * 64, 255);
+};
+
+image.dither = function(pixels, width, height, dithers, converter) {
+  converter = converter || getChannel2;
   dithers = dithers || image.dithers['default'];
-  var numdithers = dithers.length;
+  var numDithers = dithers.length;
   for (var y = 0, yy = height; y < yy; ++y) {
     for (var x = 0, xx = width; x < xx; ++x) {
       var pos = getPos(width, x, y);
-      var oldColor = pixels[pos];
-      var newColor = oldColor >= 128 ? 255 : 0;
-      var error = oldColor - newColor;
-      pixels[pos] = newColor;
-      for (var i = 0; i < numdithers; ++i) {
-        var dither = dithers[i];
-        var x2 = x + dither[0], y2 = y + dither[1];
-        if (x2 >= 0 && x2 < width && y < height) {
-          pixels[getPos(width, x2, y2)] += parseInt(error * dither[2]);
+      for (var i = 0; i < 3; ++i) {
+        var oldColor = pixels[pos + i];
+        var newColor = converter(oldColor);
+        var error = oldColor - newColor;
+        pixels[pos + i] = newColor;
+        for (var j = 0; j < numDithers; ++j) {
+          var dither = dithers[j];
+          var x2 = x + dither[0], y2 = y + dither[1];
+          if (x2 >= 0 && x2 < width && y < height) {
+            pixels[getPos(width, x2, y2) + i] += parseInt(error * dither[2]);
+          }
         }
-      }
-      for (var j = 1; j < 3; ++j) {
-        pixels[pos + j] = newColor;
       }
     }
   }
 };
 
 //! Dither a pixel buffer by image properties
-image.ditherByProps = function(pixels, img) {
+image.ditherByProps = function(pixels, img, converter) {
   if (img.dither) {
     var dithers = image.dithers[img.dither];
-    image.dither(pixels, img.width, img.height, dithers);
+    image.dither(pixels, img.width, img.height, dithers, converter);
   }
 };
 
@@ -272,7 +282,8 @@ image.load = function(img, bitdepth, callback) {
     }
     image.setSizeAspect(img, png.width, png.height);
     pixels = image.resizeByProps(pixels, img);
-    image.ditherByProps(pixels, img);
+    image.ditherByProps(pixels, img,
+                        bitdepth === 1 ? getChannelGrey : getChannel2);
     if (bitdepth === 8) {
       img.image = image.toPng8(pixels, img.width, img.height);
     } else if (bitdepth === 1) {

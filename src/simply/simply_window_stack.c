@@ -86,18 +86,8 @@ SimplyWindow *simply_window_stack_get_top_window(Simply *simply) {
 static void show_window_sdk_3(SimplyWindowStack *self, SimplyWindow *window, bool is_push) {
   const bool animated = (self->simply->splash == NULL);
 
-  Window *prev_window = window_stack_get_top_window();
-  const bool is_same_window = (prev_window == window->window);
-  if (is_same_window) {
-    window_stack_remove(prev_window, false);
-  }
-
   simply_window_preload(window);
   window_stack_push(window->window, animated);
-
-  if (!is_same_window) {
-    window_stack_remove(prev_window, false);
-  }
 }
 #endif
 

@@ -84,10 +84,12 @@ SimplyWindow *simply_window_stack_get_top_window(Simply *simply) {
 
 #ifdef PBL_SDK_3
 static void show_window_sdk_3(SimplyWindowStack *self, SimplyWindow *window, bool is_push) {
-  const bool animated = (self->simply->splash == NULL);
+  self->is_showing = true;
+  window_stack_pop_all(false);
+  self->is_showing = false;
 
   simply_window_preload(window);
-  window_stack_push(window->window, animated);
+  window_stack_push(window->window, false);
 }
 #endif
 

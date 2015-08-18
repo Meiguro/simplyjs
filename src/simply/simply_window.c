@@ -312,9 +312,6 @@ bool simply_window_disappear(SimplyWindow *self) {
 void simply_window_unload(SimplyWindow *self) {
   scroll_layer_destroy(self->scroll_layer);
   self->scroll_layer = NULL;
-
-  window_destroy(self->window);
-  self->window = NULL;
 }
 
 static void handle_window_props_packet(Simply *simply, Packet *data) {
@@ -398,4 +395,7 @@ void simply_window_deinit(SimplyWindow *self) {
 
   status_bar_layer_destroy(self->status_bar_layer);
   self->status_bar_layer = NULL;
+
+  window_destroy(self->window);
+  self->window = NULL;
 }

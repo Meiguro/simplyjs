@@ -29,14 +29,20 @@ safe.translatePos = function(name, lineno, colno) {
 var makeTranslateStack = function(stackLineRegExp, translateLine) {
   return function(stack) {
     var lines = stack.split('\n');
+    var firstStackLine = -1;
     for (var i = lines.length - 1; i >= 0; --i) {
-      var line = lines[i];
-      var m = line.match(stackLineRegExp);
-      if (m) {
-        line = lines[i] = translateLine.apply(this, m);
+      var m = lines[i].match(stackLineRegExp);
+      if (!m) {
+        continue;
       }
-      if (line.match(module.filename)) {
-        lines.splice(i, 1);
+      var line = lines[i] = translateLine.apply(this, m);
+      if (line) {
+        firstStackLine = i;
+        if (line.indexOf(module.filename) !== -1) {
+          lines.splice(i, 1);
+        }
+      } else {
+        lines.splice(i, lines.length - i);
       }
     }
     return lines.join('\n');
@@ -65,37 +71,17 @@ var stackLineRegExpIOS = /(?:([^\s@]+)@)?([^\s@:]+):(\d+):(\d+)/;
 
 safe.translateStackIOS = makeTranslateStack(stackLineRegExpIOS, translateLineIOS);
 
-safe.translateStackAndroid = function(stack) {
-  var lines = stack.split('\n');
-  for (var i = lines.length - 1; i > 0; --i) {
-    var line = lines[i];
-    var name, lineno, colno;
-    if (line.match(/jskit_startup\.html/)) {
-      lines.splice(i, 1);
-    } else {
-      /* Matches <name> ':' <lineno> ':' <colno> */
-      var m = line.match(/^.*\/(.*?):(\d+):(\d+)/);
-      if (m) {
-        name = m[1];
-        lineno = m[2];
-        colno = m[3];
-      }
-    }
-    if (name) {
-      var pos = safe.translatePos(name, lineno, colno);
-      if (line.match(/\(.*\)/)) {
-        line = line.replace(/\(.*\)/, '(' + pos + ')');
-      } else {
-        line = line.replace(/[^\s\/]*\/.*$/, pos);
-      }
-      lines[i] = line;
-    }
-    if (line.match(module.filename)) {
-      lines.splice(i, 1);
-    }
+/* Translates an Android stack trace line to node style */
+var translateLineAndroid = function(line, msg, scope, name, lineno, colno) {
+  if (name !== 'jskit_startup.js') {
+    return translateLineV8(line, msg, scope, name, lineno, colno);
   }
-  return lines.join('\n');
 };
+
+/* Matches <msg> <scope> '('? filepath <name> ':' <lineno> ':' <colno> ')'? */
+var stackLineRegExpAndroid = /^(.*?)(?:\s+([^\s]+)\s+\()?[^\s\(]*?([^\/]*?):(\d+):(\d+)\)?/;
+
+safe.translateStackAndroid = makeTranslateStack(stackLineRegExpAndroid, translateLineAndroid);
 
 /* Translates a stack trace to the originating files */
 safe.translateStack = function(stack) {

@@ -338,7 +338,13 @@ static void menu_draw_header_callback(GContext *ctx, const Layer *cell_layer, ui
   list1_remove(&self->menu_layer.sections, &section->node);
   list1_prepend(&self->menu_layer.sections, &section->node);
 
-  menu_cell_basic_header_draw(ctx, cell_layer, section->title);
+  GRect bounds = layer_get_bounds(cell_layer);
+  bounds.origin.x += 2;
+  bounds.origin.y -= 1;
+
+  graphics_context_set_text_color(ctx, gcolor8_get_or(self->menu_layer.normal_foreground, GColorBlack));
+  graphics_draw_text(ctx, section->title, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD),
+                     bounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
 }
 
 static void simply_menu_draw_row_spinner(SimplyMenu *self, GContext *ctx, const Layer *cell_layer) {

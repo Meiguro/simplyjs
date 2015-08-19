@@ -98,6 +98,18 @@ safe.translateStack = function(stack, level) {
   }
 };
 
+var normalizeIndent = function(lines, pos) {
+  pos = pos || 0;
+  var label = lines[pos].match(/^[^\s]* /);
+  if (label) {
+    var indent = label[0].replace(/./g, ' ');
+    for (var i = pos + 1, ii = lines.length; i < ii; i++) {
+      lines[i] = lines[i].replace(/^\t/, indent);
+    }
+  }
+  return lines;
+};
+
 safe.translateError = function(err, intro, level) {
   var name = err.name;
   var message = err.message || err.toString();
@@ -112,7 +124,7 @@ safe.translateError = function(err, intro, level) {
   if (stack) {
     Array.prototype.push.apply(result, safe.translateStack(stack, level));
   }
-  return result.join('\n');
+  return normalizeIndent(result, 1).join('\n');
 };
 
 /* Dumps error messages to the console. */

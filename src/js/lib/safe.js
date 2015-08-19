@@ -27,7 +27,7 @@ safe.translatePos = function(name, lineno, colno) {
 };
 
 var makeTranslateStack = function(stackLineRegExp, translateLine) {
-  return function(stack) {
+  return function(stack, level) {
     var lines = stack.split('\n');
     var firstStackLine = -1;
     for (var i = lines.length - 1; i >= 0; --i) {
@@ -45,7 +45,10 @@ var makeTranslateStack = function(stackLineRegExp, translateLine) {
         lines.splice(i, lines.length - i);
       }
     }
-    return lines.join('\n');
+    if (firstStackLine > -1) {
+      lines.splice(firstStackLine, level);
+    }
+    return lines;
   };
 };
 
@@ -84,47 +87,48 @@ var stackLineRegExpAndroid = /^(.*?)(?:\s+([^\s]+)\s+\()?[^\s\(]*?([^\/]*?):(\d+
 safe.translateStackAndroid = makeTranslateStack(stackLineRegExpAndroid, translateLineAndroid);
 
 /* Translates a stack trace to the originating files */
-safe.translateStack = function(stack) {
+safe.translateStack = function(stack, level) {
+  level = level || 0;
   if (Pebble.platform === 'pypkjs') {
-    return safe.translateStackV8(stack);
+    return safe.translateStackV8(stack, level);
   } else if (stack.match('com.getpebble.android')) {
-    return safe.translateStackAndroid(stack);
+    return safe.translateStackAndroid(stack, level);
   } else {
-    return safe.translateStackIOS(stack);
+    return safe.translateStackIOS(stack, level);
   }
 };
 
-safe.translateError = function(err, intro) {
+safe.translateError = function(err, intro, level) {
   var name = err.name;
   var message = err.message || err.toString();
   var stack = err.stack;
   var result = [intro || 'JavaScript Error:'];
-  if (message && (!stack || !stack.match(message))) {
-    if (name && !message.match(message)) {
+  if (message && (!stack || stack.indexOf(message) === -1)) {
+    if (name && message.indexOf(name + ':') === -1) {
       message = name + ': ' + message;
     }
     result.push(message);
   }
   if (stack) {
-    result.push(safe.translateStack(stack));
+    Array.prototype.push.apply(result, safe.translateStack(stack, level));
   }
   return result.join('\n');
 };
 
 /* Dumps error messages to the console. */
-safe.dumpError = function(err, intro) {
+safe.dumpError = function(err, intro, level) {
   if (typeof err === 'object') {
-    console.log(safe.translateError(err, intro));
+    console.log(safe.translateError(err, intro, level));
   } else {
     console.log('Error: dumpError argument is not an object');
   }
 };
 
 /* Logs runtime warnings to the console. */
-safe.warn = function(message, name) {
+safe.warn = function(message, level, name) {
   var err = new Error(message);
   err.name = name || 'Warning';
-  safe.dumpError(err, 'Warning:');
+  safe.dumpError(err, 'Warning:', 1);
 };
 
 /* Takes a function and return a new function with a call to it wrapped in a try/catch statement */

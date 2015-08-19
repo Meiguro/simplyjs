@@ -134,25 +134,20 @@ void simply_window_stack_back(SimplyWindowStack *self, SimplyWindow *window) {
 }
 
 void simply_window_stack_send_show(SimplyWindowStack *self, SimplyWindow *window) {
-  if (self->is_showing) {
-    return;
+  if (window->id && self->is_showing) {
+    send_window_show(self->simply->msg, window->id);
   }
-  send_window_show(self->simply->msg, window->id);
 }
 
 void simply_window_stack_send_hide(SimplyWindowStack *self, SimplyWindow *window) {
-  if (!window->id) {
-    return;
+  if (window->id && !self->is_showing) {
+    send_window_hide(self->simply->msg, window->id);
+    SDK_SELECT(NONE, {
+      if (!self->is_hiding) {
+        window_stack_push(self->pusher, false);
+      }
+    });
   }
-  if (self->is_showing) {
-    return;
-  }
-  send_window_hide(self->simply->msg, window->id);
-#ifdef PBK_SDK_2
-  if (!self->is_hiding) {
-    window_stack_push(self->pusher, false);
-  }
-#endif
 }
 
 static void handle_window_show_packet(Simply *simply, Packet *data) {
@@ -188,9 +183,9 @@ SimplyWindowStack *simply_window_stack_create(Simply *simply) {
   SimplyWindowStack *self = malloc(sizeof(*self));
   *self = (SimplyWindowStack) { .simply = simply };
 
-#ifdef PBK_SDK_2
-  self->pusher = window_create();
-#endif
+  SDK_SELECT(NONE, {
+    self->pusher = window_create();
+  });
 
   return self;
 }
@@ -200,10 +195,10 @@ void simply_window_stack_destroy(SimplyWindowStack *self) {
     return;
   }
 
-#ifdef PBK_SDK_2
-  window_destroy(self->pusher);
-  self->pusher = NULL;
-#endif
+  SDK_SELECT(NONE, {
+    window_destroy(self->pusher);
+    self->pusher = NULL;
+  });
 
   free(self);
 }

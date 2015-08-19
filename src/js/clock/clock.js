@@ -1,3 +1,5 @@
+var moment = require('vendor/moment');
+
 var Clock = module.exports;
 
 Clock.weekday = function(weekday, hour, minute, seconds) {

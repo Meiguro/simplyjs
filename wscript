@@ -128,8 +128,6 @@ def concat_javascript(ctx, js_path=None):
 
                 if relpath == LOADER_PATH:
                     sources.insert(0, body)
-                elif relpath.startswith('vendor/'):
-                    sources.append(body)
                 else:
                     sources.append({ 'relpath': relpath, 'body': body })
 

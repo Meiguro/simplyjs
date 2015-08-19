@@ -20,6 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+var FlateStream;
+if (typeof require !== 'undefined') {
+  FlateStream = require('zlib').FlateStream;
+}
 
 (function() {
   var PNG;
@@ -224,7 +228,8 @@
       if (data.length === 0) {
         return new Uint8Array(0);
       }
-      data = new FlateStream(data);
+      var flateStream = FlateStream || window.FlateStream;
+      data = new flateStream(data);
       data = data.getBytes();
       pixelBytes = this.pixelBitlength / 8;
       scanlineLength = pixelBytes * this.width;
@@ -449,6 +454,10 @@
 
   })();
 
-  window.PNG = PNG;
+  if (typeof module !== 'undefined') {
+    module.exports = PNG;
+  } else {
+    window.PNG = PNG;
+  }
 
 }).call(this);

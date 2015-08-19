@@ -1,4 +1,4 @@
-/* global PNG */
+var PNG = require('vendor/png');
 
 var image = {};
 

@@ -462,3 +462,10 @@ var FlateStream = (function() {
 
   return constructor;
 })();
+
+if (typeof module !== 'undefined') {
+  module.exports = {
+    DecodeStream: DecodeStream,
+    FlateStream: FlateStream,
+  };
+}

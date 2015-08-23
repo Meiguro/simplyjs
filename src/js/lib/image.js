@@ -200,7 +200,7 @@ image.toGbitmap1 = function(pixels, width, height) {
   for (var y = 0, yy = height; y < yy; ++y) {
     for (var x = 0, xx = width; x < xx; ++x) {
       var grey = 0;
-      var pos = y * rowBytes + parseInt(x * 4);
+      var pos = getPos(width, x, y);
       for (var j = 0; j < 3; ++j) {
         grey += pixels[pos + j];
       }

@@ -115,7 +115,7 @@ static GBitmap *create_bitmap_with_data(SimplyImage *image, void *data) {
   GBitmap *bitmap = gbitmap_create_blank(ctx->size, GBitmapFormat1Bit);
   if (bitmap) {
     image->bitmap_data = gbitmap_get_data(bitmap);
-    memcpy(image->bitmap_data, data, ctx->data_length);
+    memcpy(image->bitmap_data, ctx->data, ctx->data_length);
   }
   return bitmap;
 }

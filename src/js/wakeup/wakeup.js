@@ -52,7 +52,7 @@ Wakeup.prototype.get = function(id) {
   var wakeup = this.state.wakeups[id];
   if (wakeup) {
     return {
-      id: id,
+      id: wakeup.id,
       cookie: wakeup.cookie,
       data: wakeup.data,
       time: wakeup.params.time,

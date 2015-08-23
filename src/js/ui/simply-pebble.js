@@ -430,6 +430,7 @@ var ImagePacket = new struct([
   ['uint32', 'id'],
   ['int16', 'width'],
   ['int16', 'height'],
+  ['uint16', 'pixelsLength'],
   ['data', 'pixels'],
 ]);
 
@@ -769,11 +770,19 @@ MessageQueue.prototype.stop = function() {
 };
 
 MessageQueue.prototype.consume = function() {
-  this._queue.splice(0, 1);
+  this._queue.shift();
   if (this._queue.length === 0) {
     return this.stop();
   }
   this.cycle();
+};
+
+MessageQueue.prototype.checkSent = function(message, fn) {
+  return function() {
+    if (message === this._sent) {
+      fn();
+    }
+  }.bind(this);
 };
 
 MessageQueue.prototype.cycle = function() {
@@ -784,7 +793,10 @@ MessageQueue.prototype.cycle = function() {
   if (!head) {
     return this.stop();
   }
-  Pebble.sendAppMessage(head, this._consume, this._cycle);
+  this._sent = head;
+  var success = this.checkSent(head, this._consume);
+  var failure = this.checkSent(head, this._cycle);
+  Pebble.sendAppMessage(head, success, failure);
 };
 
 MessageQueue.prototype.send = function(message) {

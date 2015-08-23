@@ -61,6 +61,10 @@ typedef union GColor8 {
 #define graphics_context_set_antialiased(ctx, enable)
 #endif
 
+#ifndef gbitmap_create_from_png_data
+#define gbitmap_create_from_png_data(png_data, png_data_size) NULL
+#endif
+
 //! Convenience function to use SDK 3.0 function to get a `GBitmap`'s `row_size_bytes` field.
 #ifndef gbitmap_get_bytes_per_row
 #define gbitmap_get_bytes_per_row(bmp) ((bmp)->row_size_bytes)

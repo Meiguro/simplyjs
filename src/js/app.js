@@ -11,7 +11,9 @@ var main = new UI.Card({
   title: 'Pebble.js',
   icon: 'images/menu_icon.png',
   subtitle: 'Hello World!',
-  body: 'Press any button.'
+  body: 'Press any button.',
+  titleColor: 'indigo', //named colors
+  bodyColor: '#6699FF' // Hex colors
 });
 
 main.show();

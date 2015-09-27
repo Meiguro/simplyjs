@@ -208,66 +208,42 @@ var namedColorMap = {
 
 var Color = function(color) {
   if (color.charAt(0)=='#') {
+      //Convert full hex to shorthand
+      if (color.length==4){
+          var r = color.charAt(1);
+          var g = color.charAt(2);
+          var b = color.charAt(3);
+          color = '#'+r+r+g+g+b+b;
+      }
+      //Ensure upper case
       color = color.toUpperCase();
-      return hexColorMap[findClosestColor(color)];
+      return hexColorMap[roundColor(color)];
   }
   return namedColorMap[color] ? namedColorMap[color] : namedColorMap.clear;
 };
 
-//As seen in: http://stackoverflow.com/questions/4057475/rounding-colour-values-to-the-nearest-of-a-small-set-of-colours
-var findClosestColor = function getSimilarColors (color) {
-    var pebble_colors=Object.keys(hexColorMap);
-
-    //Convert to RGB, then R, G, B
-    var color_rgb = hex2rgb(color);
-    var color_r = color_rgb.split(',')[0];
-    var color_g = color_rgb.split(',')[1];
-    var color_b = color_rgb.split(',')[2];
-
-    //Create an empty array for the difference between the colors
-    var differenceArray=[];
-
-    //Function to find the smallest value in an array
-    Array.min = function( array ){
-        return Math.min.apply( Math, array );
+var roundColor = function (color) {
+    var closestTo = function(color, colors) {
+        var dist = Infinity;
+        var result = color;
+        colors.forEach(function(col) {
+            var localdist = Math.abs(parseInt(color, 16)-parseInt(col, 16));
+            if (localdist < dist) {
+                dist = localdist;
+                result = col;
+            }
+        });
+        return result;
     };
 
-    //Convert the HEX color in the array to RGB colors, split them up to R-G-B, then find out the difference between the "color" and the colors in the array
-    pebble_colors.forEach(function(pebble_color) {
-        var base_color_rgb = hex2rgb(pebble_color);
-        var base_colors_r = base_color_rgb.split(',')[0];
-        var base_colors_g = base_color_rgb.split(',')[1];
-        var base_colors_b = base_color_rgb.split(',')[2];
-
-        //Add the difference to the differenceArray
-        differenceArray.push(Math.sqrt((color_r-base_colors_r)*(color_r-base_colors_r)+(color_g-base_colors_g)*(color_g-base_colors_g)+(color_b-base_colors_b)*(color_b-base_colors_b)));
-    });
-
-    //Get the lowest number from the differenceArray
-    var lowest = Array.min(differenceArray);
-
-    //Get the index for that lowest number
-    var index = differenceArray.indexOf(lowest);
-
-    //Function to convert HEX to RGB
-    function hex2rgb(colour) {
-        var r,g,b;
-        if ( colour.charAt(0) == '#' ) {
-            colour = colour.substr(1);
-        }
-
-        r = colour.charAt(0) + colour.charAt(1);
-        g = colour.charAt(2) + colour.charAt(3);
-        b = colour.charAt(4) + colour.charAt(5);
-
-        r = parseInt( r,16 );
-        g = parseInt( g,16 );
-        b = parseInt( b ,16);
-        return r+','+g+','+b;
-    }
-
-    //Return the HEX code
-    return pebble_colors[index];
+    var colors = ['00','55','AA','FF'];
+    var r_hex = color.charAt(1) + color.charAt(2);
+    var g_hex = color.charAt(3) + color.charAt(4);
+    var b_hex = color.charAt(5) + color.charAt(6);
+    var r = closestTo(r_hex, colors);
+    var g = closestTo(g_hex, colors);
+    var b = closestTo(b_hex, colors);
+    return '#'+r+g+b;
 };
 
 var Font = function(x) {

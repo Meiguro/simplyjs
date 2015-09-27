@@ -13,7 +13,7 @@ var main = new UI.Card({
   subtitle: 'Hello World!',
   body: 'Press any button.',
   titleColor: 'indigo', //named colors
-  bodyColor: '#6699FF' // Hex colors
+  bodyColor: '#9a0036' // Hex colors
 });
 
 main.show();

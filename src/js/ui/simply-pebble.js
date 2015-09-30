@@ -244,7 +244,7 @@ var findClosestColor = function(color, colors) {
       result = col;
     }
   });
- return result;
+  return result;
 };
 
 var Font = function(x) {

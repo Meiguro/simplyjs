@@ -12,7 +12,7 @@ var main = new UI.Card({
   icon: 'images/menu_icon.png',
   subtitle: 'Hello World!',
   body: 'Press any button.',
-  titleColor: 'indigo', //named colors
+  titleColor: 'indigo', // Named colors
   bodyColor: '#9a0036' // Hex colors
 });
 

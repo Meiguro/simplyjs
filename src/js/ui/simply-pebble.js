@@ -235,16 +235,16 @@ var roundColor = function (color) {
 };
 
 var findClosestColor = function(color, colors) {
-    var nearestDist = Infinity;
-    var result = color;
-    colors.forEach(function(col) {
-      var dist = Math.abs(parseInt(color, 16) - col);
-      if (dist < nearestDist) {
-        nearestDist = dist;
-        result = col;
-      }
-    });
-    return result;
+  var nearestDist = Infinity;
+  var result = color;
+  colors.forEach(function(col) {
+    var dist = Math.abs(parseInt(color, 16) - col);
+    if (dist < nearestDist) {
+      nearestDist = dist;
+      result = col;
+    }
+  });
+ return result;
 };
 
 var Font = function(x) {

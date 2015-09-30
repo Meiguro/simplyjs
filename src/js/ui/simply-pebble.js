@@ -225,9 +225,9 @@ var Color = function(color) {
 var pebbleColors = [0x00, 0x55, 0xAA, 0xFF];
 
 var roundColor = function (color) {
-  var rHex = color.substr(1,2);
-  var gHex = color.substr(3,2);
-  var bHex = color.substr(5,2);
+  var rHex = color.substr(1, 2);
+  var gHex = color.substr(3, 2);
+  var bHex = color.substr(5, 2);
   var r = findClosestColor(rHex, pebbleColors);
   var g = findClosestColor(gHex, pebbleColors);
   var b = findClosestColor(bHex, pebbleColors);

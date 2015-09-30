@@ -227,11 +227,11 @@ var roundColor = function (color) {
     var nearestDist = Infinity;
     var result = color;
     colors.forEach(function(col) {
-        var dist = Math.abs(parseInt(color, 16) - parseInt(col, 16));
-        if (dist < nearestDist) {
-            nearestDist = dist;
-            result = col;
-        }
+      var dist = Math.abs(parseInt(color, 16) - parseInt(col, 16));
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        result = col;
+      }
     });
     return result;
   };

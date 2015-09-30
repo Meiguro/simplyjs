@@ -208,8 +208,8 @@ var namedColorMap = {
 
 var Color = function(color) {
   if (color.charAt(0) === '#') {
-    // Convert full hex to shorthand
-    if (color.length === 4){
+    // Convert shorthand hex to full length for rounding
+    if (color.length === 4) {
       var r = color.charAt(1);
       var g = color.charAt(2);
       var b = color.charAt(3);
@@ -222,28 +222,29 @@ var Color = function(color) {
   return namedColorMap[color] ? namedColorMap[color] : namedColorMap.clear;
 };
 
+var pebbleColors = [0x00, 0x55, 0xAA, 0xFF];
+
 var roundColor = function (color) {
-  var closestTo = function(color, colors) {
+  var rHex = color.substr(1,2);
+  var gHex = color.substr(3,2);
+  var bHex = color.substr(5,2);
+  var r = findClosestColor(rHex, pebbleColors);
+  var g = findClosestColor(gHex, pebbleColors);
+  var b = findClosestColor(bHex, pebbleColors);
+  return '#'+r+g+b;
+};
+
+var findClosestColor = function(color, colors) {
     var nearestDist = Infinity;
     var result = color;
     colors.forEach(function(col) {
-      var dist = Math.abs(parseInt(color, 16) - parseInt(col, 16));
+      var dist = Math.abs(parseInt(color, 16) - col);
       if (dist < nearestDist) {
         nearestDist = dist;
         result = col;
       }
     });
     return result;
-  };
-
-  var colors = ['00', '55', 'AA', 'FF'];
-  var rHex = color.charAt(1) + color.charAt(2);
-  var gHex = color.charAt(3) + color.charAt(4);
-  var bHex = color.charAt(5) + color.charAt(6);
-  var r = closestTo(rHex, colors);
-  var g = closestTo(gHex, colors);
-  var b = closestTo(bHex, colors);
-  return '#'+r+g+b;
 };
 
 var Font = function(x) {

@@ -4,7 +4,7 @@
 
 #include "simply/simply.h"
 
-#ifndef PBL_PLATFORM_BASALT
+#ifdef PBL_SDK_2
 
 typedef struct StatusBarLayer StatusBarLayer;
 struct StatusBarLayer;

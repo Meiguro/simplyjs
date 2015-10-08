@@ -110,6 +110,20 @@ typedef union GColor8 {
   (GBitmapFormat1Bit)
 #endif
 
+typedef TextLayout GTextAttributes;
+
+#ifndef graphics_text_attributes_create
+#define graphics_text_attributes_create() NULL
+#endif
+
+#ifndef graphics_text_attributes_destroy
+#define graphics_text_attributes_destroy(text_attributes)
+#endif
+
+#ifndef graphics_text_attributes_enable_screen_text_flow
+#define graphics_text_attributes_enable_screen_text_flow(text_attributes, inset)
+#endif
+
 #ifndef menu_layer_set_normal_colors
 #define menu_layer_set_normal_colors(menu_layer, background_color, text_color)
 #endif

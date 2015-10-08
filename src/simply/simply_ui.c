@@ -124,7 +124,11 @@ void simply_ui_set_text_color(SimplyUi *self, SimplyUiTextfieldId textfield_id, 
 }
 
 static void layer_update_callback(Layer *layer, GContext *ctx) {
-  SimplyUi *self = *(void**) layer_get_data(layer);
+  SimplyUi *self = *(void **)layer_get_data(layer);
+
+  GTextAttributes *text_attributes = graphics_text_attributes_create();
+  const uint8_t inset = 8;
+  graphics_text_attributes_enable_screen_text_flow(text_attributes, inset);
 
   GRect window_frame = layer_get_frame(window_get_root_layer(self->window.window));
   GRect frame = layer_get_frame(layer);
@@ -253,9 +257,8 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   }
   if (has_title) {
     graphics_context_set_text_color(ctx, gcolor8_get_or(title->color, GColorBlack));
-    graphics_draw_text(ctx, title->text, title_font,
-        (GRect) { .origin = title_pos, .size = title_size },
-        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+    graphics_draw_text(ctx, title->text, title_font, (GRect) { title_pos, title_size },
+                       GTextOverflowModeWordWrap, GTextAlignmentLeft, text_attributes);
   }
 
   if (subtitle_icon) {
@@ -268,9 +271,8 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   }
   if (has_subtitle) {
     graphics_context_set_text_color(ctx, gcolor8_get_or(subtitle->color, GColorBlack));
-    graphics_draw_text(ctx, subtitle->text, subtitle_font,
-        (GRect) { .origin = subtitle_pos, .size = subtitle_size },
-        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+    graphics_draw_text(ctx, subtitle->text, subtitle_font, (GRect) { subtitle_pos, subtitle_size },
+                       GTextOverflowModeWordWrap, GTextAlignmentLeft, text_attributes);
   }
 
   if (body_image) {
@@ -284,8 +286,10 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   if (has_body) {
     graphics_context_set_text_color(ctx, gcolor8_get_or(body->color, GColorBlack));
     graphics_draw_text(ctx, body->text, body_font, body_rect,
-        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, text_attributes);
   }
+
+  graphics_text_attributes_destroy(text_attributes);
 }
 
 static void show_welcome_text(SimplyUi *self) {

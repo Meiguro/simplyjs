@@ -35,21 +35,21 @@ enum ClearIndex {
 };
 
 enum StyleIndex {
-  StyleIndex_Small = 0,
-  StyleIndex_Large,
+  StyleIndex_ClassicSmall = 0,
+  StyleIndex_ClassicLarge,
   StyleIndex_Mono,
-  StyleIndex_TimeSmall,
-  StyleIndex_TimeLarge,
+  StyleIndex_Small,
+  StyleIndex_Large,
   StyleIndexCount,
 };
 
 static const SimplyStyle STYLES[StyleIndexCount] = {
-  [StyleIndex_Small] = {
+  [StyleIndex_ClassicSmall] = {
     .title_font = FONT_KEY_GOTHIC_18_BOLD,
     .subtitle_font = FONT_KEY_GOTHIC_18_BOLD,
     .body_font = FONT_KEY_GOTHIC_18,
   },
-  [StyleIndex_Large] = {
+  [StyleIndex_ClassicLarge] = {
     .title_font = FONT_KEY_GOTHIC_28_BOLD,
     .subtitle_font = FONT_KEY_GOTHIC_28,
     .body_font = FONT_KEY_GOTHIC_24_BOLD,
@@ -59,7 +59,7 @@ static const SimplyStyle STYLES[StyleIndexCount] = {
     .subtitle_font = FONT_KEY_GOTHIC_18_BOLD,
     .custom_body_font_id = RESOURCE_ID_MONO_FONT_14,
   },
-  [StyleIndex_TimeSmall] = {
+  [StyleIndex_Small] = {
     .title_icon_padding = 4,
     .title_font = FONT_KEY_GOTHIC_18_BOLD,
     .title_padding = 2,
@@ -67,7 +67,7 @@ static const SimplyStyle STYLES[StyleIndexCount] = {
     .subtitle_padding = 3,
     .body_font = FONT_KEY_GOTHIC_18,
   },
-  [StyleIndex_TimeLarge] = {
+  [StyleIndex_Large] = {
     .title_icon_padding = 4,
     .title_font = FONT_KEY_GOTHIC_18_BOLD,
     .title_padding = 3,

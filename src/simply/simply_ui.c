@@ -6,6 +6,7 @@
 
 #include "simply.h"
 
+#include "util/compat.h"
 #include "util/color.h"
 #include "util/graphics.h"
 #include "util/math.h"
@@ -17,34 +18,62 @@
 
 #define TEXT_FLOW_INSET 8
 
-struct SimplyStyle {
-  const char* title_font;
-  const char* subtitle_font;
-  const char* body_font;
+struct __attribute__((__packed__)) SimplyStyle {
+  const char *title_font;
+  const char *subtitle_font;
+  const char *body_font;
   int custom_body_font_id;
+  int8_t title_icon_padding;
+  int8_t title_padding;
+  int8_t subtitle_padding;
 };
 
 enum ClearIndex {
-  ClearAction = 0,
-  ClearText,
-  ClearImage,
+  ClearIndex_Action = 0,
+  ClearIndex_Text,
+  ClearIndex_Image,
 };
 
-static SimplyStyle STYLES[] = {
-  {
-    .title_font = FONT_KEY_GOTHIC_24_BOLD,
+enum StyleIndex {
+  StyleIndex_Small = 0,
+  StyleIndex_Large,
+  StyleIndex_Mono,
+  StyleIndex_TimeSmall,
+  StyleIndex_TimeLarge,
+  StyleIndexCount,
+};
+
+static const SimplyStyle STYLES[StyleIndexCount] = {
+  [StyleIndex_Small] = {
+    .title_font = FONT_KEY_GOTHIC_18_BOLD,
     .subtitle_font = FONT_KEY_GOTHIC_18_BOLD,
     .body_font = FONT_KEY_GOTHIC_18,
   },
-  {
+  [StyleIndex_Large] = {
     .title_font = FONT_KEY_GOTHIC_28_BOLD,
     .subtitle_font = FONT_KEY_GOTHIC_28,
     .body_font = FONT_KEY_GOTHIC_24_BOLD,
   },
-  {
+  [StyleIndex_Mono] = {
     .title_font = FONT_KEY_GOTHIC_24_BOLD,
     .subtitle_font = FONT_KEY_GOTHIC_18_BOLD,
     .custom_body_font_id = RESOURCE_ID_MONO_FONT_14,
+  },
+  [StyleIndex_TimeSmall] = {
+    .title_icon_padding = 4,
+    .title_font = FONT_KEY_GOTHIC_18_BOLD,
+    .title_padding = 2,
+    .subtitle_font = FONT_KEY_GOTHIC_18_BOLD,
+    .subtitle_padding = 3,
+    .body_font = FONT_KEY_GOTHIC_18,
+  },
+  [StyleIndex_TimeLarge] = {
+    .title_icon_padding = 4,
+    .title_font = FONT_KEY_GOTHIC_18_BOLD,
+    .title_padding = 3,
+    .subtitle_font = FONT_KEY_GOTHIC_24_BOLD,
+    .subtitle_padding = 4,
+    .body_font = FONT_KEY_GOTHIC_24_BOLD,
   },
 };
 
@@ -86,16 +115,16 @@ static void mark_dirty(SimplyUi *self) {
 }
 
 void simply_ui_clear(SimplyUi *self, uint32_t clear_mask) {
-  if (clear_mask & (1 << ClearAction)) {
+  if (clear_mask & (1 << ClearIndex_Action)) {
     simply_window_action_bar_clear(&self->window);
   }
-  if (clear_mask & (1 << ClearText)) {
+  if (clear_mask & (1 << ClearIndex_Text)) {
     for (int textfield_id = 0; textfield_id < NumUiTextfields; ++textfield_id) {
       simply_ui_set_text(self, textfield_id, NULL);
       simply_ui_set_text_color(self, textfield_id, GColor8Black);
     }
   }
-  if (clear_mask & (1 << ClearImage)) {
+  if (clear_mask & (1 << ClearIndex_Image)) {
     memset(self->ui_layer.imagefields, 0, sizeof(self->ui_layer.imagefields));
   }
 }
@@ -203,16 +232,17 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
         title_frame.origin.x += title_icon_bounds.size.w;
         title_frame.size.w -= title_icon_bounds.size.w;
       }, {
-        title_frame.origin.y += title_icon_bounds.size.h;
+        title_frame.origin.y += title_icon_bounds.size.h + style->title_icon_padding;
       });
     }
-    enable_text_flow_and_paging(self, title_attributes, &title_frame);
+    PBL_IF_ROUND_ELSE(
+        enable_text_flow_and_paging(self, title_attributes, &title_frame), NOOP);
     title_size = graphics_text_layout_get_content_size_with_attributes(
         title->text, title_font, title_frame, GTextOverflowModeWordWrap, text_align,
         title_attributes);
     title_size.w = title_frame.size.w;
     title_pos = title_frame.origin;
-    cursor.y = title_frame.origin.y + title_size.h;
+    cursor.y = title_frame.origin.y + title_size.h + style->title_padding;
   }
 
   if (has_subtitle) {
@@ -227,16 +257,17 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
         subtitle_frame.origin.y += subtitle_icon_bounds.size.h;
       });
     }
-    enable_text_flow_and_paging(self, title_attributes, &subtitle_frame);
+    PBL_IF_ROUND_ELSE(
+        enable_text_flow_and_paging(self, subtitle_attributes, &subtitle_frame), NOOP);
     subtitle_size = graphics_text_layout_get_content_size_with_attributes(
-        subtitle->text, title_font, subtitle_frame, GTextOverflowModeWordWrap, text_align,
+        subtitle->text, subtitle_font, subtitle_frame, GTextOverflowModeWordWrap, text_align,
         subtitle_attributes);
     subtitle_size.w = subtitle_frame.size.w;
     subtitle_pos = subtitle_frame.origin;
     if (subtitle_icon) {
       subtitle_pos.x += subtitle_icon_bounds.size.w;
     }
-    cursor.y = subtitle_frame.origin.y + subtitle_size.h;
+    cursor.y = subtitle_frame.origin.y + subtitle_size.h + style->subtitle_padding;
   }
 
   if (body_image) {
@@ -252,7 +283,8 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       image_pos = body_rect.origin;
       body_rect.origin.y += body_image_bounds.size.h;
     }
-    enable_text_flow_and_paging(self, body_attributes, &body_rect);
+    PBL_IF_ROUND_ELSE(
+        enable_text_flow_and_paging(self, body_attributes, &body_rect), NOOP);
     GSize body_size = graphics_text_layout_get_content_size_with_attributes(
         body->text, body_font, body_rect, GTextOverflowModeWordWrap, text_align, body_attributes);
     if (self->window.is_scrollable) {

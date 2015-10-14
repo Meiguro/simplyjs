@@ -409,6 +409,9 @@ var CardStyleTypes = [
   'small',
   'large',
   'mono',
+  'time-small',
+  'time-large',
+  'time-mono',
 ];
 
 var CardStyleType = makeArrayType(CardStyleTypes);

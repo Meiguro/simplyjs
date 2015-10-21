@@ -115,7 +115,7 @@ static void show_window_sdk_2(SimplyWindowStack *self, SimplyWindow *window, boo
 #endif
 
 void simply_window_stack_show(SimplyWindowStack *self, SimplyWindow *window, bool is_push) {
-  SDK_SELECT(show_window_sdk_3, show_window_sdk_2)(self, window, is_push);
+  IF_SDK_3_ELSE(show_window_sdk_3, show_window_sdk_2)(self, window, is_push);
 }
 
 void simply_window_stack_pop(SimplyWindowStack *self, SimplyWindow *window) {
@@ -142,11 +142,11 @@ void simply_window_stack_send_show(SimplyWindowStack *self, SimplyWindow *window
 void simply_window_stack_send_hide(SimplyWindowStack *self, SimplyWindow *window) {
   if (window->id && !self->is_showing) {
     send_window_hide(self->simply->msg, window->id);
-    SDK_SELECT(NONE, {
+    IF_SDK_2_ELSE({
       if (!self->is_hiding) {
         window_stack_push(self->pusher, false);
       }
-    });
+    }, NULL);
   }
 }
 
@@ -183,9 +183,9 @@ SimplyWindowStack *simply_window_stack_create(Simply *simply) {
   SimplyWindowStack *self = malloc(sizeof(*self));
   *self = (SimplyWindowStack) { .simply = simply };
 
-  SDK_SELECT(NONE, {
+  IF_SDK_2_ELSE({
     self->pusher = window_create();
-  });
+  }, NULL);
 
   return self;
 }
@@ -195,10 +195,10 @@ void simply_window_stack_destroy(SimplyWindowStack *self) {
     return;
   }
 
-  SDK_SELECT(NONE, {
+  IF_SDK_2_ELSE({
     window_destroy(self->pusher);
     self->pusher = NULL;
-  });
+  }, NULL);
 
   free(self);
 }

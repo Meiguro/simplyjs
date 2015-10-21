@@ -110,7 +110,7 @@ typedef struct {
   const uint8_t *data;
 } CreateDataContext;
 
-static GBitmap *create_bitmap_with_data(SimplyImage *image, void *data) {
+static GBitmap *SDK_2_USAGE create_bitmap_with_data(SimplyImage *image, void *data) {
   CreateDataContext *ctx = data;
   GBitmap *bitmap = gbitmap_create_blank(ctx->size, GBitmapFormat1Bit);
   if (bitmap) {

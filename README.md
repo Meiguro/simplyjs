@@ -25,7 +25,7 @@ Pebble.js applications run on your phone. They have access to all the resources 
    
    The main entry point for your application is in the `src/js/app.js` file.
 
-   [Install the Pebble SDK on your computer >](http://developer.getpebble.com/2/getting-started/)
+   [Install the Pebble SDK on your computer >](http://developer.getpebble.com/sdk/install/)
 
 
 Pebble.js applications follow modern JavaScript best practices. To get started, you just need to call `require('ui')` to load the UI module and start building user interfaces.

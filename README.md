@@ -21,11 +21,11 @@ Pebble.js applications run on your phone. They have access to all the resources 
 
  * With the Pebble SDK
 
-   This option allows you to customize Pebble.js. Follow the [Pebble SDK installation instructions](http://developer.getpebble.com/2/getting-started/) to install the SDK on your computer and [fork this project](http://github.com/pebble/pebblejs) on Github. 
+   This option allows you to customize Pebble.js. Follow the [Pebble SDK installation instructions](https://developer.pebble.com/sdk/install/) to install the SDK on your computer and [fork this project](http://github.com/pebble/pebblejs) on Github. 
    
    The main entry point for your application is in the `src/js/app.js` file.
 
-   [Install the Pebble SDK on your computer >](http://developer.getpebble.com/sdk/install/)
+   [Install the Pebble SDK on your computer >](http://developer.pebble.com/sdk/install/)
 
 
 Pebble.js applications follow modern JavaScript best practices. To get started, you just need to call `require('ui')` to load the UI module and start building user interfaces.
@@ -130,7 +130,7 @@ wind.show();
 
 ## Using Fonts
 
-You can use any of the Pebble system fonts in your Pebble.js applications. Please refer to [this Pebble Developer's blog post](https://developer.getpebble.com/blog/2013/07/24/Using-Pebble-System-Fonts/) for a list of all the Pebble system fonts. When referring to a font, using lowercase with dashes is recommended. For example, `GOTHIC_18_BOLD` becomes `gothic-18-bold`.
+You can use any of the Pebble system fonts in your Pebble.js applications. Please refer to [this Pebble Developer's blog post](https://developer.pebble.com/blog/2013/07/24/Using-Pebble-System-Fonts/) for a list of all the Pebble system fonts. When referring to a font, using lowercase with dashes is recommended. For example, `GOTHIC_18_BOLD` becomes `gothic-18-bold`.
 
 ````js
 var Vector2 = require('vector2');
@@ -173,7 +173,7 @@ Exporting is possible by modifying or setting `module.exports` within the requir
 
 ### Pebble
 
-The `Pebble` object from [PebbleKit JavaScript](https://developer.getpebble.com/2/guides/javascript-guide.html) is available as a global variable. Its usage is discouraged in Pebble.js, instead you should use the objects documented below who provide a cleaner object interface to the same functionalities.
+The `Pebble` object from [PebbleKit JavaScript](https://developer.pebble.com/guides/pebble-apps/pebblekit-js/) is available as a global variable. Its usage is discouraged in Pebble.js, instead you should use the objects documented below who provide a cleaner object interface to the same functionalities.
 
 ### window -- browser
 

@@ -204,7 +204,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       subtitle_frame.size.w -= subtitle_icon_bounds.size.w;
     }
     subtitle_size = graphics_text_layout_get_content_size(subtitle->text,
-        title_font, subtitle_frame, GTextOverflowModeWordWrap, GTextAlignmentLeft);
+        subtitle_font, subtitle_frame, GTextOverflowModeWordWrap, GTextAlignmentLeft);
     subtitle_size.w = subtitle_frame.size.w;
     subtitle_pos = cursor;
     if (subtitle_icon) {

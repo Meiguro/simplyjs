@@ -27,18 +27,25 @@ enum ClearIndex {
   ClearImage,
 };
 
+enum SimplyStyleId {
+  SimplyStyleId_Small = 0,
+  SimplyStyleId_Large,
+  SimplyStyleId_Mono,
+  SimplyStyleId_Default = SimplyStyleId_Large,
+};
+
 static SimplyStyle STYLES[] = {
-  {
+  [SimplyStyleId_Small] = {
     .title_font = FONT_KEY_GOTHIC_24_BOLD,
     .subtitle_font = FONT_KEY_GOTHIC_18_BOLD,
     .body_font = FONT_KEY_GOTHIC_18,
   },
-  {
+  [SimplyStyleId_Large] = {
     .title_font = FONT_KEY_GOTHIC_28_BOLD,
     .subtitle_font = FONT_KEY_GOTHIC_28,
     .body_font = FONT_KEY_GOTHIC_24_BOLD,
   },
-  {
+  [SimplyStyleId_Mono] = {
     .title_font = FONT_KEY_GOTHIC_24_BOLD,
     .subtitle_font = FONT_KEY_GOTHIC_18_BOLD,
     .custom_body_font_id = RESOURCE_ID_MONO_FONT_14,
@@ -87,6 +94,7 @@ void simply_ui_clear(SimplyUi *self, uint32_t clear_mask) {
     simply_window_action_bar_clear(&self->window);
   }
   if (clear_mask & (1 << ClearText)) {
+    simply_ui_set_style(self, SimplyStyleId_Default);
     for (int textfield_id = 0; textfield_id < NumUiTextfields; ++textfield_id) {
       simply_ui_set_text(self, textfield_id, NULL);
       simply_ui_set_text_color(self, textfield_id, GColor8Black);

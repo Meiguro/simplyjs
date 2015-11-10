@@ -14,7 +14,7 @@ typedef struct SimplyWindowStack SimplyWindowStack;
 
 struct SimplyWindowStack {
   Simply *simply;
-  SDK_SELECT(NONE, Window *pusher);
+  IF_SDK_2_ELSE(Window *pusher, NONE);
   bool is_showing:1;
   bool is_hiding:1;
 };

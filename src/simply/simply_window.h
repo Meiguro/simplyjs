@@ -5,6 +5,7 @@
 #include "simply.h"
 
 #include "util/color.h"
+#include "util/sdk.h"
 #include "util/status_bar_layer.h"
 
 #include <pebble.h>

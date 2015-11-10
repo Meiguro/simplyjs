@@ -310,6 +310,9 @@ bool simply_window_disappear(SimplyWindow *self) {
 }
 
 void simply_window_unload(SimplyWindow *self) {
+  // Unregister the click config provider
+  window_set_click_config_provider_with_context(self->window, NULL, NULL);
+
   scroll_layer_destroy(self->scroll_layer);
   self->scroll_layer = NULL;
 }

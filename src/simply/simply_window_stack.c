@@ -6,6 +6,7 @@
 #include "simply.h"
 
 #include "util/math.h"
+#include "util/none.h"
 #include "util/sdk.h"
 
 #include <pebble.h>
@@ -162,7 +163,7 @@ void simply_window_stack_send_hide(SimplyWindowStack *self, SimplyWindow *window
       if (!self->is_hiding) {
         window_stack_push(self->pusher, false);
       }
-    }, NULL);
+    }, NONE);
   }
 }
 
@@ -201,7 +202,7 @@ SimplyWindowStack *simply_window_stack_create(Simply *simply) {
 
   IF_SDK_2_ELSE({
     self->pusher = window_create();
-  }, NULL);
+  }, NONE);
 
   return self;
 }
@@ -214,7 +215,7 @@ void simply_window_stack_destroy(SimplyWindowStack *self) {
   IF_SDK_2_ELSE({
     window_destroy(self->pusher);
     self->pusher = NULL;
-  }, NULL);
+  }, NONE);
 
   free(self);
 }

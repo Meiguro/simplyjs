@@ -1,6 +1,8 @@
 Pebble.js
 =========
 
+[![Build Status](https://travis-ci.org/pebble/pebblejs.svg?branch=master)](https://travis-ci.org/pebble/pebblejs)
+
 Pebble.js lets you write beautiful Pebble applications completely in JavaScript.
 
 Pebble.js applications run on your phone. They have access to all the resources of your phone (internet connectivity, GPS, almost unlimited memory, etc). Because they are written in JavaScript they are also perfect to make HTTP requests and connect your Pebble to the internet.

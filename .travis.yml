@@ -1,0 +1,25 @@
+language: python
+python:
+  - "2.7"
+
+env:
+  - PEBBLE_SDK_VERSION=3.6
+
+before_install:
+  - wget https://sdk.getpebble.com/download/$PEBBLE_SDK_VERSION?source=travis -O PebbleSDK-$PEBBLE_SDK_VERSION.tar.gz
+  - wget http://assets.getpebble.com.s3-website-us-east-1.amazonaws.com/sdk/arm-cs-tools-ubuntu-universal.tar.gz
+  - mkdir -p ~/pebble-dev
+  - tar -zxf PebbleSDK-$PEBBLE_SDK_VERSION.tar.gz -C ~/pebble-dev
+  - tar -zxf arm-cs-tools-ubuntu-universal.tar.gz -C ~/pebble-dev/PebbleSDK-$PEBBLE_SDK_VERSION
+  - touch ~/pebble-dev/ENABLE_ANALYTICS
+
+install:
+  - pushd ~/pebble-dev/PebbleSDK-$PEBBLE_SDK_VERSION
+  - virtualenv --no-site-packages .env
+  - source .env/bin/activate
+  - pip install -r requirements.txt
+  - deactivate
+  - popd
+
+script:
+  - ~/pebble-dev/PebbleSDK-$PEBBLE_SDK_VERSION/bin/pebble build

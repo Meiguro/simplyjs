@@ -1129,7 +1129,7 @@ Note that this means you may have to move portions of your startup logic into th
 
 ## Wakeup
 
-The Wakeup module allows you to schedule your app to wakeup at a specified time using Pebble's wakeup functionality. Whether the user is in a watchface or in a different app, your app while launch by the specified time. This allows you to write a custom alarm app, for example. With the Wakeup module, you can save data to be read on launch and configure your app to behave differently based on launch data. The Wakeup module, like the Settings module, is backed by localStorage.
+The Wakeup module allows you to schedule your app to wakeup at a specified time using Pebble's wakeup functionality. Whether the user is in a different watchface or app, your app while launch by the specified time. This allows you to write a custom alarm app, for example. If your app is already running, you may also subscribe to receive the wakeup event, which can be useful for more longer lived timers. With the Wakeup module, you can save data to be read on launch and configure your app to behave differently based on launch data. The Wakeup module, like the Settings module, is backed by localStorage.
 
 ### Wakeup
 
@@ -1200,6 +1200,8 @@ Finally, there are multiple reasons why setting a wakeup event can fail. When a 
 
 If you wish to change the behavior of your app depending on whether it was launched by a wakeup event, and further configure the behavior based on the data associated with the wakeup event, use `Wakeup.launch` on startup. `Wakeup.launch` will immediately call your launch callback asynchronously with a launch event detailing whether or not your app was launched by a wakeup event.
 
+If you require knowing when a wakeup event occurs while your app is already running, refer to [Wakeup.on('wakeup')] to register a wakeup callback that will be called for both launch wakeup events and wakeup events while already running.
+
 ````js
 // Query whether we were launched by a wakeup event
 Wakeup.launch(function(e) {
@@ -1216,11 +1218,56 @@ The `callback` will be called with a wakeup launch event. The event has the foll
 | Name             | Type    | Description   |
 | ----             | :----:  | ------------- |
 | `id`             | number  | If woken by a wakeup event, the wakeup event id. |
-| `wakeup`         | boolean | `true` if the app woke up by a wakeup event, otherwise `false`. |
+| `wakeup`         | boolean | `true` if the launch event is a wakeup event, otherwise `false`. |
+| `launch`         | boolean | `true` if the launch was caused by this wakeup event, otherwise `false`. |
 | `data`           | number  | If woken by a wakeup event, the custom `data` that was associated with the wakeup event. |
 | `cookie`         | number  | If woken by a wakeup event, the custom 32-bit unsigned integer `cookie` that was associated with the wakeup event. |
 
-Note that this means you may have to move portions of your startup logic into the `Wakeup.launch` callback or a function called by the callback. This can also add a very small delay to startup behavior because the underlying implementation must query the watch for the launch information.
+**Note:** You may have to move portions of your startup logic into the `Wakeup.launch` callback or a function called by the callback. This can also add a very small delay to startup behavior because the underlying implementation must query the watch for the launch information.
+
+<a id="wakeup-on-wakeup"></a>
+#### Wakeup.on('wakeup', handler)
+[Wakeup.on('wakeup')]: #wakeup-on-wakeup
+
+Registers a handler to call when a wakeup event occurs. This includes launch wakeup events and wakeup events while already running. See [Wakeup.launch] for the properties of the wakeup event object to be passed to the handler.
+
+````js
+// Single wakeup event handler example:
+Wakeup.on('wakeup', function(e) {
+  console.log('Wakeup event! ' + JSON.stringify(e));
+});
+````
+
+If you want your wakeup handler to only receive wakeup events while already running, you can either test against the `.launch` boolean property, or use a wakeup launch handler to block the event from being sent to additional handlers. Wakeup events are sent to launch wakeup handlers first, then to general wakeup handlers next.
+
+````js
+// Single already-running example:
+Wakeup.on('wakeup', function(e) {
+  if (!e.launch) {
+    console.log('Already-running wakeup: ' + JSON.stringify(e));
+  }
+});
+````
+
+**Note:** Returning false will also prevent further handlers of the same type from receiving the event.  Within each type of handlers, they are passed in registration order. The passing process ends if any handler returns false.
+
+````js
+// Launch + Already-running example:
+// Launch wakeup handler
+Wakeup.launch(function(e) {
+  if (e.wakeup) {
+    console.log('Launch wakeup: ' + JSON.stringify(e));
+  }
+  // Do not pass the event to additional handlers
+  return false;
+});
+
+// Since the launch wakeup handler returns false,
+// this becomes an already-running wakeup handler
+Wakeup.on('wakeup', function(e) {
+  console.log('Wakeup: ' + JSON.stringify(e));
+});
+````
 
 <a id="wakeup-get"></a>
 #### Wakeup.get(id)

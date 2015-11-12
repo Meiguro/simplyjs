@@ -11,7 +11,7 @@ void layer_update_callback(Layer *layer, GContext *ctx) {
 
   GRect frame = layer_get_frame(layer);
 
-#if SPLASH_LOGO
+#if defined(SPLASH_LOGO)
   graphics_draw_bitmap_centered(ctx, self->image, frame);
 #else
   graphics_draw_bitmap_in_rect(ctx, self->image, frame);
@@ -22,7 +22,7 @@ void layer_update_callback(Layer *layer, GContext *ctx) {
 static void window_load(Window *window) {
   SimplySplash *self = window_get_user_data(window);
 
-#if SPLASH_LOGO
+#if defined(SPLASH_LOGO)
   self->image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO_SPLASH);
 #else
   self->image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_TILE_SPLASH);

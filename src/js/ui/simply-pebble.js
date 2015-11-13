@@ -772,13 +772,12 @@ var NumCommandsPacket = new struct([
 
 var VoiceDictationStartPacket = new struct([
   [Packet, 'packet'],
-  ['uint32', 'id'],
 ]);
 
 var VoiceDictationDataPacket = new struct([
   [Packet, 'packet'],
-  ['int8', 'err'],
-  ['cstring', 'result'],
+  ['int8', 'status'],
+  ['cstring', 'transcription'],
 ]);
 
 var CommandPackets = [
@@ -1134,25 +1133,31 @@ SimplyPebble.accelConfig = function(def) {
 };
 
 SimplyPebble.voiceDictationSession = function(callback) {
+  // If there's a transcription in progress
   if (SimplyPebble.dictationCallback) {
-    callback(-1, null);
+    callback( { 'status': -1, 'transcription': null } );
     return;
   }
 
-  SimplyPebble.dictationCallback = callback;
+  // Grab the current window to re-show once we're done
   SimplyPebble.window = WindowStack.top();
 
+  // Set the callback and send the packet
+  SimplyPebble.dictationCallback = callback;
   SimplyPebble.sendPacket(VoiceDictationStartPacket);
 }
 
 SimplyPebble.onVoiceData = function(packet) {
   if (!SimplyPebble.dictationCallback) {
+    // Something bad happened
     console.log("No callback specified for dictation session");
   } else {
-    SimplyPebble.dictationCallback(packet.err(), packet.result());
+    // invoke and clear the callback
+    SimplyPebble.dictationCallback( { 'status': packet.status(), 'transcription': packet.transcription() } );
     SimplyPebble.dictationCallback = null;
   }
 
+  // show the top window to re-register handlers, etc. 
   SimplyPebble.window.show();
 }
 

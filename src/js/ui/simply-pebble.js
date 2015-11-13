@@ -1130,7 +1130,7 @@ SimplyPebble.accelConfig = function(def) {
 SimplyPebble.voiceDictationSession = function(callback, enableConfirmation) {
   // If there's a transcription in progress
   if (SimplyPebble.dictationCallback) {
-    callback( { 'status': -1, 'transcription': null } );
+    callback({ 'status': -1, 'transcription': null });
     return;
   }
 
@@ -1148,7 +1148,7 @@ SimplyPebble.onVoiceData = function(packet) {
     console.log("No callback specified for dictation session");
   } else {
     // invoke and clear the callback
-    SimplyPebble.dictationCallback( { 'status': packet.status(), 'transcription': packet.transcription() } );
+    SimplyPebble.dictationCallback({ 'status': packet.status(), 'transcription': packet.transcription() });
     SimplyPebble.dictationCallback = null;
   }
 

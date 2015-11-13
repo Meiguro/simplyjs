@@ -19,20 +19,26 @@ typedef struct VoiceDataPacket VoiceDataPacket;
 struct __attribute__((__packed__)) VoiceDataPacket {
   Packet packet;
   int8_t status;
-  char result[SIMPLY_VOICE_BUFFER_LENGTH];
+  char result[];
 };
 
 static SimplyVoice *s_voice;
 
 static bool send_voice_data(int status, char *transcription) {
-  VoiceDataPacket packet = {
+  size_t transcription_length = strlen(transcription);
+  size_t packet_length = sizeof(VoiceDataPacket) + transcription_length;
+  
+  uint8_t buffer[packet_length];
+  VoiceDataPacket *packet = (VoiceDataPacket *)buffer;
+  *packet = (VoiceDataPacket) {
     .packet.type = CommandVoiceData,
-    .packet.length = sizeof(packet),
+    .packet.length = packet_length,
     .status = (uint8_t) status,
   };
-  snprintf(packet.result, sizeof(packet.result), "%s", transcription);
 
-  return simply_msg_send_packet(&packet.packet);
+  strncpy(packet->result, transcription, transcription_length);
+
+  return simply_msg_send_packet(&packet->packet);
 }
 
 #ifndef PBL_SDK_2

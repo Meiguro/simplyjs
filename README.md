@@ -397,14 +397,6 @@ You can use the accelerometer in two different ways:
 var Accel = require('ui/accel');
 ````
 
-#### Accel.init()
-
-Before you can use the accelerometer, you must call `Accel.init()`.
-
-````js
-Accel.init();
-````
-
 #### Accel.config(accelConfig)
 
 This function configures the accelerometer `data` events to your liking. The `tap` event requires no configuration for use. Configuring the accelerometer is a very error prone process, so it is recommended to not configure the accelerometer and use `data` events with the default configuration without calling `Accel.config`.

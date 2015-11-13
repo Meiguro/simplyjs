@@ -146,16 +146,6 @@ wind.add(textfield);
 wind.show();
 ````
 
-## Examples
-
-Coming Soon!
-
-## Acknowledgements
-
-Pebble.js started as [Simply.JS](http://simplyjs.io), a project by [Meiguro](http://github.com/meiguro). It is now part of the Pebble SDK and supported by Pebble. Contact [devsupport@getpebble.com](mailto:devsupport@getpebble.com) with any questions!
-
-This documentation uses [Flatdoc](http://ricostacruz.com/flatdoc/#flatdoc).
-
 # API Reference
 
 ## Global namespace
@@ -1338,3 +1328,13 @@ For more information, see [Vector2 in the three.js reference documentation][thre
 [Text]: #text
 [TimeText]: #timetext
 [three.js Vector2]: http://threejs.org/docs/#Reference/Math/Vector2
+
+## Examples
+
+Coming Soon!
+
+## Acknowledgements
+
+Pebble.js started as [Simply.JS](http://simplyjs.io), a project by [Meiguro](http://github.com/meiguro). It is now part of the Pebble SDK and supported by Pebble. Contact [devsupport@getpebble.com](mailto:devsupport@getpebble.com) with any questions!
+
+This documentation uses [Flatdoc](http://ricostacruz.com/flatdoc/#flatdoc).

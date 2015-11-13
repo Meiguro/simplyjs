@@ -14,7 +14,7 @@ struct __attribute__((__packed__)) VoiceDataPacket {
   char result[SIMPLY_VOICE_BUFFER_LENGTH];
 };
 
-static SimplyVoice *s_voice = NULL;
+static SimplyVoice *s_voice;
 
 static bool send_voice_data(int status, char *transcription) {
   VoiceDataPacket packet = {
@@ -22,13 +22,13 @@ static bool send_voice_data(int status, char *transcription) {
     .packet.length = sizeof(packet),
     .status = (uint8_t) status,
   };
-  
   snprintf(packet.result, sizeof(packet.result), "%s", transcription);
 
   return simply_msg_send_packet(&packet.packet);
 }
 
 #ifndef PBL_SDK_2
+  // Define a callback for the dictation session
   static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, char *transcription, void *context) {
     s_voice->inProgress = false;
 
@@ -37,18 +37,27 @@ static bool send_voice_data(int status, char *transcription) {
   }
 #endif
 
+static void timer_callback_start_dictation(void *data) {
+  dictation_session_start(s_voice->session);
+}
+
+
 static void handle_voice_start_packet(Simply *simply, Packet *data) {
   #ifdef PBL_SDK_2
+  // send an immediate reply if we don't support voice
   send_voice_data(-1, "");
   #else
 
+  // Send an immediate response if there's already a dictation session in progress
   if (s_voice->inProgress) {
+    send_voice_data(-1, "");
     return;
   }
 
+  // Otherwise, start the timer as soon as possible
+  // (we start a timer so we can return true as quickly as possible)
   s_voice->inProgress = true;
-  dictation_session_start(s_voice->session);
-
+  s_voice->timer = app_timer_register(0, timer_callback_start_dictation, NULL);
   #endif
 }
 

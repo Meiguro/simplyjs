@@ -18,6 +18,7 @@ typedef struct SimplyVoice SimplyVoice;
 struct SimplyVoice {
   Simply *simply;
   DictationSession *session;
+  AppTimer *timer;
 
   bool inProgress;
 };

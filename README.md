@@ -13,7 +13,7 @@ Pebble.js applications run on your phone. They have access to all the resources 
 
 ## Getting Started
 
- * In CloudPebble
+ * In CloudPebble 
 
    The easiest way to use Pebble.js is in [CloudPebble](https://cloudpebble.net). Select the 'Pebble.js' project type when creating a new project.
 
@@ -475,6 +475,34 @@ wind.on('accelData', function(e) {
  console.log('Accel data: ' + JSON.stringify(e.accels));
 });
 ````
+
+### Voice
+
+The `Voice` module allows you to interact with Pebble's dictation API on supported platforms (Basalt and Chalk).
+
+````js
+var Voice = require('ui/voice');
+````
+
+#### Voice.startDictationSession(callback)
+
+This function starts the dictation UI, and invokes the callback upon completion. The callback is invoked with an event with the following fields:
+
+* `status`: The [DictationSessionStatus](https://developer.getpebble.com/docs/c/Foundation/Dictation/#DictationSessionStatus) (or -1 if the platform is not supported).
+* `transcription`: The transcribed string
+
+```js
+Voice.startDictationSession(function(e) {
+  if (e.status != 0) {
+    // if there was an error
+    console.log('Error: ' + e.status);
+    return;
+  }
+
+  // Log the result
+  console.log('Success: ' + e.transcription);
+});
+```
 
 ### Window
 

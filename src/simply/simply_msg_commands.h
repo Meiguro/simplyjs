@@ -53,4 +53,6 @@ enum Command {
   CommandElementAnimate,
   CommandElementAnimateDone,
   NumCommands,
+  CommandVoiceStart,
+  CommandVoiceData,
 };

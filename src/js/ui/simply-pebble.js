@@ -5,6 +5,7 @@ var Wakeup = require('wakeup');
 var Timeline = require('timeline');
 var Resource = require('ui/resource');
 var Accel = require('ui/accel');
+var Voice = require('ui/voice');
 var ImageService = require('ui/imageservice');
 var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
@@ -764,6 +765,22 @@ var ElementAnimateDonePacket = new struct([
   ['uint32', 'id'],
 ]);
 
+var NumCommandsPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+]);
+
+var VoiceDictationStartPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+]);
+
+var VoiceDictationDataPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'err'],
+  ['cstring', 'result'],
+]);
+
 var CommandPackets = [
   Packet,
   SegmentPacket,
@@ -815,6 +832,9 @@ var CommandPackets = [
   ElementImagePacket,
   ElementAnimatePacket,
   ElementAnimateDonePacket,
+  NumCommandsPacket,
+  VoiceDictationStartPacket,
+  VoiceDictationDataPacket,
 ];
 
 var accelAxes = [
@@ -1113,6 +1133,29 @@ SimplyPebble.accelConfig = function(def) {
   SimplyPebble.sendPacket(AccelConfigPacket.prop(def));
 };
 
+SimplyPebble.voiceDictationSession = function(callback) {
+  if (SimplyPebble.dictationCallback) {
+    callback(-1, null);
+    return;
+  }
+
+  SimplyPebble.dictationCallback = callback;
+  SimplyPebble.window = WindowStack.top();
+
+  SimplyPebble.sendPacket(VoiceDictationStartPacket);
+}
+
+SimplyPebble.onVoiceData = function(packet) {
+  if (!SimplyPebble.dictationCallback) {
+    console.log("No callback specified for dictation session");
+  } else {
+    SimplyPebble.dictationCallback(packet.err(), packet.result());
+    SimplyPebble.dictationCallback = null;
+  }
+
+  SimplyPebble.window.show();
+}
+
 SimplyPebble.menuClear = function() {
   SimplyPebble.sendPacket(MenuClearPacket);
 };
@@ -1381,11 +1424,15 @@ SimplyPebble.onPacket = function(buffer, offset) {
     case ElementAnimateDonePacket:
       StageElement.emitAnimateDone(packet.id());
       break;
+    case VoiceDictationDataPacket:
+      SimplyPebble.onVoiceData(packet);
+      break;
   }
 };
 
 SimplyPebble.onAppMessage = function(e) {
   var data = e.payload[0];
+  
   Packet._view = toArrayBuffer(data);
 
   var offset = 0;

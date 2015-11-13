@@ -20,7 +20,7 @@ struct SimplyVoice {
   DictationSession *session;
   AppTimer *timer;
 
-  bool inProgress;
+  bool in_progress;
 };
 
 SimplyVoice *simply_voice_create(Simply *simply);

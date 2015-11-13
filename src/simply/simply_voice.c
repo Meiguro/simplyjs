@@ -38,7 +38,7 @@ static bool send_voice_data(int status, char *transcription) {
 #ifndef PBL_SDK_2
 // Define a callback for the dictation session
 static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, char *transcription, void *context) {
-  s_voice->inProgress = false;
+  s_voice->in_progress = false;
 
   // Send the result
   send_voice_data(status, transcription);
@@ -57,14 +57,14 @@ static void handle_voice_start_packet(Simply *simply, Packet *data) {
   #else
 
   // Send an immediate response if there's already a dictation session in progress
-  if (s_voice->inProgress) {
+  if (s_voice->in_progress) {
     send_voice_data(-1, "");
     return;
   }
 
   // Otherwise, start the timer as soon as possible
   // (we start a timer so we can return true as quickly as possible)
-  s_voice->inProgress = true;
+  s_voice->in_progress = true;
 
   VoiceStartPacket *packet = (VoiceStartPacket*) data;
   dictation_session_enable_confirmation(s_voice->session, packet->enableConfirmation);
@@ -90,7 +90,7 @@ SimplyVoice *simply_voice_create(Simply *simply) {
   SimplyVoice *self = malloc(sizeof(*self));
   *self = (SimplyVoice) {
     .simply = simply,
-    .inProgress = false,
+    .in_progress = false,
   };
 
   #ifndef PBL_SDK_2

@@ -55,12 +55,9 @@ main.on('click', 'select', function(e) {
 });
 
 main.on('click', 'down', function(e) {
-  Voice.startDictationSession(function(err, transcription) {
-    if (err) {
-      main.subtitle("An error occured :(");
-      return;
-    }
-
-    main.subtitle(transcription);
-  });
+  var card = new UI.Card();
+  card.title('A Card');
+  card.subtitle('Is a Window');
+  card.body('The simplest window type in Pebble.js.');
+  card.show();
 });

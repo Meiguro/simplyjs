@@ -772,6 +772,7 @@ var NumCommandsPacket = new struct([
 
 var VoiceDictationStartPacket = new struct([
   [Packet, 'packet'],
+  ['bool', 'enableConfirmation'],
 ]);
 
 var VoiceDictationDataPacket = new struct([
@@ -1132,7 +1133,7 @@ SimplyPebble.accelConfig = function(def) {
   SimplyPebble.sendPacket(AccelConfigPacket.prop(def));
 };
 
-SimplyPebble.voiceDictationSession = function(callback) {
+SimplyPebble.voiceDictationSession = function(callback, enableConfirmation) {
   // If there's a transcription in progress
   if (SimplyPebble.dictationCallback) {
     callback( { 'status': -1, 'transcription': null } );
@@ -1144,7 +1145,7 @@ SimplyPebble.voiceDictationSession = function(callback) {
 
   // Set the callback and send the packet
   SimplyPebble.dictationCallback = callback;
-  SimplyPebble.sendPacket(VoiceDictationStartPacket);
+  SimplyPebble.sendPacket(VoiceDictationStartPacket.enableConfirmation(enableConfirmation));
 }
 
 SimplyPebble.onVoiceData = function(packet) {

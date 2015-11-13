@@ -6,6 +6,14 @@
 
 #include <pebble.h>
 
+typedef struct VoiceStartPacket VoiceStartPacket;
+
+struct __attribute__((__packed__)) VoiceStartPacket {
+  Packet packet;
+  bool enableConfirmation;
+};
+
+
 typedef struct VoiceDataPacket VoiceDataPacket;
 
 struct __attribute__((__packed__)) VoiceDataPacket {
@@ -57,6 +65,9 @@ static void handle_voice_start_packet(Simply *simply, Packet *data) {
   // Otherwise, start the timer as soon as possible
   // (we start a timer so we can return true as quickly as possible)
   s_voice->inProgress = true;
+
+  VoiceStartPacket *packet = (VoiceStartPacket*) data;
+  dictation_session_enable_confirmation(s_voice->session, packet->enableConfirmation);
   s_voice->timer = app_timer_register(0, timer_callback_start_dictation, NULL);
   #endif
 }

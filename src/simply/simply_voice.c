@@ -37,7 +37,8 @@ static bool send_voice_data(int status, char *transcription) {
 
 #ifndef PBL_SDK_2
 // Define a callback for the dictation session
-static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, char *transcription, void *context) {
+static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, 
+                                       char *transcription, void *context) {
   s_voice->in_progress = false;
 
   // Send the result
@@ -83,7 +84,7 @@ bool simply_voice_handle_packet(Simply *simply, Packet *packet) {
 }
 
 SimplyVoice *simply_voice_create(Simply *simply) {
-  if(s_voice) {
+  if (s_voice) {
     return s_voice;
   }
 
@@ -94,7 +95,7 @@ SimplyVoice *simply_voice_create(Simply *simply) {
   };
 
   #ifndef PBL_SDK_2
-  self->session = dictation_session_create(SIMPLY_VOICE_BUFFER_LENGTH, dictation_session_callback, NULL),
+  self->session = dictation_session_create(SIMPLY_VOICE_BUFFER_LENGTH, dictation_session_callback, NULL);
   #endif
 
   s_voice = self;

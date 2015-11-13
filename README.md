@@ -13,7 +13,7 @@ Pebble.js applications run on your phone. They have access to all the resources 
 
 ## Getting Started
 
- * In CloudPebble 
+ * In CloudPebble
 
    The easiest way to use Pebble.js is in [CloudPebble](https://cloudpebble.net). Select the 'Pebble.js' project type when creating a new project.
 

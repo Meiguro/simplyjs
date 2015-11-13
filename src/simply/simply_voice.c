@@ -28,13 +28,13 @@ static bool send_voice_data(int status, char *transcription) {
 }
 
 #ifndef PBL_SDK_2
-  // Define a callback for the dictation session
-  static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, char *transcription, void *context) {
-    s_voice->inProgress = false;
+// Define a callback for the dictation session
+static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, char *transcription, void *context) {
+  s_voice->inProgress = false;
 
-    // Send the result
-    send_voice_data(status, transcription);
-  }
+  // Send the result
+  send_voice_data(status, transcription);
+}
 #endif
 
 static void timer_callback_start_dictation(void *data) {

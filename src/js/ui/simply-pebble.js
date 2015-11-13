@@ -777,7 +777,7 @@ var VoiceDictationStartPacket = new struct([
 
 var VoiceDictationDataPacket = new struct([
   [Packet, 'packet'],
-  ['uint8', 'err'],
+  ['int8', 'err'],
   ['cstring', 'result'],
 ]);
 

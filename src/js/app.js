@@ -57,7 +57,7 @@ main.on('click', 'select', function(e) {
 main.on('click', 'down', function(e) {
   Voice.startDictationSession(function(err, transcription) {
     if (err) {
-      console.log('Error: ' + err);
+      main.subtitle("An error occured :(");
       return;
     }
 

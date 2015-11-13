@@ -765,11 +765,6 @@ var ElementAnimateDonePacket = new struct([
   ['uint32', 'id'],
 ]);
 
-var NumCommandsPacket = new struct([
-  [Packet, 'packet'],
-  ['uint32', 'id'],
-]);
-
 var VoiceDictationStartPacket = new struct([
   [Packet, 'packet'],
   ['bool', 'enableConfirmation'],
@@ -832,7 +827,6 @@ var CommandPackets = [
   ElementImagePacket,
   ElementAnimatePacket,
   ElementAnimateDonePacket,
-  NumCommandsPacket,
   VoiceDictationStartPacket,
   VoiceDictationDataPacket,
 ];

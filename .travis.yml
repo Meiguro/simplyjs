@@ -3,6 +3,7 @@ python:
   - "2.7"
 
 env:
+  - PEBBLE_SDK_VERSION=2.9
   - PEBBLE_SDK_VERSION=3.6
 
 before_install:

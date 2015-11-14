@@ -2,11 +2,24 @@ var simply = require('ui/simply');
 
 var Voice = {};
 
-Voice.startDictationSession = function(e, enableConfirmation) {
-    // default parameter value for enableDictation = true
-  enableConfirmation = typeof enableConfirmation !== 'undefined' ?  enableConfirmation : true;
+Voice.dictate = function(type, confirm, callback) {
+  type = type.toLowerCase();
+  switch (type){
+    case 'stop':
+      simply.impl.voiceDictationStop();
+      break;
+    case 'start':
+      if (typeof callback === 'undefined') {
+        callback = confirm;
+        confirm = true;
+      }
 
-  simply.impl.voiceDictationSession(e, enableConfirmation);
+      simply.impl.voiceDictationStart(callback, confirm);
+      break;
+    default:
+      console.log('Unsupported type passed to Voice.dictate');
+  }
+  
 };
 
 module.exports = Voice;

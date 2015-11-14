@@ -79,10 +79,22 @@ static void handle_voice_start_packet(Simply *simply, Packet *data) {
   #endif
 }
 
+static void handle_voice_stop_packet(Simply *simply, Packet *data) {
+  // Do nothing for SDK 2
+  #ifndef PBL_SDK_2
+  // Stop the session and clear the in_progress flag
+  dictation_session_stop(s_voice->session);
+  s_voice->in_progress = false;
+  #endif
+}
+
 bool simply_voice_handle_packet(Simply *simply, Packet *packet) {
   switch (packet->type) {
     case CommandVoiceStart:
       handle_voice_start_packet(simply, packet);
+      return true;
+    case CommandVoiceStop:
+      handle_voice_stop_packet(simply, packet);
       return true;
   }
 

@@ -770,6 +770,10 @@ var VoiceDictationStartPacket = new struct([
   ['bool', 'enableConfirmation'],
 ]);
 
+var VoiceDictationStopPacket = new struct([
+  [Packet, 'packet'],
+]);
+
 var VoiceDictationDataPacket = new struct([
   [Packet, 'packet'],
   ['int8', 'status'],
@@ -828,6 +832,7 @@ var CommandPackets = [
   ElementAnimatePacket,
   ElementAnimateDonePacket,
   VoiceDictationStartPacket,
+  VoiceDictationStopPacket,
   VoiceDictationDataPacket,
 ];
 
@@ -1127,7 +1132,7 @@ SimplyPebble.accelConfig = function(def) {
   SimplyPebble.sendPacket(AccelConfigPacket.prop(def));
 };
 
-SimplyPebble.voiceDictationSession = function(callback, enableConfirmation) {
+SimplyPebble.voiceDictationStart = function(callback, enableConfirmation) {
   // If there's a transcription in progress
   if (SimplyPebble.dictationCallback) {
     callback({ 'status': -1, 'transcription': null });
@@ -1142,6 +1147,20 @@ SimplyPebble.voiceDictationSession = function(callback, enableConfirmation) {
   SimplyPebble.sendPacket(VoiceDictationStartPacket.enableConfirmation(enableConfirmation));
 }
 
+SimplyPebble.voiceDictationStop = function() {
+  // Send the message
+  SimplyPebble.sendPacket(VoiceDictationStopPacket);
+
+  // Clear the callback variable
+  state.dictationCallback = null;
+
+  // If we have a window stored, show it then clear the varaible
+  if (state.dictationWindow) {
+    state.dictationWindow.show();
+    state.dictationWindow = null;
+  }
+}
+
 SimplyPebble.onVoiceData = function(packet) {
   if (!state.dictationCallback) {
     // Something bad happened
@@ -1154,6 +1173,7 @@ SimplyPebble.onVoiceData = function(packet) {
 
   // show the top window to re-register handlers, etc. 
   state.dictationWindow.show();
+  state.dictationWindow = null;
 }
 
 SimplyPebble.menuClear = function() {

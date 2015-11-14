@@ -25,7 +25,7 @@ struct __attribute__((__packed__)) VoiceDataPacket {
 static SimplyVoice *s_voice;
 
 static bool send_voice_data(int status, char *transcription) {
-  size_t transcription_length = strlen(transcription);
+  size_t transcription_length = strlen(transcription) + 1;
   size_t packet_length = sizeof(VoiceDataPacket) + transcription_length;
   
   uint8_t buffer[packet_length];

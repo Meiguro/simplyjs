@@ -1150,8 +1150,15 @@ SimplyPebble.accelConfig = function(def) {
 SimplyPebble.voiceDictationStart = function(callback, enableConfirmation) {
   // If there's a transcription in progress
   if (SimplyPebble.dictationCallback) {
-    // DictationSessionStatus[64] = dictationAlreadyInProgress
-    callback({ 'err': DictationSessionStatus[64], 'transcription': null });
+    // Create the eror event
+    var e = {
+      'err': DictationSessionStatus[64],  // dictationAlreadyInProgress
+      'failed': true,
+      'transcription': null,
+    };
+    
+    // Invoke the callback and return    
+    callback(e);
     return;
   }
 
@@ -1182,8 +1189,13 @@ SimplyPebble.onVoiceData = function(packet) {
     // Something bad happened
     console.log("No callback specified for dictation session");
   } else {
+    var e = {
+      'err': DictationSessionStatus[packet.status()], 
+      'failed': packet.status() != 0,
+      'transcription': packet.transcription(),
+    };
     // invoke and clear the callback
-    state.dictationCallback({ 'err': DictationSessionStatus[packet.status()], 'transcription': packet.transcription() });
+    state.dictationCallback(e);
     state.dictationCallback = null;
   }
 

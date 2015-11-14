@@ -6,6 +6,7 @@
 
 var UI = require('ui');
 var Vector2 = require('vector2');
+var Voice = require('ui/voice');
 
 var main = new UI.Card({
   title: 'Pebble.js',
@@ -54,9 +55,13 @@ main.on('click', 'select', function(e) {
 });
 
 main.on('click', 'down', function(e) {
-  var card = new UI.Card();
-  card.title('A Card');
-  card.subtitle('Is a Window');
-  card.body('The simplest window type in Pebble.js.');
-  card.show();
+  Voice.dictate('start', false, function(e) {
+    console.log(e.failed);
+    if (e.err) {
+      console.log('Error: ' + e.err);
+      return;
+    }
+
+    main.subtitle('Success: ' + e.transcription);
+  });
 });

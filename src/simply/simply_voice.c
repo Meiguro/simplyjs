@@ -10,7 +10,7 @@ typedef struct VoiceStartPacket VoiceStartPacket;
 
 struct __attribute__((__packed__)) VoiceStartPacket {
   Packet packet;
-  bool enableConfirmation;
+  bool enable_confirmation;
 };
 
 
@@ -76,7 +76,7 @@ static void handle_voice_start_packet(Simply *simply, Packet *data) {
   s_voice->in_progress = true;
 
   VoiceStartPacket *packet = (VoiceStartPacket*) data;
-  dictation_session_enable_confirmation(s_voice->session, packet->enableConfirmation);
+  dictation_session_enable_confirmation(s_voice->session, packet->enable_confirmation);
   s_voice->timer = app_timer_register(0, timer_callback_start_dictation, NULL);
   #endif
 }

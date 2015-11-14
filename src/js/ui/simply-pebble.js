@@ -1135,25 +1135,25 @@ SimplyPebble.voiceDictationSession = function(callback, enableConfirmation) {
   }
 
   // Grab the current window to re-show once we're done
-  SimplyPebble.window = WindowStack.top();
+  state.dictationWindow = WindowStack.top();
 
   // Set the callback and send the packet
-  SimplyPebble.dictationCallback = callback;
+  state.dictationCallback = callback;
   SimplyPebble.sendPacket(VoiceDictationStartPacket.enableConfirmation(enableConfirmation));
 }
 
 SimplyPebble.onVoiceData = function(packet) {
-  if (!SimplyPebble.dictationCallback) {
+  if (!state.dictationCallback) {
     // Something bad happened
     console.log("No callback specified for dictation session");
   } else {
     // invoke and clear the callback
-    SimplyPebble.dictationCallback({ 'status': packet.status(), 'transcription': packet.transcription() });
-    SimplyPebble.dictationCallback = null;
+    state.dictationCallback({ 'status': packet.status(), 'transcription': packet.transcription() });
+    state.dictationCallback = null;
   }
 
   // show the top window to re-register handlers, etc. 
-  SimplyPebble.window.show();
+  state.dictationWindow.show();
 }
 
 SimplyPebble.menuClear = function() {

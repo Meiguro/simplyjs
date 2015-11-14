@@ -484,27 +484,35 @@ The `Voice` module allows you to interact with Pebble's dictation API on support
 var Voice = require('ui/voice');
 ````
 
-#### Voice.startDictationSession(callback, [enableConfirmation])
+#### Voice.dictate('state', [confirmDialog,] callback)
 
 This function starts the dictation UI, and invokes the callback upon completion. The callback is invoked with an event with the following fields:
 
 * `status`: The [DictationSessionStatus](https://developer.getpebble.com/docs/c/Foundation/Dictation/#DictationSessionStatus) (or -1 if the platform is not supported).
 * `transcription`: The transcribed string
 
-An optional second parameter - `enableConfirmation` - can be passed to the startDictationSession method to control the behaviour of the confirmation page. If `enableConfirmation` is to `false`, the confirmation page will be skipped, otherwise it will be included in the dictation flow.
+An optional second parameter - `confirmDialog` - can be passed to the `Voice.dictate` method to control the behaviour of the confirmation dialog. If `confirmDialog` is set to `false`, the confirmation page will be skipped, otherwise it will be included in the dictation flow.
 
 ```js
 // Start a diction session and skip confirmation
-Voice.startDictationSession(function(e) {
-  if (e.status != 0) {
-    // if there was an error
+Voice.dictate('start', false, function(e) {
+  if (e.status) {
     console.log('Error: ' + e.status);
     return;
   }
 
-  // Log the result
-  console.log('Success: ' + e.transcription);
-}, false);
+  main.subtitle('Success: ' + e.transcription);
+});
+```
+
+**NOTE:** Only one dictation session can be active at any time. Trying to call `Voice.dicate('start', ...)` while another dictation session is in progress will result in the callback being called immediatly with status = -1.
+
+#### Voice.dictate('stop')
+
+This function stops a dictation session that is currently in progress and prevents the session's callback from being invoked. If no session is in progress this method has no effect.
+
+```
+Voice.dictate('stop');
 ```
 
 ### Window

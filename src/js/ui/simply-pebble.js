@@ -1189,6 +1189,11 @@ SimplyPebble.onVoiceData = function(packet) {
     // Something bad happened
     console.log("No callback specified for dictation session");
   } else {
+
+    // show the top window to re-register handlers, etc. 
+    state.dictationWindow.show();
+    state.dictationWindow = null;
+
     var e = {
       'err': DictationSessionStatus[packet.status()], 
       'failed': packet.status() != 0,
@@ -1198,10 +1203,6 @@ SimplyPebble.onVoiceData = function(packet) {
     state.dictationCallback(e);
     state.dictationCallback = null;
   }
-
-  // show the top window to re-register handlers, etc. 
-  state.dictationWindow.show();
-  state.dictationWindow = null;
 }
 
 SimplyPebble.menuClear = function() {

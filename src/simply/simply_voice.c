@@ -130,3 +130,7 @@ void simply_voice_destroy(SimplyVoice *self) {
   free(self);
   s_voice = NULL;
 }
+
+bool simply_voice_dictation_in_progress() {
+  return s_voice->in_progress;
+}

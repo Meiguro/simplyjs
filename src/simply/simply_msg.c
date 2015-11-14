@@ -1,6 +1,7 @@
 #include "simply_msg.h"
 
 #include "simply_accel.h"
+#include "simply_voice.h"
 #include "simply_res.h"
 #include "simply_stage.h"
 #include "simply_menu.h"
@@ -22,7 +23,7 @@
 
 static const size_t APP_MSG_SIZE_INBOUND = 2044;
 
-static const size_t APP_MSG_SIZE_OUTBOUND = 512;
+static const size_t APP_MSG_SIZE_OUTBOUND = 1024;
 
 typedef enum VibeType VibeType;
 
@@ -201,6 +202,7 @@ static void handle_packet(Simply *simply, Packet *packet) {
   if (simply_window_handle_packet(simply, packet)) { return; }
   if (simply_ui_handle_packet(simply, packet)) { return; }
   if (simply_accel_handle_packet(simply, packet)) { return; }
+  if (simply_voice_handle_packet(simply, packet)) { return; }
   if (simply_menu_handle_packet(simply, packet)) { return; }
   if (simply_stage_handle_packet(simply, packet)) { return; }
 }

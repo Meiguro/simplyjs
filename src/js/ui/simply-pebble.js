@@ -5,6 +5,7 @@ var Wakeup = require('wakeup');
 var Timeline = require('timeline');
 var Resource = require('ui/resource');
 var Accel = require('ui/accel');
+var Voice = require('ui/voice');
 var ImageService = require('ui/imageservice');
 var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
@@ -429,6 +430,21 @@ var LightTypes = [
 
 var LightType = makeArrayType(LightTypes);
 
+var DictationSessionStatus = [
+  null,
+  'transcriptionRejected',
+  'transcriptionRejectedWithError',
+  'systemAborted',
+  'noSpeechDetected',
+  'connectivityError',
+  'disabled',
+  'internalError',
+  'recognizerError',
+];
+// Custom Dictation Errors:
+DictationSessionStatus[64] = "sessionAlreadyInProgress";
+DictationSessionStatus[65] = "noMicrophone";
+
 var Packet = new struct([
   ['uint16', 'type'],
   ['uint16', 'length'],
@@ -764,6 +780,21 @@ var ElementAnimateDonePacket = new struct([
   ['uint32', 'id'],
 ]);
 
+var VoiceDictationStartPacket = new struct([
+  [Packet, 'packet'],
+  ['bool', 'enableConfirmation'],
+]);
+
+var VoiceDictationStopPacket = new struct([
+  [Packet, 'packet'],
+]);
+
+var VoiceDictationDataPacket = new struct([
+  [Packet, 'packet'],
+  ['int8', 'status'],
+  ['cstring', 'transcription'],
+]);
+
 var CommandPackets = [
   Packet,
   SegmentPacket,
@@ -815,6 +846,9 @@ var CommandPackets = [
   ElementImagePacket,
   ElementAnimatePacket,
   ElementAnimateDonePacket,
+  VoiceDictationStartPacket,
+  VoiceDictationStopPacket,
+  VoiceDictationDataPacket,
 ];
 
 var accelAxes = [
@@ -1113,6 +1147,63 @@ SimplyPebble.accelConfig = function(def) {
   SimplyPebble.sendPacket(AccelConfigPacket.prop(def));
 };
 
+SimplyPebble.voiceDictationStart = function(callback, enableConfirmation) {
+  // If there's a transcription in progress
+  if (SimplyPebble.dictationCallback) {
+    // Create the eror event
+    var e = {
+      'err': DictationSessionStatus[64],  // dictationAlreadyInProgress
+      'failed': true,
+      'transcription': null,
+    };
+    
+    // Invoke the callback and return    
+    callback(e);
+    return;
+  }
+
+  // Grab the current window to re-show once we're done
+  state.dictationWindow = WindowStack.top();
+
+  // Set the callback and send the packet
+  state.dictationCallback = callback;
+  SimplyPebble.sendPacket(VoiceDictationStartPacket.enableConfirmation(enableConfirmation));
+}
+
+SimplyPebble.voiceDictationStop = function() {
+  // Send the message
+  SimplyPebble.sendPacket(VoiceDictationStopPacket);
+
+  // Clear the callback variable
+  state.dictationCallback = null;
+
+  // If we have a window stored, show it then clear the varaible
+  if (state.dictationWindow) {
+    state.dictationWindow.show();
+    state.dictationWindow = null;
+  }
+}
+
+SimplyPebble.onVoiceData = function(packet) {
+  if (!state.dictationCallback) {
+    // Something bad happened
+    console.log("No callback specified for dictation session");
+  } else {
+    var e = {
+      'err': DictationSessionStatus[packet.status()], 
+      'failed': packet.status() != 0,
+      'transcription': packet.transcription(),
+    };
+    // invoke and clear the callback
+    state.dictationCallback(e);
+    state.dictationCallback = null;
+  }
+
+  // show the top window to re-register handlers, etc. 
+  state.dictationWindow.show();
+  state.dictationWindow = null;
+}
+
 SimplyPebble.menuClear = function() {
   SimplyPebble.sendPacket(MenuClearPacket);
 };
@@ -1381,11 +1472,15 @@ SimplyPebble.onPacket = function(buffer, offset) {
     case ElementAnimateDonePacket:
       StageElement.emitAnimateDone(packet.id());
       break;
+    case VoiceDictationDataPacket:
+      SimplyPebble.onVoiceData(packet);
+      break;
   }
 };
 
 SimplyPebble.onAppMessage = function(e) {
   var data = e.payload[0];
+  
   Packet._view = toArrayBuffer(data);
 
   var offset = 0;

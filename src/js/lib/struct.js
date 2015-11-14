@@ -139,6 +139,7 @@ struct.prototype._prevField = function(field) {
 struct.prototype._makeAccessor = function(field) {
   this[field.name] = function(value) {
     var type = field.type;
+    
     if (field.dynamic) {
       var prevField = this._prevField(field);
       if (prevField === undefined) {

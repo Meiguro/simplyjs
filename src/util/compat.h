@@ -136,6 +136,11 @@ typedef union GColor8 {
   ((prop_anim)->values.to.grect = *(value_ptr))
 #endif
 
+// Voice API
+typedef struct DictationSession DictationSession;
+typedef struct DictationSessionStatus DictationSessionStatus;
+void dictation_session_start(DictationSession *session);
+
 #endif
 
 // Legacy definitions for basalt on 3.0

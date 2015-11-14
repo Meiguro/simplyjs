@@ -488,16 +488,16 @@ var Voice = require('ui/voice');
 
 This function starts the dictation UI, and invokes the callback upon completion. The callback is invoked with an event with the following fields:
 
-* `status`: The [DictationSessionStatus](https://developer.getpebble.com/docs/c/Foundation/Dictation/#DictationSessionStatus) (or -1 if the platform is not supported).
-* `transcription`: The transcribed string
+* `err`: A string describing the error, or `null` on success.
+* `transcription`: The transcribed string.
 
 An optional second parameter - `confirmDialog` - can be passed to the `Voice.dictate` method to control the behaviour of the confirmation dialog. If `confirmDialog` is set to `false`, the confirmation page will be skipped, otherwise it will be included in the dictation flow.
 
 ```js
 // Start a diction session and skip confirmation
 Voice.dictate('start', false, function(e) {
-  if (e.status) {
-    console.log('Error: ' + e.status);
+  if (e.err) {
+    console.log('Error: ' + e.err);
     return;
   }
 

@@ -430,6 +430,21 @@ var LightTypes = [
 
 var LightType = makeArrayType(LightTypes);
 
+var DictationSessionStatus = [
+  null,
+  'transcriptionRejected',
+  'transcriptionRejectedWithError',
+  'systemAborted',
+  'noSpeechDetected',
+  'connectivityError',
+  'disabled',
+  'internalError',
+  'recognizerError',
+];
+// Custom Dictation Errors:
+DictationSessionStatus[64] = "sessionAlreadyInProgress";
+DictationSessionStatus[65] = "noMicrophone";
+
 var Packet = new struct([
   ['uint16', 'type'],
   ['uint16', 'length'],
@@ -1135,7 +1150,8 @@ SimplyPebble.accelConfig = function(def) {
 SimplyPebble.voiceDictationStart = function(callback, enableConfirmation) {
   // If there's a transcription in progress
   if (SimplyPebble.dictationCallback) {
-    callback({ 'status': -1, 'transcription': null });
+    // DictationSessionStatus[64] = dictationAlreadyInProgress
+    callback({ 'err': DictationSessionStatus[64], 'transcription': null });
     return;
   }
 
@@ -1167,7 +1183,7 @@ SimplyPebble.onVoiceData = function(packet) {
     console.log("No callback specified for dictation session");
   } else {
     // invoke and clear the callback
-    state.dictationCallback({ 'status': packet.status(), 'transcription': packet.transcription() });
+    state.dictationCallback({ 'err': DictationSessionStatus[packet.status()], 'transcription': packet.transcription() });
     state.dictationCallback = null;
   }
 

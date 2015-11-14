@@ -60,12 +60,14 @@ static void timer_callback_start_dictation(void *data) {
 static void handle_voice_start_packet(Simply *simply, Packet *data) {
   #ifdef PBL_SDK_2
   // send an immediate reply if we don't support voice
-  send_voice_data(-1, "");
+  // Status 65 = NoMicrophone
+  send_voice_data(65, "");
   #else
 
   // Send an immediate response if there's already a dictation session in progress
+  // Status 64 = SessionAlreadyInProgress
   if (s_voice->in_progress) {
-    send_voice_data(-1, "");
+    send_voice_data(64, "");
     return;
   }
 

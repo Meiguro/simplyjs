@@ -300,7 +300,7 @@ bool simply_window_disappear(SimplyWindow *self) {
     return false;
   }
   // If the window is disappearing because of the dictation API
-  if(simply_voice_dictation_in_progress()) {
+  if (simply_voice_dictation_in_progress()) {
     return false;
   }
   if (simply_msg_has_communicated()) {

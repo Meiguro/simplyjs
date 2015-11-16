@@ -513,7 +513,7 @@ Voice.dictate('start', false, function(e) {
 
 This function stops a dictation session that is currently in progress and prevents the session's callback from being invoked. If no session is in progress this method has no effect.
 
-```
+```js
 Voice.dictate('stop');
 ```
 

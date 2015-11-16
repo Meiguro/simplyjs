@@ -1162,9 +1162,6 @@ SimplyPebble.voiceDictationStart = function(callback, enableConfirmation) {
     return;
   }
 
-  // Grab the current window to re-show once we're done
-  state.dictationWindow = WindowStack.top();
-
   // Set the callback and send the packet
   state.dictationCallback = callback;
   SimplyPebble.sendPacket(VoiceDictationStartPacket.enableConfirmation(enableConfirmation));
@@ -1176,12 +1173,6 @@ SimplyPebble.voiceDictationStop = function() {
 
   // Clear the callback variable
   state.dictationCallback = null;
-
-  // If we have a window stored, show it then clear the varaible
-  if (state.dictationWindow) {
-    state.dictationWindow.show();
-    state.dictationWindow = null;
-  }
 }
 
 SimplyPebble.onVoiceData = function(packet) {
@@ -1198,10 +1189,6 @@ SimplyPebble.onVoiceData = function(packet) {
     state.dictationCallback(e);
     state.dictationCallback = null;
   }
-
-  // show the top window to re-register handlers, etc. 
-  state.dictationWindow.show();
-  state.dictationWindow = null;
 }
 
 SimplyPebble.menuClear = function() {

@@ -140,6 +140,7 @@ typedef union GColor8 {
 typedef struct DictationSession DictationSession;
 typedef struct DictationSessionStatus DictationSessionStatus;
 void dictation_session_start(DictationSession *session);
+#define DictationSessionStatusFailureSystemAborted 3
 
 #endif
 

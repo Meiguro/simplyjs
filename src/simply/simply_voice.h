@@ -22,3 +22,5 @@ SimplyVoice *simply_voice_create(Simply *simply);
 void simply_voice_destroy(SimplyVoice *self);
 
 bool simply_voice_handle_packet(Simply *simply, Packet *packet);
+
+bool simply_voice_dictation_in_progress();

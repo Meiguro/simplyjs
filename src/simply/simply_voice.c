@@ -25,6 +25,12 @@ struct __attribute__((__packed__)) VoiceDataPacket {
 static SimplyVoice *s_voice;
 
 static bool send_voice_data(int status, char *transcription) {
+  // Handle NULL Case
+  if (transcription == NULL) {
+    return send_voice_data(DictationSessionStatusFailureSystemAborted, "");
+  }
+
+  // Handle success case
   size_t transcription_length = strlen(transcription) + 1;
   size_t packet_length = sizeof(VoiceDataPacket) + transcription_length;
   
@@ -129,4 +135,8 @@ void simply_voice_destroy(SimplyVoice *self) {
 
   free(self);
   s_voice = NULL;
+}
+
+bool simply_voice_dictation_in_progress() {
+  return s_voice->in_progress;
 }

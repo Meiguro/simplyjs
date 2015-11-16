@@ -486,7 +486,7 @@ The `Voice` module allows you to interact with Pebble's dictation API on support
 var Voice = require('ui/voice');
 ````
 
-#### Voice.dictate('state', [confirmDialog,] callback)
+#### Voice.dictate('start', [confirmDialog,] callback)
 
 This function starts the dictation UI, and invokes the callback upon completion. The callback is invoked with an event with the following fields:
 

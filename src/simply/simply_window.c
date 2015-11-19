@@ -106,18 +106,27 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
   layer_mark_dirty(self->layer);
 }
 
-static void prv_refresh_main_layer_frame(SimplyWindow *self) {
+static void prv_update_layer_placement(SimplyWindow *self) {
   Layer * const main_layer = self->layer ?: scroll_layer_get_layer(self->scroll_layer);
   if (!main_layer) {
     return;
   }
   GRect frame = { .size = layer_get_frame(window_get_root_layer(self->window)).size };
-  IF_SDK_3_ELSE({
-    if (layer_get_window(status_bar_layer_get_layer(self->status_bar_layer))) {
+  IF_SDK_3_ELSE(({
+    Layer * const status_bar_base_layer = status_bar_layer_get_layer(self->status_bar_layer);
+    const bool has_status_bar = (layer_get_window(status_bar_base_layer) != NULL);
+    const bool has_action_bar =
+        (layer_get_window(action_bar_layer_get_layer(self->action_bar_layer)) != NULL);
+    if (has_status_bar) {
+      GRect status_frame = { .size = { frame.size.w, STATUS_BAR_LAYER_HEIGHT } };
       frame.origin.y = STATUS_BAR_LAYER_HEIGHT;
       frame.size.h -= STATUS_BAR_LAYER_HEIGHT;
+      if (has_action_bar) {
+        status_frame.size.w -= ACTION_BAR_WIDTH;
+      }
+      layer_set_frame(status_bar_base_layer, status_frame);
     }
-  }, NONE);
+  }), NONE);
   layer_set_frame(main_layer, frame);
 }
 
@@ -139,7 +148,7 @@ void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
     return;
   }
 
-  prv_refresh_main_layer_frame(self);
+  prv_update_layer_placement(self);
 
 #ifdef PBL_SDK_2
   if (!window_stack_contains_window(self->window)) {
@@ -171,16 +180,15 @@ void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
   }
 
   action_bar_layer_remove_from_window(self->action_bar_layer);
-
   prv_set_scroll_layer_click_config(self);
 
-  if (!is_action_bar) {
-    return;
+  if (is_action_bar) {
+    action_bar_layer_set_context(self->action_bar_layer, self);
+    action_bar_layer_set_click_config_provider(self->action_bar_layer, click_config_provider);
+    action_bar_layer_add_to_window(self->action_bar_layer, self->window);
   }
 
-  action_bar_layer_set_context(self->action_bar_layer, self);
-  action_bar_layer_set_click_config_provider(self->action_bar_layer, click_config_provider);
-  action_bar_layer_add_to_window(self->action_bar_layer, self->window);
+  prv_update_layer_placement(self);
 }
 
 void simply_window_set_action_bar_icon(SimplyWindow *self, ButtonId button, uint32_t id) {

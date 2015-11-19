@@ -56,7 +56,7 @@ static GColor8 s_button_palette[] = { { GColorWhiteARGB8 }, { GColorClearARGB8 }
 
 static void click_config_provider(void *data);
 
-static bool send_click(SimplyMsg *self, Command type, ButtonId button) {
+static bool prv_send_click(SimplyMsg *self, Command type, ButtonId button) {
   ClickPacket packet = {
     .packet.type = type,
     .packet.length = sizeof(packet),
@@ -65,15 +65,15 @@ static bool send_click(SimplyMsg *self, Command type, ButtonId button) {
   return simply_msg_send_packet(&packet.packet);
 }
 
-static bool send_single_click(SimplyMsg *self, ButtonId button) {
-  return send_click(self, CommandClick, button);
+static bool prv_send_single_click(SimplyMsg *self, ButtonId button) {
+  return prv_send_click(self, CommandClick, button);
 }
 
-static bool send_long_click(SimplyMsg *self, ButtonId button) {
-  return send_click(self, CommandLongClick, button);
+static bool prv_send_long_click(SimplyMsg *self, ButtonId button) {
+  return prv_send_click(self, CommandLongClick, button);
 }
 
-static void set_scroll_layer_click_config(SimplyWindow *self) {
+static void prv_set_scroll_layer_click_config(SimplyWindow *self) {
   if (!self->scroll_layer) {
     return;
   }
@@ -89,7 +89,7 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
 
   self->is_scrollable = is_scrollable;
 
-  set_scroll_layer_click_config(self);
+  prv_set_scroll_layer_click_config(self);
 
   if (!self->layer) {
     return;
@@ -106,6 +106,22 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
   layer_mark_dirty(self->layer);
 }
 
+static void prv_refresh_main_layer_frame(SimplyWindow *self) {
+  Layer * const main_layer = self->layer ?: scroll_layer_get_layer(self->scroll_layer);
+  if (!main_layer) {
+    return;
+  }
+  GRect frame = { .size = layer_get_frame(window_get_root_layer(self->window)).size };
+  IF_SDK_3_ELSE({
+    if (layer_get_window(status_bar_layer_get_layer(self->status_bar_layer))) {
+      frame.origin.y = STATUS_BAR_LAYER_HEIGHT;
+      frame.size.h -= STATUS_BAR_LAYER_HEIGHT;
+    }
+  }, NONE);
+  layer_set_frame(main_layer, frame);
+}
+
+
 void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
   const bool was_status_bar = self->is_status_bar;
   self->is_status_bar = !is_fullscreen;
@@ -119,13 +135,11 @@ void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
     changed = true;
   }
 
-  if (!changed || !self->layer) {
+  if (!changed) {
     return;
   }
 
-  GRect frame = { GPointZero, layer_get_frame(window_get_root_layer(self->window)).size };
-  scroll_layer_set_frame(self->scroll_layer, frame);
-  layer_set_frame(self->layer, frame);
+  prv_refresh_main_layer_frame(self);
 
 #ifdef PBL_SDK_2
   if (!window_stack_contains_window(self->window)) {
@@ -145,6 +159,8 @@ void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
 
 void simply_window_set_background_color(SimplyWindow *self, GColor8 background_color) {
   self->background_color = background_color;
+  status_bar_layer_set_colors(self->status_bar_layer, background_color,
+                              gcolor_legible_over(background_color));
 }
 
 void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
@@ -156,7 +172,7 @@ void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
 
   action_bar_layer_remove_from_window(self->action_bar_layer);
 
-  set_scroll_layer_click_config(self);
+  prv_set_scroll_layer_click_config(self);
 
   if (!is_action_bar) {
     return;
@@ -227,7 +243,7 @@ void simply_window_single_click_handler(ClickRecognizerRef recognizer, void *con
     }
   }
   if (is_enabled) {
-    send_single_click(self->simply->msg, button);
+    prv_send_single_click(self->simply->msg, button);
   }
 }
 
@@ -236,7 +252,7 @@ static void long_click_handler(ClickRecognizerRef recognizer, void *context) {
   ButtonId button = click_recognizer_get_button_id(recognizer);
   bool is_enabled = (self->button_mask & (1 << button));
   if (is_enabled) {
-    send_long_click(self->simply->msg, button);
+    prv_send_long_click(self->simply->msg, button);
   }
 }
 
@@ -322,7 +338,7 @@ void simply_window_unload(SimplyWindow *self) {
   self->scroll_layer = NULL;
 }
 
-static void handle_window_props_packet(Simply *simply, Packet *data) {
+static void prv_handle_window_props_packet(Simply *simply, Packet *data) {
   WindowPropsPacket *packet = (WindowPropsPacket*) data;
   SimplyWindow *window = simply_window_stack_get_top_window(simply);
   if (!window) {
@@ -334,7 +350,7 @@ static void handle_window_props_packet(Simply *simply, Packet *data) {
   simply_window_set_scrollable(window, packet->scrollable);
 }
 
-static void handle_window_button_config_packet(Simply *simply, Packet *data) {
+static void prv_handle_window_button_config_packet(Simply *simply, Packet *data) {
   WindowButtonConfigPacket *packet = (WindowButtonConfigPacket*) data;
   SimplyWindow *window = simply_window_stack_get_top_window(simply);
   if (!window) {
@@ -343,7 +359,7 @@ static void handle_window_button_config_packet(Simply *simply, Packet *data) {
   window->button_mask = packet->button_mask;
 }
 
-static void handle_window_action_bar_packet(Simply *simply, Packet *data) {
+static void prv_handle_window_action_bar_packet(Simply *simply, Packet *data) {
   WindowActionBarPacket *packet = (WindowActionBarPacket*) data;
   SimplyWindow *window = simply_window_stack_get_top_window(simply);
   if (!window) {
@@ -359,13 +375,13 @@ static void handle_window_action_bar_packet(Simply *simply, Packet *data) {
 bool simply_window_handle_packet(Simply *simply, Packet *packet) {
   switch (packet->type) {
     case CommandWindowProps:
-      handle_window_props_packet(simply, packet);
+      prv_handle_window_props_packet(simply, packet);
       return true;
     case CommandWindowButtonConfig:
-      handle_window_button_config_packet(simply, packet);
+      prv_handle_window_button_config_packet(simply, packet);
       return true;
     case CommandWindowActionBar:
-      handle_window_action_bar_packet(simply, packet);
+      prv_handle_window_action_bar_packet(simply, packet);
       return true;
   }
   return false;
@@ -383,6 +399,7 @@ SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply) {
   simply_window_preload(self);
 
   self->status_bar_layer = status_bar_layer_create();
+  status_bar_layer_set_separator_mode(self->status_bar_layer, StatusBarLayerSeparatorModeDotted);
   status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
   self->is_status_bar = false;
   self->is_fullscreen = true;

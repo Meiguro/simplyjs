@@ -134,8 +134,10 @@ void simply_ui_set_text_color(SimplyUi *self, SimplyUiTextfieldId textfield_id, 
 static void layer_update_callback(Layer *layer, GContext *ctx) {
   SimplyUi *self = *(void**) layer_get_data(layer);
 
-  GRect window_frame = layer_get_frame(window_get_root_layer(self->window.window));
-  GRect frame = layer_get_frame(layer);
+  GRect window_frame =
+      { .size = layer_get_frame(scroll_layer_get_layer(self->window.scroll_layer)).size };
+  GRect frame = window_frame;
+  layer_set_frame(layer, window_frame);
 
   const SimplyStyle *style = self->ui_layer.style;
   GFont title_font = fonts_get_system_font(style->title_font);
@@ -249,7 +251,8 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   graphics_fill_rect(ctx, frame, 0, GCornerNone);
 
   graphics_context_set_fill_color(ctx, gcolor8_get_or(self->window.background_color, GColorWhite));
-  graphics_fill_rect(ctx, frame, 4, GCornersAll);
+  const int radius = IF_SDK_2_ELSE(4, 0);
+  graphics_fill_rect(ctx, frame, radius, GCornersAll);
 
   if (title_icon) {
     GRect icon_frame = (GRect) {
@@ -314,7 +317,7 @@ static void window_load(Window *window) {
   frame.origin = GPointZero;
 
   Layer *layer = layer_create_with_data(frame, sizeof(void*));
-  self->window.layer = self->ui_layer.layer = layer;
+  self->ui_layer.layer = layer;
   *(void**) layer_get_data(layer) = self;
   layer_set_update_proc(layer, layer_update_callback);
   scroll_layer_add_child(self->window.scroll_layer, layer);

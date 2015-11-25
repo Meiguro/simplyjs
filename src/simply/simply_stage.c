@@ -152,6 +152,7 @@ static void destroy_element(SimplyStage *self, SimplyElementCommon *element) {
 
 static void destroy_animation(SimplyStage *self, SimplyAnimation *animation) {
   if (!animation) { return; }
+  property_animation_destroy(animation->animation);
   list1_remove(&self->stage_layer.animations, &animation->node);
   free(animation);
 }

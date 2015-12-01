@@ -1078,6 +1078,14 @@ SimplyPebble.windowStatusBar = function(def) {
   SimplyPebble.sendPacket(WindowStatusBarPacket);
 };
 
+SimplyPebble.windowStatusBarCompat = function(def) {
+  if (typeof def.fullscreen === 'boolean') {
+    SimplyPebble.windowStatusBar(!def.fullscreen);
+  } else if (def.status !== undefined) {
+    SimplyPebble.windowStatusBar(def.status);
+  }
+};
+
 var toActionDef = function(actionDef) {
   if (typeof actionDef === 'boolean') {
     actionDef = { action: actionDef };
@@ -1145,9 +1153,7 @@ SimplyPebble.card = function(def, clear, pushing) {
     SimplyPebble.cardClear(clear);
   }
   SimplyPebble.windowProps(def);
-  if (def.status !== undefined) {
-    SimplyPebble.windowStatusBar(def.status);
-  }
+  SimplyPebble.windowStatusBarCompat(def);
   if (def.action !== undefined) {
     SimplyPebble.windowActionBar(def.action);
   }
@@ -1278,6 +1284,7 @@ SimplyPebble.menu = function(def, clear, pushing) {
     SimplyPebble.menuClear();
   }
   SimplyPebble.windowProps(def);
+  SimplyPebble.windowStatusBarCompat(def);
   SimplyPebble.menuProps(def);
 };
 
@@ -1366,6 +1373,7 @@ SimplyPebble.stage = function(def, clear, pushing) {
     SimplyPebble.windowShow({ type: 'window', pushing: pushing });
   }
   SimplyPebble.windowProps(def);
+  SimplyPebble.windowStatusBarCompat(def);
   if (clear !== undefined) {
     SimplyPebble.stageClear();
   }

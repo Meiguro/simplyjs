@@ -21,7 +21,6 @@ struct __attribute__((__packed__)) WindowPropsPacket {
   Packet packet;
   uint32_t id;
   GColor8 background_color;
-  bool fullscreen;
   bool scrollable;
 };
 
@@ -32,13 +31,25 @@ struct __attribute__((__packed__)) WindowButtonConfigPacket {
   uint8_t button_mask;
 };
 
+typedef struct WindowStatusBarPacket WindowStatusBarPacket;
+
+struct __attribute__((__packed__)) WindowStatusBarPacket {
+  Packet packet;
+  GColor8 background_color;
+  GColor8 color;
+  StatusBarLayerSeparatorMode separator:8;
+  bool status;
+};
+
+typedef struct WindowButtonConfigPacket WindowButtonConfigPacket;
+
 typedef struct WindowActionBarPacket WindowActionBarPacket;
 
 struct __attribute__((__packed__)) WindowActionBarPacket {
   Packet packet;
   uint32_t image[3];
-  bool action;
   GColor8 background_color;
+  bool action;
 };
 
 typedef struct ClickPacket ClickPacket;
@@ -131,15 +142,15 @@ static void prv_update_layer_placement(SimplyWindow *self) {
 }
 
 
-void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
-  const bool was_status_bar = self->is_status_bar;
-  self->is_status_bar = !is_fullscreen;
+void simply_window_set_status_bar(SimplyWindow *self, bool use_status_bar) {
+  const bool was_status_bar = self->use_status_bar;
+  self->use_status_bar = use_status_bar;
 
   bool changed = false;
-  if (is_fullscreen && was_status_bar) {
+  if (!use_status_bar && was_status_bar) {
     status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
     changed = true;
-  } else if (!is_fullscreen && !was_status_bar) {
+  } else if (use_status_bar && !was_status_bar) {
     status_bar_layer_add_to_window(self->window, self->status_bar_layer);
     changed = true;
   }
@@ -172,8 +183,22 @@ void simply_window_set_background_color(SimplyWindow *self, GColor8 background_c
                               gcolor_legible_over(background_color));
 }
 
-void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
-  self->is_action_bar = is_action_bar;
+void simply_window_set_status_bar_colors(SimplyWindow *self, GColor8 background_color,
+                                         GColor8 foreground_color) {
+  if (self->status_bar_layer) {
+    status_bar_layer_set_colors(self->status_bar_layer, background_color, foreground_color);
+  }
+}
+
+void simply_window_set_status_bar_separator_mode(SimplyWindow *self,
+                                                 StatusBarLayerSeparatorMode separator) {
+  if (self->status_bar_layer) {
+    status_bar_layer_set_separator_mode(self->status_bar_layer, separator);
+  }
+}
+
+void simply_window_set_action_bar(SimplyWindow *self, bool use_action_bar) {
+  self->use_action_bar = use_action_bar;
 
   if (!self->action_bar_layer) {
     return;
@@ -182,7 +207,7 @@ void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
   action_bar_layer_remove_from_window(self->action_bar_layer);
   prv_set_scroll_layer_click_config(self);
 
-  if (is_action_bar) {
+  if (use_action_bar) {
     action_bar_layer_set_context(self->action_bar_layer, self);
     action_bar_layer_set_click_config_provider(self->action_bar_layer, click_config_provider);
     action_bar_layer_add_to_window(self->action_bar_layer, self->window);
@@ -306,7 +331,7 @@ void simply_window_load(SimplyWindow *self) {
   scroll_layer_set_shadow_hidden(scroll_layer, true);
 
   window_set_click_config_provider_with_context(window, click_config_provider, self);
-  simply_window_set_action_bar(self, self->is_action_bar);
+  simply_window_set_action_bar(self, self->use_action_bar);
 }
 
 bool simply_window_appear(SimplyWindow *self) {
@@ -332,7 +357,7 @@ bool simply_window_disappear(SimplyWindow *self) {
   }
 
 #ifdef PBL_PLATFORM_BASALT
-  simply_window_set_fullscreen(self, true);
+  simply_window_set_status_bar(self, false);
 #endif
 
   return true;
@@ -347,14 +372,13 @@ void simply_window_unload(SimplyWindow *self) {
 }
 
 static void prv_handle_window_props_packet(Simply *simply, Packet *data) {
-  WindowPropsPacket *packet = (WindowPropsPacket*) data;
   SimplyWindow *window = simply_window_stack_get_top_window(simply);
   if (!window) {
     return;
   }
+  WindowPropsPacket *packet = (WindowPropsPacket *)data;
   window->id = packet->id;
   simply_window_set_background_color(window, packet->background_color);
-  simply_window_set_fullscreen(window, packet->fullscreen);
   simply_window_set_scrollable(window, packet->scrollable);
 }
 
@@ -367,12 +391,23 @@ static void prv_handle_window_button_config_packet(Simply *simply, Packet *data)
   window->button_mask = packet->button_mask;
 }
 
-static void prv_handle_window_action_bar_packet(Simply *simply, Packet *data) {
-  WindowActionBarPacket *packet = (WindowActionBarPacket*) data;
+static void prv_handle_window_status_bar_packet(Simply *simply, Packet *data) {
   SimplyWindow *window = simply_window_stack_get_top_window(simply);
   if (!window) {
     return;
   }
+  WindowStatusBarPacket *packet = (WindowStatusBarPacket *)data;
+  simply_window_set_status_bar_colors(window, packet->background_color, packet->color);
+  simply_window_set_status_bar_separator_mode(window, packet->separator);
+  simply_window_set_status_bar(window, packet->status);
+}
+
+static void prv_handle_window_action_bar_packet(Simply *simply, Packet *data) {
+  SimplyWindow *window = simply_window_stack_get_top_window(simply);
+  if (!window) {
+    return;
+  }
+  WindowActionBarPacket *packet = (WindowActionBarPacket *)data;
   simply_window_set_action_bar_background_color(window, packet->background_color);
   for (unsigned int i = 0; i < ARRAY_LENGTH(packet->image); ++i) {
     simply_window_set_action_bar_icon(window, i + 1, packet->image[i]);
@@ -387,6 +422,9 @@ bool simply_window_handle_packet(Simply *simply, Packet *packet) {
       return true;
     case CommandWindowButtonConfig:
       prv_handle_window_button_config_packet(simply, packet);
+      return true;
+    case CommandWindowStatusBar:
+      prv_handle_window_status_bar_packet(simply, packet);
       return true;
     case CommandWindowActionBar:
       prv_handle_window_action_bar_packet(simply, packet);
@@ -409,8 +447,7 @@ SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply) {
   self->status_bar_layer = status_bar_layer_create();
   status_bar_layer_set_separator_mode(self->status_bar_layer, StatusBarLayerSeparatorModeDotted);
   status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
-  self->is_status_bar = false;
-  self->is_fullscreen = true;
+  self->use_status_bar = false;
 
   ActionBarLayer *action_bar_layer = self->action_bar_layer = action_bar_layer_create();
   action_bar_layer_set_context(action_bar_layer, self);

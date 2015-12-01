@@ -154,7 +154,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   text_frame.size.h += 1000;
   GPoint cursor = { margin_x, margin_y };
 
-  if (self->window.is_action_bar) {
+  if (self->window.use_action_bar) {
     text_frame.size.w -= ACTION_BAR_WIDTH;
     window_frame.size.w -= ACTION_BAR_WIDTH;
   }

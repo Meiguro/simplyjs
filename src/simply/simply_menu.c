@@ -9,13 +9,14 @@
 #include "util/color.h"
 #include "util/graphics.h"
 #include "util/menu_layer.h"
+#include "util/platform.h"
 #include "util/string.h"
 
 #include <pebble.h>
 
 #define MAX_CACHED_SECTIONS 10
 
-#define MAX_CACHED_ITEMS 51
+#define MAX_CACHED_ITEMS IF_APLITE_ELSE(6, 51)
 
 static const time_t SPINNER_MS = 66;
 

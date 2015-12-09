@@ -795,6 +795,32 @@ menu.item(0, 0, { title: 'A new item', subtitle: 'replacing the previous one' })
 
 When called with no `item`, returns the item at the given `sectionIndex` and `itemIndex`.
 
+#### Menu.selection(callback)
+
+Get the currently selected item and section. The callback function will be passed an event with the following fields:
+
+* `menu`: The menu object.
+* `section`: The menu section object.
+* `sectionIndex`: The section index of the section of the selected item.
+* `item`: The menu item object.
+* `itemIndex`: The item index of the selected item.
+
+````js
+menu.selection(function(e) {
+  console.log('Currently selected item is #' + e.itemIndex + ' of section #' + e.sectionIndex);
+  console.log('The item is titled "' + e.item.title + '"');
+});
+````
+
+#### Menu.selection(sectionIndex, itemIndex)
+
+Change the selected item and section.
+
+````js
+// Set the menu selection to the first section's third menu item
+menu.selection(0, 2);
+````
+
 <a id="menu-on-select-callback"></a>
 #### Menu.on('select', callback)
 [Menu.on('select', callback)]: #menu-on-select-callback

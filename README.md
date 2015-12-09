@@ -148,16 +148,6 @@ wind.add(textfield);
 wind.show();
 ````
 
-## Examples
-
-Coming Soon!
-
-## Acknowledgements
-
-Pebble.js started as [Simply.JS](http://simplyjs.io), a project by [Meiguro](http://github.com/meiguro). It is now part of the Pebble SDK and supported by Pebble. Contact [devsupport@getpebble.com](mailto:devsupport@getpebble.com) with any questions!
-
-This documentation uses [Flatdoc](http://ricostacruz.com/flatdoc/#flatdoc).
-
 # API Reference
 
 ## Global namespace
@@ -409,14 +399,6 @@ You can use the accelerometer in two different ways:
 var Accel = require('ui/accel');
 ````
 
-#### Accel.init()
-
-Before you can use the accelerometer, you must call `Accel.init()`.
-
-````js
-Accel.init();
-````
-
 #### Accel.config(accelConfig)
 
 This function configures the accelerometer `data` events to your liking. The `tap` event requires no configuration for use. Configuring the accelerometer is a very error prone process, so it is recommended to not configure the accelerometer and use `data` events with the default configuration without calling `Accel.config`.
@@ -495,6 +477,45 @@ wind.on('accelData', function(e) {
  console.log('Accel data: ' + JSON.stringify(e.accels));
 });
 ````
+
+### Voice
+
+The `Voice` module allows you to interact with Pebble's dictation API on supported platforms (Basalt and Chalk).
+
+````js
+var Voice = require('ui/voice');
+````
+
+#### Voice.dictate('start', [confirmDialog,] callback)
+
+This function starts the dictation UI, and invokes the callback upon completion. The callback is passed an event with the following fields:
+
+* `err`: A string describing the error, or `null` on success.
+* `transcription`: The transcribed string.
+
+An optional second parameter, `confirmDialog`, can be passed to the `Voice.dictate` method to control whether there should be a confirmation dialog displaying the transcription text after voice input. If `confirmDialog` is set to `false`, the confirmation dialog will be skipped. By default, there will be a confirmation dialog.
+
+```js
+// Start a diction session and skip confirmation
+Voice.dictate('start', false, function(e) {
+  if (e.err) {
+    console.log('Error: ' + e.err);
+    return;
+  }
+
+  main.subtitle('Success: ' + e.transcription);
+});
+```
+
+**NOTE:** Only one dictation session can be active at any time. Trying to call `Voice.dicate('start', ...)` while another dictation session is in progress will result in the callback being called with an event having the error `"sessionAlreadyInProgress"`.
+
+#### Voice.dictate('stop')
+
+This function stops a dictation session that is currently in progress and prevents the session's callback from being invoked. If no session is in progress this method has no effect.
+
+```js
+Voice.dictate('stop');
+```
 
 ### Window
 
@@ -1340,3 +1361,13 @@ For more information, see [Vector2 in the three.js reference documentation][thre
 [Text]: #text
 [TimeText]: #timetext
 [three.js Vector2]: http://threejs.org/docs/#Reference/Math/Vector2
+
+## Examples
+
+Coming Soon!
+
+## Acknowledgements
+
+Pebble.js started as [Simply.JS](http://simplyjs.io), a project by [Meiguro](http://github.com/meiguro). It is now part of the Pebble SDK and supported by Pebble. Contact [devsupport@getpebble.com](mailto:devsupport@getpebble.com) with any questions!
+
+This documentation uses [Flatdoc](http://ricostacruz.com/flatdoc/#flatdoc).

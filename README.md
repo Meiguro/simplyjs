@@ -488,7 +488,7 @@ var Voice = require('ui/voice');
 
 #### Voice.dictate('start', [confirmDialog,] callback)
 
-This function starts the dictation UI, and invokes the callback upon completion. The callback is invoked with an event with the following fields:
+This function starts the dictation UI, and invokes the callback upon completion. The callback is passed an event with the following fields:
 
 * `err`: A string describing the error, or `null` on success.
 * `transcription`: The transcribed string.
@@ -507,7 +507,7 @@ Voice.dictate('start', false, function(e) {
 });
 ```
 
-**NOTE:** Only one dictation session can be active at any time. Trying to call `Voice.dicate('start', ...)` while another dictation session is in progress will result in the callback being called immediatly with status = -1.
+**NOTE:** Only one dictation session can be active at any time. Trying to call `Voice.dicate('start', ...)` while another dictation session is in progress will result in the callback being called with an event having the error `"sessionAlreadyInProgress"`.
 
 #### Voice.dictate('stop')
 

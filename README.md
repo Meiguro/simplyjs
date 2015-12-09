@@ -493,7 +493,7 @@ This function starts the dictation UI, and invokes the callback upon completion.
 * `err`: A string describing the error, or `null` on success.
 * `transcription`: The transcribed string.
 
-An optional second parameter - `confirmDialog` - can be passed to the `Voice.dictate` method to control the behaviour of the confirmation dialog. If `confirmDialog` is set to `false`, the confirmation page will be skipped, otherwise it will be included in the dictation flow.
+An optional second parameter, `confirmDialog`, can be passed to the `Voice.dictate` method to control whether there should be a confirmation dialog displaying the transcription text after voice input. If `confirmDialog` is set to `false`, the confirmation dialog will be skipped. By default, there will be a confirmation dialog.
 
 ```js
 // Start a diction session and skip confirmation

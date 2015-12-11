@@ -9,7 +9,7 @@
 #define GColor8Clear (GColor8){.argb=GColorClearARGB8}
 #define GColor8ClearWhite (GColor8){.argb=0x3F}
 
-#ifndef PBL_COLOR
+#ifndef PBL_SDK_3
 
 static inline GColor gcolor8_get(GColor8 color) {
   switch (color.argb) {

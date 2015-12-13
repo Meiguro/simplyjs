@@ -3,7 +3,7 @@
  * you want to change the way PebbleJS starts, the script it runs or the libraries
  * it loads.
  *
- * By default, this will run app.js
+ * By default, this will run app/index.js
  */
 
 var safe = require('safe');
@@ -38,5 +38,5 @@ Pebble.addEventListener('ready', function(e) {
   window.moment = globalMoment;
 
   // Load local file
-  require('app.js');
+  require('./app');
 });

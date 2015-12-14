@@ -5,23 +5,26 @@ python:
 
 env:
   - PEBBLE_SDK_VERSION=2.9
-  - PEBBLE_SDK_VERSION=3.6
+  - PEBBLE_SDK_VERSION=3.7
+  - PEBBLE_SDK_VERSION=3.8-beta10
 
 before_install:
-  - wget https://sdk.getpebble.com/download/$PEBBLE_SDK_VERSION?source=travis -O PebbleSDK-$PEBBLE_SDK_VERSION.tar.gz
-  - wget http://assets.getpebble.com.s3-website-us-east-1.amazonaws.com/sdk/arm-cs-tools-ubuntu-universal.tar.gz
-  - mkdir -p ~/pebble-dev
-  - tar -zxf PebbleSDK-$PEBBLE_SDK_VERSION.tar.gz -C ~/pebble-dev
-  - tar -zxf arm-cs-tools-ubuntu-universal.tar.gz -C ~/pebble-dev/PebbleSDK-$PEBBLE_SDK_VERSION
-  - touch ~/pebble-dev/ENABLE_ANALYTICS
+  - wget https://github.com/pebble/pebble-tool/releases/download/v4.0-rc5/pebble-sdk-4.0-rc5-linux64.tar.bz2?source=travis
+  - mkdir -p ~/.pebble-sdk
+  - tar -jxf pebble-sdk-* -C ~/.pebble-sdk
+  - touch ~/.pebble-sdk/ENABLE_ANALYTICS
+  - export PEBBLE_SDK=~/.pebble-sdk/pebble-sdk-*
+  - export PEBBLE=$PEBBLE_SDK/bin/pebble
 
 install:
-  - pushd ~/pebble-dev/PebbleSDK-$PEBBLE_SDK_VERSION
+  - pushd $PEBBLE_SDK
   - virtualenv --no-site-packages .env
   - source .env/bin/activate
   - pip install -r requirements.txt
   - deactivate
   - popd
+  - $PEBBLE sdk set-channel beta
+  - yes | $PEBBLE sdk install $PEBBLE_SDK_VERSION
 
 script:
-  - ~/pebble-dev/PebbleSDK-$PEBBLE_SDK_VERSION/bin/pebble build
+  - $PEBBLE build

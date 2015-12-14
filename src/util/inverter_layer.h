@@ -4,7 +4,7 @@
 
 #include "util/math.h"
 
-#ifdef PBL_COLOR
+#ifdef PBL_SDK_3
 
 typedef struct InverterLayer InverterLayer;
 struct InverterLayer;

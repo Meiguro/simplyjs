@@ -7,17 +7,26 @@ from waflib.Configure import conf
 top = '.'
 out = 'build'
 
+
 def options(ctx):
     ctx.load('pebble_sdk')
 
+    ctx.load('aplite_legacy', tooldir='waftools')
+    ctx.load('configure_appinfo', tooldir='waftools')
+    ctx.load('pebble_sdk_version', tooldir='waftools')
+
+
 def configure(ctx):
     ctx.load('pebble_sdk')
+
+    ctx.configure_appinfo([ctx.appinfo_bitmap_to_png])
 
     if ctx.env.TARGET_PLATFORMS:
         for platform in ctx.env.TARGET_PLATFORMS:
             ctx.configure_platform(platform)
     else:
         ctx.configure_platform()
+
 
 def build(ctx):
     ctx.load('pebble_sdk')
@@ -40,13 +49,14 @@ def build(ctx):
                        worker_elf=elfs['worker_elf'] if 'worker_elf' in elfs else None,
                        js=js_target)
 
+
 @conf
 def configure_platform(ctx, platform=None):
     if platform is not None:
         ctx.setenv(platform, ctx.all_envs[platform])
 
     cflags = ctx.env.CFLAGS
-    cflags = [ x for x in cflags if not x.startswith('-std=') ]
+    cflags = [x for x in cflags if not x.startswith('-std=')]
     cflags.extend(['-std=c11',
                    '-fms-extensions',
                    '-Wno-address',
@@ -55,6 +65,7 @@ def configure_platform(ctx, platform=None):
 
     ctx.env.CFLAGS = cflags
 
+
 @conf
 def build_platform(ctx, platform=None, binaries=None):
     if platform is not None:
@@ -62,17 +73,18 @@ def build_platform(ctx, platform=None, binaries=None):
 
     build_worker = os.path.exists('worker_src')
 
-    app_elf='{}/pebble-app.elf'.format(ctx.env.BUILD_DIR)
+    app_elf = '{}/pebble-app.elf'.format(ctx.env.BUILD_DIR)
     ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'),
                     target=app_elf)
 
     if build_worker:
-        worker_elf='{}/pebble-worker.elf'.format(ctx.env.BUILD_DIR)
+        worker_elf = '{}/pebble-worker.elf'.format(ctx.env.BUILD_DIR)
         binaries.append({'platform': platform, 'app_elf': app_elf, 'worker_elf': worker_elf})
         ctx.pbl_worker(source=ctx.path.ant_glob('worker_src/**/*.c'),
                        target=worker_elf)
     else:
         binaries.append({'platform': platform, 'app_elf': app_elf})
+
 
 @conf
 def concat_javascript(ctx, js_path=None):
@@ -92,9 +104,9 @@ def concat_javascript(ctx, js_path=None):
 
         def loader_translate(source, lineno):
             return LOADER_TEMPLATE.format(
-                    relpath=json.dumps(source['relpath']),
-                    lineno=lineno,
-                    body=source['body'])
+                relpath=json.dumps(source['relpath']),
+                lineno=lineno,
+                body=source['body'])
 
         def coffeescript_compile(relpath, body):
             try:
@@ -129,11 +141,11 @@ def concat_javascript(ctx, js_path=None):
                 if relpath == LOADER_PATH:
                     sources.insert(0, body)
                 else:
-                    sources.append({ 'relpath': relpath, 'body': body })
+                    sources.append({'relpath': relpath, 'body': body})
 
         with open(APPINFO_PATH, 'r') as f:
             body = JSON_TEMPLATE.format(body=f.read())
-            sources.append({ 'relpath': APPINFO_PATH, 'body': body })
+            sources.append({'relpath': APPINFO_PATH, 'body': body})
 
         sources.append('__loader.require("main");')
 

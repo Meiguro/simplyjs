@@ -1,46 +1,46 @@
 {
-  "uuid": "133215f0-cf20-4c05-997b-3c9be5a64e5b",
-  "shortName": "Pebble.js",
-  "longName": "Pebble.js",
-  "companyName": "Meiguro",
-  "versionCode": 1,
-  "versionLabel": "0.4",
+  "appKeys": {},
   "capabilities": [
     "configurable"
   ],
-  "watchapp": {
-    "watchface": false
-  },
-  "appKeys": {},
+  "companyName": "Meiguro",
+  "longName": "Pebble.js",
   "resources": {
     "media": [
       {
+        "file": "images/menu_icon.png",
         "menuIcon": true,
-        "type": "png",
         "name": "IMAGE_MENU_ICON",
-        "file": "images/menu_icon.png"
+        "type": "bitmap"
       },
       {
-        "type": "png",
+        "file": "images/logo_splash.png",
         "name": "IMAGE_LOGO_SPLASH",
-        "file": "images/logo_splash.png"
+        "type": "bitmap"
       },
       {
-        "type": "png",
+        "file": "images/tile_splash.png",
         "name": "IMAGE_TILE_SPLASH",
-        "file": "images/tile_splash.png"
+        "type": "bitmap"
       },
       {
-        "type": "font",
+        "file": "fonts/UbuntuMono-Regular.ttf",
         "name": "MONO_FONT_14",
-        "file": "fonts/UbuntuMono-Regular.ttf"
+        "type": "font"
       }
     ]
   },
+  "sdkVersion": "3",
+  "shortName": "Pebble.js",
   "targetPlatforms": [
     "aplite",
     "basalt",
     "chalk"
   ],
-  "sdkVersion": "3"
+  "uuid": "133215f0-cf20-4c05-997b-3c9be5a64e5b",
+  "versionCode": 1,
+  "versionLabel": "0.4",
+  "watchapp": {
+    "watchface": false
+  }
 }

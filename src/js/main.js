@@ -3,7 +3,7 @@
  * you want to change the way PebbleJS starts, the script it runs or the libraries
  * it loads.
  *
- * By default, this will run app/index.js
+ * By default, this will run app.js
  */
 
 var safe = require('safe');

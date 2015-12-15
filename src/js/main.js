@@ -38,5 +38,5 @@ Pebble.addEventListener('ready', function(e) {
   window.moment = globalMoment;
 
   // Load local file
-  require('app.js');
+  require('./app');
 });

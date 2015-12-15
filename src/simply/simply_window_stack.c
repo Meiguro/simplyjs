@@ -7,6 +7,7 @@
 
 #include "util/math.h"
 #include "util/none.h"
+#include "util/platform.h"
 #include "util/sdk.h"
 
 #include <pebble.h>
@@ -104,7 +105,7 @@ static void show_window_sdk_3(SimplyWindowStack *self, SimplyWindow *window, boo
 
   window_stack_push(window->window, animated);
 
-  if (animated) {
+  if (IF_APLITE_ELSE(true, animated)) {
     window_stack_remove(prev_window, animated);
   }
 }

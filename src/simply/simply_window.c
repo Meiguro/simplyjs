@@ -199,6 +199,10 @@ void simply_window_set_action_bar_background_color(SimplyWindow *self, GColor8 b
 }
 
 void simply_window_action_bar_clear(SimplyWindow *self) {
+  if (!self->action_bar_layer) {
+    return;
+  }
+
   simply_window_set_action_bar(self, false);
 
   for (ButtonId button = BUTTON_ID_UP; button <= BUTTON_ID_DOWN; ++button) {
@@ -274,12 +278,18 @@ void simply_window_load(SimplyWindow *self) {
   GRect frame = layer_get_frame(window_layer);
   frame.origin = GPointZero;
 
-  ScrollLayer *scroll_layer = self->scroll_layer = scroll_layer_create(frame);
-  Layer *scroll_base_layer = scroll_layer_get_layer(scroll_layer);
+  self->scroll_layer = scroll_layer_create(frame);
+  Layer *scroll_base_layer = scroll_layer_get_layer(self->scroll_layer);
   layer_add_child(window_layer, scroll_base_layer);
 
-  scroll_layer_set_context(scroll_layer, self);
-  scroll_layer_set_shadow_hidden(scroll_layer, true);
+  scroll_layer_set_context(self->scroll_layer, self);
+  scroll_layer_set_shadow_hidden(self->scroll_layer, true);
+
+  self->status_bar_layer = status_bar_layer_create();
+  status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
+
+  self->action_bar_layer = action_bar_layer_create();
+  action_bar_layer_set_context(self->action_bar_layer, self);
 
   window_set_click_config_provider_with_context(window, click_config_provider, self);
   simply_window_set_action_bar(self, self->is_action_bar);
@@ -320,6 +330,15 @@ void simply_window_unload(SimplyWindow *self) {
 
   scroll_layer_destroy(self->scroll_layer);
   self->scroll_layer = NULL;
+
+  action_bar_layer_destroy(self->action_bar_layer);
+  self->action_bar_layer = NULL;
+
+  status_bar_layer_destroy(self->status_bar_layer);
+  self->status_bar_layer = NULL;
+
+  window_destroy(self->window);
+  self->window = NULL;
 }
 
 static void handle_window_props_packet(Simply *simply, Packet *data) {
@@ -382,13 +401,8 @@ SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply) {
 
   simply_window_preload(self);
 
-  self->status_bar_layer = status_bar_layer_create();
-  status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
   self->is_status_bar = false;
   self->is_fullscreen = true;
-
-  ActionBarLayer *action_bar_layer = self->action_bar_layer = action_bar_layer_create();
-  action_bar_layer_set_context(action_bar_layer, self);
 
   return self;
 }
@@ -397,12 +411,6 @@ void simply_window_deinit(SimplyWindow *self) {
   if (!self) {
     return;
   }
-
-  action_bar_layer_destroy(self->action_bar_layer);
-  self->action_bar_layer = NULL;
-
-  status_bar_layer_destroy(self->status_bar_layer);
-  self->status_bar_layer = NULL;
 
   window_destroy(self->window);
   self->window = NULL;

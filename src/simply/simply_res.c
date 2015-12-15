@@ -20,6 +20,7 @@ static void destroy_image(SimplyRes *self, SimplyImage *image) {
   list1_remove(&self->images, &image->node);
   gbitmap_destroy(image->bitmap);
   free(image->palette);
+  free(image);
 }
 
 static void destroy_font(SimplyRes *self, SimplyFont *font) {

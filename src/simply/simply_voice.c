@@ -6,6 +6,7 @@
 
 #include <pebble.h>
 
+#if !defined(PBL_PLATFORM_APLITE)
 typedef struct VoiceStartPacket VoiceStartPacket;
 
 struct __attribute__((__packed__)) VoiceStartPacket {
@@ -33,7 +34,7 @@ static bool send_voice_data(int status, char *transcription) {
   // Handle success case
   size_t transcription_length = strlen(transcription) + 1;
   size_t packet_length = sizeof(VoiceDataPacket) + transcription_length;
-  
+
   uint8_t buffer[packet_length];
   VoiceDataPacket *packet = (VoiceDataPacket *)buffer;
   *packet = (VoiceDataPacket) {
@@ -47,7 +48,6 @@ static bool send_voice_data(int status, char *transcription) {
   return simply_msg_send_packet(&packet->packet);
 }
 
-#ifndef PBL_SDK_2
 // Define a callback for the dictation session
 static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, 
                                        char *transcription, void *context) {
@@ -56,7 +56,6 @@ static void dictation_session_callback(DictationSession *session, DictationSessi
   // Send the result
   send_voice_data(status, transcription);
 }
-#endif
 
 static void timer_callback_start_dictation(void *data) {
   dictation_session_start(s_voice->session);
@@ -64,12 +63,6 @@ static void timer_callback_start_dictation(void *data) {
 
 
 static void handle_voice_start_packet(Simply *simply, Packet *data) {
-  #ifdef PBL_SDK_2
-  // send an immediate reply if we don't support voice
-  // Status 65 = NoMicrophone
-  send_voice_data(65, "");
-  #else
-
   // Send an immediate response if there's already a dictation session in progress
   // Status 64 = SessionAlreadyInProgress
   if (s_voice->in_progress) {
@@ -84,16 +77,12 @@ static void handle_voice_start_packet(Simply *simply, Packet *data) {
   VoiceStartPacket *packet = (VoiceStartPacket*) data;
   dictation_session_enable_confirmation(s_voice->session, packet->enable_confirmation);
   s_voice->timer = app_timer_register(0, timer_callback_start_dictation, NULL);
-  #endif
 }
 
 static void handle_voice_stop_packet(Simply *simply, Packet *data) {
-  // Do nothing for SDK 2
-  #ifndef PBL_SDK_2
   // Stop the session and clear the in_progress flag
   dictation_session_stop(s_voice->session);
   s_voice->in_progress = false;
-  #endif
 }
 
 bool simply_voice_handle_packet(Simply *simply, Packet *packet) {
@@ -120,9 +109,7 @@ SimplyVoice *simply_voice_create(Simply *simply) {
     .in_progress = false,
   };
 
-  #ifndef PBL_SDK_2
   self->session = dictation_session_create(SIMPLY_VOICE_BUFFER_LENGTH, dictation_session_callback, NULL);
-  #endif
 
   s_voice = self;
   return self;
@@ -140,3 +127,4 @@ void simply_voice_destroy(SimplyVoice *self) {
 bool simply_voice_dictation_in_progress() {
   return s_voice->in_progress;
 }
+#endif

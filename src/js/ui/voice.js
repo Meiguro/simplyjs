@@ -19,7 +19,6 @@ Voice.dictate = function(type, confirm, callback) {
     default:
       console.log('Unsupported type passed to Voice.dictate');
   }
-  
 };
 
 module.exports = Voice;

@@ -15,14 +15,14 @@
 #include "util/list1.h"
 #include "util/math.h"
 #include "util/memory.h"
+#include "util/platform.h"
 #include "util/string.h"
 
 #include <pebble.h>
 
 #define SEND_DELAY_MS 10
 
-static const size_t APP_MSG_SIZE_INBOUND = 2044;
-
+static const size_t APP_MSG_SIZE_INBOUND = IF_APLITE_ELSE(1024, 2044);
 static const size_t APP_MSG_SIZE_OUTBOUND = 1024;
 
 typedef enum VibeType VibeType;

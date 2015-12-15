@@ -1,6 +1,7 @@
 var struct = require('struct');
 var util2 = require('util2');
 var myutil = require('myutil');
+var Platform = require('platform');
 var Wakeup = require('wakeup');
 var Timeline = require('timeline');
 var Resource = require('ui/resource');
@@ -971,7 +972,7 @@ var PacketQueue = function() {
   this._send = this.send.bind(this);
 };
 
-PacketQueue.prototype._maxPayloadSize = 2044 - 32;
+PacketQueue.prototype._maxPayloadSize = (Platform.version() === 'aplite' ? 1024 : 2044) - 32;
 
 PacketQueue.prototype.add = function(packet) {
   var byteArray = toByteArray(packet);

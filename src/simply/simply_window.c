@@ -181,6 +181,7 @@ void simply_window_set_background_color(SimplyWindow *self, GColor8 background_c
   self->background_color = background_color;
   status_bar_layer_set_colors(self->status_bar_layer, background_color,
                               gcolor_legible_over(background_color));
+  window_set_background_color(self->window, gcolor8_get_or(background_color, GColorBlack));
 }
 
 void simply_window_set_status_bar_colors(SimplyWindow *self, GColor8 background_color,
@@ -333,6 +334,7 @@ void simply_window_load(SimplyWindow *self) {
 
   scroll_layer_set_context(self->scroll_layer, self);
   scroll_layer_set_shadow_hidden(self->scroll_layer, true);
+  scroll_layer_set_paging(self->scroll_layer, PBL_IF_ROUND_ELSE(true, false)); // TODO: Expose this to JS
 
   self->status_bar_layer = status_bar_layer_create();
   status_bar_layer_set_separator_mode(self->status_bar_layer, StatusBarLayerSeparatorModeDotted);

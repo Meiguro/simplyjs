@@ -408,9 +408,11 @@ var CardImageTypes = [
 var CardImageType = makeArrayType(CardImageTypes);
 
 var CardStyleTypes = [
+  'classic-small',
+  'classic-large',
+  'mono',
   'small',
   'large',
-  'mono',
 ];
 
 var CardStyleType = makeArrayType(CardStyleTypes);

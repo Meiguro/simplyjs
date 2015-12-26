@@ -110,6 +110,30 @@ typedef union GColor8 {
   (GBitmapFormat1Bit)
 #endif
 
+typedef TextLayout GTextAttributes;
+
+#ifndef graphics_text_attributes_create
+#define graphics_text_attributes_create() NULL
+#endif
+
+#ifndef graphics_text_attributes_destroy
+#define graphics_text_attributes_destroy(text_attributes)
+#endif
+
+#ifndef graphics_text_attributes_enable_screen_text_flow
+#define graphics_text_attributes_enable_screen_text_flow(text_attributes, inset)
+#endif
+
+#ifndef graphics_text_attributes_enable_paging
+#define graphics_text_attributes_enable_paging(text_attributes, origin_on_screen, page_frame)
+#endif
+
+#ifndef graphics_text_layout_get_content_size_with_attributes
+#define graphics_text_layout_get_content_size_with_attributes(text, font, box, overflow_mode, \
+                                                              alignment, text_attributes) \
+    graphics_text_layout_get_content_size(text, font, box, overflow_mode, alignment)
+#endif
+
 #ifndef menu_layer_set_normal_colors
 #define menu_layer_set_normal_colors(menu_layer, background_color, text_color)
 #endif
@@ -141,6 +165,10 @@ typedef struct DictationSession DictationSession;
 typedef struct DictationSessionStatus DictationSessionStatus;
 void dictation_session_start(DictationSession *session);
 #define DictationSessionStatusFailureSystemAborted 3
+
+#ifndef scroll_layer_set_paging
+#define scroll_layer_set_paging(scroll_layer, paging_enabled)
+#endif
 
 #endif
 

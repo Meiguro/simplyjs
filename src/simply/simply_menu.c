@@ -333,6 +333,18 @@ static int16_t prv_menu_get_header_height_callback(MenuLayer *menu_layer, uint16
           section->title != EMPTY_TITLE ? MENU_CELL_BASIC_HEADER_HEIGHT : 0);
 }
 
+static int16_t prv_menu_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
+                                            void *context) {
+  if (PBL_IF_ROUND_ELSE(true, false)) {
+    const bool is_selected = menu_layer_is_index_selected(menu_layer, cell_index);
+    return is_selected ? MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT :
+                         MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT;
+  } else {
+    return MENU_CELL_BASIC_CELL_HEIGHT;
+  }
+}
+
+
 static void prv_menu_draw_header_callback(GContext *ctx, const Layer *cell_layer,
                                           uint16_t section_index, void *data) {
   SimplyMenu *self = data;
@@ -467,6 +479,9 @@ static void prv_menu_window_load(Window *window) {
     .get_num_sections = prv_menu_get_num_sections_callback,
     .get_num_rows = prv_menu_get_num_rows_callback,
     .get_header_height = prv_menu_get_header_height_callback,
+#if defined(PBL_ROUND)
+    .get_cell_height = prv_menu_get_cell_height_callback,
+#endif
     .draw_header = prv_menu_draw_header_callback,
     .draw_row = prv_menu_draw_row_callback,
     .select_click = prv_menu_select_click_callback,

@@ -46,13 +46,19 @@ static inline void status_bar_layer_remove_from_window(Window *window, StatusBar
 
 #else
 
-static inline void status_bar_layer_add_to_window(Window *window, StatusBarLayer *status_bar_layer) {
-  Layer *window_layer = window_get_root_layer(window);
-  layer_add_child(window_layer, status_bar_layer_get_layer(status_bar_layer));
+static inline void status_bar_layer_add_to_window(Window *window,
+                                                  StatusBarLayer *status_bar_layer) {
+  if (status_bar_layer) {
+    Layer *window_layer = window_get_root_layer(window);
+    layer_add_child(window_layer, status_bar_layer_get_layer(status_bar_layer));
+  }
 }
 
-static inline void status_bar_layer_remove_from_window(Window *window, StatusBarLayer *status_bar_layer) {
-  layer_remove_from_parent(status_bar_layer_get_layer(status_bar_layer));
+static inline void status_bar_layer_remove_from_window(Window *window,
+                                                       StatusBarLayer *status_bar_layer) {
+  if (status_bar_layer) {
+    layer_remove_from_parent(status_bar_layer_get_layer(status_bar_layer));
+  }
 }
 
 #endif

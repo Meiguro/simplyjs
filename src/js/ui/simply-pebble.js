@@ -446,6 +446,13 @@ var DictationSessionStatus = [
 DictationSessionStatus[64] = "sessionAlreadyInProgress";
 DictationSessionStatus[65] = "noMicrophone";
 
+var StatusBarSeparatorModeTypes = [
+  'none',
+  'dotted',
+];
+
+var StatusBarSeparatorModeType = makeArrayType(StatusBarSeparatorModeTypes);
+
 var Packet = new struct([
   ['uint16', 'type'],
   ['uint16', 'length'],
@@ -518,7 +525,6 @@ var WindowPropsPacket = new struct([
   [Packet, 'packet'],
   ['uint32', 'id'],
   ['uint8', 'backgroundColor', Color],
-  ['bool', 'fullscreen', BoolType],
   ['bool', 'scrollable', BoolType],
 ]);
 
@@ -527,13 +533,21 @@ var WindowButtonConfigPacket = new struct([
   ['uint8', 'buttonMask', ButtonFlagsType],
 ]);
 
+var WindowStatusBarPacket = new struct([
+  [Packet, 'packet'],
+  ['uint8', 'backgroundColor', Color],
+  ['uint8', 'color', Color],
+  ['uint8', 'separator', StatusBarSeparatorModeType],
+  ['uint8', 'status', BoolType],
+]);
+
 var WindowActionBarPacket = new struct([
   [Packet, 'packet'],
   ['uint32', 'up', ImageType],
   ['uint32', 'select', ImageType],
   ['uint32', 'down', ImageType],
-  ['uint8', 'action', BoolType],
   ['uint8', 'backgroundColor', Color],
+  ['uint8', 'action', BoolType],
 ]);
 
 var ClickPacket = new struct([
@@ -811,6 +825,7 @@ var CommandPackets = [
   WindowHideEventPacket,
   WindowPropsPacket,
   WindowButtonConfigPacket,
+  WindowStatusBarPacket,
   WindowActionBarPacket,
   ClickPacket,
   LongClickPacket,
@@ -1047,6 +1062,31 @@ SimplyPebble.windowButtonConfig = function(def) {
   SimplyPebble.sendPacket(WindowButtonConfigPacket.buttonMask(def));
 };
 
+var toStatusDef = function(statusDef) {
+  if (typeof statusDef === 'boolean') {
+    statusDef = { status: statusDef };
+  }
+  return statusDef;
+};
+
+SimplyPebble.windowStatusBar = function(def) {
+  var statusDef = toStatusDef(def);
+  WindowStatusBarPacket
+    .separator(statusDef.separator || 'dotted')
+    .status(typeof def === 'boolean' ? def : true)
+    .color(statusDef.color || 'black')
+    .backgroundColor(statusDef.backgroundColor || 'white');
+  SimplyPebble.sendPacket(WindowStatusBarPacket);
+};
+
+SimplyPebble.windowStatusBarCompat = function(def) {
+  if (typeof def.fullscreen === 'boolean') {
+    SimplyPebble.windowStatusBar(!def.fullscreen);
+  } else if (def.status !== undefined) {
+    SimplyPebble.windowStatusBar(def.status);
+  }
+};
+
 var toActionDef = function(actionDef) {
   if (typeof actionDef === 'boolean') {
     actionDef = { action: actionDef };
@@ -1114,6 +1154,7 @@ SimplyPebble.card = function(def, clear, pushing) {
     SimplyPebble.cardClear(clear);
   }
   SimplyPebble.windowProps(def);
+  SimplyPebble.windowStatusBarCompat(def);
   if (def.action !== undefined) {
     SimplyPebble.windowActionBar(def.action);
   }
@@ -1246,6 +1287,7 @@ SimplyPebble.menu = function(def, clear, pushing) {
     SimplyPebble.menuClear();
   }
   SimplyPebble.windowProps(def);
+  SimplyPebble.windowStatusBarCompat(def);
   SimplyPebble.menuProps(def);
 };
 
@@ -1334,6 +1376,7 @@ SimplyPebble.stage = function(def, clear, pushing) {
     SimplyPebble.windowShow({ type: 'window', pushing: pushing });
   }
   SimplyPebble.windowProps(def);
+  SimplyPebble.windowStatusBarCompat(def);
   if (clear !== undefined) {
     SimplyPebble.stageClear();
   }

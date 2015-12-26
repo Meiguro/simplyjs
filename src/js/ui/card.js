@@ -39,8 +39,8 @@ var accessorProps = textProps.concat(textColorProps).concat(imageProps).concat(c
 var clearableProps = textProps.concat(imageProps);
 
 var defaults = {
+  status: true,
   backgroundColor: 'white',
-  fullscreen: false,
 };
 
 var Card = function(cardDef) {

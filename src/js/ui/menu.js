@@ -7,11 +7,11 @@ var Window = require('ui/window');
 var simply = require('ui/simply');
 
 var defaults = {
+  status: true,
   backgroundColor: 'white',
   textColor: 'black',
   highlightBackgroundColor: 'black',
   highlightTextColor: 'white',
-  fullscreen: false,
 };
 
 var Menu = function(menuDef) {

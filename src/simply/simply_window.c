@@ -138,19 +138,13 @@ static void prv_update_layer_placement(SimplyWindow *self) {
 
 
 void simply_window_set_status_bar(SimplyWindow *self, bool use_status_bar) {
-  const bool was_status_bar = self->use_status_bar;
   self->use_status_bar = use_status_bar;
 
-  bool changed = false;
-  if (!use_status_bar && was_status_bar) {
-    status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
-    changed = true;
-  } else if (use_status_bar && !was_status_bar) {
-    status_bar_layer_add_to_window(self->window, self->status_bar_layer);
-    changed = true;
-  }
+  status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
 
-  if (!changed) { return; }
+  if (use_status_bar) {
+    status_bar_layer_add_to_window(self->window, self->status_bar_layer);
+  }
 
   prv_update_layer_placement(self);
 
@@ -321,7 +315,7 @@ void simply_window_load(SimplyWindow *self) {
 
   self->status_bar_layer = status_bar_layer_create();
   status_bar_layer_set_separator_mode(self->status_bar_layer, StatusBarLayerSeparatorModeDotted);
-  status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
+  simply_window_set_status_bar(self, self->use_status_bar);
 
   self->action_bar_layer = action_bar_layer_create();
   action_bar_layer_set_context(self->action_bar_layer, self);

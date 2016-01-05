@@ -25,6 +25,7 @@ struct SimplyWindow {
   GColor8 background_color;
   bool is_scrollable:1;
   bool use_status_bar:1;
+  bool status_bar_insets_bottom:1;
   bool use_action_bar:1;
 };
 

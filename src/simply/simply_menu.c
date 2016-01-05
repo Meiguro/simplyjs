@@ -638,6 +638,7 @@ SimplyMenu *simply_menu_create(Simply *simply) {
   SimplyMenu *self = malloc(sizeof(*self));
   *self = (SimplyMenu) {
     .window.simply = simply,
+    .window.status_bar_insets_bottom = true,
     .menu_layer.num_sections = 1,
   };
 

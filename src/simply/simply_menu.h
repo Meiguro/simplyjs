@@ -61,6 +61,8 @@ typedef struct SimplyMenuSection SimplyMenuSection;
 struct SimplyMenuSection {
   SimplyMenuCommonMember;
   uint16_t num_items;
+  GColor8 title_foreground;
+  GColor8 title_background;
 };
 
 typedef struct SimplyMenuItem SimplyMenuItem;

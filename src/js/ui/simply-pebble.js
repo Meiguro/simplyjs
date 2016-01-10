@@ -641,6 +641,8 @@ var MenuSectionPacket = new struct([
   [Packet, 'packet'],
   ['uint16', 'section'],
   ['uint16', 'items', EnumerableType],
+  ['uint8', 'backgroundColor', Color],
+  ['uint8', 'textColor', Color],
   ['uint16', 'titleLength', EnumerableType],
   ['cstring', 'title', StringType],
 ]);
@@ -1213,6 +1215,8 @@ SimplyPebble.menuSection = function(section, def, clear) {
   MenuSectionPacket
     .section(section)
     .items(def.items)
+    .backgroundColor(def.backgroundColor)
+    .textColor(def.textColor)
     .titleLength(def.title)
     .title(def.title);
   SimplyPebble.sendPacket(MenuSectionPacket);

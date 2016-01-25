@@ -308,7 +308,7 @@ Menu.prototype.item = function(sectionIndex, itemIndex, item) {
 
 Menu.prototype.selection = function(callback_or_sectionIndex, itemIndex) {
   if (typeof callback_or_sectionIndex === 'function') {
-    this._selections.push(callback);
+    this._selections.push(callback_or_sectionIndex);
     simply.impl.menuSelection();
   } else {
     this._selection = {

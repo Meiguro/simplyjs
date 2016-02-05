@@ -47,6 +47,8 @@ enum Command {
   CommandElementRemove,
   CommandElementCommon,
   CommandElementRadius,
+  CommandElementAnglestart,
+  CommandElementAngleend,
   CommandElementText,
   CommandElementTextStyle,
   CommandElementImage,

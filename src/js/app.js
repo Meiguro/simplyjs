@@ -39,18 +39,19 @@ main.on('click', 'up', function(e) {
 });
 
 main.on('click', 'select', function(e) {
-  var wind = new UI.Window({
-    fullscreen: true,
+  var wind = new UI.Window({backgroundColor:'red'});
+
+  var circlearc = new UI.CircleArc({
+    position: new Vector2(-30, -28),
+    size: new Vector2(205, 205),
+    anglestart: 0,
+    angleend: 132,
+    radius: 20,
+    backgroundColor: 'blue',
   });
-  var textfield = new UI.Text({
-    position: new Vector2(0, 65),
-    size: new Vector2(144, 30),
-    font: 'gothic-24-bold',
-    text: 'Text Anywhere!',
-    textAlign: 'center'
-  });
-  wind.add(textfield);
-  wind.show();
+
+  wind.add(circlearc);
+  wind.show(circlearc);
 });
 
 main.on('click', 'down', function(e) {

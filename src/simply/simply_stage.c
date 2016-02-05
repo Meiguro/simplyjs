@@ -53,6 +53,22 @@ struct __attribute__((__packed__)) ElementRadiusPacket {
   uint16_t radius;
 };
 
+typedef struct CommandElementAnglestartPacket CommandElementAnglestartPacket;
+
+struct __attribute__((__packed__)) CommandElementAnglestartPacket {
+  Packet packet;
+  uint32_t id;
+  uint16_t anglestart;
+};
+
+typedef struct CommandElementAngleendPacket CommandElementAngleendPacket;
+
+struct __attribute__((__packed__)) CommandElementAngleendPacket {
+  Packet packet;
+  uint32_t id;
+  uint16_t angleend;
+};
+
 typedef struct ElementTextPacket ElementTextPacket;
 
 struct __attribute__((__packed__)) ElementTextPacket {
@@ -200,6 +216,12 @@ static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementC
   }
 }
 
+static void circlearc_element_draw(GContext *ctx, SimplyStage *self, SimplyElementCircleArc *element) {
+  GRect frame = grect_inset(element->frame, GEdgeInsets(30));
+  graphics_context_set_fill_color(ctx, element->background_color);
+  graphics_fill_radial(ctx, frame, GOvalScaleModeFitCircle, element->radius, DEG_TO_TRIGANGLE(element->anglestart), DEG_TO_TRIGANGLE(element->angleend));
+}
+
 static char *format_time(char *format) {
   time_t now = time(NULL);
   struct tm* tm = localtime(&now);
@@ -264,6 +286,9 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       case SimplyElementTypeCircle:
         circle_element_draw(ctx, self, (SimplyElementCircle*) element);
         break;
+      case SimplyElementTypeCircleArc:
+        circlearc_element_draw(ctx, self, (SimplyElementCircleArc*) element);
+        break;
       case SimplyElementTypeText:
         text_element_draw(ctx, self, (SimplyElementText*) element);
         break;
@@ -288,6 +313,7 @@ static SimplyElementCommon *alloc_element(SimplyElementType type) {
     case SimplyElementTypeNone: return NULL;
     case SimplyElementTypeRect: return malloc0(sizeof(SimplyElementRect));
     case SimplyElementTypeCircle: return malloc0(sizeof(SimplyElementCircle));
+    case SimplyElementTypeCircleArc: return malloc0(sizeof(SimplyElementCircleArc));
     case SimplyElementTypeText: return malloc0(sizeof(SimplyElementText));
     case SimplyElementTypeImage: return malloc0(sizeof(SimplyElementImage));
     case SimplyElementTypeInverter: {
@@ -542,6 +568,26 @@ static void handle_element_radius_packet(Simply *simply, Packet *data) {
   simply_stage_update(simply->stage);
 };
 
+static void handle_element_anglestart_packet(Simply *simply, Packet *data) {
+  CommandElementAnglestartPacket *packet = (CommandElementAnglestartPacket*) data;
+  SimplyElementRect *element = (SimplyElementRect*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->anglestart = packet->anglestart;
+  simply_stage_update(simply->stage);
+};
+
+static void handle_element_angleend_packet(Simply *simply, Packet *data) {
+  CommandElementAngleendPacket *packet = (CommandElementAngleendPacket*) data;
+  SimplyElementRect *element = (SimplyElementRect*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->angleend = packet->angleend;
+  simply_stage_update(simply->stage);
+};
+
 static void handle_element_text_packet(Simply *simply, Packet *data) {
   ElementTextPacket *packet = (ElementTextPacket*) data;
   SimplyElementText *element = (SimplyElementText*) simply_stage_get_element(simply->stage, packet->id);
@@ -617,6 +663,12 @@ bool simply_stage_handle_packet(Simply *simply, Packet *packet) {
       return true;
     case CommandElementRadius:
       handle_element_radius_packet(simply, packet);
+      return true;
+    case CommandElementAnglestart:
+      handle_element_anglestart_packet(simply, packet);
+      return true;
+    case CommandElementAngleend:
+      handle_element_angleend_packet(simply, packet);
       return true;
     case CommandElementText:
       handle_element_text_packet(simply, packet);

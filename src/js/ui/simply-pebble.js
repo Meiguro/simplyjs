@@ -743,6 +743,18 @@ var ElementRadiusPacket = new struct([
   ['uint16', 'radius', EnumerableType],
 ]);
 
+var ElementAnglestartPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['uint16', 'anglestart', EnumerableType],
+]);
+
+var ElementAngleendPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['uint16', 'angleend', EnumerableType],
+]);
+
 var ElementTextPacket = new struct([
   [Packet, 'packet'],
   ['uint32', 'id'],
@@ -842,6 +854,8 @@ var CommandPackets = [
   ElementRemovePacket,
   ElementCommonPacket,
   ElementRadiusPacket,
+  ElementAnglestartPacket,
+  ElementAngleendPacket,
   ElementTextPacket,
   ElementTextStylePacket,
   ElementImagePacket,
@@ -1270,6 +1284,14 @@ SimplyPebble.elementRadius = function(id, radius) {
   SimplyPebble.sendPacket(ElementRadiusPacket.id(id).radius(radius));
 };
 
+SimplyPebble.elementAnglestart = function(id, anglestart) {
+  SimplyPebble.sendPacket(ElementAnglestartPacket.id(id).anglestart(anglestart));
+};
+
+SimplyPebble.elementAngleend = function(id, angleend) {
+  SimplyPebble.sendPacket(ElementAngleendPacket.id(id).angleend(angleend));
+};
+
 SimplyPebble.elementText = function(id, text, timeUnits) {
   SimplyPebble.sendPacket(ElementTextPacket.id(id).updateTimeUnits(timeUnits).text(text));
 };
@@ -1312,6 +1334,11 @@ SimplyPebble.stageElement = function(id, type, def, index) {
     case StageElement.RectType:
     case StageElement.CircleType:
       SimplyPebble.elementRadius(id, def.radius);
+      break;
+    case StageElement.CircleArcType:
+      SimplyPebble.elementRadius(id, def.radius);
+      SimplyPebble.elementAnglestart(id, def.anglestart);
+      SimplyPebble.elementAngleend(id, def.angleend);
       break;
     case StageElement.TextType:
       SimplyPebble.elementRadius(id, def.radius);

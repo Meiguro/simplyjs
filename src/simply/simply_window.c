@@ -125,7 +125,8 @@ static void prv_update_layer_placement(SimplyWindow *self) {
     if (has_status_bar) {
       GRect status_frame = { .size = { frame.size.w, STATUS_BAR_LAYER_HEIGHT } };
       frame.origin.y = STATUS_BAR_LAYER_HEIGHT;
-      frame.size.h -= STATUS_BAR_LAYER_HEIGHT;
+      frame.size.h -= self->status_bar_insets_bottom ? STATUS_BAR_LAYER_HEIGHT * 2 :
+                                                       STATUS_BAR_LAYER_HEIGHT;
       if (has_action_bar) {
         status_frame.size.w -= ACTION_BAR_WIDTH;
       }

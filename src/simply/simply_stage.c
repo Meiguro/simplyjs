@@ -152,6 +152,7 @@ static void destroy_element(SimplyStage *self, SimplyElementCommon *element) {
 
 static void destroy_animation(SimplyStage *self, SimplyAnimation *animation) {
   if (!animation) { return; }
+  property_animation_destroy(animation->animation);
   list1_remove(&self->stage_layer.animations, &animation->node);
   free(animation);
 }
@@ -429,16 +430,15 @@ SimplyAnimation *simply_stage_animate_element(SimplyStage *self,
 }
 
 static void window_load(Window *window) {
-  SimplyStage *self = window_get_user_data(window);
+  SimplyStage * const self = window_get_user_data(window);
 
   simply_window_load(&self->window);
 
-  Layer *window_layer = window_get_root_layer(window);
-  GRect frame = layer_get_frame(window_layer);
-  frame.origin = GPointZero;
+  Layer * const window_layer = window_get_root_layer(window);
+  const GRect frame = { .size = layer_get_frame(window_layer).size };
 
-  Layer *layer = layer_create_with_data(frame, sizeof(void*));
-  self->window.layer = self->stage_layer.layer = layer;
+  Layer * const layer = layer_create_with_data(frame, sizeof(void *));
+  self->stage_layer.layer = layer;
   *(void**) layer_get_data(layer) = self;
   layer_set_update_proc(layer, layer_update_callback);
   scroll_layer_add_child(self->window.scroll_layer, layer);

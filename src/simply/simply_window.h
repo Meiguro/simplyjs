@@ -23,10 +23,10 @@ struct SimplyWindow {
   uint32_t id;
   ButtonId button_mask:4;
   GColor8 background_color;
-  bool is_fullscreen:1;
   bool is_scrollable:1;
-  bool is_action_bar:1;
-  bool is_status_bar:1;
+  bool use_status_bar:1;
+  bool status_bar_insets_bottom:1;
+  bool use_action_bar:1;
 };
 
 SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply);
@@ -43,7 +43,7 @@ bool simply_window_disappear(SimplyWindow *self);
 void simply_window_single_click_handler(ClickRecognizerRef recognizer, void *context);
 
 void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable);
-void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen);
+void simply_window_set_status_bar(SimplyWindow *self, bool use_status_bar);
 void simply_window_set_background_color(SimplyWindow *self, GColor8 background_color);
 
 void simply_window_set_button(SimplyWindow *self, ButtonId button, bool enable);

@@ -16,6 +16,7 @@ enum Command {
   CommandWindowHideEvent,
   CommandWindowProps,
   CommandWindowButtonConfig,
+  CommandWindowStatusBar,
   CommandWindowActionBar,
   CommandClick,
   CommandLongClick,

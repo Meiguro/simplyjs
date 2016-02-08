@@ -134,6 +134,14 @@ typedef TextLayout GTextAttributes;
     graphics_text_layout_get_content_size(text, font, box, overflow_mode, alignment)
 #endif
 
+#ifndef MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT
+#define MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT ((const int16_t) 84)
+#endif
+
+#ifndef MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT
+#define MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT ((const int16_t) 24)
+#endif
+
 #ifndef menu_layer_set_normal_colors
 #define menu_layer_set_normal_colors(menu_layer, background_color, text_color)
 #endif
@@ -144,6 +152,13 @@ typedef TextLayout GTextAttributes;
 
 #ifndef menu_cell_layer_is_highlighted
 #define menu_cell_layer_is_highlighted(cell_layer) (false)
+#endif
+
+#ifndef menu_layer_is_index_selected
+static inline bool menu_layer_is_index_selected(MenuLayer *menu_layer, MenuIndex *cell_index) {
+  MenuIndex current_index = menu_layer_get_selected_index(menu_layer);
+  return (current_index.section == cell_index->section && current_index.row == cell_index->row);
+}
 #endif
 
 //! Convenience macro to use SDK 3.0 function to set a `PropertyAnimation`'s
@@ -168,6 +183,10 @@ void dictation_session_start(DictationSession *session);
 
 #ifndef scroll_layer_set_paging
 #define scroll_layer_set_paging(scroll_layer, paging_enabled)
+#endif
+
+#ifndef STATUS_BAR_LAYER_HEIGHT
+#define STATUS_BAR_LAYER_HEIGHT 16
 #endif
 
 #endif

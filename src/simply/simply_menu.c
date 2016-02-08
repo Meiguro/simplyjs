@@ -7,6 +7,7 @@
 #include "simply.h"
 
 #include "util/color.h"
+#include "util/display.h"
 #include "util/graphics.h"
 #include "util/menu_layer.h"
 #include "util/platform.h"
@@ -333,8 +334,8 @@ static int16_t prv_menu_get_header_height_callback(MenuLayer *menu_layer, uint16
           section->title != EMPTY_TITLE ? MENU_CELL_BASIC_HEADER_HEIGHT : 0);
 }
 
-static int16_t prv_menu_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
-                                            void *context) {
+ROUND_USAGE static int16_t prv_menu_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
+                                                             void *context) {
   if (PBL_IF_ROUND_ELSE(true, false)) {
     const bool is_selected = menu_layer_is_index_selected(menu_layer, cell_index);
     return is_selected ? MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT :

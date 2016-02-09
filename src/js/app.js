@@ -41,17 +41,19 @@ main.on('click', 'up', function(e) {
 main.on('click', 'select', function(e) {
   var wind = new UI.Window({backgroundColor:'red'});
 
-  var circlearc = new UI.CircleArc({
-    position: new Vector2(-30, -28),
-    size: new Vector2(205, 205),
-    anglestart: 0,
-    angleend: 132,
+  var radial = new UI.Radial({
+    position: new Vector2(0, 0),
+    size: new Vector2(150, 150),
+    angleStart: 0,
+    angleEnd: 132,
     radius: 20,
+    borderColor: "red",
+    borderWidth: 5,
     backgroundColor: 'blue',
   });
 
-  wind.add(circlearc);
-  wind.show(circlearc);
+  wind.add(radial);
+  wind.show(radial);
 });
 
 main.on('click', 'down', function(e) {

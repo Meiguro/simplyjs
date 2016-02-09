@@ -26,7 +26,7 @@ enum SimplyElementType {
   SimplyElementTypeNone = 0,
   SimplyElementTypeRect = 1,
   SimplyElementTypeCircle = 2,
-  SimplyElementTypeCircleArc = 6,
+  SimplyElementTypeRadial = 6,
   SimplyElementTypeText = 3,
   SimplyElementTypeImage = 4,
   SimplyElementTypeInverter = 5,
@@ -67,13 +67,14 @@ typedef struct SimplyElementRect SimplyElementRect;
 struct SimplyElementRect {
   SimplyElementCommonMember;
   uint16_t radius;
-  uint16_t anglestart;
-  uint16_t angleend;
+  uint16_t angle_start;
+  uint16_t angle_end;
+  uint16_t border_width;
 };
 
 typedef struct SimplyElementRect SimplyElementCircle;
 
-typedef struct SimplyElementRect SimplyElementCircleArc;
+typedef struct SimplyElementRect SimplyElementRadial;
 
 typedef struct SimplyElementText SimplyElementText;
 

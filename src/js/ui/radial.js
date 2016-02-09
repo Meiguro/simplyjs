@@ -4,14 +4,16 @@ var StageElement = require('ui/element');
 
 var defaults = {
   backgroundColor: 'white',
-  borderColor: 'clear',
+  angleStart: 0,
+  angleEnd: 132,
+  borderWidth: 5,
 };
 
-var CircleArc = function(elementDef) {
+var Radial = function(elementDef) {
   StageElement.call(this, myutil.shadow(defaults, elementDef || {}));
-  this.state.type = StageElement.CircleArcType;
+  this.state.type = StageElement.RadialType;
 };
 
-util2.inherit(CircleArc, StageElement);
+util2.inherit(Radial, StageElement);
 
-module.exports = CircleArc;
+module.exports = Radial;

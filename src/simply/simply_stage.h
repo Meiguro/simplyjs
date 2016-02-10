@@ -67,14 +67,19 @@ typedef struct SimplyElementRect SimplyElementRect;
 struct SimplyElementRect {
   SimplyElementCommonMember;
   uint16_t radius;
+};
+
+typedef struct SimplyElementRadial SimplyElementRadial;
+
+struct SimplyElementRadial {
+  SimplyElementCommonMember;
+  uint16_t radius;
   uint16_t angle_start;
   uint16_t angle_end;
   uint16_t border_width;
 };
 
 typedef struct SimplyElementRect SimplyElementCircle;
-
-typedef struct SimplyElementRect SimplyElementRadial;
 
 typedef struct SimplyElementText SimplyElementText;
 

@@ -225,23 +225,21 @@ static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementC
 }
 
 static void radial_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRadial *element) {
-  // element->border_color
-  // element->border_width
-  if (element->border_color.a) {
-    printf("Draw Arc");
-    GRect frame = grect_inset(element->frame, GEdgeInsets(0));
-    graphics_context_set_fill_color(ctx, element->background_color);
-    graphics_draw_arc(ctx, frame, GOvalScaleModeFitCircle,
-                        DEG_TO_TRIGANGLE(element->angle_start),
-                        DEG_TO_TRIGANGLE(element->angle_end));
-  } else {
-    printf("Draw Radial");
+  if (element->background_color.a) {
     GRect frame = grect_inset(element->frame, GEdgeInsets(0));
     graphics_context_set_fill_color(ctx, element->background_color);
     graphics_fill_radial(ctx, frame, GOvalScaleModeFitCircle, element->radius,
-                        DEG_TO_TRIGANGLE(element->angle_start),
-                        DEG_TO_TRIGANGLE(element->angle_end));
+                         DEG_TO_TRIGANGLE(element->angle_start),
+                         DEG_TO_TRIGANGLE(element->angle_end));
   }
+  if (element->border_color.a) {
+    GRect frame = grect_inset(element->frame, GEdgeInsets(10));
+    graphics_context_set_stroke_color(ctx, element->border_color);
+    graphics_context_set_stroke_width(ctx, element->border_width);
+    graphics_draw_arc(ctx, frame, GOvalScaleModeFitCircle,
+                      DEG_TO_TRIGANGLE(element->angle_start),
+                      DEG_TO_TRIGANGLE(element->angle_end));
+  } 
 }
 
 static char *format_time(char *format) {
@@ -592,7 +590,7 @@ static void handle_element_radius_packet(Simply *simply, Packet *data) {
 
 static void handle_element_angle_start_packet(Simply *simply, Packet *data) {
   CommandElementAngleStartPacket *packet = (CommandElementAngleStartPacket*) data;
-  SimplyElementRect *element = (SimplyElementRect*) simply_stage_get_element(simply->stage, packet->id);
+  SimplyElementRadial *element = (SimplyElementRadial*) simply_stage_get_element(simply->stage, packet->id);
   if (!element) {
     return;
   }
@@ -602,7 +600,7 @@ static void handle_element_angle_start_packet(Simply *simply, Packet *data) {
 
 static void handle_element_angle_end_packet(Simply *simply, Packet *data) {
   CommandElementAngleEndPacket *packet = (CommandElementAngleEndPacket*) data;
-  SimplyElementRect *element = (SimplyElementRect*) simply_stage_get_element(simply->stage, packet->id);
+  SimplyElementRadial *element = (SimplyElementRadial*) simply_stage_get_element(simply->stage, packet->id);
   if (!element) {
     return;
   }
@@ -612,7 +610,7 @@ static void handle_element_angle_end_packet(Simply *simply, Packet *data) {
 
 static void handle_element_border_width_packet(Simply *simply, Packet *data) {
   CommandElementBorderWidthPacket *packet = (CommandElementBorderWidthPacket*) data;
-  SimplyElementRect *element = (SimplyElementRect*) simply_stage_get_element(simply->stage, packet->id);
+  SimplyElementRadial *element = (SimplyElementRadial*) simply_stage_get_element(simply->stage, packet->id);
   if (!element) {
     return;
   }

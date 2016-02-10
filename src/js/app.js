@@ -39,16 +39,16 @@ main.on('click', 'up', function(e) {
 });
 
 main.on('click', 'select', function(e) {
-  var wind = new UI.Window({backgroundColor:'red'});
+  var wind = new UI.Window({backgroundColor:'white'});
 
   var radial = new UI.Radial({
     position: new Vector2(0, 0),
     size: new Vector2(150, 150),
     angleStart: 0,
-    angleEnd: 132,
+    angleEnd: 300,
     radius: 20,
     borderColor: "red",
-    borderWidth: 5,
+    borderWidth: 19,
     backgroundColor: 'blue',
   });
 

@@ -30,6 +30,7 @@ var StageElement = function(elementDef) {
 
 StageElement.RectType = 1;
 StageElement.CircleType = 2;
+StageElement.RadialType = 6;
 StageElement.TextType = 3;
 StageElement.ImageType = 4;
 StageElement.InverterType = 5;

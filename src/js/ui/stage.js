@@ -10,6 +10,7 @@ var Stage = function(stageDef) {
 
 Stage.RectType = 1;
 Stage.CircleType = 2;
+Stage.RadialType = 6;
 Stage.TextType = 3;
 Stage.ImageType = 4;
 Stage.InverterType = 5;

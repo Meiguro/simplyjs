@@ -6,6 +6,7 @@ UI.Card = require('ui/card');
 UI.Menu = require('ui/menu');
 UI.Rect = require('ui/rect');
 UI.Circle = require('ui/circle');
+UI.Radial = require('ui/radial');
 UI.Text = require('ui/text');
 UI.TimeText = require('ui/timetext');
 UI.Image = require('ui/image');

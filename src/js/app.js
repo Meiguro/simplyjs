@@ -40,15 +40,26 @@ main.on('click', 'up', function(e) {
 
 main.on('click', 'select', function(e) {
   var wind = new UI.Window({
-    fullscreen: true,
+    backgroundColor: 'black'
+  });
+  var radial = new UI.Radial({
+    position: new Vector2(2, 14),
+    size: new Vector2(140, 140),
+    angleStart: 0,
+    angleEnd: 300,
+    radius: 20,
+    backgroundColor: 'cyan',
+    borderColor: 'celeste',
+    borderWidth: 1,
   });
   var textfield = new UI.Text({
-    position: new Vector2(0, 65),
-    size: new Vector2(144, 30),
+    position: new Vector2(0, 57),
+    size: new Vector2(144, 60),
     font: 'gothic-24-bold',
-    text: 'Text Anywhere!',
+    text: 'Dynamic\nWindow',
     textAlign: 'center'
   });
+  wind.add(radial);
   wind.add(textfield);
   wind.show();
 });

@@ -53,6 +53,30 @@ struct __attribute__((__packed__)) ElementRadiusPacket {
   uint16_t radius;
 };
 
+typedef struct CommandElementAngleStartPacket CommandElementAngleStartPacket;
+
+struct __attribute__((__packed__)) CommandElementAngleStartPacket {
+  Packet packet;
+  uint32_t id;
+  uint16_t angle_start;
+};
+
+typedef struct CommandElementAngleEndPacket CommandElementAngleEndPacket;
+
+struct __attribute__((__packed__)) CommandElementAngleEndPacket {
+  Packet packet;
+  uint32_t id;
+  uint16_t angle_end;
+};
+
+typedef struct CommandElementBorderWidthPacket CommandElementBorderWidthPacket;
+
+struct __attribute__((__packed__)) CommandElementBorderWidthPacket {
+  Packet packet;
+  uint32_t id;
+  uint16_t border_width;
+};
+
 typedef struct ElementTextPacket ElementTextPacket;
 
 struct __attribute__((__packed__)) ElementTextPacket {
@@ -201,6 +225,35 @@ static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementC
   }
 }
 
+static void prv_draw_line_polar(GContext *ctx, const GRect *outer_frame, const GRect *inner_frame,
+                                GOvalScaleMode scale_mode, int32_t angle) {
+  const GPoint a = gpoint_from_polar(*outer_frame, scale_mode, angle);
+  const GPoint b = gpoint_from_polar(*inner_frame, scale_mode, angle);
+  graphics_draw_line(ctx, a, b);
+}
+
+static void radial_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRadial *element) {
+  const GOvalScaleMode scale_mode = GOvalScaleModeFitCircle;
+  const int32_t angle_start = DEG_TO_TRIGANGLE(element->angle_start);
+  const int32_t angle_end = DEG_TO_TRIGANGLE(element->angle_end);
+  if (element->background_color.a) {
+    graphics_context_set_fill_color(ctx, element->background_color);
+    graphics_fill_radial(ctx, element->frame, scale_mode, element->radius, angle_start, angle_end);
+  }
+  if (element->border_color.a && element->border_width) {
+    graphics_context_set_stroke_color(ctx, element->border_color);
+    graphics_context_set_stroke_width(ctx, element->border_width);
+    graphics_draw_arc(ctx, element->frame, scale_mode, angle_start, angle_end);
+    GRect inner_frame = grect_inset(element->frame, GEdgeInsets(element->radius));
+    prv_draw_line_polar(ctx, &element->frame, &inner_frame, scale_mode, angle_start);
+    prv_draw_line_polar(ctx, &element->frame, &inner_frame, scale_mode, angle_end);
+    if (inner_frame.size.w) {
+      graphics_draw_arc(ctx, inner_frame, GOvalScaleModeFitCircle,
+                        angle_start, angle_end);
+    }
+  }
+}
+
 static char *format_time(char *format) {
   time_t now = time(NULL);
   struct tm* tm = localtime(&now);
@@ -252,6 +305,8 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
 
   SimplyElementCommon *element = (SimplyElementCommon*) self->stage_layer.elements;
   while (element) {
+    // TODO: change border_width to a common element member
+    graphics_context_set_stroke_width(ctx, 1);
     int16_t max_y = element->frame.origin.y + element->frame.size.h;
     if (max_y > frame.size.h) {
       frame.size.h = max_y;
@@ -264,6 +319,9 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
         break;
       case SimplyElementTypeCircle:
         circle_element_draw(ctx, self, (SimplyElementCircle*) element);
+        break;
+      case SimplyElementTypeRadial:
+        radial_element_draw(ctx, self, (SimplyElementRadial*) element);
         break;
       case SimplyElementTypeText:
         text_element_draw(ctx, self, (SimplyElementText*) element);
@@ -289,6 +347,7 @@ static SimplyElementCommon *alloc_element(SimplyElementType type) {
     case SimplyElementTypeNone: return NULL;
     case SimplyElementTypeRect: return malloc0(sizeof(SimplyElementRect));
     case SimplyElementTypeCircle: return malloc0(sizeof(SimplyElementCircle));
+    case SimplyElementTypeRadial: return malloc0(sizeof(SimplyElementRadial));
     case SimplyElementTypeText: return malloc0(sizeof(SimplyElementText));
     case SimplyElementTypeImage: return malloc0(sizeof(SimplyElementImage));
     case SimplyElementTypeInverter: {
@@ -542,6 +601,36 @@ static void handle_element_radius_packet(Simply *simply, Packet *data) {
   simply_stage_update(simply->stage);
 };
 
+static void handle_element_angle_start_packet(Simply *simply, Packet *data) {
+  CommandElementAngleStartPacket *packet = (CommandElementAngleStartPacket*) data;
+  SimplyElementRadial *element = (SimplyElementRadial*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->angle_start = packet->angle_start;
+  simply_stage_update(simply->stage);
+};
+
+static void handle_element_angle_end_packet(Simply *simply, Packet *data) {
+  CommandElementAngleEndPacket *packet = (CommandElementAngleEndPacket*) data;
+  SimplyElementRadial *element = (SimplyElementRadial*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->angle_end = packet->angle_end;
+  simply_stage_update(simply->stage);
+};
+
+static void handle_element_border_width_packet(Simply *simply, Packet *data) {
+  CommandElementBorderWidthPacket *packet = (CommandElementBorderWidthPacket*) data;
+  SimplyElementRadial *element = (SimplyElementRadial*) simply_stage_get_element(simply->stage, packet->id);
+  if (!element) {
+    return;
+  }
+  element->border_width = packet->border_width;
+  simply_stage_update(simply->stage);
+};
+
 static void handle_element_text_packet(Simply *simply, Packet *data) {
   ElementTextPacket *packet = (ElementTextPacket*) data;
   SimplyElementText *element = (SimplyElementText*) simply_stage_get_element(simply->stage, packet->id);
@@ -617,6 +706,15 @@ bool simply_stage_handle_packet(Simply *simply, Packet *packet) {
       return true;
     case CommandElementRadius:
       handle_element_radius_packet(simply, packet);
+      return true;
+    case CommandElementAngleStart:
+      handle_element_angle_start_packet(simply, packet);
+      return true;
+    case CommandElementAngleEnd:
+      handle_element_angle_end_packet(simply, packet);
+      return true;
+    case CommandElementBorderWidth:
+      handle_element_border_width_packet(simply, packet);
       return true;
     case CommandElementText:
       handle_element_text_packet(simply, packet);

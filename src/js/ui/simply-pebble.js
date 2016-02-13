@@ -761,6 +761,24 @@ var ElementRadiusPacket = new struct([
   ['uint16', 'radius', EnumerableType],
 ]);
 
+var ElementAngleStartPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['uint16', 'angleStart', EnumerableType],
+]);
+
+var ElementAngleEndPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['uint16', 'angleEnd', EnumerableType],
+]);
+
+var ElementBorderWidthPacket = new struct([
+  [Packet, 'packet'],
+  ['uint32', 'id'],
+  ['uint16', 'borderWidth', EnumerableType],
+]);
+
 var ElementTextPacket = new struct([
   [Packet, 'packet'],
   ['uint32', 'id'],
@@ -861,6 +879,9 @@ var CommandPackets = [
   ElementRemovePacket,
   ElementCommonPacket,
   ElementRadiusPacket,
+  ElementAngleStartPacket,
+  ElementAngleEndPacket,
+  ElementBorderWidthPacket,
   ElementTextPacket,
   ElementTextStylePacket,
   ElementImagePacket,
@@ -1318,6 +1339,18 @@ SimplyPebble.elementRadius = function(id, radius) {
   SimplyPebble.sendPacket(ElementRadiusPacket.id(id).radius(radius));
 };
 
+SimplyPebble.elementAngleStart = function(id, angleStart) {
+  SimplyPebble.sendPacket(ElementAngleStartPacket.id(id).angleStart(angleStart));
+};
+
+SimplyPebble.elementAngleEnd = function(id, angleEnd) {
+  SimplyPebble.sendPacket(ElementAngleEndPacket.id(id).angleEnd(angleEnd));
+};
+
+SimplyPebble.elementBorderWidth = function(id, borderWidth) {
+  SimplyPebble.sendPacket(ElementBorderWidthPacket.id(id).borderWidth(borderWidth));
+};
+
 SimplyPebble.elementText = function(id, text, timeUnits) {
   SimplyPebble.sendPacket(ElementTextPacket.id(id).updateTimeUnits(timeUnits).text(text));
 };
@@ -1360,6 +1393,12 @@ SimplyPebble.stageElement = function(id, type, def, index) {
     case StageElement.RectType:
     case StageElement.CircleType:
       SimplyPebble.elementRadius(id, def.radius);
+      break;
+    case StageElement.RadialType:
+      SimplyPebble.elementRadius(id, def.radius);
+      SimplyPebble.elementAngleStart(id, def.angleStart);
+      SimplyPebble.elementAngleEnd(id, def.angleEnd);
+      SimplyPebble.elementBorderWidth(id, def.borderWidth);
       break;
     case StageElement.TextType:
       SimplyPebble.elementRadius(id, def.radius);

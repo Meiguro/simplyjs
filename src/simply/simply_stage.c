@@ -225,22 +225,33 @@ static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementC
   }
 }
 
+static void prv_draw_line_polar(GContext *ctx, const GRect *outer_frame, const GRect *inner_frame,
+                                GOvalScaleMode scale_mode, int32_t angle) {
+  const GPoint a = gpoint_from_polar(*outer_frame, scale_mode, angle);
+  const GPoint b = gpoint_from_polar(*inner_frame, scale_mode, angle);
+  graphics_draw_line(ctx, a, b);
+}
+
 static void radial_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRadial *element) {
+  const GOvalScaleMode scale_mode = GOvalScaleModeFitCircle;
+  const int32_t angle_start = DEG_TO_TRIGANGLE(element->angle_start);
+  const int32_t angle_end = DEG_TO_TRIGANGLE(element->angle_end);
   if (element->background_color.a) {
-    GRect frame = grect_inset(element->frame, GEdgeInsets(0));
     graphics_context_set_fill_color(ctx, element->background_color);
-    graphics_fill_radial(ctx, frame, GOvalScaleModeFitCircle, element->radius,
-                         DEG_TO_TRIGANGLE(element->angle_start),
-                         DEG_TO_TRIGANGLE(element->angle_end));
+    graphics_fill_radial(ctx, element->frame, scale_mode, element->radius, angle_start, angle_end);
   }
-  if (element->border_color.a) {
-    GRect frame = grect_inset(element->frame, GEdgeInsets(10));
+  if (element->border_color.a && element->border_width) {
     graphics_context_set_stroke_color(ctx, element->border_color);
     graphics_context_set_stroke_width(ctx, element->border_width);
-    graphics_draw_arc(ctx, frame, GOvalScaleModeFitCircle,
-                      DEG_TO_TRIGANGLE(element->angle_start),
-                      DEG_TO_TRIGANGLE(element->angle_end));
-  } 
+    graphics_draw_arc(ctx, element->frame, scale_mode, angle_start, angle_end);
+    GRect inner_frame = grect_inset(element->frame, GEdgeInsets(element->radius));
+    prv_draw_line_polar(ctx, &element->frame, &inner_frame, scale_mode, angle_start);
+    prv_draw_line_polar(ctx, &element->frame, &inner_frame, scale_mode, angle_end);
+    if (inner_frame.size.w) {
+      graphics_draw_arc(ctx, inner_frame, GOvalScaleModeFitCircle,
+                        angle_start, angle_end);
+    }
+  }
 }
 
 static char *format_time(char *format) {

@@ -305,6 +305,8 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
 
   SimplyElementCommon *element = (SimplyElementCommon*) self->stage_layer.elements;
   while (element) {
+    // TODO: change border_width to a common element member
+    graphics_context_set_stroke_width(ctx, 1);
     int16_t max_y = element->frame.origin.y + element->frame.size.h;
     if (max_y > frame.size.h) {
       frame.size.h = max_y;

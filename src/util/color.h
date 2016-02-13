@@ -40,6 +40,12 @@ static inline bool gcolor8_equal_native(GColor8 color, GColor other) {
   return (color.argb == gcolor_get8(other).argb);
 }
 
+static inline GColor8 gcolor_legible_over(GColor8 background_color) {
+  const int sum = background_color.r + background_color.g + background_color.b;
+  const int avg = sum / 3;
+  return (avg >= 2) ? GColor8Black : GColor8White;
+}
+
 #else
 
 static inline GColor gcolor8_get(GColor8 color) {

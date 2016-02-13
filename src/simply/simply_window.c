@@ -21,7 +21,6 @@ struct __attribute__((__packed__)) WindowPropsPacket {
   Packet packet;
   uint32_t id;
   GColor8 background_color;
-  bool fullscreen;
   bool scrollable;
 };
 
@@ -32,13 +31,25 @@ struct __attribute__((__packed__)) WindowButtonConfigPacket {
   uint8_t button_mask;
 };
 
+typedef struct WindowStatusBarPacket WindowStatusBarPacket;
+
+struct __attribute__((__packed__)) WindowStatusBarPacket {
+  Packet packet;
+  GColor8 background_color;
+  GColor8 color;
+  StatusBarLayerSeparatorMode separator:8;
+  bool status;
+};
+
+typedef struct WindowButtonConfigPacket WindowButtonConfigPacket;
+
 typedef struct WindowActionBarPacket WindowActionBarPacket;
 
 struct __attribute__((__packed__)) WindowActionBarPacket {
   Packet packet;
   uint32_t image[3];
-  bool action;
   GColor8 background_color;
+  bool action;
 };
 
 typedef struct ClickPacket ClickPacket;
@@ -56,7 +67,7 @@ static GColor8 s_button_palette[] = { { GColorWhiteARGB8 }, { GColorClearARGB8 }
 
 static void click_config_provider(void *data);
 
-static bool send_click(SimplyMsg *self, Command type, ButtonId button) {
+static bool prv_send_click(SimplyMsg *self, Command type, ButtonId button) {
   ClickPacket packet = {
     .packet.type = type,
     .packet.length = sizeof(packet),
@@ -65,35 +76,29 @@ static bool send_click(SimplyMsg *self, Command type, ButtonId button) {
   return simply_msg_send_packet(&packet.packet);
 }
 
-static bool send_single_click(SimplyMsg *self, ButtonId button) {
-  return send_click(self, CommandClick, button);
+static bool prv_send_single_click(SimplyMsg *self, ButtonId button) {
+  return prv_send_click(self, CommandClick, button);
 }
 
-static bool send_long_click(SimplyMsg *self, ButtonId button) {
-  return send_click(self, CommandLongClick, button);
+static bool prv_send_long_click(SimplyMsg *self, ButtonId button) {
+  return prv_send_click(self, CommandLongClick, button);
 }
 
-static void set_scroll_layer_click_config(SimplyWindow *self) {
-  if (!self->scroll_layer) {
-    return;
+static void prv_set_scroll_layer_click_config(SimplyWindow *self) {
+  if (self->scroll_layer) {
+    scroll_layer_set_click_config_provider_onto_window(
+        self->scroll_layer, click_config_provider, self->window, self);
   }
-
-  scroll_layer_set_click_config_provider_onto_window(
-      self->scroll_layer, click_config_provider, self->window, self);
 }
 
 void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
-  if (self->is_scrollable == is_scrollable) {
-    return;
-  }
+  if (self->is_scrollable == is_scrollable) { return; }
 
   self->is_scrollable = is_scrollable;
 
-  set_scroll_layer_click_config(self);
+  prv_set_scroll_layer_click_config(self);
 
-  if (!self->layer) {
-    return;
-  }
+  if (!self->layer) { return; }
 
   if (!is_scrollable) {
     GRect bounds = { GPointZero, layer_get_bounds(window_get_root_layer(self->window)).size };
@@ -106,31 +111,46 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
   layer_mark_dirty(self->layer);
 }
 
-void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
-  const bool was_status_bar = self->is_status_bar;
-  self->is_status_bar = !is_fullscreen;
+static void prv_update_layer_placement(SimplyWindow *self) {
+  Layer * const main_layer = self->layer ?: scroll_layer_get_layer(self->scroll_layer);
+  if (!main_layer) { return; }
 
-  bool changed = false;
-  if (is_fullscreen && was_status_bar) {
-    status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
-    changed = true;
-  } else if (!is_fullscreen && !was_status_bar) {
+  GRect frame = { .size = layer_get_frame(window_get_root_layer(self->window)).size };
+
+  if (self->status_bar_layer) {
+    Layer * const status_bar_base_layer = status_bar_layer_get_layer(self->status_bar_layer);
+    const bool has_status_bar = (layer_get_window(status_bar_base_layer) != NULL);
+    const bool has_action_bar =
+        (layer_get_window(action_bar_layer_get_layer(self->action_bar_layer)) != NULL);
+    if (has_status_bar) {
+      GRect status_frame = { .size = { frame.size.w, STATUS_BAR_LAYER_HEIGHT } };
+      frame.origin.y = STATUS_BAR_LAYER_HEIGHT;
+      frame.size.h -= self->status_bar_insets_bottom ? STATUS_BAR_LAYER_HEIGHT * 2 :
+                                                       STATUS_BAR_LAYER_HEIGHT;
+      if (has_action_bar) {
+        status_frame.size.w -= ACTION_BAR_WIDTH;
+      }
+      layer_set_frame(status_bar_base_layer, status_frame);
+    }
+  }
+
+  layer_set_frame(main_layer, frame);
+}
+
+
+void simply_window_set_status_bar(SimplyWindow *self, bool use_status_bar) {
+  self->use_status_bar = use_status_bar;
+
+  status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
+
+  if (use_status_bar) {
     status_bar_layer_add_to_window(self->window, self->status_bar_layer);
-    changed = true;
   }
 
-  if (!changed || !self->layer) {
-    return;
-  }
-
-  GRect frame = { GPointZero, layer_get_frame(window_get_root_layer(self->window)).size };
-  scroll_layer_set_frame(self->scroll_layer, frame);
-  layer_set_frame(self->layer, frame);
+  prv_update_layer_placement(self);
 
 #ifdef PBL_SDK_2
-  if (!window_stack_contains_window(self->window)) {
-    return;
-  }
+  if (!window_stack_contains_window(self->window)) { return; }
 
   // HACK: Refresh app chrome state
   uint32_t id = self->id;
@@ -145,32 +165,46 @@ void simply_window_set_fullscreen(SimplyWindow *self, bool is_fullscreen) {
 
 void simply_window_set_background_color(SimplyWindow *self, GColor8 background_color) {
   self->background_color = background_color;
+  window_set_background_color(self->window, gcolor8_get_or(background_color, GColorBlack));
+  if (self->status_bar_layer) {
+    status_bar_layer_set_colors(self->status_bar_layer, background_color,
+                               gcolor_legible_over(background_color));
+  }
 }
 
-void simply_window_set_action_bar(SimplyWindow *self, bool is_action_bar) {
-  self->is_action_bar = is_action_bar;
-
-  if (!self->action_bar_layer) {
-    return;
+void simply_window_set_status_bar_colors(SimplyWindow *self, GColor8 background_color,
+                                         GColor8 foreground_color) {
+  if (self->status_bar_layer) {
+    status_bar_layer_set_colors(self->status_bar_layer, background_color, foreground_color);
   }
+}
+
+void simply_window_set_status_bar_separator_mode(SimplyWindow *self,
+                                                 StatusBarLayerSeparatorMode separator) {
+  if (self->status_bar_layer) {
+    status_bar_layer_set_separator_mode(self->status_bar_layer, separator);
+  }
+}
+
+void simply_window_set_action_bar(SimplyWindow *self, bool use_action_bar) {
+  self->use_action_bar = use_action_bar;
+
+  if (!self->action_bar_layer) { return; }
 
   action_bar_layer_remove_from_window(self->action_bar_layer);
+  prv_set_scroll_layer_click_config(self);
 
-  set_scroll_layer_click_config(self);
-
-  if (!is_action_bar) {
-    return;
+  if (use_action_bar) {
+    action_bar_layer_set_context(self->action_bar_layer, self);
+    action_bar_layer_set_click_config_provider(self->action_bar_layer, click_config_provider);
+    action_bar_layer_add_to_window(self->action_bar_layer, self->window);
   }
 
-  action_bar_layer_set_context(self->action_bar_layer, self);
-  action_bar_layer_set_click_config_provider(self->action_bar_layer, click_config_provider);
-  action_bar_layer_add_to_window(self->action_bar_layer, self->window);
+  prv_update_layer_placement(self);
 }
 
 void simply_window_set_action_bar_icon(SimplyWindow *self, ButtonId button, uint32_t id) {
-  if (!self->action_bar_layer) {
-    return;
-  }
+  if (!self->action_bar_layer) { return; }
 
   SimplyImage *icon = simply_res_auto_image(self->simply->res, id, true);
 
@@ -188,9 +222,7 @@ void simply_window_set_action_bar_icon(SimplyWindow *self, ButtonId button, uint
 }
 
 void simply_window_set_action_bar_background_color(SimplyWindow *self, GColor8 background_color) {
-  if (!self->action_bar_layer) {
-    return;
-  }
+  if (!self->action_bar_layer) { return; }
 
   s_button_palette[0] = gcolor8_equal(background_color, GColor8White) ? GColor8Black : GColor8White;
 
@@ -199,9 +231,7 @@ void simply_window_set_action_bar_background_color(SimplyWindow *self, GColor8 b
 }
 
 void simply_window_action_bar_clear(SimplyWindow *self) {
-  if (!self->action_bar_layer) {
-    return;
-  }
+  if (!self->action_bar_layer) { return; }
 
   simply_window_set_action_bar(self, false);
 
@@ -231,7 +261,7 @@ void simply_window_single_click_handler(ClickRecognizerRef recognizer, void *con
     }
   }
   if (is_enabled) {
-    send_single_click(self->simply->msg, button);
+    prv_send_single_click(self->simply->msg, button);
   }
 }
 
@@ -240,7 +270,7 @@ static void long_click_handler(ClickRecognizerRef recognizer, void *context) {
   ButtonId button = click_recognizer_get_button_id(recognizer);
   bool is_enabled = (self->button_mask & (1 << button));
   if (is_enabled) {
-    send_long_click(self->simply->msg, button);
+    prv_send_long_click(self->simply->msg, button);
   }
 }
 
@@ -259,9 +289,7 @@ static void click_config_provider(void *context) {
 }
 
 void simply_window_preload(SimplyWindow *self) {
-  if (self->window) {
-    return;
-  }
+  if (self->window) { return; }
 
   Window *window = self->window = window_create();
   window_set_background_color(window, GColorClear);
@@ -284,15 +312,17 @@ void simply_window_load(SimplyWindow *self) {
 
   scroll_layer_set_context(self->scroll_layer, self);
   scroll_layer_set_shadow_hidden(self->scroll_layer, true);
+  scroll_layer_set_paging(self->scroll_layer, PBL_IF_ROUND_ELSE(true, false)); // TODO: Expose this to JS
 
   self->status_bar_layer = status_bar_layer_create();
-  status_bar_layer_remove_from_window(self->window, self->status_bar_layer);
+  status_bar_layer_set_separator_mode(self->status_bar_layer, StatusBarLayerSeparatorModeDotted);
+  simply_window_set_status_bar(self, self->use_status_bar);
 
   self->action_bar_layer = action_bar_layer_create();
   action_bar_layer_set_context(self->action_bar_layer, self);
 
   window_set_click_config_provider_with_context(window, click_config_provider, self);
-  simply_window_set_action_bar(self, self->is_action_bar);
+  simply_window_set_action_bar(self, self->use_action_bar);
 }
 
 bool simply_window_appear(SimplyWindow *self) {
@@ -318,7 +348,7 @@ bool simply_window_disappear(SimplyWindow *self) {
   }
 
 #ifdef PBL_PLATFORM_BASALT
-  simply_window_set_fullscreen(self, true);
+  simply_window_set_status_bar(self, false);
 #endif
 
   return true;
@@ -341,33 +371,39 @@ void simply_window_unload(SimplyWindow *self) {
   self->window = NULL;
 }
 
-static void handle_window_props_packet(Simply *simply, Packet *data) {
-  WindowPropsPacket *packet = (WindowPropsPacket*) data;
+static void prv_handle_window_props_packet(Simply *simply, Packet *data) {
   SimplyWindow *window = simply_window_stack_get_top_window(simply);
-  if (!window) {
-    return;
-  }
+  if (!window) { return; }
+
+  WindowPropsPacket *packet = (WindowPropsPacket *)data;
   window->id = packet->id;
   simply_window_set_background_color(window, packet->background_color);
-  simply_window_set_fullscreen(window, packet->fullscreen);
   simply_window_set_scrollable(window, packet->scrollable);
 }
 
-static void handle_window_button_config_packet(Simply *simply, Packet *data) {
+static void prv_handle_window_button_config_packet(Simply *simply, Packet *data) {
   WindowButtonConfigPacket *packet = (WindowButtonConfigPacket*) data;
   SimplyWindow *window = simply_window_stack_get_top_window(simply);
-  if (!window) {
-    return;
+  if (window) {
+    window->button_mask = packet->button_mask;
   }
-  window->button_mask = packet->button_mask;
 }
 
-static void handle_window_action_bar_packet(Simply *simply, Packet *data) {
-  WindowActionBarPacket *packet = (WindowActionBarPacket*) data;
+static void prv_handle_window_status_bar_packet(Simply *simply, Packet *data) {
   SimplyWindow *window = simply_window_stack_get_top_window(simply);
-  if (!window) {
-    return;
-  }
+  if (!window) { return; }
+
+  WindowStatusBarPacket *packet = (WindowStatusBarPacket *)data;
+  simply_window_set_status_bar_colors(window, packet->background_color, packet->color);
+  simply_window_set_status_bar_separator_mode(window, packet->separator);
+  simply_window_set_status_bar(window, packet->status);
+}
+
+static void prv_handle_window_action_bar_packet(Simply *simply, Packet *data) {
+  SimplyWindow *window = simply_window_stack_get_top_window(simply);
+  if (!window) { return; }
+
+  WindowActionBarPacket *packet = (WindowActionBarPacket *)data;
   simply_window_set_action_bar_background_color(window, packet->background_color);
   for (unsigned int i = 0; i < ARRAY_LENGTH(packet->image); ++i) {
     simply_window_set_action_bar_icon(window, i + 1, packet->image[i]);
@@ -378,13 +414,16 @@ static void handle_window_action_bar_packet(Simply *simply, Packet *data) {
 bool simply_window_handle_packet(Simply *simply, Packet *packet) {
   switch (packet->type) {
     case CommandWindowProps:
-      handle_window_props_packet(simply, packet);
+      prv_handle_window_props_packet(simply, packet);
       return true;
     case CommandWindowButtonConfig:
-      handle_window_button_config_packet(simply, packet);
+      prv_handle_window_button_config_packet(simply, packet);
+      return true;
+    case CommandWindowStatusBar:
+      prv_handle_window_status_bar_packet(simply, packet);
       return true;
     case CommandWindowActionBar:
-      handle_window_action_bar_packet(simply, packet);
+      prv_handle_window_action_bar_packet(simply, packet);
       return true;
   }
   return false;
@@ -392,6 +431,7 @@ bool simply_window_handle_packet(Simply *simply, Packet *packet) {
 
 SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply) {
   self->simply = simply;
+  self->use_status_bar = false;
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {
     if (i != BUTTON_ID_BACK) {
@@ -401,17 +441,12 @@ SimplyWindow *simply_window_init(SimplyWindow *self, Simply *simply) {
 
   simply_window_preload(self);
 
-  self->is_status_bar = false;
-  self->is_fullscreen = true;
-
   return self;
 }
 
 void simply_window_deinit(SimplyWindow *self) {
-  if (!self) {
-    return;
+  if (self) {
+    window_destroy(self->window);
+    self->window = NULL;
   }
-
-  window_destroy(self->window);
-  self->window = NULL;
 }

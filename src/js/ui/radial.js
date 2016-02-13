@@ -4,9 +4,10 @@ var StageElement = require('ui/element');
 
 var defaults = {
   backgroundColor: 'white',
+  borderColor: 'clear',
+  borderWidth: 1,
   angleStart: 0,
-  angleEnd: 132,
-  borderWidth: 5,
+  angleEnd: 360,
 };
 
 var Radial = function(elementDef) {

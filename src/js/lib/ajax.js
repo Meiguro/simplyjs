@@ -95,8 +95,10 @@ var ajax = function(opt, success, failure) {
     }
   }
 
+  var ready = false;
   req.onreadystatechange = function(e) {
-    if (req.readyState === 4) {
+    if (req.readyState === 4 && !ready) {
+      ready = true;
       var body = req.responseText;
       var okay = req.status >= 200 && req.status < 300 || req.status === 304;
 

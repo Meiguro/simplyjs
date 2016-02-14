@@ -28,6 +28,10 @@ main.on('click', 'up', function(e) {
       }, {
         title: 'Second Item',
         subtitle: 'Subtitle Text'
+      }, {
+        title: 'Third Item',
+      }, {
+        title: 'Fourth Item',
       }]
     }]
   });

@@ -172,7 +172,7 @@ SimplyImage *simply_res_auto_image(SimplyRes *self, uint32_t id, bool is_placeho
 }
 
 GFont simply_res_add_custom_font(SimplyRes *self, uint32_t id) {
-  SimplyFont *font = malloc(sizeof(*font));
+  SimplyFont *font = malloc0(sizeof(*font));
   if (!font) {
     return NULL;
   }
@@ -188,6 +188,7 @@ GFont simply_res_add_custom_font(SimplyRes *self, uint32_t id) {
     return NULL;
   }
 
+  font->id = id;
   font->font = custom_font;
 
   list1_prepend(&self->fonts, &font->node);

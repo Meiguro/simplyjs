@@ -287,6 +287,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
         enable_text_flow_and_paging(self, body_attributes, &body_rect), NOOP);
     GSize body_size = graphics_text_layout_get_content_size_with_attributes(
         body->text, body_font, body_rect, GTextOverflowModeWordWrap, text_align, body_attributes);
+    body_size.w = body_rect.size.w;
     if (self->window.is_scrollable) {
       body_rect.size = body_size;
       int16_t new_height = cursor.y + 2 * margin_y + body_size.h;

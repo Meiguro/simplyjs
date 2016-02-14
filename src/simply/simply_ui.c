@@ -158,8 +158,13 @@ void simply_ui_set_text_color(SimplyUi *self, SimplyUiTextfieldId textfield_id, 
 static void enable_text_flow_and_paging(SimplyUi *self, GTextAttributes *text_attributes,
                                         const GRect *box) {
   graphics_text_attributes_enable_screen_text_flow(text_attributes, TEXT_FLOW_INSET);
-  graphics_text_attributes_enable_paging(
-      text_attributes, box->origin, layer_get_bounds((Layer *)self->window.scroll_layer));
+  Layer *base_layer = (Layer *)self->window.scroll_layer;
+  const GPoint origin_on_screen =
+      layer_convert_point_to_screen(base_layer, box->origin);
+  const GRect paging_on_screen =
+      layer_convert_rect_to_screen(base_layer,
+                                   (GRect) { .size = layer_get_bounds(base_layer).size });
+  graphics_text_attributes_enable_paging(text_attributes, origin_on_screen, paging_on_screen);
 }
 
 static void layer_update_callback(Layer *layer, GContext *ctx) {

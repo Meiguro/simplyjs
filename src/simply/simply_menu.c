@@ -161,13 +161,17 @@ static SimplyMenuSection *prv_get_menu_section(SimplyMenu *self, int index) {
                                          (void*)(uintptr_t) index);
 }
 
+static void prv_free_title(char **title) {
+  if (*title && *title != EMPTY_TITLE) {
+    free(*title);
+    *title = NULL;
+  }
+}
+
 static void prv_destroy_section(SimplyMenu *self, SimplyMenuSection *section) {
   if (!section) { return; }
   list1_remove(&self->menu_layer.sections, &section->node);
-  if (section->title && section->title != EMPTY_TITLE) {
-    free(section->title);
-    section->title = NULL;
-  }
+  prv_free_title(&section->title);
   free(section);
 }
 
@@ -187,14 +191,8 @@ static SimplyMenuItem *prv_get_menu_item(SimplyMenu *self, int section, int inde
 static void prv_destroy_item(SimplyMenu *self, SimplyMenuItem *item) {
   if (!item) { return; }
   list1_remove(&self->menu_layer.items, &item->node);
-  if (item->title) {
-    free(item->title);
-    item->title = NULL;
-  }
-  if (item->subtitle) {
-    free(item->subtitle);
-    item->subtitle = NULL;
-  }
+  prv_free_title(&item->title);
+  prv_free_title(&item->subtitle);
   free(item);
 }
 

@@ -179,13 +179,14 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       self->ui_layer.custom_body_font : fonts_get_system_font(style->body_font);
 
   const int16_t margin_x = 5;
-  const int16_t margin_y = 2;
+  const int16_t margin_top = 2;
+  const int16_t margin_bottom = self->window.is_scrollable ? 10 : margin_top;
   const int16_t image_offset_y = 3;
 
   GRect text_frame = frame;
   text_frame.size.w -= 2 * margin_x;
-  text_frame.size.h += 1000;
-  GPoint cursor = { margin_x, margin_y };
+  text_frame.size.h += INT16_MAX / 2;
+  GPoint cursor = { margin_x, margin_top };
 
   if (self->window.use_action_bar) {
     text_frame.size.w -= ACTION_BAR_WIDTH + PBL_IF_ROUND_ELSE(TEXT_FLOW_DEFAULT_INSET, 0);
@@ -272,32 +273,32 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
 
   if (body_image) {
     body_image_bounds = gbitmap_get_bounds(body_image->bitmap);
+    image_pos = cursor;
+    cursor.y += body_image_bounds.size.h;
   }
 
   if (has_body) {
     body_rect = (GRect) { cursor, (self->window.is_scrollable ? text_frame.size : frame.size) };
     body_rect.origin = cursor;
     body_rect.size.w = text_frame.size.w;
-    body_rect.size.h -= 2 * margin_y + cursor.y;
-    if (body_image) {
-      image_pos = body_rect.origin;
-      body_rect.origin.y += body_image_bounds.size.h;
-    }
+    body_rect.size.h -= cursor.y + margin_bottom;
     PBL_IF_ROUND_ELSE(
         enable_text_flow_and_paging(self, body_attributes, &body_rect), NOOP);
     GSize body_size = graphics_text_layout_get_content_size_with_attributes(
         body->text, body_font, body_rect, GTextOverflowModeWordWrap, text_align, body_attributes);
     body_size.w = body_rect.size.w;
+    cursor.y = body_rect.origin.y + body_size.h;
     if (self->window.is_scrollable) {
       body_rect.size = body_size;
-      int16_t new_height = cursor.y + 2 * margin_y + body_size.h;
-      frame.size.h = window_frame.size.h > new_height ? window_frame.size.h : new_height;
+      const int new_height = cursor.y + margin_bottom;
+      frame.size.h = MAX(window_frame.size.h, new_height);
       layer_set_frame(layer, frame);
       scroll_layer_set_content_size(self->window.scroll_layer, frame.size);
     } else if (!self->ui_layer.custom_body_font && body_size.h > body_rect.size.h) {
       body_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
     }
-    cursor.y = body_rect.origin.y + body_size.h;
+    // For rendering text descenders
+    body_rect.size.h += margin_bottom;
   }
 
   IF_SDK_2_ELSE(({

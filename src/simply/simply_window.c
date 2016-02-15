@@ -65,6 +65,7 @@ typedef ClickPacket LongClickPacket;
 static GColor8 s_button_palette[] = { { GColorWhiteARGB8 }, { GColorClearARGB8 } };
 
 
+static GRect prv_update_layer_placement(SimplyWindow *self);
 static void click_config_provider(void *data);
 
 static bool prv_send_click(SimplyMsg *self, Command type, ButtonId button) {
@@ -101,19 +102,18 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
   if (!self->layer) { return; }
 
   if (!is_scrollable) {
-    GRect bounds = { GPointZero, layer_get_bounds(window_get_root_layer(self->window)).size };
-    layer_set_bounds(self->layer, bounds);
+    GRect frame = prv_update_layer_placement(self);
     const bool animated = true;
     scroll_layer_set_content_offset(self->scroll_layer, GPointZero, animated);
-    scroll_layer_set_content_size(self->scroll_layer, bounds.size);
+    scroll_layer_set_content_size(self->scroll_layer, frame.size);
   }
 
   layer_mark_dirty(self->layer);
 }
 
-static void prv_update_layer_placement(SimplyWindow *self) {
+static GRect prv_update_layer_placement(SimplyWindow *self) {
   Layer * const main_layer = self->layer ?: scroll_layer_get_layer(self->scroll_layer);
-  if (!main_layer) { return; }
+  if (!main_layer) { return GRectZero; }
 
   GRect frame = { .size = layer_get_frame(window_get_root_layer(self->window)).size };
 
@@ -125,10 +125,9 @@ static void prv_update_layer_placement(SimplyWindow *self) {
     if (has_status_bar) {
       GRect status_frame = { .size = { frame.size.w, STATUS_BAR_LAYER_HEIGHT } };
       frame.origin.y = STATUS_BAR_LAYER_HEIGHT;
-#if defined(PBL_ROUND)
-      frame.size.h -= self->status_bar_insets_bottom ? STATUS_BAR_LAYER_HEIGHT * 2 :
-                                                       STATUS_BAR_LAYER_HEIGHT;
-#endif
+      frame.size.h -=
+          PBL_IF_ROUND_ELSE(self->status_bar_insets_bottom, false) ? STATUS_BAR_LAYER_HEIGHT * 2 :
+                                                                     STATUS_BAR_LAYER_HEIGHT;
       if (has_action_bar) {
         status_frame.size.w -= ACTION_BAR_WIDTH;
       }
@@ -137,6 +136,7 @@ static void prv_update_layer_placement(SimplyWindow *self) {
   }
 
   layer_set_frame(main_layer, frame);
+  return frame;
 }
 
 

@@ -165,7 +165,7 @@ Settings.onOpenConfig = function(e) {
     return;
   }
   var hash = encodeURIComponent(JSON.stringify(options));
-  Pebble.openURL(url + '#' + hash);
+  Pebble.openURL(url + (listener.params.noHash ? '' : '#' + hash));
 };
 
 Settings.onCloseConfig = function(e) {

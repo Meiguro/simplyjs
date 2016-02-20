@@ -110,6 +110,10 @@ WindowStack.prototype.each = function(callback) {
   }
 };
 
+WindowStack.prototype.length = function() {
+  return this._items.length;
+};
+
 WindowStack.prototype.emitHide = function(windowId) {
   var wind = this.get(windowId);
   if (wind !== this.top()) { return; }

@@ -144,7 +144,7 @@ void simply_ui_set_style(SimplyUi *self, int style_index) {
 void simply_ui_set_text(SimplyUi *self, SimplyUiTextfieldId textfield_id, const char *str) {
   SimplyUiTextfield *textfield = &self->ui_layer.textfields[textfield_id];
   char **str_field = &textfield->text;
-  strset(str_field, str);
+  strset_truncated(str_field, str);
   mark_dirty(self);
 }
 

@@ -164,8 +164,9 @@ Settings.onOpenConfig = function(e) {
     options = Settings.getBaseOptions();
     return;
   }
-  var hash = encodeURIComponent(JSON.stringify(options));
-  Pebble.openURL(url + (listener.params.noHash ? '' : '#' + hash));
+  if (listener.params.hash !== false) 
+    url += '#' + encodeURIComponent(JSON.stringify(options));
+  Pebble.openURL(url);
 };
 
 Settings.onCloseConfig = function(e) {

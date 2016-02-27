@@ -213,6 +213,14 @@ static void rect_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRec
   rect_element_draw_border(ctx, self, element);
 }
 
+static void line_element_draw(GContext *ctx, SimplyStage *self, SimplyElementLine *element) {
+  if (element->border_color.a) {
+    const GPoint end = { element->frame.origin.x + element->frame.size.w,
+                         element->frame.origin.y + element->frame.size.h };
+    graphics_draw_line(ctx, element->frame.origin, end);
+  }
+}
+
 static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementCircle *element) {
   if (element->common.background_color.a) {
     graphics_fill_circle(ctx, element->common.frame.origin, element->radius);
@@ -299,7 +307,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, gcolor8_get(self->window.background_color));
   graphics_fill_rect(ctx, frame, 0, GCornerNone);
 
-  SimplyElementCommon *element = (SimplyElementCommon*) self->stage_layer.elements;
+  SimplyElementCommon *element = (SimplyElementCommon *)self->stage_layer.elements;
   while (element) {
     element_set_graphics_context(ctx, self, element);
     int16_t max_y = element->frame.origin.y + element->frame.size.h;
@@ -310,19 +318,22 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       case SimplyElementTypeNone:
         break;
       case SimplyElementTypeRect:
-        rect_element_draw(ctx, self, (SimplyElementRect*) element);
+        rect_element_draw(ctx, self, (SimplyElementRect *)element);
+        break;
+      case SimplyElementTypeLine:
+        line_element_draw(ctx, self, (SimplyElementLine *)element);
         break;
       case SimplyElementTypeCircle:
-        circle_element_draw(ctx, self, (SimplyElementCircle*) element);
+        circle_element_draw(ctx, self, (SimplyElementCircle *)element);
         break;
       case SimplyElementTypeRadial:
-        radial_element_draw(ctx, self, (SimplyElementRadial*) element);
+        radial_element_draw(ctx, self, (SimplyElementRadial *)element);
         break;
       case SimplyElementTypeText:
-        text_element_draw(ctx, self, (SimplyElementText*) element);
+        text_element_draw(ctx, self, (SimplyElementText *)element);
         break;
       case SimplyElementTypeImage:
-        image_element_draw(ctx, self, (SimplyElementImage*) element);
+        image_element_draw(ctx, self, (SimplyElementImage *)element);
         break;
       case SimplyElementTypeInverter:
         break;
@@ -337,24 +348,34 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   }
 }
 
-static SimplyElementCommon *alloc_element(SimplyElementType type) {
+static size_t prv_get_element_size(SimplyElementType type) {
   switch (type) {
-    case SimplyElementTypeNone: return NULL;
-    case SimplyElementTypeRect: return malloc0(sizeof(SimplyElementRect));
-    case SimplyElementTypeCircle: return malloc0(sizeof(SimplyElementCircle));
-    case SimplyElementTypeRadial: return malloc0(sizeof(SimplyElementRadial));
-    case SimplyElementTypeText: return malloc0(sizeof(SimplyElementText));
-    case SimplyElementTypeImage: return malloc0(sizeof(SimplyElementImage));
+    case SimplyElementTypeNone: return 0;
+    case SimplyElementTypeLine: return sizeof(SimplyElementLine);
+    case SimplyElementTypeRect: return sizeof(SimplyElementRect);
+    case SimplyElementTypeCircle: return sizeof(SimplyElementCircle);
+    case SimplyElementTypeRadial: return sizeof(SimplyElementRadial);
+    case SimplyElementTypeText: return sizeof(SimplyElementText);
+    case SimplyElementTypeImage: return sizeof(SimplyElementImage);
+    case SimplyElementTypeInverter: return sizeof(SimplyElementInverter);
+  }
+  return 0;
+}
+
+static SimplyElementCommon *prv_create_element(SimplyElementType type) {
+  SimplyElementCommon *common = malloc0(prv_get_element_size(type));
+  if (!common) {
+    return NULL;
+  }
+  switch (type) {
+    default: return common;
     case SimplyElementTypeInverter: {
-      SimplyElementInverter *element = malloc0(sizeof(SimplyElementInverter));
-      if (!element) {
-        return NULL;
-      }
+      SimplyElementInverter *element = (SimplyElementInverter *)common;
       element->inverter_layer = inverter_layer_create(GRect(0, 0, 0, 0));
-      return &element->common;
+      return common;
     }
   }
-  return NULL;
+  return common;
 }
 
 SimplyElementCommon *simply_stage_auto_element(SimplyStage *self, uint32_t id, SimplyElementType type) {
@@ -366,7 +387,7 @@ SimplyElementCommon *simply_stage_auto_element(SimplyStage *self, uint32_t id, S
   if (element) {
     return element;
   }
-  while (!(element = alloc_element(type))) {
+  while (!(element = prv_create_element(type))) {
     if (!simply_res_evict_image(self->window.simply->res)) {
       return NULL;
     }
@@ -399,7 +420,9 @@ SimplyElementCommon *simply_stage_remove_element(SimplyStage *self, SimplyElemen
 }
 
 void simply_stage_set_element_frame(SimplyStage *self, SimplyElementCommon *element, GRect frame) {
-  grect_standardize(&frame);
+  if (element->type != SimplyElementTypeLine) {
+    grect_standardize(&frame);
+  }
   element->frame = frame;
   switch (element->type) {
     default: break;

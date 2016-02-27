@@ -32,6 +32,7 @@ var StageElement = function(elementDef) {
 var Types = [
   'NoneType',
   'RectType',
+  'LineType',
   'CircleType',
   'RadialType',
   'TextType',

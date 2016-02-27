@@ -12,6 +12,7 @@ var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
 var Menu = require('ui/menu');
 var StageElement = require('ui/element');
+var Vector2 = require('vector2');
 
 var simply = require('ui/simply');
 
@@ -1320,11 +1321,27 @@ SimplyPebble.elementRemove = function(id) {
   SimplyPebble.sendPacket(ElementRemovePacket.id(id));
 };
 
+SimplyPebble.elementFrame = function(packet, def, altDef) {
+  var position = def.position || (altDef ? altDef.position : undefined);
+  var position2 = def.position2 || (altDef ? altDef.position2 : undefined);
+  var size = def.size || (altDef ? altDef.size : undefined);
+  if (position && position2) {
+    size = position2.clone().subSelf(position);
+  }
+  packet.position(position);
+  packet.size(size);
+};
+
 SimplyPebble.elementCommon = function(id, def) {
+  if ('strokeColor' in def) {
+    ElementCommonPacket.borderColor(def.strokeColor);
+  }
+  if ('strokeWidth' in def) {
+    ElementCommonPacket.borderWidth(def.strokeWidth);
+  }
+  SimplyPebble.elementFrame(ElementCommonPacket, def);
   ElementCommonPacket
     .id(id)
-    .position(def.position)
-    .size(def.size)
     .prop(def);
   SimplyPebble.sendPacket(ElementCommonPacket);
 };
@@ -1361,10 +1378,9 @@ SimplyPebble.elementImage = function(id, image, compositing) {
 };
 
 SimplyPebble.elementAnimate = function(id, def, animateDef, duration, easing) {
+  SimplyPebble.elementFrame(ElementAnimatePacket, animateDef, def);
   ElementAnimatePacket
     .id(id)
-    .position(animateDef.position || def.position)
-    .size(animateDef.size || def.size)
     .duration(duration)
     .easing(easing);
   SimplyPebble.sendPacket(ElementAnimatePacket);

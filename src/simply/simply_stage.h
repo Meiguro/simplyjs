@@ -25,6 +25,7 @@ typedef enum SimplyElementType SimplyElementType;
 enum SimplyElementType {
   SimplyElementTypeNone = 0,
   SimplyElementTypeRect,
+  SimplyElementTypeLine,
   SimplyElementTypeCircle,
   SimplyElementTypeRadial,
   SimplyElementTypeText,
@@ -54,6 +55,8 @@ struct SimplyElementCommon {
   GColor8 background_color;
   GColor8 border_color;
 };
+
+typedef struct SimplyElementCommon SimplyElementLine;
 
 typedef struct SimplyElementRect SimplyElementRect;
 

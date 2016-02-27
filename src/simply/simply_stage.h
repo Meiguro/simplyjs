@@ -24,12 +24,12 @@ typedef enum SimplyElementType SimplyElementType;
 
 enum SimplyElementType {
   SimplyElementTypeNone = 0,
-  SimplyElementTypeRect = 1,
-  SimplyElementTypeCircle = 2,
-  SimplyElementTypeRadial = 6,
-  SimplyElementTypeText = 3,
-  SimplyElementTypeImage = 4,
-  SimplyElementTypeInverter = 5,
+  SimplyElementTypeRect,
+  SimplyElementTypeCircle,
+  SimplyElementTypeRadial,
+  SimplyElementTypeText,
+  SimplyElementTypeImage,
+  SimplyElementTypeInverter,
 };
 
 struct SimplyStageLayer {

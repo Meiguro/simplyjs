@@ -195,17 +195,18 @@ void simply_stage_clear(SimplyStage *self) {
   simply_stage_update_ticker(self);
 }
 
-static void rect_element_draw_background(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
-  if (element->background_color.a) {
-    graphics_context_set_fill_color(ctx, gcolor8_get(element->background_color));
-    graphics_fill_rect(ctx, element->frame, element->radius, GCornersAll);
+static void rect_element_draw_background(GContext *ctx, SimplyStage *self,
+                                         SimplyElementRect *element) {
+  if (element->common.background_color.a) {
+    graphics_context_set_fill_color(ctx, gcolor8_get(element->common.background_color));
+    graphics_fill_rect(ctx, element->common.frame, element->radius, GCornersAll);
   }
 }
 
 static void rect_element_draw_border(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
-  if (element->border_color.a) {
-    graphics_context_set_stroke_color(ctx, gcolor8_get(element->border_color));
-    graphics_draw_round_rect(ctx, element->frame, element->radius);
+  if (element->common.border_color.a) {
+    graphics_context_set_stroke_color(ctx, gcolor8_get(element->common.border_color));
+    graphics_draw_round_rect(ctx, element->common.frame, element->radius);
   }
 }
 
@@ -215,13 +216,13 @@ static void rect_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRec
 }
 
 static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementCircle *element) {
-  if (element->background_color.a) {
-    graphics_context_set_fill_color(ctx, gcolor8_get(element->background_color));
-    graphics_fill_circle(ctx, element->frame.origin, element->radius);
+  if (element->common.background_color.a) {
+    graphics_context_set_fill_color(ctx, gcolor8_get(element->common.background_color));
+    graphics_fill_circle(ctx, element->common.frame.origin, element->radius);
   }
-  if (element->border_color.a) {
-    graphics_context_set_stroke_color(ctx, gcolor8_get(element->border_color));
-    graphics_draw_circle(ctx, element->frame.origin, element->radius);
+  if (element->common.border_color.a) {
+    graphics_context_set_stroke_color(ctx, gcolor8_get(element->common.border_color));
+    graphics_draw_circle(ctx, element->common.frame.origin, element->radius);
   }
 }
 
@@ -236,17 +237,18 @@ static void radial_element_draw(GContext *ctx, SimplyStage *self, SimplyElementR
   const GOvalScaleMode scale_mode = GOvalScaleModeFitCircle;
   const int32_t angle_start = DEG_TO_TRIGANGLE(element->angle_start);
   const int32_t angle_end = DEG_TO_TRIGANGLE(element->angle_end);
-  if (element->background_color.a) {
-    graphics_context_set_fill_color(ctx, element->background_color);
-    graphics_fill_radial(ctx, element->frame, scale_mode, element->radius, angle_start, angle_end);
+  if (element->common.background_color.a) {
+    graphics_context_set_fill_color(ctx, element->common.background_color);
+    graphics_fill_radial(ctx, element->common.frame, scale_mode, element->radius,
+                         angle_start, angle_end);
   }
-  if (element->border_color.a && element->border_width) {
-    graphics_context_set_stroke_color(ctx, element->border_color);
+  if (element->common.border_color.a && element->border_width) {
+    graphics_context_set_stroke_color(ctx, element->common.border_color);
     graphics_context_set_stroke_width(ctx, element->border_width);
-    graphics_draw_arc(ctx, element->frame, scale_mode, angle_start, angle_end);
-    GRect inner_frame = grect_inset(element->frame, GEdgeInsets(element->radius));
-    prv_draw_line_polar(ctx, &element->frame, &inner_frame, scale_mode, angle_start);
-    prv_draw_line_polar(ctx, &element->frame, &inner_frame, scale_mode, angle_end);
+    graphics_draw_arc(ctx, element->common.frame, scale_mode, angle_start, angle_end);
+    GRect inner_frame = grect_inset(element->common.frame, GEdgeInsets(element->radius));
+    prv_draw_line_polar(ctx, &element->common.frame, &inner_frame, scale_mode, angle_start);
+    prv_draw_line_polar(ctx, &element->common.frame, &inner_frame, scale_mode, angle_end);
     if (inner_frame.size.w) {
       graphics_draw_arc(ctx, inner_frame, GOvalScaleModeFitCircle,
                         angle_start, angle_end);
@@ -271,7 +273,8 @@ static void text_element_draw(GContext *ctx, SimplyStage *self, SimplyElementTex
     }
     GFont font = element->font ? element->font : fonts_get_system_font(FONT_KEY_GOTHIC_14);
     graphics_context_set_text_color(ctx, gcolor8_get(element->text_color));
-    graphics_draw_text(ctx, text, font, element->frame, element->overflow_mode, element->alignment, NULL);
+    graphics_draw_text(ctx, text, font, element->rect.common.frame, element->overflow_mode,
+                       element->alignment, NULL);
   }
 }
 
@@ -280,7 +283,7 @@ static void image_element_draw(GContext *ctx, SimplyStage *self, SimplyElementIm
   rect_element_draw_background(ctx, self, (SimplyElementRect*) element);
   SimplyImage *image = simply_res_get_image(self->window.simply->res, element->image);
   if (image && image->bitmap) {
-    GRect frame = element->frame;
+    GRect frame = element->rect.common.frame;
     if (frame.size.w == 0 && frame.size.h == 0) {
       frame = gbitmap_get_bounds(image->bitmap);
     }

@@ -92,7 +92,7 @@ static void prv_set_scroll_layer_click_config(SimplyWindow *self) {
 
 void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable, bool animated,
                                   bool reset) {
-  if (self->is_scrollable == is_scrollable && !reset) { return; }
+  if (!self->use_scroll_layer || (self->is_scrollable == is_scrollable && !reset)) { return; }
 
   self->is_scrollable = is_scrollable;
 

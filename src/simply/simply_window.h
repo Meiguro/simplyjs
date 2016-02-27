@@ -24,6 +24,7 @@ struct SimplyWindow {
   ButtonId button_mask:4;
   GColor8 background_color;
   bool is_scrollable:1;
+  bool use_scroll_layer:1;
   bool use_status_bar:1;
   bool use_action_bar:1;
 #if defined(PBL_ROUND)

@@ -751,6 +751,7 @@ var ElementCommonPacket = new struct([
   ['uint32', 'id'],
   [GPoint, 'position', PositionType],
   [GSize, 'size', SizeType],
+  ['uint16', 'borderWidth', EnumerableType],
   ['uint8', 'backgroundColor', Color],
   ['uint8', 'borderColor', Color],
 ]);
@@ -771,12 +772,6 @@ var ElementAngleEndPacket = new struct([
   [Packet, 'packet'],
   ['uint32', 'id'],
   ['uint16', 'angleEnd', EnumerableType],
-]);
-
-var ElementBorderWidthPacket = new struct([
-  [Packet, 'packet'],
-  ['uint32', 'id'],
-  ['uint16', 'borderWidth', EnumerableType],
 ]);
 
 var ElementTextPacket = new struct([
@@ -881,7 +876,6 @@ var CommandPackets = [
   ElementRadiusPacket,
   ElementAngleStartPacket,
   ElementAngleEndPacket,
-  ElementBorderWidthPacket,
   ElementTextPacket,
   ElementTextStylePacket,
   ElementImagePacket,
@@ -1347,10 +1341,6 @@ SimplyPebble.elementAngleEnd = function(id, angleEnd) {
   SimplyPebble.sendPacket(ElementAngleEndPacket.id(id).angleEnd(angleEnd));
 };
 
-SimplyPebble.elementBorderWidth = function(id, borderWidth) {
-  SimplyPebble.sendPacket(ElementBorderWidthPacket.id(id).borderWidth(borderWidth));
-};
-
 SimplyPebble.elementText = function(id, text, timeUnits) {
   SimplyPebble.sendPacket(ElementTextPacket.id(id).updateTimeUnits(timeUnits).text(text));
 };
@@ -1398,7 +1388,6 @@ SimplyPebble.stageElement = function(id, type, def, index) {
       SimplyPebble.elementRadius(id, def.radius);
       SimplyPebble.elementAngleStart(id, def.angleStart);
       SimplyPebble.elementAngleEnd(id, def.angleEnd);
-      SimplyPebble.elementBorderWidth(id, def.borderWidth);
       break;
     case StageElement.TextType:
       SimplyPebble.elementRadius(id, def.radius);

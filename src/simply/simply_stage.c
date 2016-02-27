@@ -41,6 +41,7 @@ struct __attribute__((__packed__)) ElementCommonPacket {
   Packet packet;
   uint32_t id;
   GRect frame;
+  uint16_t border_width;
   GColor8 background_color;
   GColor8 border_color;
 };
@@ -67,14 +68,6 @@ struct __attribute__((__packed__)) CommandElementAngleEndPacket {
   Packet packet;
   uint32_t id;
   uint16_t angle_end;
-};
-
-typedef struct CommandElementBorderWidthPacket CommandElementBorderWidthPacket;
-
-struct __attribute__((__packed__)) CommandElementBorderWidthPacket {
-  Packet packet;
-  uint32_t id;
-  uint16_t border_width;
 };
 
 typedef struct ElementTextPacket ElementTextPacket;
@@ -195,17 +188,22 @@ void simply_stage_clear(SimplyStage *self) {
   simply_stage_update_ticker(self);
 }
 
+static void element_set_graphics_context(GContext *ctx, SimplyStage *self,
+                                         SimplyElementCommon *element) {
+  graphics_context_set_fill_color(ctx, element->background_color);
+  graphics_context_set_stroke_color(ctx, element->border_color);
+  graphics_context_set_stroke_width(ctx, element->border_width);
+}
+
 static void rect_element_draw_background(GContext *ctx, SimplyStage *self,
                                          SimplyElementRect *element) {
   if (element->common.background_color.a) {
-    graphics_context_set_fill_color(ctx, gcolor8_get(element->common.background_color));
     graphics_fill_rect(ctx, element->common.frame, element->radius, GCornersAll);
   }
 }
 
 static void rect_element_draw_border(GContext *ctx, SimplyStage *self, SimplyElementRect *element) {
   if (element->common.border_color.a) {
-    graphics_context_set_stroke_color(ctx, gcolor8_get(element->common.border_color));
     graphics_draw_round_rect(ctx, element->common.frame, element->radius);
   }
 }
@@ -217,11 +215,9 @@ static void rect_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRec
 
 static void circle_element_draw(GContext *ctx, SimplyStage *self, SimplyElementCircle *element) {
   if (element->common.background_color.a) {
-    graphics_context_set_fill_color(ctx, gcolor8_get(element->common.background_color));
     graphics_fill_circle(ctx, element->common.frame.origin, element->radius);
   }
   if (element->common.border_color.a) {
-    graphics_context_set_stroke_color(ctx, gcolor8_get(element->common.border_color));
     graphics_draw_circle(ctx, element->common.frame.origin, element->radius);
   }
 }
@@ -237,18 +233,15 @@ static void radial_element_draw(GContext *ctx, SimplyStage *self, SimplyElementR
   const GOvalScaleMode scale_mode = GOvalScaleModeFitCircle;
   const int32_t angle_start = DEG_TO_TRIGANGLE(element->angle_start);
   const int32_t angle_end = DEG_TO_TRIGANGLE(element->angle_end);
-  if (element->common.background_color.a) {
-    graphics_context_set_fill_color(ctx, element->common.background_color);
-    graphics_fill_radial(ctx, element->common.frame, scale_mode, element->radius,
+  if (element->rect.common.background_color.a) {
+    graphics_fill_radial(ctx, element->rect.common.frame, scale_mode, element->rect.radius,
                          angle_start, angle_end);
   }
-  if (element->common.border_color.a && element->border_width) {
-    graphics_context_set_stroke_color(ctx, element->common.border_color);
-    graphics_context_set_stroke_width(ctx, element->border_width);
-    graphics_draw_arc(ctx, element->common.frame, scale_mode, angle_start, angle_end);
-    GRect inner_frame = grect_inset(element->common.frame, GEdgeInsets(element->radius));
-    prv_draw_line_polar(ctx, &element->common.frame, &inner_frame, scale_mode, angle_start);
-    prv_draw_line_polar(ctx, &element->common.frame, &inner_frame, scale_mode, angle_end);
+  if (element->rect.common.border_color.a && element->rect.common.border_width) {
+    graphics_draw_arc(ctx, element->rect.common.frame, scale_mode, angle_start, angle_end);
+    GRect inner_frame = grect_inset(element->rect.common.frame, GEdgeInsets(element->rect.radius));
+    prv_draw_line_polar(ctx, &element->rect.common.frame, &inner_frame, scale_mode, angle_start);
+    prv_draw_line_polar(ctx, &element->rect.common.frame, &inner_frame, scale_mode, angle_end);
     if (inner_frame.size.w) {
       graphics_draw_arc(ctx, inner_frame, GOvalScaleModeFitCircle,
                         angle_start, angle_end);
@@ -265,7 +258,7 @@ static char *format_time(char *format) {
 }
 
 static void text_element_draw(GContext *ctx, SimplyStage *self, SimplyElementText *element) {
-  rect_element_draw(ctx, self, (SimplyElementRect*) element);
+  rect_element_draw(ctx, self, &element->rect);
   char *text = element->text;
   if (element->text_color.a && is_string(text)) {
     if (element->time_units) {
@@ -280,7 +273,7 @@ static void text_element_draw(GContext *ctx, SimplyStage *self, SimplyElementTex
 
 static void image_element_draw(GContext *ctx, SimplyStage *self, SimplyElementImage *element) {
   graphics_context_set_compositing_mode(ctx, element->compositing);
-  rect_element_draw_background(ctx, self, (SimplyElementRect*) element);
+  rect_element_draw_background(ctx, self, &element->rect);
   SimplyImage *image = simply_res_get_image(self->window.simply->res, element->image);
   if (image && image->bitmap) {
     GRect frame = element->rect.common.frame;
@@ -289,7 +282,7 @@ static void image_element_draw(GContext *ctx, SimplyStage *self, SimplyElementIm
     }
     graphics_draw_bitmap_centered(ctx, image->bitmap, frame);
   }
-  rect_element_draw_border(ctx, self, (SimplyElementRect*) element);
+  rect_element_draw_border(ctx, self, &element->rect);
   graphics_context_set_compositing_mode(ctx, GCompOpAssign);
 }
 
@@ -308,8 +301,7 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
 
   SimplyElementCommon *element = (SimplyElementCommon*) self->stage_layer.elements;
   while (element) {
-    // TODO: change border_width to a common element member
-    graphics_context_set_stroke_width(ctx, 1);
+    element_set_graphics_context(ctx, self, element);
     int16_t max_y = element->frame.origin.y + element->frame.size.h;
     if (max_y > frame.size.h) {
       frame.size.h = max_y;
@@ -592,6 +584,7 @@ static void handle_element_common_packet(Simply *simply, Packet *data) {
   simply_stage_set_element_frame(simply->stage, element, packet->frame);
   element->background_color = packet->background_color;
   element->border_color = packet->border_color;
+  element->border_width = packet->border_width;
   simply_stage_update(simply->stage);
 }
 
@@ -622,16 +615,6 @@ static void handle_element_angle_end_packet(Simply *simply, Packet *data) {
     return;
   }
   element->angle_end = packet->angle_end;
-  simply_stage_update(simply->stage);
-};
-
-static void handle_element_border_width_packet(Simply *simply, Packet *data) {
-  CommandElementBorderWidthPacket *packet = (CommandElementBorderWidthPacket*) data;
-  SimplyElementRadial *element = (SimplyElementRadial*) simply_stage_get_element(simply->stage, packet->id);
-  if (!element) {
-    return;
-  }
-  element->border_width = packet->border_width;
   simply_stage_update(simply->stage);
 };
 
@@ -716,9 +699,6 @@ bool simply_stage_handle_packet(Simply *simply, Packet *packet) {
       return true;
     case CommandElementAngleEnd:
       handle_element_angle_end_packet(simply, packet);
-      return true;
-    case CommandElementBorderWidth:
-      handle_element_border_width_packet(simply, packet);
       return true;
     case CommandElementText:
       handle_element_text_packet(simply, packet);

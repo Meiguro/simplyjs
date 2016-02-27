@@ -8,8 +8,9 @@ var simply = require('ui/simply');
 var elementProps = [
   'position',
   'size',
-  'borderColor',
   'backgroundColor',
+  'borderColor',
+  'borderWidth',
 ];
 
 var accessorProps = elementProps;

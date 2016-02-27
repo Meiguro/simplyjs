@@ -15,6 +15,7 @@ var textProps = [
 var defaults = {
   backgroundColor: 'clear',
   borderColor: 'clear',
+  borderWidth: 1,
   color: 'white',
   font: 'gothic-24',
 };

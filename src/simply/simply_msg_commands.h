@@ -50,7 +50,6 @@ enum Command {
   CommandElementRadius,
   CommandElementAngleStart,
   CommandElementAngleEnd,
-  CommandElementBorderWidth,
   CommandElementText,
   CommandElementTextStyle,
   CommandElementImage,

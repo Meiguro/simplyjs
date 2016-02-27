@@ -50,6 +50,7 @@ struct SimplyElementCommon {
   uint32_t id;
   SimplyElementType type;
   GRect frame;
+  uint16_t border_width;
   GColor8 background_color;
   GColor8 border_color;
 };
@@ -64,11 +65,9 @@ struct SimplyElementRect {
 typedef struct SimplyElementRadial SimplyElementRadial;
 
 struct SimplyElementRadial {
-  SimplyElementCommon common;
-  uint16_t radius;
+  SimplyElementRect rect;
   uint16_t angle_start;
   uint16_t angle_end;
-  uint16_t border_width;
 };
 
 typedef struct SimplyElementRect SimplyElementCircle;

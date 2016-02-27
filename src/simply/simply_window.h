@@ -44,7 +44,8 @@ bool simply_window_disappear(SimplyWindow *self);
 
 void simply_window_single_click_handler(ClickRecognizerRef recognizer, void *context);
 
-void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable);
+void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable, bool animated,
+                                  bool reset);
 void simply_window_set_status_bar(SimplyWindow *self, bool use_status_bar);
 void simply_window_set_background_color(SimplyWindow *self, GColor8 background_color);
 

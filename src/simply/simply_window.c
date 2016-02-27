@@ -41,8 +41,6 @@ struct __attribute__((__packed__)) WindowStatusBarPacket {
   bool status;
 };
 
-typedef struct WindowButtonConfigPacket WindowButtonConfigPacket;
-
 typedef struct WindowActionBarPacket WindowActionBarPacket;
 
 struct __attribute__((__packed__)) WindowActionBarPacket {
@@ -65,7 +63,7 @@ typedef ClickPacket LongClickPacket;
 static GColor8 s_button_palette[] = { { GColorWhiteARGB8 }, { GColorClearARGB8 } };
 
 
-static GRect prv_update_layer_placement(SimplyWindow *self);
+static void prv_update_layer_placement(SimplyWindow *self, GRect *frame_out);
 static void click_config_provider(void *data);
 
 static bool prv_send_click(SimplyMsg *self, Command type, ButtonId button) {
@@ -92,28 +90,32 @@ static void prv_set_scroll_layer_click_config(SimplyWindow *self) {
   }
 }
 
-void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable) {
-  if (self->is_scrollable == is_scrollable) { return; }
+void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable, bool animated,
+                                  bool reset) {
+  if (self->is_scrollable == is_scrollable && !reset) { return; }
 
   self->is_scrollable = is_scrollable;
 
   prv_set_scroll_layer_click_config(self);
 
-  if (!self->layer) { return; }
-
-  if (!is_scrollable) {
-    GRect frame = prv_update_layer_placement(self);
+  if (!is_scrollable || reset) {
+    GRect frame = GRectZero;
+    prv_update_layer_placement(self, &frame);
+    // TODO: Remove `animated = true` once set content offset always unschedules the animation
     const bool animated = true;
     scroll_layer_set_content_offset(self->scroll_layer, GPointZero, animated);
     scroll_layer_set_content_size(self->scroll_layer, frame.size);
   }
 
-  layer_mark_dirty(self->layer);
+
+  if (self->layer) {
+    layer_mark_dirty(self->layer);
+  }
 }
 
-static GRect prv_update_layer_placement(SimplyWindow *self) {
+static void prv_update_layer_placement(SimplyWindow *self, GRect *frame_out) {
   Layer * const main_layer = self->layer ?: scroll_layer_get_layer(self->scroll_layer);
-  if (!main_layer) { return GRectZero; }
+  if (!main_layer) { return; }
 
   GRect frame = { .size = layer_get_frame(window_get_root_layer(self->window)).size };
 
@@ -136,7 +138,9 @@ static GRect prv_update_layer_placement(SimplyWindow *self) {
   }
 
   layer_set_frame(main_layer, frame);
-  return frame;
+  if (frame_out) {
+    *frame_out = frame;
+  }
 }
 
 
@@ -149,7 +153,7 @@ void simply_window_set_status_bar(SimplyWindow *self, bool use_status_bar) {
     status_bar_layer_add_to_window(self->window, self->status_bar_layer);
   }
 
-  prv_update_layer_placement(self);
+  prv_update_layer_placement(self, NULL);
 
 #ifdef PBL_SDK_2
   if (!window_stack_contains_window(self->window)) { return; }
@@ -202,7 +206,7 @@ void simply_window_set_action_bar(SimplyWindow *self, bool use_action_bar) {
     action_bar_layer_add_to_window(self->action_bar_layer, self->window);
   }
 
-  prv_update_layer_placement(self);
+  prv_update_layer_placement(self, NULL);
 }
 
 void simply_window_set_action_bar_icon(SimplyWindow *self, ButtonId button, uint32_t id) {
@@ -378,9 +382,10 @@ static void prv_handle_window_props_packet(Simply *simply, Packet *data) {
   if (!window) { return; }
 
   WindowPropsPacket *packet = (WindowPropsPacket *)data;
-  window->id = packet->id;
   simply_window_set_background_color(window, packet->background_color);
-  simply_window_set_scrollable(window, packet->scrollable);
+  const bool is_same_window = (window->id == packet->id);
+  simply_window_set_scrollable(window, packet->scrollable, is_same_window, !is_same_window);
+  window->id = packet->id;
 }
 
 static void prv_handle_window_button_config_packet(Simply *simply, Packet *data) {

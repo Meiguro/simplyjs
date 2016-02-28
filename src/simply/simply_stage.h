@@ -65,6 +65,8 @@ struct SimplyElementRect {
   uint16_t radius;
 };
 
+typedef struct SimplyElementRect SimplyElementCircle;
+
 typedef struct SimplyElementRadial SimplyElementRadial;
 
 struct SimplyElementRadial {
@@ -72,8 +74,6 @@ struct SimplyElementRadial {
   uint16_t angle_start;
   uint16_t angle_end;
 };
-
-typedef struct SimplyElementRect SimplyElementCircle;
 
 typedef struct SimplyElementText SimplyElementText;
 

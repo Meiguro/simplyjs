@@ -241,18 +241,19 @@ static void radial_element_draw(GContext *ctx, SimplyStage *self, SimplyElementR
   const GOvalScaleMode scale_mode = GOvalScaleModeFitCircle;
   const int32_t angle_start = DEG_TO_TRIGANGLE(element->angle_start);
   const int32_t angle_end = DEG_TO_TRIGANGLE(element->angle_end);
+  const GRect *frame = &element->rect.common.frame;
   if (element->rect.common.background_color.a) {
-    graphics_fill_radial(ctx, element->rect.common.frame, scale_mode, element->rect.radius,
-                         angle_start, angle_end);
+    graphics_fill_radial(ctx, *frame, scale_mode, element->rect.radius, angle_start, angle_end);
   }
   if (element->rect.common.border_color.a && element->rect.common.border_width) {
-    graphics_draw_arc(ctx, element->rect.common.frame, scale_mode, angle_start, angle_end);
-    GRect inner_frame = grect_inset(element->rect.common.frame, GEdgeInsets(element->rect.radius));
-    prv_draw_line_polar(ctx, &element->rect.common.frame, &inner_frame, scale_mode, angle_start);
-    prv_draw_line_polar(ctx, &element->rect.common.frame, &inner_frame, scale_mode, angle_end);
-    if (inner_frame.size.w) {
-      graphics_draw_arc(ctx, inner_frame, GOvalScaleModeFitCircle,
-                        angle_start, angle_end);
+    graphics_draw_arc(ctx, *frame, scale_mode, angle_start, angle_end);
+    if (element->rect.radius) {
+      GRect inner_frame = grect_inset(*frame, GEdgeInsets(element->rect.radius));
+      if (inner_frame.size.w) {
+        prv_draw_line_polar(ctx, frame, &inner_frame, scale_mode, angle_start);
+        prv_draw_line_polar(ctx, frame, &inner_frame, scale_mode, angle_end);
+        graphics_draw_arc(ctx, inner_frame, GOvalScaleModeFitCircle, angle_start, angle_end);
+      }
     }
   }
 }

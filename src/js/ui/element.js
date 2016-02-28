@@ -80,14 +80,12 @@ StageElement.prototype.animate = function(field, value, duration) {
     duration = value;
   }
   var animateDef = myutil.toObject(field, value);
-  function animate() {
+  this.queue(function() {
     this._animate(animateDef, duration);
     util2.copy(animateDef, this.state);
-  }
-  if (this._queue.length === 0) {
-    animate.call(this);
-  } else {
-    this.queue(animate);
+  });
+  if (!this.state.animating) {
+    this.dequeue();
   }
   return this;
 };
@@ -98,8 +96,12 @@ StageElement.prototype.queue = function(callback) {
 
 StageElement.prototype.dequeue = function() {
   var callback = this._queue.shift();
-  if (!callback) { return; }
-  callback.call(this, this.dequeue.bind(this));
+  if (callback) {
+    this.state.animating = true;
+    callback.call(this, this.dequeue.bind(this));
+  } else {
+    this.state.animating = false;
+  }
 };
 
 StageElement.emitAnimateDone = function(id) {

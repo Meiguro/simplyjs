@@ -49,8 +49,8 @@ main.on('click', 'select', function(e) {
   var radial = new UI.Radial({
     position: new Vector2(2, 14),
     size: new Vector2(140, 140),
-    angleStart: 0,
-    angleEnd: 300,
+    angle: 0,
+    angle2: 300,
     radius: 20,
     backgroundColor: 'cyan',
     borderColor: 'celeste',

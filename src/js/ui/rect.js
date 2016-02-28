@@ -5,6 +5,7 @@ var StageElement = require('ui/element');
 var defaults = {
   backgroundColor: 'white',
   borderColor: 'clear',
+  borderWidth: 1,
 };
 
 var Rect = function(elementDef) {

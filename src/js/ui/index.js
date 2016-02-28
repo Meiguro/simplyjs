@@ -5,6 +5,7 @@ UI.Window = require('ui/window');
 UI.Card = require('ui/card');
 UI.Menu = require('ui/menu');
 UI.Rect = require('ui/rect');
+UI.Line = require('ui/line');
 UI.Circle = require('ui/circle');
 UI.Radial = require('ui/radial');
 UI.Text = require('ui/text');

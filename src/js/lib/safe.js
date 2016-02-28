@@ -140,7 +140,7 @@ safe.dumpError = function(err, intro, level) {
 safe.warn = function(message, level, name) {
   var err = new Error(message);
   err.name = name || 'Warning';
-  safe.dumpError(err, 'Warning:', 1);
+  safe.dumpError(err, 'Warning:', level);
 };
 
 /* Takes a function and return a new function with a call to it wrapped in a try/catch statement */

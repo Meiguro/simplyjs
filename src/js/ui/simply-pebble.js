@@ -12,6 +12,7 @@ var WindowStack = require('ui/windowstack');
 var Window = require('ui/window');
 var Menu = require('ui/menu');
 var StageElement = require('ui/element');
+var Vector2 = require('vector2');
 
 var simply = require('ui/simply');
 
@@ -751,6 +752,7 @@ var ElementCommonPacket = new struct([
   ['uint32', 'id'],
   [GPoint, 'position', PositionType],
   [GSize, 'size', SizeType],
+  ['uint16', 'borderWidth', EnumerableType],
   ['uint8', 'backgroundColor', Color],
   ['uint8', 'borderColor', Color],
 ]);
@@ -761,22 +763,16 @@ var ElementRadiusPacket = new struct([
   ['uint16', 'radius', EnumerableType],
 ]);
 
-var ElementAngleStartPacket = new struct([
+var ElementAnglePacket = new struct([
   [Packet, 'packet'],
   ['uint32', 'id'],
-  ['uint16', 'angleStart', EnumerableType],
+  ['uint16', 'angle', EnumerableType],
 ]);
 
-var ElementAngleEndPacket = new struct([
+var ElementAngle2Packet = new struct([
   [Packet, 'packet'],
   ['uint32', 'id'],
-  ['uint16', 'angleEnd', EnumerableType],
-]);
-
-var ElementBorderWidthPacket = new struct([
-  [Packet, 'packet'],
-  ['uint32', 'id'],
-  ['uint16', 'borderWidth', EnumerableType],
+  ['uint16', 'angle2', EnumerableType],
 ]);
 
 var ElementTextPacket = new struct([
@@ -879,9 +875,8 @@ var CommandPackets = [
   ElementRemovePacket,
   ElementCommonPacket,
   ElementRadiusPacket,
-  ElementAngleStartPacket,
-  ElementAngleEndPacket,
-  ElementBorderWidthPacket,
+  ElementAnglePacket,
+  ElementAngle2Packet,
   ElementTextPacket,
   ElementTextStylePacket,
   ElementImagePacket,
@@ -1326,29 +1321,41 @@ SimplyPebble.elementRemove = function(id) {
   SimplyPebble.sendPacket(ElementRemovePacket.id(id));
 };
 
+SimplyPebble.elementFrame = function(packet, def, altDef) {
+  var position = def.position || (altDef ? altDef.position : undefined);
+  var position2 = def.position2 || (altDef ? altDef.position2 : undefined);
+  var size = def.size || (altDef ? altDef.size : undefined);
+  if (position && position2) {
+    size = position2.clone().subSelf(position);
+  }
+  packet.position(position);
+  packet.size(size);
+};
+
 SimplyPebble.elementCommon = function(id, def) {
+  if ('strokeColor' in def) {
+    ElementCommonPacket.borderColor(def.strokeColor);
+  }
+  if ('strokeWidth' in def) {
+    ElementCommonPacket.borderWidth(def.strokeWidth);
+  }
+  SimplyPebble.elementFrame(ElementCommonPacket, def);
   ElementCommonPacket
     .id(id)
-    .position(def.position)
-    .size(def.size)
     .prop(def);
   SimplyPebble.sendPacket(ElementCommonPacket);
 };
 
-SimplyPebble.elementRadius = function(id, radius) {
-  SimplyPebble.sendPacket(ElementRadiusPacket.id(id).radius(radius));
+SimplyPebble.elementRadius = function(id, def) {
+  SimplyPebble.sendPacket(ElementRadiusPacket.id(id).radius(def.radius));
 };
 
-SimplyPebble.elementAngleStart = function(id, angleStart) {
-  SimplyPebble.sendPacket(ElementAngleStartPacket.id(id).angleStart(angleStart));
+SimplyPebble.elementAngle = function(id, def) {
+  SimplyPebble.sendPacket(ElementAnglePacket.id(id).angle(def.angleStart || def.angle));
 };
 
-SimplyPebble.elementAngleEnd = function(id, angleEnd) {
-  SimplyPebble.sendPacket(ElementAngleEndPacket.id(id).angleEnd(angleEnd));
-};
-
-SimplyPebble.elementBorderWidth = function(id, borderWidth) {
-  SimplyPebble.sendPacket(ElementBorderWidthPacket.id(id).borderWidth(borderWidth));
+SimplyPebble.elementAngle2 = function(id, def) {
+  SimplyPebble.sendPacket(ElementAngle2Packet.id(id).angle2(def.angleEnd || def.angle2));
 };
 
 SimplyPebble.elementText = function(id, text, timeUnits) {
@@ -1371,10 +1378,9 @@ SimplyPebble.elementImage = function(id, image, compositing) {
 };
 
 SimplyPebble.elementAnimate = function(id, def, animateDef, duration, easing) {
+  SimplyPebble.elementFrame(ElementAnimatePacket, animateDef, def);
   ElementAnimatePacket
     .id(id)
-    .position(animateDef.position || def.position)
-    .size(animateDef.size || def.size)
     .duration(duration)
     .easing(easing);
   SimplyPebble.sendPacket(ElementAnimatePacket);
@@ -1392,21 +1398,20 @@ SimplyPebble.stageElement = function(id, type, def, index) {
   switch (type) {
     case StageElement.RectType:
     case StageElement.CircleType:
-      SimplyPebble.elementRadius(id, def.radius);
+      SimplyPebble.elementRadius(id, def);
       break;
     case StageElement.RadialType:
-      SimplyPebble.elementRadius(id, def.radius);
-      SimplyPebble.elementAngleStart(id, def.angleStart);
-      SimplyPebble.elementAngleEnd(id, def.angleEnd);
-      SimplyPebble.elementBorderWidth(id, def.borderWidth);
+      SimplyPebble.elementRadius(id, def);
+      SimplyPebble.elementAngle(id, def);
+      SimplyPebble.elementAngle2(id, def);
       break;
     case StageElement.TextType:
-      SimplyPebble.elementRadius(id, def.radius);
+      SimplyPebble.elementRadius(id, def);
       SimplyPebble.elementTextStyle(id, def);
       SimplyPebble.elementText(id, def.text, def.updateTimeUnits);
       break;
     case StageElement.ImageType:
-      SimplyPebble.elementRadius(id, def.radius);
+      SimplyPebble.elementRadius(id, def);
       SimplyPebble.elementImage(id, def.image, def.compositing);
       break;
   }

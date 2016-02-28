@@ -8,8 +8,9 @@ var simply = require('ui/simply');
 var elementProps = [
   'position',
   'size',
-  'borderColor',
   'backgroundColor',
+  'borderColor',
+  'borderWidth',
 ];
 
 var accessorProps = elementProps;
@@ -28,12 +29,20 @@ var StageElement = function(elementDef) {
   this._queue = [];
 };
 
-StageElement.RectType = 1;
-StageElement.CircleType = 2;
-StageElement.RadialType = 6;
-StageElement.TextType = 3;
-StageElement.ImageType = 4;
-StageElement.InverterType = 5;
+var Types = [
+  'NoneType',
+  'RectType',
+  'LineType',
+  'CircleType',
+  'RadialType',
+  'TextType',
+  'ImageType',
+  'InverterType',
+];
+
+Types.forEach(function(name, index) {
+  StageElement[name] = index;
+});
 
 util2.copy(Propable.prototype, StageElement.prototype);
 

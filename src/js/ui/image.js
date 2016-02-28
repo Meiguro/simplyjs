@@ -11,6 +11,7 @@ var imageProps = [
 var defaults = {
   backgroundColor: 'clear',
   borderColor: 'clear',
+  borderWidth: 1,
 };
 
 var ImageElement = function(elementDef) {

@@ -763,16 +763,16 @@ var ElementRadiusPacket = new struct([
   ['uint16', 'radius', EnumerableType],
 ]);
 
-var ElementAngleStartPacket = new struct([
+var ElementAnglePacket = new struct([
   [Packet, 'packet'],
   ['uint32', 'id'],
-  ['uint16', 'angleStart', EnumerableType],
+  ['uint16', 'angle', EnumerableType],
 ]);
 
-var ElementAngleEndPacket = new struct([
+var ElementAngle2Packet = new struct([
   [Packet, 'packet'],
   ['uint32', 'id'],
-  ['uint16', 'angleEnd', EnumerableType],
+  ['uint16', 'angle2', EnumerableType],
 ]);
 
 var ElementTextPacket = new struct([
@@ -875,8 +875,8 @@ var CommandPackets = [
   ElementRemovePacket,
   ElementCommonPacket,
   ElementRadiusPacket,
-  ElementAngleStartPacket,
-  ElementAngleEndPacket,
+  ElementAnglePacket,
+  ElementAngle2Packet,
   ElementTextPacket,
   ElementTextStylePacket,
   ElementImagePacket,
@@ -1346,16 +1346,16 @@ SimplyPebble.elementCommon = function(id, def) {
   SimplyPebble.sendPacket(ElementCommonPacket);
 };
 
-SimplyPebble.elementRadius = function(id, radius) {
-  SimplyPebble.sendPacket(ElementRadiusPacket.id(id).radius(radius));
+SimplyPebble.elementRadius = function(id, def) {
+  SimplyPebble.sendPacket(ElementRadiusPacket.id(id).radius(def.radius));
 };
 
-SimplyPebble.elementAngleStart = function(id, angleStart) {
-  SimplyPebble.sendPacket(ElementAngleStartPacket.id(id).angleStart(angleStart));
+SimplyPebble.elementAngle = function(id, def) {
+  SimplyPebble.sendPacket(ElementAnglePacket.id(id).angle(def.angleStart || def.angle));
 };
 
-SimplyPebble.elementAngleEnd = function(id, angleEnd) {
-  SimplyPebble.sendPacket(ElementAngleEndPacket.id(id).angleEnd(angleEnd));
+SimplyPebble.elementAngle2 = function(id, def) {
+  SimplyPebble.sendPacket(ElementAngle2Packet.id(id).angle2(def.angleEnd || def.angle2));
 };
 
 SimplyPebble.elementText = function(id, text, timeUnits) {
@@ -1398,20 +1398,20 @@ SimplyPebble.stageElement = function(id, type, def, index) {
   switch (type) {
     case StageElement.RectType:
     case StageElement.CircleType:
-      SimplyPebble.elementRadius(id, def.radius);
+      SimplyPebble.elementRadius(id, def);
       break;
     case StageElement.RadialType:
-      SimplyPebble.elementRadius(id, def.radius);
-      SimplyPebble.elementAngleStart(id, def.angleStart);
-      SimplyPebble.elementAngleEnd(id, def.angleEnd);
+      SimplyPebble.elementRadius(id, def);
+      SimplyPebble.elementAngle(id, def);
+      SimplyPebble.elementAngle2(id, def);
       break;
     case StageElement.TextType:
-      SimplyPebble.elementRadius(id, def.radius);
+      SimplyPebble.elementRadius(id, def);
       SimplyPebble.elementTextStyle(id, def);
       SimplyPebble.elementText(id, def.text, def.updateTimeUnits);
       break;
     case StageElement.ImageType:
-      SimplyPebble.elementRadius(id, def.radius);
+      SimplyPebble.elementRadius(id, def);
       SimplyPebble.elementImage(id, def.image, def.compositing);
       break;
   }

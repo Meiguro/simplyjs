@@ -21,7 +21,7 @@ Pebble.addEventListener('ready', function(e) {
     return function() {
       if (safe.warnGlobalMoment !== false) {
         safe.warn("You've accessed moment globally. Pleae use `var moment = require('moment')` instead.\n\t" +
-                  'moment will not be automatically loaded as a global in future versions.', 5);
+                  'moment will not be automatically loaded as a global in future versions.', 1);
         safe.warnGlobalMoment = false;
       }
       return (methodName ? moment[methodName] : moment).apply(this, arguments);

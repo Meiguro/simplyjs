@@ -54,21 +54,15 @@ struct __attribute__((__packed__)) ElementRadiusPacket {
   uint16_t radius;
 };
 
-typedef struct CommandElementAngleStartPacket CommandElementAngleStartPacket;
+typedef struct ElementAnglePacket ElementAnglePacket;
 
-struct __attribute__((__packed__)) CommandElementAngleStartPacket {
+struct __attribute__((__packed__)) ElementAnglePacket {
   Packet packet;
   uint32_t id;
-  uint16_t angle_start;
+  uint16_t angle;
 };
 
-typedef struct CommandElementAngleEndPacket CommandElementAngleEndPacket;
-
-struct __attribute__((__packed__)) CommandElementAngleEndPacket {
-  Packet packet;
-  uint32_t id;
-  uint16_t angle_end;
-};
+typedef struct ElementAnglePacket ElementAngle2Packet;
 
 typedef struct ElementTextPacket ElementTextPacket;
 
@@ -239,20 +233,20 @@ static void prv_draw_line_polar(GContext *ctx, const GRect *outer_frame, const G
 
 static void radial_element_draw(GContext *ctx, SimplyStage *self, SimplyElementRadial *element) {
   const GOvalScaleMode scale_mode = GOvalScaleModeFitCircle;
-  const int32_t angle_start = DEG_TO_TRIGANGLE(element->angle_start);
-  const int32_t angle_end = DEG_TO_TRIGANGLE(element->angle_end);
+  const int32_t angle = DEG_TO_TRIGANGLE(element->angle);
+  const int32_t angle2 = DEG_TO_TRIGANGLE(element->angle2);
   const GRect *frame = &element->rect.common.frame;
   if (element->rect.common.background_color.a) {
-    graphics_fill_radial(ctx, *frame, scale_mode, element->rect.radius, angle_start, angle_end);
+    graphics_fill_radial(ctx, *frame, scale_mode, element->rect.radius, angle, angle2);
   }
   if (element->rect.common.border_color.a && element->rect.common.border_width) {
-    graphics_draw_arc(ctx, *frame, scale_mode, angle_start, angle_end);
+    graphics_draw_arc(ctx, *frame, scale_mode, angle, angle2);
     if (element->rect.radius) {
       GRect inner_frame = grect_inset(*frame, GEdgeInsets(element->rect.radius));
       if (inner_frame.size.w) {
-        prv_draw_line_polar(ctx, frame, &inner_frame, scale_mode, angle_start);
-        prv_draw_line_polar(ctx, frame, &inner_frame, scale_mode, angle_end);
-        graphics_draw_arc(ctx, inner_frame, GOvalScaleModeFitCircle, angle_start, angle_end);
+        prv_draw_line_polar(ctx, frame, &inner_frame, scale_mode, angle);
+        prv_draw_line_polar(ctx, frame, &inner_frame, scale_mode, angle2);
+        graphics_draw_arc(ctx, inner_frame, GOvalScaleModeFitCircle, angle, angle2);
       }
     }
   }
@@ -622,23 +616,25 @@ static void handle_element_radius_packet(Simply *simply, Packet *data) {
   simply_stage_update(simply->stage);
 };
 
-static void handle_element_angle_start_packet(Simply *simply, Packet *data) {
-  CommandElementAngleStartPacket *packet = (CommandElementAngleStartPacket*) data;
-  SimplyElementRadial *element = (SimplyElementRadial*) simply_stage_get_element(simply->stage, packet->id);
+static void handle_element_angle_packet(Simply *simply, Packet *data) {
+  ElementAnglePacket *packet = (ElementAnglePacket *)data;
+  SimplyElementRadial *element =
+      (SimplyElementRadial *)simply_stage_get_element(simply->stage, packet->id);
   if (!element) {
     return;
   }
-  element->angle_start = packet->angle_start;
+  element->angle = packet->angle;
   simply_stage_update(simply->stage);
 };
 
-static void handle_element_angle_end_packet(Simply *simply, Packet *data) {
-  CommandElementAngleEndPacket *packet = (CommandElementAngleEndPacket*) data;
-  SimplyElementRadial *element = (SimplyElementRadial*) simply_stage_get_element(simply->stage, packet->id);
+static void handle_element_angle2_packet(Simply *simply, Packet *data) {
+  ElementAngle2Packet *packet = (ElementAngle2Packet *)data;
+  SimplyElementRadial *element =
+      (SimplyElementRadial *)simply_stage_get_element(simply->stage, packet->id);
   if (!element) {
     return;
   }
-  element->angle_end = packet->angle_end;
+  element->angle2 = packet->angle;
   simply_stage_update(simply->stage);
 };
 
@@ -718,11 +714,11 @@ bool simply_stage_handle_packet(Simply *simply, Packet *packet) {
     case CommandElementRadius:
       handle_element_radius_packet(simply, packet);
       return true;
-    case CommandElementAngleStart:
-      handle_element_angle_start_packet(simply, packet);
+    case CommandElementAngle:
+      handle_element_angle_packet(simply, packet);
       return true;
-    case CommandElementAngleEnd:
-      handle_element_angle_end_packet(simply, packet);
+    case CommandElementAngle2:
+      handle_element_angle2_packet(simply, packet);
       return true;
     case CommandElementText:
       handle_element_text_packet(simply, packet);

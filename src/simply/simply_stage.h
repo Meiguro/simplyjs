@@ -71,8 +71,8 @@ typedef struct SimplyElementRadial SimplyElementRadial;
 
 struct SimplyElementRadial {
   SimplyElementRect rect;
-  uint16_t angle_start;
-  uint16_t angle_end;
+  uint16_t angle;
+  uint16_t angle2;
 };
 
 typedef struct SimplyElementText SimplyElementText;

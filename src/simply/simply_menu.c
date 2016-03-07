@@ -282,6 +282,9 @@ static void simply_menu_add_item(SimplyMenu *self, SimplyMenuItem *item) {
 }
 
 static MenuIndex simply_menu_get_selection(SimplyMenu *self) {
+  if (!self->menu_layer.menu_layer) {
+    return (MenuIndex) {};
+  }
   return menu_layer_get_selected_index(self->menu_layer.menu_layer);
 }
 

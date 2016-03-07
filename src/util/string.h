@@ -8,7 +8,7 @@ static inline bool is_string(const char *str) {
   return str && str[0];
 }
 
-static inline int strlen2(const char *str) {
+static inline size_t strlen2(const char *str) {
   return is_string(str) ? strlen(str) : 0;
 }
 

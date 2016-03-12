@@ -36,6 +36,11 @@ var actionProps = [
 
 var accessorProps = configProps;
 
+var nestedProps = [
+  'action',
+  'status',
+];
+
 var defaults = {
   status: false,
   backgroundColor: 'black',
@@ -61,6 +66,8 @@ util2.copy(Propable.prototype, Window.prototype);
 util2.copy(Stage.prototype, Window.prototype);
 
 Propable.makeAccessors(accessorProps, Window.prototype);
+
+Propable.makeNestedAccessors(nestedProps, Window.prototype);
 
 Window.prototype._id = function() {
   return this.state.id;
@@ -141,28 +148,10 @@ Window.prototype._action = function(actionDef) {
   }
 };
 
-Window.prototype.action = function(field, value, clear) {
-  var action = this.state.action;
-  if (!action) {
-    action = this.state.action = {};
+Window.prototype._status = function(statusDef) {
+  if (this === WindowStack.top()) {
+    simply.impl.windowStatusBar(statusDef);
   }
-  if (arguments.length === 0) {
-    return action;
-  }
-  if (arguments.length === 1 && typeof field === 'string') {
-    return action[field];
-  }
-  if (typeof field !== 'string') {
-    clear = value;
-  }
-  if (clear) {
-    this._clear('action');
-  }
-  if (typeof field !== 'boolean') {
-    util2.copy(myutil.toObject(field, value), this.state.action);
-  }
-  this._action(field);
-  return this;
 };
 
 var isBackEvent = function(type, subtype) {

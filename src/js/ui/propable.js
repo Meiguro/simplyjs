@@ -5,6 +5,10 @@ var Propable = function(def) {
   this.state = def || {};
 };
 
+Propable.unset = function(k) {
+  delete this[k];
+};
+
 Propable.makeAccessor = function(k) {
   return function(value) {
     if (arguments.length === 0) {

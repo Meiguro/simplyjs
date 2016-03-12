@@ -20,6 +20,7 @@ var defaults = {
 };
 
 var checkProps = function(def) {
+  if (!def) return;
   if ('angleStart' in def && safe.warnAngleStart !== false) {
     safe.warn('`angleStart` has been deprecated in favor of `angle` in order to match\n\t' +
               "Line's `position` and `position2`. Please use `angle` intead.", 2);

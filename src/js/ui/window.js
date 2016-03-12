@@ -1,5 +1,6 @@
 var util2 = require('util2');
 var myutil = require('myutil');
+var safe = require('safe');
 var Emitter = require('emitter');
 var Accel = require('ui/accel');
 var WindowStack = require('ui/windowstack');
@@ -22,12 +23,14 @@ var configProps = [
 ];
 
 var statusProps = [
+  'status',
   'separator',
   'color',
   'backgroundColor',
 ];
 
 var actionProps = [
+  'action',
   'up',
   'select',
   'back',
@@ -35,6 +38,11 @@ var actionProps = [
 ];
 
 var accessorProps = configProps;
+
+var nestedProps = [
+  'action',
+  'status',
+];
 
 var defaults = {
   status: false,
@@ -44,7 +52,18 @@ var defaults = {
 
 var nextId = 1;
 
+var checkProps = function(def) {
+  if (!def) return;
+  if ('fullscreen' in def && safe.warnFullscreen !== false) {
+    safe.warn('`fullscreen` has been deprecated by `status` which allows settings\n\t' +
+              'its color and separator in a similar manner to the `action` property.\n\t' +
+              'Remove usages of `fullscreen` to enable usage of `status`.', 2);
+    safe.warnFullscreen = false;
+  }
+};
+
 var Window = function(windowDef) {
+  checkProps(windowDef);
   this.state = myutil.shadow(defaults, windowDef || {});
   this.state.id = nextId++;
   this._buttonInit();
@@ -62,8 +81,15 @@ util2.copy(Stage.prototype, Window.prototype);
 
 Propable.makeAccessors(accessorProps, Window.prototype);
 
+Propable.makeNestedAccessors(nestedProps, Window.prototype);
+
 Window.prototype._id = function() {
   return this.state.id;
+};
+
+Window.prototype._prop = function(def, clear, pushing) {
+  checkProps(def);
+  Stage.prototype._prop.call(this, def, clear, pushing);
 };
 
 Window.prototype._hide = function(broadcast) {
@@ -109,30 +135,17 @@ Window.prototype._clearAction = function() {
   actionProps.forEach(Propable.unset.bind(this.state.action));
 };
 
-Window.prototype._clear = function(flags) {
-  flags = myutil.toFlags(flags);
+Window.prototype._clear = function(flags_) {
+  var flags = myutil.toFlags(flags_);
   if (myutil.flag(flags, 'action')) {
     this._clearAction();
   }
-};
-
-Window.prototype.prop = function(field, value, clear) {
-  if (arguments.length === 0) {
-    return util2.copy(this.state);
+  if (myutil.flag(flags, 'status')) {
+    this._clearStatus();
   }
-  if (arguments.length === 1 && typeof field !== 'object') {
-    return this.state[field];
+  if (flags_ === true || flags_ === undefined) {
+    Propable.prototype._clear.call(this);
   }
-  if (typeof field === 'object') {
-    clear = value;
-  }
-  if (clear) {
-    this._clear(true);
-  }
-  var windowDef = myutil.toObject(field, value);
-  util2.copy(windowDef, this.state);
-  this._prop(windowDef);
-  return this;
 };
 
 Window.prototype._action = function(actionDef) {
@@ -141,28 +154,10 @@ Window.prototype._action = function(actionDef) {
   }
 };
 
-Window.prototype.action = function(field, value, clear) {
-  var action = this.state.action;
-  if (!action) {
-    action = this.state.action = {};
+Window.prototype._status = function(statusDef) {
+  if (this === WindowStack.top()) {
+    simply.impl.windowStatusBar(statusDef);
   }
-  if (arguments.length === 0) {
-    return action;
-  }
-  if (arguments.length === 1 && typeof field === 'string') {
-    return action[field];
-  }
-  if (typeof field !== 'string') {
-    clear = value;
-  }
-  if (clear) {
-    this._clear('action');
-  }
-  if (typeof field !== 'boolean') {
-    util2.copy(myutil.toObject(field, value), this.state.action);
-  }
-  this._action(field);
-  return this;
 };
 
 var isBackEvent = function(type, subtype) {

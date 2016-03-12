@@ -1093,7 +1093,7 @@ SimplyPebble.windowStatusBar = function(def) {
   var statusDef = toStatusDef(def);
   WindowStatusBarPacket
     .separator(statusDef.separator || 'dotted')
-    .status(typeof def === 'boolean' ? def : true)
+    .status(typeof def === 'boolean' ? def : def.status !== false)
     .color(statusDef.color || 'black')
     .backgroundColor(statusDef.backgroundColor || 'white');
   SimplyPebble.sendPacket(WindowStatusBarPacket);
@@ -1120,7 +1120,7 @@ SimplyPebble.windowActionBar = function(def) {
     .up(actionDef.up)
     .select(actionDef.select)
     .down(actionDef.down)
-    .action(typeof def === 'boolean' ? def : true)
+    .action(typeof def === 'boolean' ? def : def.action !== false)
     .backgroundColor(actionDef.backgroundColor || 'black');
   SimplyPebble.sendPacket(WindowActionBarPacket);
 };

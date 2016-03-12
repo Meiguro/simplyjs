@@ -20,10 +20,52 @@ Propable.makeAccessor = function(k) {
   };
 };
 
+Propable.makeNestedAccessor = function(k) {
+  var _k = '_' + k;
+  return function(field, value, clear) {
+    var nest = this.state[k];
+    if (arguments.length === 0) {
+      return nest;
+    }
+    if (arguments.length === 1 && typeof field === 'string') {
+      return typeof nest === 'object' ? nest[field] : undefined;
+    }
+    if (typeof field === 'boolean') {
+      value = field;
+      field = k;
+    }
+    if (typeof field === 'object') {
+      clear = value;
+      value = undefined;
+    }
+    if (clear) {
+      this._clear(k);
+    }
+    if (field !== undefined && typeof nest !== 'object') {
+      nest = this.state[k] = {};
+    }
+    if (field !== undefined && typeof nest === 'object') {
+      util2.copy(myutil.toObject(field, value), nest);
+    }
+    if (this[_k]) {
+      this[_k](nest);
+    }
+    return this;
+  };
+};
+
 Propable.makeAccessors = function(props, proto) {
   proto = proto || {};
   props.forEach(function(k) {
     proto[k] = Propable.makeAccessor(k);
+  });
+  return proto;
+};
+
+Propable.makeNestedAccessors = function(props, proto) {
+  proto = proto || {};
+  props.forEach(function(k) {
+    proto[k] = Propable.makeNestedAccessor(k);
   });
   return proto;
 };

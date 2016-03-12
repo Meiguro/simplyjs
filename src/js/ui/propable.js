@@ -74,8 +74,12 @@ Propable.prototype.unset = function(k) {
   delete this.state[k];
 };
 
-Propable.prototype._clear = function() {
-  this.state = {};
+Propable.prototype._clear = function(k) {
+  if (k === undefined || k === true) {
+    this.state = {};
+  } else if (k !== false) {
+    this.state[k] = {};
+  }
 };
 
 Propable.prototype._prop = function(def) {

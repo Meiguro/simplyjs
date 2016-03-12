@@ -22,12 +22,14 @@ var configProps = [
 ];
 
 var statusProps = [
+  'status',
   'separator',
   'color',
   'backgroundColor',
 ];
 
 var actionProps = [
+  'action',
   'up',
   'select',
   'back',
@@ -116,30 +118,17 @@ Window.prototype._clearAction = function() {
   actionProps.forEach(Propable.unset.bind(this.state.action));
 };
 
-Window.prototype._clear = function(flags) {
-  flags = myutil.toFlags(flags);
+Window.prototype._clear = function(flags_) {
+  var flags = myutil.toFlags(flags_);
   if (myutil.flag(flags, 'action')) {
     this._clearAction();
   }
-};
-
-Window.prototype.prop = function(field, value, clear) {
-  if (arguments.length === 0) {
-    return util2.copy(this.state);
+  if (myutil.flag(flags, 'status')) {
+    this._clearStatus();
   }
-  if (arguments.length === 1 && typeof field !== 'object') {
-    return this.state[field];
+  if (flags_ === true || flags_ === undefined) {
+    Propable.prototype._clear.call(this);
   }
-  if (typeof field === 'object') {
-    clear = value;
-  }
-  if (clear) {
-    this._clear(true);
-  }
-  var windowDef = myutil.toObject(field, value);
-  util2.copy(windowDef, this.state);
-  this._prop(windowDef);
-  return this;
 };
 
 Window.prototype._action = function(actionDef) {

@@ -62,14 +62,12 @@ Card.prototype._prop = function() {
   }
 };
 
-Card.prototype._clear = function(flags) {
-  flags = myutil.toFlags(flags);
+Card.prototype._clear = function(flags_) {
+  var flags = myutil.toFlags(flags_);
   if (flags === true) {
-    clearableProps.forEach(Propable.unset.bind(this));
+    clearableProps.forEach(Propable.unset.bind(this.state));
   }
-  if (myutil.flag(flags, 'action')) {
-    this._clearAction();
-  }
+  Window.prototype._clear.call(this, flags_);
 };
 
 module.exports = Card;

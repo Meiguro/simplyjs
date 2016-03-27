@@ -47,7 +47,6 @@ main.on('click', 'select', function(e) {
     backgroundColor: 'black'
   });
   var radial = new UI.Radial({
-    position: new Vector2(2, 14),
     size: new Vector2(140, 140),
     angle: 0,
     angle2: 300,
@@ -57,12 +56,24 @@ main.on('click', 'select', function(e) {
     borderWidth: 1,
   });
   var textfield = new UI.Text({
-    position: new Vector2(0, 57),
-    size: new Vector2(144, 60),
+    size: new Vector2(140, 60),
     font: 'gothic-24-bold',
     text: 'Dynamic\nWindow',
     textAlign: 'center'
   });
+  var windSize = wind.size();
+  // Center the radial in the window
+  var radialPos = radial.position()
+      .addSelf(windSize)
+      .subSelf(radial.size())
+      .multiplyScalar(0.5);
+  radial.position(radialPos);
+  // Center the textfield in the window
+  var textfieldPos = textfield.position()
+      .addSelf(windSize)
+      .subSelf(textfield.size())
+      .multiplyScalar(0.5);
+  textfield.position(textfieldPos);
   wind.add(radial);
   wind.add(textfield);
   wind.show();

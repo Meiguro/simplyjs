@@ -1,3 +1,4 @@
+var Vector2 = require('vector2');
 var Platform = require('platform');
 
 var Feature = module.exports;
@@ -50,7 +51,15 @@ Feature.microphone = Feature.makePlatformTest({
 });
 
 Feature.resolution = Feature.makePlatformTest({
-  aplite: { width: 144, height: 168 },
-  basalt: { width: 144, height: 168 },
-  chalk: { width: 180, height: 180 },
+  aplite: new Vector2(144, 168),
+  basalt: new Vector2(144, 168),
+  chalk: new Vector2(180, 180),
 });
+
+Feature.actionBarWidth = function() {
+  return Feature.rectangle(30, 40);
+};
+
+Feature.statusBarHeight = function() {
+  return 16;
+};

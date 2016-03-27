@@ -2,6 +2,8 @@ var util2 = require('util2');
 var myutil = require('myutil');
 var safe = require('safe');
 var Emitter = require('emitter');
+var Vector2 = require('vector2');
+var Feature = require('platform/feature');
 var Accel = require('ui/accel');
 var WindowStack = require('ui/windowstack');
 var Propable = require('ui/propable');
@@ -69,6 +71,8 @@ var Window = function(windowDef) {
   this._buttonInit();
   this._items = [];
   this._dynamic = true;
+  this._size = new Vector2();
+  this.size(); // calculate and set the size
 };
 
 Window._codeName = 'window';
@@ -249,6 +253,20 @@ Window.prototype._buttonAutoConfig = function() {
     this._button.config.back = useBack;
     return this._buttonConfig(this._button.config, true);
   }
+};
+
+Window.prototype.size = function() {
+  var state = this.state;
+  var size = this._size.copy(Feature.resolution());
+  if ('status' in state && state.status !== false) {
+    size.y -= Feature.statusBarHeight();
+  } else if ('fullscreen' in state && state.fullscreen === false) {
+    size.y -= Feature.statusBarHeight();
+  }
+  if ('action' in state && state.action !== false) {
+    size.x -= Feature.actionBarWidth();
+  }
+  return size;
 };
 
 Window.prototype._toString = function() {

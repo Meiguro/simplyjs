@@ -3,7 +3,7 @@ var Platform = require('platform');
 var Feature = module.exports;
 
 Feature.platform = function(map, yes, no) {
-  var v = map[Platform.version()];
+  var v = map[Platform.version()] || map.unknown;
   var rv;
   if (v && yes !== undefined) {
     rv = typeof yes === 'function' ? yes(v) : yes;
@@ -47,4 +47,10 @@ Feature.microphone = Feature.makePlatformTest({
   aplite: false,
   basalt: true,
   chalk: true,
+});
+
+Feature.resolution = Feature.makePlatformTest({
+  aplite: { width: 144, height: 168 },
+  basalt: { width: 144, height: 168 },
+  chalk: { width: 180, height: 180 },
 });

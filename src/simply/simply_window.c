@@ -172,10 +172,6 @@ void simply_window_set_status_bar(SimplyWindow *self, bool use_status_bar) {
 void simply_window_set_background_color(SimplyWindow *self, GColor8 background_color) {
   self->background_color = background_color;
   window_set_background_color(self->window, gcolor8_get_or(background_color, GColorBlack));
-  if (self->status_bar_layer) {
-    status_bar_layer_set_colors(self->status_bar_layer, background_color,
-                               gcolor_legible_over(background_color));
-  }
 }
 
 void simply_window_set_status_bar_colors(SimplyWindow *self, GColor8 background_color,

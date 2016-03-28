@@ -1,6 +1,6 @@
 var imagelib = require('lib/image');
 var myutil = require('myutil');
-var Platform = require('platform');
+var Feature = require('platform/feature');
 var Resource = require('ui/resource');
 var simply = require('ui/simply');
 
@@ -100,7 +100,7 @@ ImageService.load = function(opt, reset, callback) {
     }
   };
   if (fetch) {
-    var bitdepth = Platform.version() === 'basalt' ? 8 : 1;
+    var bitdepth = Feature.color(8, 1);
     imagelib.load(image, bitdepth, onLoad);
   } else {
     onLoad();

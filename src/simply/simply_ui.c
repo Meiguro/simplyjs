@@ -298,8 +298,11 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       body_rect.size = body_size;
       const int new_height = cursor.y + margin_bottom;
       frame.size.h = MAX(window_frame.size.h, new_height);
-      layer_set_frame(layer, frame);
-      scroll_layer_set_content_size(self->window.scroll_layer, frame.size);
+      GRect original_frame = layer_get_frame(layer);
+      if (!grect_equal(&frame, &original_frame)) {
+        layer_set_frame(layer, frame);
+        scroll_layer_set_content_size(self->window.scroll_layer, frame.size);
+      }
     } else if (!self->ui_layer.custom_body_font && body_size.h > body_rect.size.h) {
       body_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
     }

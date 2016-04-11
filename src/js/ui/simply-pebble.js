@@ -143,9 +143,21 @@ var namedColorMap = {
   'clearWhite': 0x3F,
 };
 
+var namedColorMapUpper = (function() {
+  var map = {};
+  for (var k in namedColorMap) {
+    map[k.toUpperCase()] = namedColorMap[k];
+  }
+  return map;
+})();
+
 var ColorType = function(color) {
-  if (color in namedColorMap) {
-    return namedColorMap[color];
+  if (typeof color === 'string') {
+    var name = myutil.toCConstantName(color);
+    name = name.replace(/_+/g, '');
+    if (name in namedColorMapUpper) {
+      return namedColorMapUpper[name];
+    }
   }
   var argb = Color.toArgbUint8(color);
   if ((argb & 0xc0) === 0 && argb !== 0) {

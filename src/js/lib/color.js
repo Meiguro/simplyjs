@@ -42,4 +42,8 @@ Color.toArgbUint8 = function(color) {
           ((argb >> 12) & 0xc) | ((argb >> 6) & 0x3));
 };
 
+Color.toRgbUint8 = function(color) {
+  return Color.toArgbUint8(color) & 0x3f;
+};
+
 module.exports = Color;

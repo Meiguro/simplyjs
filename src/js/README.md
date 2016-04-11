@@ -7,9 +7,9 @@ This is the API reference of Simply.js generated with JSDoc.
 
 Simply.js provides the following modules:
 
-  * [simply](simply.html) - The Simply.js framework.
-  * [ajax](global.html#ajax) - An ajax micro library.
-  * [require](global.html#require) - A synchronous dependency loader provided by simply.
+  * [simply](http://simplyjs.io/doc/simply.html) - The Simply.js framework.
+  * [ajax](http://simplyjs.io/doc/global.html#ajax) - An ajax micro library.
+  * [require](http://simplyjs.io/doc/global.html#require) - A synchronous dependency loader provided by simply.
 
-Visit [simplyjs.meiguro.com](http://simplyjs.meiguro.com) for more details.
+Visit [http://simplyjs.io/](http://http://simplyjs.io/) for more details.
 

@@ -723,9 +723,9 @@ The properties available on a [Card] are:
 
 A [Card] is also a [Window] and thus also has Window properties.
 
-The small and large styles correspond to the system notification styles. Mono sets a monospace font for the body textfield, enabling more complex text UIs or ASCII art.
+The `'small'` and `'large`' styles correspond to the system notification styles. `'mono'` sets a monospace font for the body textfield, enabling more complex text UIs or ASCII art. The `'small'` and `'large'` styles were updated to match the Pebble firmware 3.x design during the 3.11 release. In order to use the older 2.x styles, you may specify `'classic-small'` and `'classic-large'`, however it is encouraged to use the newer styles.
 
-Note that all fields will automatically span multiple lines if needed and that you can '\n' to insert line breaks.
+Note that all text fields will automatically span multiple lines if needed and that you can use '\n' to insert line breaks.
 
 ### Menu
 

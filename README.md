@@ -866,15 +866,15 @@ Similar to the select callback, except for long select presses. See [Menu.on('se
 
 There are four types of [Element] that can be instantiated at the moment: [Circle], [Image], [Rect] and [Text].
 
-They all share some common properties:
+Most elements share these common properties:
 
 | Name              | Type      | Default   | Description                                                                    |
 | ------------      | :-------: | --------- | -------------                                                                  |
 | `position`        | Vector2   |           | Position of this element in the window.                                        |
 | `size`            | Vector2   |           | Size of this element in this window. [Circle] uses `radius` instead.           |
-| `borderWidth`     | number    | 0         | Width of the border of this element.                                           |
-| `borderColor`     | Color     | 'clear'   | Color of the border of this element.                                           |
-| `backgroundColor` | Color     | 'white'   | Background color of this element.                                              |
+| `borderWidth`     | number    | 0         | Width of the border of this element. [Line] uses `strokeWidth` instead.        |
+| `borderColor`     | Color     | 'clear'   | Color of the border of this element. [Line] uses `strokeColor` instead.        |
+| `backgroundColor` | Color     | 'white'   | Background color of this element. [Line] has no background.                    |
 
 All properties can be initialized by passing an object when creating the Element, and changed with accessors functions that have the same name as the properties. Calling an accessor without a parameter will return the current value.
 
@@ -973,14 +973,48 @@ Accessor to the `borderColor` property. See [Element].
 
 Accessor to the `backgroundColor` property. See [Element].
 
+### Line
+
+An [Element] that displays a line on the screen.
+
+[Line] also has these additional properties:
+
+| Name              | Type      | Default   | Description                                                                    |
+| ------------      | :-------: | --------- | -------------                                                                  |
+| `position2`       | Vector2   |           | Ending position of the line where `position` is the starting position.         |
+| `strokeWidth`     | number    | 0         | Width of the line.                                                             |
+| `strokeColor`     | Color     | 'clear'   | Color of the line.                                                             |
+
+For clarity, [Line] has `strokeWidth` and `strokeColor` instead of `borderWidth` and `borderColor`.
+
+````js
+var wind = new UI.Window();
+
+var line = new UI.Line({
+  position: new Vector2(10, 10),
+  position2: new Vector2(72, 84),
+  strokeColor: 'white',
+});
+
+wind.add(line);
+wind.show();
+```
+
+#### Line.position2(position)
+
+Accessor to the `position2` ending position property. See [Line].
+
+#### Line.strokeWidth(width)
+
+Accessor to the `strokeWidth` property. See [Line].
+
+#### Line.strokeColor(color)
+
+Accessor to the `strokeColor` property. See [Line].
+
 ### Circle
 
 An [Element] that displays a circle on the screen.
-
-Default properties value:
-
- * `backgroundColor`: 'white'
- * `borderColor`: 'clear'
 
 [Circle] also has the additional property `radius` which it uses for size rather than `size`. [Circle] is also different in that it positions its origin at the position, rather than anchoring by its top left. These differences are to keep the graphics operation characteristics that it is built upon.
 
@@ -994,7 +1028,7 @@ var circle = new UI.Circle({
 });
 
 wind.add(circle);
-wind.show(circle);
+wind.show();
 ````
 
 #### Circle.radius(radius)

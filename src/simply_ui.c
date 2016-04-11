@@ -163,8 +163,11 @@ void display_layer_update_callback(Layer *layer, GContext *ctx) {
       body_rect.size = body_size;
       int16_t new_height = cursor.y + 2 * y_margin + body_size.h;
       bounds.size.h = window_bounds.size.h > new_height ? window_bounds.size.h : new_height;
-      layer_set_frame(layer, bounds);
-      scroll_layer_set_content_size(self->scroll_layer, bounds.size);
+      GRect original_frame = layer_get_frame(layer);
+      if (!grect_equal(&bounds, &original_frame)) {
+        layer_set_frame(layer, bounds);
+        scroll_layer_set_content_size(self->scroll_layer, bounds.size);
+      }
     } else if (!style->custom_body_font && body_size.h > body_rect.size.h) {
       body_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
     }

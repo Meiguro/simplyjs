@@ -871,15 +871,19 @@ They all share some common properties:
 | Name              | Type      | Default   | Description                                                                    |
 | ------------      | :-------: | --------- | -------------                                                                  |
 | `position`        | Vector2   |           | Position of this element in the window.                                        |
-| `size`            | Vector2   |           | Size of this element in this window. Note that [Circle] uses `radius` instead. |
-| `borderColor`     | string    | ''        | Color of the border of this element ('clear', 'black',or 'white').             |
-| `backgroundColor` | string    | ''        | Background color of this element ('clear', 'black' or 'white').                |
+| `size`            | Vector2   |           | Size of this element in this window. [Circle] uses `radius` instead.           |
+| `borderWidth`     | number    | 0         | Width of the border of this element.                                           |
+| `borderColor`     | Color     | 'clear'   | Color of the border of this element.                                           |
+| `backgroundColor` | Color     | 'white'   | Background color of this element.                                              |
 
-All properties can be initialized by passing an object when creating the Element, and changed with accessors functions who have the name of the properties. Calling an accessor without a parameter will return the current value.
+All properties can be initialized by passing an object when creating the Element, and changed with accessors functions that have the same name as the properties. Calling an accessor without a parameter will return the current value.
 
 ````js
 var Vector2 = require('vector2');
-var element = new Text({ position: new Vector2(0, 0), size: new Vector2(144, 168) });
+var element = new Text({
+  position: new Vector2(0, 0),
+  size: new Vector2(144, 168),
+});
 element.borderColor('white');
 console.log('This element background color is: ' + element.backgroundColor());
 ````
@@ -956,6 +960,10 @@ Accessor to the `position` property. See [Element].
 #### Element.size(size)
 
 Accessor to the `size` property. See [Element].
+
+#### Element.borderWidth(width)
+
+Accessor to the `borderWidth` property. See [Element].
 
 #### Element.borderColor(color)
 

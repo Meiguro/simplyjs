@@ -545,7 +545,7 @@ A `Window` action bar can be displayed by setting its Window `action` property t
 | `up`              | Image     | None      | An image to display in the action bar, next to the up button.                                          |
 | `select`          | Image     | None      | An image to display in the action bar, next to the select button.                                      |
 | `down`            | Image     | None      | An image to display in the action bar, next to the down button.                                        |
-| `backgroundColor` | Image     | 'black'   | The background color of the action bar. You can set this to 'white' for windows with black backgrounds |
+| `backgroundColor` | Color     | 'black'   | The background color of the action bar. You can set this to 'white' for windows with black backgrounds |
 
 ````js
 var card = new UI.Card({
@@ -709,14 +709,19 @@ The properties available on a [Card] are:
 
 | Name         | Type      | Default   | Description                                                                                                                                                          |
 | ----         | :-------: | --------- | -------------                                                                                                                                                        |
-| `title`      | string    | ""        | Text to display in the title field at the top of the screen                                                                                                          |
-| `subtitle`   | string    | ""        | Text to display below the title                                                                                                                                      |
-| `body`       | string    | ""        | Text to display in the body field.                                                                                                                                   |
-| `icon`       | Image     | null      | An image to display before the title text. Refer to [Using Images] for instructions on how to include images in your app.                                                                     |
-| `subicon`    | Image     | null      | An image to display before the subtitle text. Refer to [Using Images] for instructions on how to include images in your app.                                                                     |
-| `banner`     | Image     | null      | An image to display in the center of the screen. Refer to [Using Images] for instructions on how to include images in your app.                                                                     |
+| `title`      | string    | ''        | Text to display in the title field at the top of the screen                                                                                                          |
+| `titleColor` | Color     | 'black'   | Text color of the title field                                                                                                                                             |
+| `subtitle`   | string    | ''        | Text to display below the title                                                                                                                                      |
+| `subtitleColor` | Color  | 'black'   | Text color of the subtitle field                                                                                                                                          |
+| `body`       | string    | ''        | Text to display in the body field                                                                                                                                    |
+| `bodyColor`  | Color     | 'black'   | Text color of the body field                                                                                                                                              |
+| `icon`       | Image     | null      | An image to display before the title text. Refer to [Using Images] for instructions on how to include images in your app.                                            |
+| `subicon`    | Image     | null      | An image to display before the subtitle text. Refer to [Using Images] for instructions on how to include images in your app.                                         |
+| `banner`     | Image     | null      | An image to display in the center of the screen. Refer to [Using Images] for instructions on how to include images in your app.                                      |
 | `scrollable` | boolean   | false     | Whether the user can scroll this card with the up and down button. When this is enabled, single and long click events on the up and down button will not be transmitted to your app. |
-| `style`      | string    | "small"   | Selects the font used to display the body. This can be 'small', 'large' or 'mono'                                                                                    |
+| `style`      | string    | 'small'   | Selects the font used to display the body. This can be 'small', 'large' or 'mono'                                                                                    |
+
+A [Card] is also a [Window] and thus also has Window properties.
 
 The small and large styles correspond to the system notification styles. Mono sets a monospace font for the body textfield, enabling more complex text UIs or ASCII art.
 

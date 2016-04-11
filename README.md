@@ -743,7 +743,18 @@ The properties available on a [Menu] are:
 | `highlightBackgroundColor`  | Color   | `black` | The background color of a selected menu item.     |
 | `highlightTextColor`        | Color   | `white` | The text color of a selected menu item.           |
 
-A menu contains one or more sections. Each section has a title and contains zero or more items. An item must have a title. It can also have a subtitle and an icon.
+A menu contains one or more sections.
+
+The properties available on a section are:
+
+| Name                        | Type    | Default | Description |
+| ----                        |:-------:|---------|-------------|
+| `items`                     | Array   | `[]`    | A list of all the items to display.               |
+| `title`                     | string  | ''      | Title text of the section header.                 |
+| `backgroundColor`           | Color   | `white` | The background color of the section header.       |
+| `textColor`                 | Color   | `black` | The text color of the section header.             |
+
+Each section has a title and contains zero or more items. An item must have a title. Items can also optionally have a subtitle and an icon.
 
 ````js
 var menu = new UI.Menu({

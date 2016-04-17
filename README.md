@@ -84,6 +84,7 @@ You can do much more with Pebble.js:
 Keep reading for the full [API Reference].
 
 ## Using Images
+[Using Images]: #using-images
 
 You can use images in your Pebble.js application. Currently all images must be embedded in your applications. They will be resized and converted to black and white when you build your project.
 
@@ -131,6 +132,7 @@ wind.show();
 ````
 
 ## Using Fonts
+[Using Fonts]: #using-fonts
 
 You can use any of the Pebble system fonts in your Pebble.js applications. Please refer to [this Pebble Developer's blog post](https://developer.pebble.com/blog/2013/07/24/Using-Pebble-System-Fonts/) for a list of all the Pebble system fonts. When referring to a font, using lowercase with dashes is recommended. For example, `GOTHIC_18_BOLD` becomes `gothic-18-bold`.
 
@@ -149,6 +151,7 @@ wind.show();
 ````
 
 # API Reference
+[API Reference]: #api-reference
 
 ## Global namespace
 
@@ -179,6 +182,7 @@ More specifically:
 If in doubt, please contact [devsupport@getpebble.com](mailto:devsupport@getpebble.com).
 
 ## Clock
+[Clock]: #clock
 
 The Clock module makes working with the Wakeup module with time utility functions.
 
@@ -219,6 +223,7 @@ Wakeup.schedule(
 ````
 
 ## Platform
+[Platform]: #platform
 
 The Platform module allows you to determine the current platform runtime on the watch through its `Platform.version` method. This is to be used when the [Feature] module does not give enough ability to discern whether a feature exists or not.
 
@@ -240,6 +245,7 @@ console.log('Current platform is ' + Platform.version());
 | Pebble Time Round    | `'chalk'`  |
 
 ### Feature
+[Feature]: #feature
 
 The Feature module under Platform allows you to perform feature detection, adjusting aspects of your app to the capabilities of the current watch model it is current running on. This allows you to consider the functionality of your app based on the current set of available capabilities or features. The Feature module also provides information about features that exist on all watch models such as `Feature.resolution` which returns the resolution of the current watch model.
 
@@ -350,6 +356,7 @@ var elementHeight = Feature.resolution().y - topMargin;
 ````
 
 ## Settings
+[Settings]: #settings
 
 The Settings module allows you to add a configurable web view to your application and share options with it. Settings also provides two data accessors `Settings.option` and `Settings.data` which are backed by localStorage. Data stored in `Settings.option` is automatically shared with the configurable web view.
 
@@ -514,10 +521,12 @@ console.log(JSON.stringify(data));
 ````
 
 ## UI
+[UI]: #ui
 
 The UI framework contains all the classes needed to build the user interface of your Pebble applications and interact with the user.
 
 ### Accel
+[Accel]: #accel
 
 The `Accel` module allows you to get events from the accelerometer on Pebble.
 
@@ -610,6 +619,7 @@ wind.on('accelData', function(e) {
 ````
 
 ### Voice
+[Voice]: #voice
 
 The `Voice` module allows you to interact with Pebble's dictation API on supported platforms (Basalt and Chalk).
 
@@ -649,6 +659,7 @@ Voice.dictate('stop');
 ```
 
 ### Window
+[Window]: #window
 
 `Window` is the basic building block in your Pebble.js application. All windows share some common properties and methods.
 
@@ -824,6 +835,7 @@ wind.each(function(element) {
 ````
 
 ### Card
+[Card]: #card
 
 A Card is a type of [Window] that allows you to display a title, a subtitle, an image and a body on the screen of Pebble.
 
@@ -859,6 +871,7 @@ The `'small'` and `'large`' styles correspond to the system notification styles.
 Note that all text fields will automatically span multiple lines if needed and that you can use '\n' to insert line breaks.
 
 ### Menu
+[Menu]: #menu
 
 A menu is a type of [Window] that displays a standard Pebble menu on the screen of Pebble.
 
@@ -994,6 +1007,7 @@ menu.on('select', function(e) {
 Similar to the select callback, except for long select presses. See [Menu.on('select', callback)].
 
 ### Element
+[Element]: #element
 
 There are four types of [Element] that can be instantiated at the moment: [Circle], [Image], [Rect] and [Text].
 
@@ -1105,6 +1119,7 @@ Accessor to the `borderColor` property. See [Element].
 Accessor to the `backgroundColor` property. See [Element].
 
 ### Line
+[Line]: #line
 
 An [Element] that displays a line on the screen.
 
@@ -1144,6 +1159,7 @@ Accessor to the `strokeWidth` property. See [Line].
 Accessor to the `strokeColor` property. See [Line].
 
 ### Circle
+[Circle]: #circle
 
 An [Element] that displays a circle on the screen.
 
@@ -1167,6 +1183,7 @@ wind.show();
 Accessor to the `radius` property. See [Circle]
 
 ### Radial
+[Radial]: #radial
 
 An [Element] that can display as an arc, ring, sector of a circle depending on its properties are set.
 
@@ -1191,6 +1208,7 @@ Accessor to the `angle` starting angle property. See [Radial]
 Accessor to the `angle2` ending angle property. See [Radial]
 
 ### Rect
+[Rect]: #rect
 
 An [Element] that displays a rectangle on the screen.
 
@@ -1202,6 +1220,7 @@ The [Rect] element has the following properties. Just like any other [Element] y
 | `borderColor`     | string    | "clear"   | Color of the border of this element ('clear', 'black',or 'white'). |
 
 ### Text
+[Text]: #text
 
 An [Element] that displays text on the screen.
 
@@ -1218,6 +1237,7 @@ The [Text] element has the following properties. Just like any other [Element] y
 | `backgroundColor` | string    | 'clear'   | Background color of this element ('clear', 'black' or 'white').                                                                                                                                                                                                                                                                                            |
 
 ### TimeText
+[TimeText]: #timetext
 
 A [Text] element that displays time formatted text on the screen.
 
@@ -1285,6 +1305,7 @@ Sets the borderColor property. See [Text].
 Sets the backgroundColor property. See [Text].
 
 ### Image
+[Image]: #image
 
 An [Element] that displays an image on the screen.
 
@@ -1316,6 +1337,7 @@ Sets the compositing operation to be used when rendering. Specify the compositin
 | `"set"`     | The image's black pixels are painted as white, and the rest are clear. |
 
 ### Vibe
+[Vibe]: #vibe
 
 `Vibe` allows you to trigger vibration on the user wrist.
 
@@ -1333,6 +1355,7 @@ Vibe.vibrate('long');
 | `type` | string | optional | `short` | The duration of the vibration. `short`, `long` or `double`. |
 
 ### Light
+[Light]: #light
 
 `Light` allows you to control the Pebble's backlight.
 ````js
@@ -1346,12 +1369,13 @@ Light.on('long');
 Turn on the light indefinitely.
 
 #### Light.auto()
-Restore the normal behaviour.
+Restore the normal behavior.
 
 #### Light.trigger()
 Trigger the backlight to turn on momentarily, just like if the user shook their wrist.
 
 ## Timeline
+[Timeline]: #timeline
 
 The Timeline module allows your app to handle a launch via a timeline action. This allows you to write a custom handler to manage launch events outside of the app menu. With the Timeline module, you can preform a specific set of actions based on the action which launched the app.
 
@@ -1390,6 +1414,7 @@ The `callback` will be called with a timeline launch event. The event has the fo
 Note that this means you may have to move portions of your startup logic into the `Timeline.launch` callback or a function called by the callback. This can also add a very small delay to startup behavior because the underlying implementation must query the watch for the launch information.
 
 ## Wakeup
+[Wakeup]: #wakeup
 
 The Wakeup module allows you to schedule your app to wakeup at a specified time using Pebble's wakeup functionality. Whether the user is in a different watchface or app, your app will launch at the specified time. This allows you to write a custom alarm app, for example. If your app is already running, you may also subscribe to receive the wakeup event, which can be useful for more longer lived timers. With the Wakeup module, you can save data to be read on launch and configure your app to behave differently based on launch data. The Wakeup module, like the Settings module, is backed by localStorage.
 
@@ -1581,6 +1606,7 @@ Cancels all wakeup events scheduled by your app. You can check what wakeup event
 Pebble.js includes several libraries to help you write applications.
 
 ### ajax
+[ajax]: #ajax
 
 This module gives you a very simple and easy way to make HTTP requests.
 
@@ -1620,6 +1646,7 @@ The `success` callback will be called if the HTTP request is successful (when th
 The `failure` callback is called when an error occurred. The parameters are the same as `success`.
 
 ### Vector2
+[Vector2]: #vector2
 
 A 2 dimensional vector. The constructor takes two parameters for the x and y values.
 
@@ -1630,22 +1657,6 @@ var vec = new Vector2(144, 168);
 ````
 
 For more information, see [Vector2 in the three.js reference documentation][three.js Vector2].
-
-
-[API Reference]: #api-reference
-[Using Images]: #using-images
-[Using Fonts]: #using-fonts
-
-[Clock]: #clock
-[Window]: #window
-[Card]: #card
-[Menu]: #menu
-[Element]: #element
-[Circle]: #circle
-[Image]: #image
-[Rect]: #rect
-[Text]: #text
-[TimeText]: #timetext
 [three.js Vector2]: http://threejs.org/docs/#Reference/Math/Vector2
 
 ## Examples

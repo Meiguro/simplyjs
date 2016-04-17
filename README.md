@@ -239,6 +239,116 @@ console.log('Current platform is ' + Platform.version());
 | Pebble Time Steel    | `'basalt'` |
 | Pebble Time Round    | `'chalk'`  |
 
+### Feature
+
+The Feature module under Platform allows you to perform feature detection, adjusting aspects of your app to the capabilities of the current watch model it is current running on. This allows you to consider the functionality of your app based on the current set of available capabilities or features. The Feature module also provides information about features that exist on all watch models such as `Feature.resolution` which returns the resolution of the current watch model.
+
+````js
+var Feature = require('platform/feature');
+
+console.log('Color is ' + Feature.color('avaiable', 'not available'));
+console.log('Display width is ' + Feature.resolution().x);
+````
+
+#### Feature.color([yes, no])
+
+`Feature.color` will return the `yes` parameter if color is supported and `no` if it is not. This is the opposite of `Feature.blackAndWhite`. When given no parameters, it will return true or false respectively.
+
+````js
+var textColor = Feature.color('oxford-blue', 'black');
+
+if (Feature.color()) {
+  // Perform color-only operation
+  console.log('Color supported');
+}
+````
+
+#### Feature.blackAndWhite([yes, no])
+
+`Feature.blackAndWhite` will return the `yes` parameter if only black and white is supported and `no` if it is not. This is the opposite of `Feature.color`. When given no parameters, it will return true or false respectively.
+
+````js
+var backgroundColor = Feature.blackAndWhite('white', 'clear');
+
+if (Feature.blackAndWhite()) {
+  // Perform black-and-white-only operation
+  console.log('Black and white only');
+}
+````
+
+#### Feature.rectangle([yes, no])
+
+`Feature.rectangle` will return the `yes` parameter if the watch screen is rectangular and `no` if it is not. This is the opposite of `Feature.round`. When given no parameters, it will return true or false respectively.
+
+````js
+var margin = Feature.rectangle(10, 20);
+
+if (Feature.rectangle()) {
+  // Perform rectangular display only operation
+  console.log('Rectangular display');
+}
+````
+
+#### Feature.round([yes, no])
+
+`Feature.round` will return the `yes` parameter if the watch screen is round and `no` if it is not. This is the opposite of `Feature.rectangle`. When given no parameters, it will return true or false respectively.
+
+````js
+var textAlign = Feature.round('center', 'left');
+
+if (Feature.round()) {
+  // Perform round display only operation
+  console.log('Round display');
+}
+````
+
+#### Feature.microphone([yes, no])
+
+`Feature.microphone` will return the `yes` parameter if the watch has a microphone and `no` if it does not. When given no parameters, it will return true or false respectively. Useful for determining whether the `Voice` module will allow transcription or not and changing the UI accordingly.
+
+````js
+var text = Feature.microphone('Say your command.',
+                              'Select your command.');
+
+if (Feature.microphone()) {
+  // Perform microphone only operation
+  console.log('Microphone available');
+}
+````
+
+#### Feature.resolution()
+
+`Feature.resolution` returns a [Vector2] containing the display width as the `x` component and the display height as the `y` component. Use the following table to determine the resolution that `Feature.resolution` will return on a given platform.
+
+| Platform | Width | Height | Note                                                                                              |
+| ----     | :---: | :----: | ------                                                                                            |
+| aplite   | 144   | 168    |                                                                                                   |
+| basalt   | 144   | 168    | This is a rounded rectangle, therefore there is small set of pixels at each corner not available. |
+| chalk    | 180   | 180    | This is a circular display, therefore not all pixels in a 180 by 180 square are available.        |
+
+````js
+var res = Feature.resolution();
+console.log('Current display is ' + res.x + 'x' + res.y);
+````
+
+#### Feature.actionBarWidth()
+
+`Feature.actionBarWidth` returns the action bar width based on the platform. This is `30` for rectangular displays and `40` for round displays. Useful for determining the remaining screen real estate in a dynamic [Window] with an action bar visible.
+
+````js
+var rightMargin = Feature.actionBarWidth() + 5;
+var elementWidth = Feature.resolution().x - rightMargin;
+````
+
+#### Feature.statusBarHeight()
+
+`Feature.statusBarHeight` returns the status bar height. This is `16` and can change accordingly if the Pebble Firmware theme ever changes. Useful for determining the remaining screen real estate in a dynamic [Window] with a status bar visible.
+
+````js
+var topMargin = Feature.statusBarHeight() + 5;
+var elementHeight = Feature.resolution().y - topMargin;
+````
+
 ## Settings
 
 The Settings module allows you to add a configurable web view to your application and share options with it. Settings also provides two data accessors `Settings.option` and `Settings.data` which are backed by localStorage. Data stored in `Settings.option` is automatically shared with the configurable web view.

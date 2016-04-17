@@ -225,14 +225,17 @@ Wakeup.schedule(
 ## Platform
 [Platform]: #platform
 
-The Platform module allows you to determine the current platform runtime on the watch through its `Platform.version` method. This is to be used when the [Feature] module does not give enough ability to discern whether a feature exists or not.
+`Platform` provides a module of the same name `Platform` and a feature detection module [Feature].
 
 ````js
 var Platform = require('platform');
-console.log('Current platform is ' + Platform.version());
 ````
 
-### Platform.version()
+### Platform
+
+The Platform module allows you to determine the current platform runtime on the watch through its `Platform.version` method. This is to be used when the [Feature] module does not give enough ability to discern whether a feature exists or not.
+
+#### Platform.version()
 
 `Platform.version` returns the current platform version name as a lowercase string. This can be `'aplite'`, `'basalt'`, or `'chalk'`. Use the following table to determine the platform that `Platform.version` will return.
 
@@ -243,6 +246,10 @@ console.log('Current platform is ' + Platform.version());
 | Pebble Time          | `'basalt'` |
 | Pebble Time Steel    | `'basalt'` |
 | Pebble Time Round    | `'chalk'`  |
+
+````js
+console.log('Current platform is ' + Platform.version());
+````
 
 ### Feature
 [Feature]: #feature

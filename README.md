@@ -674,7 +674,7 @@ Pebble.js provides three types of Windows:
 
  * [Card]: Displays a title, a subtitle, a banner image and text on a screen. The position of the elements are fixed and cannot be changed.
  * [Menu]: Displays a menu on the Pebble screen. This is similar to the standard system menu in Pebble.
- * [Window]: The Window by itself is the most flexible. It allows you to add different [Element]s ([Circle], [Image], [Rect], [Text], [TimeText]) and to specify a position and size for each of them. You can also animate them.
+ * [Window]: The `Window` by itself is the most flexible. It allows you to add different [Element]s ([Circle], [Image], [Line], [Radial], [Rect], [Text], [TimeText]) and to specify a position and size for each of them. [Element]s can also be animated.
 
 A `Window` can have the following properties:
 
@@ -1091,7 +1091,7 @@ Similar to the select callback, except for long select presses. See [Menu.on('se
 ### Element
 [Element]: #element
 
-There are four types of [Element] that can be instantiated at the moment: [Circle], [Image], [Rect] and [Text].
+There are seven types of [Element] that can be instantiated at the moment: [Circle], [Image], [Line], [Radial], [Rect], [Text], [TimeText].
 
 Most elements share these common properties:
 

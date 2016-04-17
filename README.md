@@ -867,6 +867,20 @@ card.status({
 });
 ````
 
+To disable the status bar after enabling it, `false` can be passed in place of `statusDef`.
+
+````js
+// Disable the status bar
+card.status(false);
+````
+
+Similarly, `true` can be used as a [Window statusDef] to represent a `statusDef` with all default properties.
+
+````js
+var card = new UI.Card({ status: true });
+card.show();
+````
+
 #### Window.status(field, value)
 
 `Window.status` can also be called with two arguments, `field` and `value`, to set specific fields of the window's `status` property. `field` is the name of a [Window statusDef] property as a string and `value` is the new property value.

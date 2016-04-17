@@ -676,6 +676,8 @@ Pebble.js provides three types of Windows:
  * [Menu]: Displays a menu on the Pebble screen. This is similar to the standard system menu in Pebble.
  * [Window]: The Window by itself is the most flexible. It allows you to add different [Element]s ([Circle], [Image], [Rect], [Text], [TimeText]) and to specify a position and size for each of them. You can also animate them.
 
+A `Window` can have the following properties:
+
 | Name           | Type      | Default   | Description                                                                                     |
 | ----           | :-------: | --------- | -------------                                                                                   |
 | `clear`        | boolean   |           |                                                                                                 |
@@ -687,25 +689,76 @@ Pebble.js provides three types of Windows:
 #### Window actionDef
 [Window actionDef]: #window-actiondef
 
-A `Window` action bar can be displayed by setting its Window `action` property to an `actionDef`:
+A `Window` action bar can be displayed by setting its Window `action` property to an `actionDef`.
+
+An `actionDef` has the following properties:
 
 | Name              | Type      | Default   | Description                                                                                            |
 | ----              | :-------: | --------- | -------------                                                                                          |
 | `up`              | Image     | None      | An image to display in the action bar, next to the up button.                                          |
 | `select`          | Image     | None      | An image to display in the action bar, next to the select button.                                      |
 | `down`            | Image     | None      | An image to display in the action bar, next to the down button.                                        |
-| `backgroundColor` | Color     | 'black'   | The background color of the action bar. You can set this to 'white' for windows with black backgrounds |
+| `backgroundColor` | Color     | 'black'   | The background color of the action bar. You can set this to 'white' for windows with black backgrounds. |
 
 ````js
+// Set action properties during initialization
 var card = new UI.Card({
   action: {
     up: 'images/action_icon_plus.png',
     down: 'images/action_icon_minus.png'
   }
 });
+
+// Set action properties after initialization
+card.action({
+  up: 'images/action_icon_plus.png',
+  down: 'images/action_icon_minus.png'
+});
+
+// Set a single action property
+card.action('select', 'images/action_icon_checkmark.png');
+
+// Disable the action bar
+card.action(false);
 ````
 
 You will need to add images to your project according to the [Using Images] guide in order to display action bar icons.
+
+<a id="window-statusdef"></a>
+#### Window statusDef
+[Window statusDef]: #window-statusdef
+
+A `Window` status bar can be displayed by setting its Window `status` property to a `statusDef`:
+
+A `statusDef` has the following properties:
+
+| Name              | Type      | Default   | Description                                                                                            |
+| ----              | :-------: | --------- | -------------                                                                                          |
+| `separator`       | string    | 'dotted'  | The separate between the status bar and the content of the window. Can be `'dotted'` or `'none'`.      |
+| `color`           | Color     | 'black'   | The foreground color of the status bar used to display the separator and time text.                    |
+| `backgroundColor` | Color     | 'white'   | The background color of the status bar. You can set this to 'black' for windows with white backgrounds. |
+
+````js
+// Set status properties during initialization
+var card = new UI.Card({
+  status: {
+    color: 'white',
+    backgroundColor: 'black'
+  }
+});
+
+// Set status properties after initialization
+card.status({
+  color: 'white',
+  backgroundColor: 'black'
+});
+
+// Set a single status property
+card.status('separator', 'none');
+
+// Disable the status bar
+card.status(false);
+````
 
 #### Window.show()
 
@@ -779,7 +832,7 @@ wind.on('hide', function() {
 
 #### Window.action(actionDef)
 
-This is a special nested accessor to the `action` property which takes an `actionDef`. It can be used to set a new `actionDef`. See [Window actionDef].
+Nested accessor to the `action` property which takes an `actionDef`. Used to configure the action bar with a new `actionDef`. See [Window actionDef].
 
 ````js
 card.action({
@@ -788,17 +841,39 @@ card.action({
 });
 ````
 
-#### Window.action(field, value)
-
-You may also call `Window.action` with two arguments, `field` and `value`, to set specific fields of the window's `action` propery. `field` is a string refering to the [actionDef] property to change. `value` is the new property value to set.
+To disable the action bar after enabling it, `false` can be passed in place of an `actionDef`.
 
 ````js
-card.action('up', 'images/action_icon_plus.png');
+// Disable the action bar
+card.action(false);
 ````
 
-#### Window.fullscreen(fullscreen)
+#### Window.action(field, value)
 
-Accessor to the `fullscreen` property. See [Window].
+`Window.action` can also be called with two arguments, `field` and `value`, to set specific fields of the window's `action` property. `field` is the name of a [Window actionDef] property as a string and `value` is the new property value.
+
+````js
+card.action('select', 'images/action_icon_checkmark.png');
+````
+
+#### Window.status(statusDef)
+
+Nested accessor to the `status` property which takes a `statusDef`. Used to configure the status bar with a new `statusDef`. See [Window statusDef].
+
+````js
+card.status({
+  color: 'white',
+  backgroundColor: 'black'
+});
+````
+
+#### Window.status(field, value)
+
+`Window.status` can also be called with two arguments, `field` and `value`, to set specific fields of the window's `status` property. `field` is the name of a [Window statusDef] property as a string and `value` is the new property value.
+
+````js
+card.status('separator', 'none');
+````
 
 ### Window (dynamic)
 
@@ -1151,7 +1226,7 @@ var line = new UI.Line({
 
 wind.add(line);
 wind.show();
-```
+````
 
 #### Line.position2(position)
 

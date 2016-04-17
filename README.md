@@ -392,6 +392,7 @@ var Settings = require('settings');
 | ----       | :----:  | :--------: | --------- | -------------                                                                      |
 | `url`      | string  |            |           | The URL to the configurable. e.g. 'http://www.example.com?name=value'              |
 | `autoSave` | boolean | (optional) | true      | Whether to automatically save the web view response to options                     |
+| `hash`     | boolean | (optional) | true      | Whether to automatically concatenate the URI encoded json `Settings` options to the URL as the hash component. |
 
 `open` is an optional callback used to perform any tasks before the webview is open, such as managing the options that will be passed to the web view.
 

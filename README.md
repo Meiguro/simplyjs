@@ -330,6 +330,7 @@ if (Feature.microphone()) {
 ````
 
 #### Feature.resolution()
+[Feature.resolution()]: #feature-resolution
 
 `Feature.resolution` returns a [Vector2] containing the display width as the `x` component and the display height as the `y` component. Use the following table to determine the resolution that `Feature.resolution` will return on a given platform.
 
@@ -338,6 +339,8 @@ if (Feature.microphone()) {
 | aplite   | 144   | 168    |                                                                                                   |
 | basalt   | 144   | 168    | This is a rounded rectangle, therefore there is small set of pixels at each corner not available. |
 | chalk    | 180   | 180    | This is a circular display, therefore not all pixels in a 180 by 180 square are available.        |
+
+**NOTE:** [Window]s also have a [Window.size()] method which returns its size as a [Vector2]. Use [Window.size()] when possible.
 
 ````js
 var res = Feature.resolution();
@@ -353,6 +356,8 @@ var rightMargin = Feature.actionBarWidth() + 5;
 var elementWidth = Feature.resolution().x - rightMargin;
 ````
 
+**NOTE:** [Window.size()] already takes the action bar into consideration, so use it instead when possible.
+
 #### Feature.statusBarHeight()
 
 `Feature.statusBarHeight` returns the status bar height. This is `16` and can change accordingly if the Pebble Firmware theme ever changes. Useful for determining the remaining screen real estate in a dynamic [Window] with a status bar visible.
@@ -361,6 +366,8 @@ var elementWidth = Feature.resolution().x - rightMargin;
 var topMargin = Feature.statusBarHeight() + 5;
 var elementHeight = Feature.resolution().y - topMargin;
 ````
+
+**NOTE:** [Window.size()] already takes the status bar into consideration, so use it instead when possible.
 
 ## Settings
 [Settings]: #settings
@@ -887,6 +894,23 @@ card.show();
 
 ````js
 card.status('separator', 'none');
+````
+
+#### Window.size()
+[Window.size()]: #window-size
+
+`Window.size` returns the size of the max viewable content size of the window as a [Vector2] taking into account whether there is an action bar and status bar. A [Window] will return a size that is shorter than a [Window] without for example.
+
+If the automatic consideration of the action bar and status bar does not satisfy your use case, you can use [Feature.resolution()] to obtain the Pebble's screen resolution as a [Vector2].
+
+````js
+var wind = new UI.Window({ status: true });
+
+var size = wind.size();
+var rect = new UI.Rect({ size: new Vector2(size.x / 4, size.y / 4) });
+wind.add(rect);
+
+wind.show();
 ````
 
 ### Window (dynamic)

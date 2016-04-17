@@ -445,13 +445,13 @@ document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(opti
 
 #### Settings.option(field, value)
 
-Saves `value` to `field`. It is recommended that `value` be either a primitive, or an object whose data is retained after going through `JSON.stringify` and `JSON.parse`.
+Saves `value` to `field`. It is recommended that `value` be either a primitive or an object whose data is retained after going through `JSON.stringify` and `JSON.parse`.
 
 ````js
 Settings.option('color', 'red');
 ````
 
-If value is undefined or null, the field will be deleted.
+If `value` is undefined or null, the field will be deleted.
 
 ````js
 Settings.option('color', null);
@@ -479,11 +479,16 @@ Settings.option({
 
 #### Settings.option()
 
-Returns all options. The options can be modified, but you must call `Settings.option` in a way that sets to save.
+Returns all options. The returned options can be modified, but if you want the modifications to be saved, you must call `Settings.option` as a setter.
 
 ````js
 var options = Settings.option();
 console.log(JSON.stringify(options));
+
+options.counter = (options.counter || 0) + 1;
+
+// Modifications are not saved until `Settings.option` is called as a setter
+Settings.option(options);
 ````
 
 #### Settings.data
@@ -494,13 +499,13 @@ While localStorage is still accessible, it is recommended to use `Settings.data`
 
 #### Settings.data(field, value)
 
-Saves `value` to `field`. It is recommended that `value` be either a primitive, or an object whose data is retained after going through `JSON.stringify` and `JSON.parse`.
+Saves `value` to `field`. It is recommended that `value` be either a primitive or an object whose data is retained after going through `JSON.stringify` and `JSON.parse`.
 
 ````js
 Settings.data('player', { id: 1, x: 10, y: 10 });
 ````
 
-If value is undefined or null, the field will be deleted.
+If `value` is undefined or null, the field will be deleted.
 
 ````js
 Settings.data('player', null);
@@ -528,11 +533,16 @@ Settings.data({
 
 #### Settings.data()
 
-Returns all data. The data can be modified, but you must call `Settings.data` in a way that sets to save.
+Returns all data. The returned data can be modified, but if you want the modifications to be saved, you must call `Settings.data` as a setter.
 
 ````js
 var data = Settings.data();
 console.log(JSON.stringify(data));
+
+data.counter = (data.counter || 0) + 1;
+
+// Modifications are not saved until `Settings.data` is called as a setter
+Settings.data(data);
 ````
 
 ## UI

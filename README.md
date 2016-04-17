@@ -218,6 +218,27 @@ Wakeup.schedule(
 )
 ````
 
+## Platform
+
+The Platform module allows you to determine the current platform runtime on the watch through its `Platform.version` method. This is to be used when the [Feature] module does not give enough ability to discern whether a feature exists or not.
+
+````js
+var Platform = require('platform');
+console.log('Current platform is ' + Platform.version());
+````
+
+### Platform.version()
+
+`Platform.version` returns the current platform version name as a lowercase string. This can be `'aplite'`, `'basalt'`, or `'chalk'`. Use the following table to determine the platform that `Platform.version` will return.
+
+| Watch Model          | Platform   |
+| ----                 | :----:     |
+| Pebble Classic       | `'aplite'` |
+| Pebble Steel Classic | `'aplite'` |
+| Pebble Time          | `'basalt'` |
+| Pebble Time Steel    | `'basalt'` |
+| Pebble Time Round    | `'chalk'`  |
+
 ## Settings
 
 The Settings module allows you to add a configurable web view to your application and share options with it. Settings also provides two data accessors `Settings.option` and `Settings.data` which are backed by localStorage. Data stored in `Settings.option` is automatically shared with the configurable web view.

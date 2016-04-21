@@ -467,13 +467,14 @@ Wakeup.schedule(
 
 `Platform` provides a module of the same name `Platform` and a feature detection module [Feature].
 
-````js
-var Platform = require('platform');
-````
 
 ### Platform
 
 The Platform module allows you to determine the current platform runtime on the watch through its `Platform.version` method. This is to be used when the [Feature] module does not give enough ability to discern whether a feature exists or not.
+
+````js
+var Platform = require('platform');
+````
 
 #### Platform.version()
 

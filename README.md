@@ -292,6 +292,104 @@ menu.show();
 
 In the examples above, mostly black text on white or light gray is used which has the most contrast. Try to maintain this amount of contrast with text. Using dark gray on light gray for example can be unreadable at certain angles in the sunlight or in darkly lit areas.
 
+## Feature Detection
+[Feature Detection]: #feature-detection
+
+Pebble.js provides the [Feature] module so that you may perform feature detection. This allows you change the presentation or behavior of your application based on the capabilities or characteristics of the current Pebble watch that the user is running your application with.
+
+### Using Feature
+[Using Feature]: #feature-vs-platform
+
+During the development of your Pebble.js application, you will want to test your application on all platforms. You can use the following local SDK command or change the current platform in CloudPebble.
+
+> `pebble build && pebble install --emulator=aplite && pebble install --emulator=basalt && pebble install --emulator=chalk`
+
+You'll notice that there are a few differing capabilities across platforms, such as having `color` support or having a `round` screen. You can use [Feature.color()] and [Feature.round()] respectively in order to test for these capabilities. Most capability functions also have a direct opposite, such as [Feature.blackAndWhite()] and [Feature.rectangle()] respectively.
+
+The most common way to use [Feature] capability functions is to pass two parameters.
+
+````js
+var UI = require('ui');
+var Feature = require('platform/feature');
+
+// Use 'red' if round, otherwise use 'blue'
+var color = Feature.round('red', 'blue');
+
+var card = new UI.Card({
+  title: 'Color',
+  titleColor: color,
+});
+
+card.show();
+````
+
+You can also call the [Feature] capability functions with no arguments. In these cases, the function will return either `true` or `false` based on whether the capability exists.
+
+````js
+if (Feature.round()) {
+  // Perform round-only logic
+  console.log('This is a round device.');
+}
+````
+
+Among all Pebble platforms, there are characteristics that exist on all platforms, such as the device `resolution` and the height of the status bar. [Feature] also provides methods which gives additional information about these characteristics, such as [Feature.resolution()] and [Feature.statusBarHeight()].
+
+````js
+var res = Feature.resolution();
+console.log('Current display height is ' + res.y);
+````
+
+Check out the [Feature] API Reference for all the capabilities it detects and characteristics it offers.
+
+### Feature vs Platform
+[Feature vs Platform]: #feature-vs-platform
+
+When do you use [Feature] detection instead of just changing the logic based on the current [Platform]? Using feature detection allows you minimize the concerns of your logic, allowing it to be a single unit that does not rely on anything else unrelated.
+
+Consider the following [Platform] detection logic:
+
+````js
+var UI = require('ui');
+var Platform = require('platform');
+
+var isAplite = (Platform.version() === 'aplite');
+var isChalk = (Platform.version() === 'chalk');
+var card = new UI.Card({
+  title: 'Example',
+  titleColor: isAplite ? 'black' : 'dark-green',
+  subtitle: isChalk ? 'Hello World!' : 'Hello!',
+  body: isAplite ? 'Press up or down' : 'Speak to me',
+});
+
+card.show();
+````
+
+The first issue has to do with future proofing. It is checking if the current Pebble has a round screen by seeing if it is on Chalk, however there may be future platforms that have round screens. It can instead use [Feature.round()] which will update to include newer platforms as they are introduced.
+
+The second issue is unintentional entanglement of different concerns. `isAplite` is being used to both determine whether the Pebble is black and white and whether there is a microphone. It is harmless in this small example,  but when the code grows, it could potentially change such that a function both sets up the color and interaction based on a single boolean `isAplite`. This mixes color presentation logic with interaction logic.
+
+Consider the same example using [Feature] detection instead:
+
+````js
+var UI = require('ui');
+var Feature = require('platform/feature');
+
+var card = new UI.Card({
+  title: 'Example',
+  titleColor: Feature.color('dark-green', 'black'),
+  subtitle: Feature.round( 'Hello World!', 'Hello!'),
+  body: Feature.microphone('Speak to me', 'Press up or down'),
+});
+
+card.show();
+````
+
+Now, if it is necessary to separate the different logic in setting up the card, the individual units can be implemented in separate functions without anything unintentionally mixing the logic together. [Feature] is provided as a module, so it is always available where you decide to move your logic.
+
+The two examples consist of logic confined into one line, but if each line was instead large blocks of logic with the `isAplite` boolean used throughout, the issue is more apparent, hence the recommendation to use [Feature] detection. Of course, for capabilities or characteristics that [Feature] is unable to allow you to discern, use [Platform].
+
+**NOTE:** [Feature] underneath the hood does not actually perform feature detection. The benefit of using [Feature] however is that the detection logic is abstracted out of your application, so if any platform is changed or introduced, Pebble.js will update and your application will automatically adapt in the case that no new capabilities or characteristics are introduced.
+
 # API Reference
 [API Reference]: #api-reference
 
@@ -396,7 +494,7 @@ console.log('Current platform is ' + Platform.version());
 ### Feature
 [Feature]: #feature
 
-The Feature module under Platform allows you to perform feature detection, adjusting aspects of your app to the capabilities of the current watch model it is current running on. This allows you to consider the functionality of your app based on the current set of available capabilities or features. The Feature module also provides information about features that exist on all watch models such as `Feature.resolution` which returns the resolution of the current watch model.
+The Feature module under Platform allows you to perform feature detection, adjusting aspects of your application to the capabilities of the current watch model it is current running on. This allows you to consider the functionality of your application based on the current set of available capabilities or features. The Feature module also provides information about features that exist on all watch models such as `Feature.resolution` which returns the resolution of the current watch model.
 
 ````js
 var Feature = require('platform/feature');
@@ -405,10 +503,11 @@ console.log('Color is ' + Feature.color('avaiable', 'not available'));
 console.log('Display width is ' + Feature.resolution().x);
 ````
 
+<a id="feature-color"></a>
 #### Feature.color([yes, no])
 [Feature.color()]: #feature-color
 
-`Feature.color` will return the `yes` parameter if color is supported and `no` if it is not. This is the opposite of `Feature.blackAndWhite`. When given no parameters, it will return true or false respectively.
+`Feature.color` will return the `yes` parameter if color is supported and `no` if it is not. This is the opposite of [Feature.blackAndWhite()]. When given no parameters, it will return true or false respectively.
 
 ````js
 var textColor = Feature.color('oxford-blue', 'black');
@@ -419,9 +518,11 @@ if (Feature.color()) {
 }
 ````
 
+<a id="feature-blackAndWhite"></a>
 #### Feature.blackAndWhite([yes, no])
+[Feature.blackAndWhite()]: #feature-blackAndWhite
 
-`Feature.blackAndWhite` will return the `yes` parameter if only black and white is supported and `no` if it is not. This is the opposite of `Feature.color`. When given no parameters, it will return true or false respectively.
+`Feature.blackAndWhite` will return the `yes` parameter if only black and white is supported and `no` if it is not. This is the opposite of [Feature.color()]. When given no parameters, it will return true or false respectively.
 
 ````js
 var backgroundColor = Feature.blackAndWhite('white', 'clear');
@@ -432,9 +533,11 @@ if (Feature.blackAndWhite()) {
 }
 ````
 
+<a id="feature-rectangle"></a>
 #### Feature.rectangle([yes, no])
+[Feature.rectangle()]: #feature-rectangle
 
-`Feature.rectangle` will return the `yes` parameter if the watch screen is rectangular and `no` if it is not. This is the opposite of `Feature.round`. When given no parameters, it will return true or false respectively.
+`Feature.rectangle` will return the `yes` parameter if the watch screen is rectangular and `no` if it is not. This is the opposite of [Feature.round()]. When given no parameters, it will return true or false respectively.
 
 ````js
 var margin = Feature.rectangle(10, 20);
@@ -445,9 +548,11 @@ if (Feature.rectangle()) {
 }
 ````
 
+<a id="feature-round"></a>
 #### Feature.round([yes, no])
+[Feature.round()]: #feature-round
 
-`Feature.round` will return the `yes` parameter if the watch screen is round and `no` if it is not. This is the opposite of `Feature.rectangle`. When given no parameters, it will return true or false respectively.
+`Feature.round` will return the `yes` parameter if the watch screen is round and `no` if it is not. This is the opposite of [Feature.rectangle()]. When given no parameters, it will return true or false respectively.
 
 ````js
 var textAlign = Feature.round('center', 'left');
@@ -472,6 +577,7 @@ if (Feature.microphone()) {
 }
 ````
 
+<a id="feature-resolution"></a>
 #### Feature.resolution()
 [Feature.resolution()]: #feature-resolution
 
@@ -501,7 +607,9 @@ var elementWidth = Feature.resolution().x - rightMargin;
 
 **NOTE:** [Window.size()] already takes the action bar into consideration, so use it instead when possible.
 
+<a id="feature-statusBarHeight"></a>
 #### Feature.statusBarHeight()
+[Feature.statusBarHeight()]: #feature-statusBarHeight
 
 `Feature.statusBarHeight` returns the status bar height. This is `16` and can change accordingly if the Pebble Firmware theme ever changes. Useful for determining the remaining screen real estate in a dynamic [Window] with a status bar visible.
 
@@ -1050,6 +1158,7 @@ card.show();
 card.status('separator', 'none');
 ````
 
+<a id="window-size"></a>
 #### Window.size()
 [Window.size()]: #window-size
 

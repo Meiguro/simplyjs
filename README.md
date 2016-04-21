@@ -424,7 +424,7 @@ If in doubt, please contact [devsupport@getpebble.com](mailto:devsupport@getpebb
 ## Clock
 [Clock]: #clock
 
-The Clock module makes working with the Wakeup module with time utility functions.
+The Clock module makes working with the [Wakeup] module simpler with its provided time utility functions.
 
 ### Clock
 

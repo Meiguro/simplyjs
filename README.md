@@ -408,7 +408,7 @@ Exporting is possible by modifying or setting `module.exports` within the requir
 
 ### Pebble
 
-The `Pebble` object from [PebbleKit JavaScript](https://developer.pebble.com/guides/pebble-apps/pebblekit-js/) is available as a global variable. Its usage is discouraged in Pebble.js, instead you should use the objects documented below who provide a cleaner object interface to the same functionalities.
+The `Pebble` object from [PebbleKit JavaScript](https://developer.pebble.com/guides/pebble-apps/pebblekit-js/) is available as a global variable. Its usage is discouraged in Pebble.js where there are equivalents. You should use the objects documented below that provide a cleaner object interface to the same functionalities. Use the `Pebble` object when there is no Pebble.js alternative.
 
 ### window -- browser
 

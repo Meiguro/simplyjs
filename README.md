@@ -295,7 +295,7 @@ In the examples above, mostly black text on white or light gray is used which ha
 ## Feature Detection
 [Feature Detection]: #feature-detection
 
-Pebble.js provides the [Feature] module so that you may perform feature detection. This allows you change the presentation or behavior of your application based on the capabilities or characteristics of the current Pebble watch that the user is running your application with.
+Pebble.js provides the [Feature] module so that you may perform feature detection. This allows you to change the presentation or behavior of your application based on the capabilities or characteristics of the current Pebble watch that the user is running your application with.
 
 ### Using Feature
 [Using Feature]: #using-feature
@@ -406,7 +406,54 @@ Exporting is possible by modifying or setting `module.exports` within the requir
 
 ### Pebble
 
-The `Pebble` object from [PebbleKit JavaScript](https://developer.pebble.com/guides/pebble-apps/pebblekit-js/) is available as a global variable. Its usage is discouraged in Pebble.js where there are equivalents. You should use the objects documented below that provide a cleaner object interface to the same functionalities. Use the `Pebble` object when there is no Pebble.js alternative.
+The `Pebble` object from [PebbleKit JavaScript](https://developer.pebble.com/guides/pebble-apps/pebblekit-js/) is available as a global variable. Some of the methods it provides have Pebble.js equivalents. When available, it is recommended to use the Pebble.js equivalents as they have more documented features and cleaner interfaces.
+
+This table lists the current Pebble.js equivalents:
+
+| Pebble API                                          | Pebble.js Equivalent                                     |
+| ------------                                        | :------:                                                 |
+| `Pebble.addEventListener('ready', ...)`             | Your application automatically starts after it is ready. |
+| `Pebble.addEventListener('showConfiguration', ...)` | [Settings.config()]                                      |
+| `Pebble.addEventListener('webviewclosed', ...)`     | [Settings.config()] with close handler.                  |
+
+Use `Pebble` when there is no Pebble.js alternative. Currently, these are the `Pebble` methods that have no direct Pebble.js alternative:
+
+| Pebble API without Equivalents    | Note                                                                   |
+| ------------                      | :---:                                                                  |
+| `Pebble.getAccountToken()`        |                                                                        |
+| `Pebble.getActiveWatchInfo()`     | Use [Platform.version()] if only querying for the platform version.    |
+| `Pebble.getTimelineToken()`       |                                                                        |
+| `Pebble.getWatchToken()`          |                                                                        |
+| `Pebble.showSimpleNotificationOnPebble()` | Consider presenting a [Card] or using Pebble Timeline instead. |
+| `Pebble.timelineSubscribe()`      |                                                                        |
+| `Pebble.timelineSubscriptions()`  |                                                                        |
+| `Pebble.timelineUnsubscribe()`    | &nbsp;                                                                 |
+
+### localStorage
+
+`localStorage` is [available for your use](https://developer.pebble.com/guides/communication/using-pebblekit-js/#using-localstorage), but consider using the [Settings] module instead which provides an alternative interface that can save and load JavaScript objects for you.
+
+````js
+var Settings = require('settings');
+
+Settings.data('playerInfo', { id: 1, name: 'Gordon Freeman' });
+var playerInfo = Settings.data('playerInfo');
+console.log("Player's name is " + playerInfo.name);
+````
+
+### XMLHttpRequest
+
+`XMLHttpRequest` is [available for your use](https://developer.pebble.com/guides/communication/using-pebblekit-js/#using-xmlhttprequest), but consider using the [ajax] module instead which provides a jQuery-like ajax alternative to performing asynchronous and synchronous HTTP requests, with built in support for forms and headers.
+
+````js
+var ajax = require('ajax');
+
+ajax({ url: 'http://api.theysaidso.com/qod.json', type: 'json' },
+  function(data, status, req) {
+    console.log('Quote of the day is: ' + data.contents.quote);
+  }
+);
+````
 
 ### window -- browser
 
@@ -474,7 +521,9 @@ The Platform module allows you to determine the current platform runtime on the 
 var Platform = require('platform');
 ````
 
+<a id="platform-version"></a>
 #### Platform.version()
+[Platform.version()]: #platform-version
 
 `Platform.version` returns the current platform version name as a lowercase string. This can be `'aplite'`, `'basalt'`, or `'chalk'`. Use the following table to determine the platform that `Platform.version` will return.
 
@@ -632,7 +681,9 @@ The Settings module allows you to add a configurable web view to your applicatio
 var Settings = require('settings');
 ````
 
+<a id="settings-config"></a>
 #### Settings.config(options, [open,] close)
+[Settings.config()]: #settings-config
 
 `Settings.config` registers your configurable for use along with `open` and `close` handlers.
 
@@ -1995,16 +2046,9 @@ This module gives you a very simple and easy way to make HTTP requests.
 ````js
 var ajax = require('ajax');
 
-ajax(
-  {
-    url: 'http://api.theysaidso.com/qod.json',
-    type: 'json'
-  },
-  function(data, status, request) {
+ajax({ url: 'http://api.theysaidso.com/qod.json', type: 'json' },
+  function(data) {
     console.log('Quote of the day is: ' + data.contents.quote);
-  },
-  function(error, status, request) {
-    console.log('The ajax request failed: ' + error);
   }
 );
 ````

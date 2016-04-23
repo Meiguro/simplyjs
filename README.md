@@ -298,7 +298,7 @@ In the examples above, mostly black text on white or light gray is used which ha
 Pebble.js provides the [Feature] module so that you may perform feature detection. This allows you change the presentation or behavior of your application based on the capabilities or characteristics of the current Pebble watch that the user is running your application with.
 
 ### Using Feature
-[Using Feature]: #feature-vs-platform
+[Using Feature]: #using-feature
 
 During the development of your Pebble.js application, you will want to test your application on all platforms. You can use the following local SDK command or change the current platform in CloudPebble.
 

@@ -388,8 +388,6 @@ Now, if it is necessary to separate the different logic in setting up the card, 
 
 The two examples consist of logic confined into one line, but if each line was instead large blocks of logic with the `isAplite` boolean used throughout, the issue is more apparent, hence the recommendation to use [Feature] detection. Of course, for capabilities or characteristics that [Feature] is unable to allow you to discern, use [Platform].
 
-**NOTE:** [Feature] underneath the hood does not actually perform feature detection. The benefit of using [Feature] however is that the detection logic is abstracted out of your application, so if any platform is changed or introduced, Pebble.js will update and your application will automatically adapt in the case that no new capabilities or characteristics are introduced.
-
 # API Reference
 [API Reference]: #api-reference
 

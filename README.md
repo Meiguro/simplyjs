@@ -304,7 +304,7 @@ During the development of your Pebble.js application, you will want to test your
 
 > `pebble build && pebble install --emulator=aplite && pebble install --emulator=basalt && pebble install --emulator=chalk`
 
-You'll notice that there are a few differing capabilities across platforms, such as having `color` support or having a `round` screen. You can use [Feature.color()] and [Feature.round()] respectively in order to test for these capabilities. Most capability functions also have a direct opposite, such as [Feature.blackAndWhite()] and [Feature.rectangle()] respectively.
+You'll notice that there are a few differing capabilities across platforms, such as having color support or having a round screen. You can use [Feature.color()] and [Feature.round()] respectively in order to test for these capabilities. Most capability functions also have a direct opposite, such as [Feature.blackAndWhite()] and [Feature.rectangle()] respectively.
 
 The most common way to use [Feature] capability functions is to pass two parameters.
 
@@ -332,7 +332,7 @@ if (Feature.round()) {
 }
 ````
 
-Among all Pebble platforms, there are characteristics that exist on all platforms, such as the device `resolution` and the height of the status bar. [Feature] also provides methods which gives additional information about these characteristics, such as [Feature.resolution()] and [Feature.statusBarHeight()].
+Among all Pebble platforms, there are characteristics that exist on all platforms, such as the device resolution and the height of the status bar. [Feature] also provides methods which gives additional information about these characteristics, such as [Feature.resolution()] and [Feature.statusBarHeight()].
 
 ````js
 var res = Feature.resolution();
@@ -344,7 +344,7 @@ Check out the [Feature] API Reference for all the capabilities it detects and ch
 ### Feature vs Platform
 [Feature vs Platform]: #feature-vs-platform
 
-When do you use [Feature] detection instead of just changing the logic based on the current [Platform]? Using feature detection allows you minimize the concerns of your logic, allowing it to be a single unit that does not rely on anything else unrelated.
+Pebble.js offers both [Feature] detection and [Platform] detection which are different. When do you use [Feature] detection instead of just changing the logic based on the current [Platform]? Using feature detection allows you to minimize the concerns of your logic, allowing each section of logic to be a single unit that does not rely on anything else unrelated.
 
 Consider the following [Platform] detection logic:
 
@@ -366,7 +366,7 @@ card.show();
 
 The first issue has to do with future proofing. It is checking if the current Pebble has a round screen by seeing if it is on Chalk, however there may be future platforms that have round screens. It can instead use [Feature.round()] which will update to include newer platforms as they are introduced.
 
-The second issue is unintentional entanglement of different concerns. `isAplite` is being used to both determine whether the Pebble is black and white and whether there is a microphone. It is harmless in this small example,  but when the code grows, it could potentially change such that a function both sets up the color and interaction based on a single boolean `isAplite`. This mixes color presentation logic with interaction logic.
+The second issue is unintentional entanglement of different concerns. In the example above, `isAplite` is being used to both determine whether the Pebble is black and white and whether there is a microphone. It is harmless in this small example,  but when the code grows, it could potentially change such that a function both sets up the color and interaction based on a single boolean `isAplite`. This mixes color presentation logic with interaction logic.
 
 Consider the same example using [Feature] detection instead:
 
@@ -386,7 +386,7 @@ card.show();
 
 Now, if it is necessary to separate the different logic in setting up the card, the individual units can be implemented in separate functions without anything unintentionally mixing the logic together. [Feature] is provided as a module, so it is always available where you decide to move your logic.
 
-The two examples consist of logic confined into one line, but if each line was instead large blocks of logic with the `isAplite` boolean used throughout, the issue is more apparent, hence the recommendation to use [Feature] detection. Of course, for capabilities or characteristics that [Feature] is unable to allow you to discern, use [Platform].
+The two examples consist of units of logic that consist of one liners, but if each line was instead large blocks of logic with the `isAplite` boolean used throughout, the entanglement issue would be more difficult to remove from your codebase, hence the recommendation to use [Feature] detection. Of course, for capabilities or characteristics that [Feature] is unable to allow you to discern, use [Platform].
 
 # API Reference
 [API Reference]: #api-reference

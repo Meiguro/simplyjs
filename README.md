@@ -153,32 +153,32 @@ wind.show();
 ## Using Color
 [Using Color]: #using-color
 
-You can use Color in your Pebble.js applications by specifying them in the supported [Color Formats]. Use the [Pebble Color Picker](https://developer.pebble.com/guides/tools-and-resources/color-picker/) to find colors to use. Be sure to maintain [Readability and Contrast] when developing your application.
+You can use color in your Pebble.js applications by specifying them in the supported [Color Formats]. Use the [Pebble Color Picker](https://developer.pebble.com/guides/tools-and-resources/color-picker/) to find colors to use. Be sure to maintain [Readability and Contrast] when developing your application.
 
 ### Color Formats
 [Color Formats]: #color-formats
 
-Color can be specified in various ways in your Pebble.js application. The formats are named string, hexidecimal string, and hexidecimal number. Each format has different benefits.
+Color can be specified in various ways in your Pebble.js application. The formats are named string, hexadecimal string, and hexadecimal number. Each format has different benefits.
 
 The following table includes examples of all the supported formats in Pebble.js:
 
 | Color Format                    | Examples                   |
 | ------------                    | :------:                   |
 | Named String                    | `'green', 'sunset-orange'` |
-| Hexidecimal String              | `'#00ff00', '#ff5555'`     |
-| Hexidecimal String (with alpha) | `'#ff00ff00', '#ffff5555'` |
-| Hexidecimal Number              | `0x00ff00, 0xff5555`       |
-| Hexidecimal Number (with alpha) | `0xff00ff00, 0xffff5555`   |
+| Hexadecimal String              | `'#00ff00', '#ff5555'`     |
+| Hexadecimal String (with alpha) | `'#ff00ff00', '#ffff5555'` |
+| Hexadecimal Number              | `0x00ff00, 0xff5555`       |
+| Hexadecimal Number (with alpha) | `0xff00ff00, 0xffff5555`   |
 
-**Named strings** are convenient to remember and read more naturally. They however cannot have the alpha channel be specified with the exception of the named string color `'clear'`. All other named colors are at max opacity. Named colors can also be specified in other casing styles, such as C constant `'SUNSET_ORANGE'`, Pascal `'SunsetOrange'`, or camel case `'sunsetOrange'`. Use the casing most convenient for you, but do so consistently across your own codebase.
+**Named strings** are convenient to remember and read more naturally. They however cannot have the alpha channel be specified with the exception of the named string color `'clear'`. All other named colors are at max opacity. Named colors can also be specified in multiple casing styles, such as hyphenated lowercase `'sunset-orange'`, C constant `'SUNSET_ORANGE'`, Pascal `'SunsetOrange'`, or camel case `'sunsetOrange'`. Use the casing most convenient for you, but do so consistently across your own codebase.
 
-**Hexidecimal strings** can be used for specifying the exact color desired as Pebble.js will automatically round the color to the supported color of the current platform. Two hexidecimal digits are used to represent the three color channels red, green, blue in that order.
+**Hexadecimal strings** can be used for specifying the exact color desired as Pebble.js will automatically round the color to the supported color of the current platform. Two hexadecimal digits are used to represent the three color channels red, green, blue in that order.
 
-**Hexidecimal strings (with alpha)** specified with eight digits are parsed as having an alpha channel specified in the first two digits where `00` is clear and `ff` is full opacity.
+**Hexadecimal strings (with alpha)** specified with eight digits are parsed as having an alpha channel specified in the first two digits where `00` is clear and `ff` is full opacity.
 
-**Hexidecimal numbers** can be manipulated directly with the arithmetic and bitwise operators. This is also the format which the configurable framework Clay uses.
+**Hexadecimal numbers** can be manipulated directly with the arithmetic and bitwise operators. This is also the format which the configurable framework Clay uses.
 
-**Hexidecimal numbers (with alpha)** also have an alpha channel specified, but it is recommended to use hexidecimal strings instead for two reasons. The first reason is that `00` also represents full opacity since they are equivalent to six digit hexidecimal numbers which are implicitly at full opacity. The second is that when explicitly representing full opacity as `ff`, some integer logic can cause a signed overflow, resulting in negative color values. Intermediate alpha channels such as `55` or `aa` have no such caveats.
+**Hexadecimal numbers (with alpha)** also have an alpha channel specified, but it is recommended to use hexadecimal strings instead for two reasons. The first reason is that `00` also represents full opacity since they are equivalent to six digit hexadecimal numbers which are implicitly at full opacity. The second is that when explicitly representing full opacity as `ff`, some integer logic can cause a signed overflow, resulting in negative color values. Intermediate alpha channels such as `55` or `aa` have no such caveats.
 
 Various parts of the Pebble.js API support color. Parameters of the type Color can take any of the color formats mentioned in the above table.
 
@@ -189,9 +189,9 @@ var card = new UI.Card({
   title: 'Using Color',
   titleColor: 'sunset-orange', // Named string
   subtitle: 'Color',
-  subtitleColor: '#00dd00', // 6-digit Hexidecimal string
+  subtitleColor: '#00dd00', // 6-digit Hexadecimal string
   body: 'Format',
-  bodyColor: 0x9a0036 // 6-digit Hexidecimal number
+  bodyColor: 0x9a0036 // 6-digit Hexadecimal number
 });
 
 card.show();
@@ -229,7 +229,7 @@ Using too much color such as in the previous example can be overwhelming however
 var card = new UI.Card({
   status: {
     color: 'white',
-    backgroundColor: Feature.color('eletric-ultramarine', 'black'),
+    backgroundColor: Feature.color('electric-ultramarine', 'black'),
     separator: 'none',
   },
   title: 'Using Color',

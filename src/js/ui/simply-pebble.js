@@ -34,7 +34,7 @@ var BoolType = function(x) {
 };
 
 var StringType = function(x) {
-  return '' + x;
+  return (x === undefined) ? '' : '' + x;
 };
 
 var UTF8ByteLength = function(x) {
@@ -42,12 +42,14 @@ var UTF8ByteLength = function(x) {
 };
 
 var EnumerableType = function(x) {
-  if (typeof x === 'string') {
-    return UTF8ByteLength(x);
-  } else if (x && x.hasOwnProperty('length')) {
+  if (x && x.hasOwnProperty('length')) {
     return x.length;
   }
   return x ? Number(x) : 0;
+};
+
+var StringLengthType = function(x) {
+  return UTF8ByteLength(StringType(x));
 };
 
 var TimeType = function(x) {
@@ -576,7 +578,7 @@ var MenuSectionPacket = new struct([
   ['uint16', 'items', EnumerableType],
   ['uint8', 'backgroundColor', ColorType],
   ['uint8', 'textColor', ColorType],
-  ['uint16', 'titleLength', EnumerableType],
+  ['uint16', 'titleLength', StringLengthType],
   ['cstring', 'title', StringType],
 ]);
 
@@ -590,8 +592,8 @@ var MenuItemPacket = new struct([
   ['uint16', 'section'],
   ['uint16', 'item'],
   ['uint32', 'icon', ImageType],
-  ['uint16', 'titleLength', EnumerableType],
-  ['uint16', 'subtitleLength', EnumerableType],
+  ['uint16', 'titleLength', StringLengthType],
+  ['uint16', 'subtitleLength', StringLengthType],
   ['cstring', 'title', StringType],
   ['cstring', 'subtitle', StringType],
 ]);

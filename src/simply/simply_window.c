@@ -101,8 +101,7 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable, bool a
   if (!is_scrollable || reset) {
     GRect frame = GRectZero;
     prv_update_layer_placement(self, &frame);
-    // TODO: Remove `animated = true` once set content offset always unschedules the animation
-    const bool animated = true;
+    const bool animated = false;
     scroll_layer_set_content_offset(self->scroll_layer, GPointZero, animated);
     scroll_layer_set_content_size(self->scroll_layer, frame.size);
   }

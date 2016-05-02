@@ -298,8 +298,8 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
       body_rect.size = body_size;
       const int new_height = cursor.y + margin_bottom;
       frame.size.h = MAX(window_frame.size.h, new_height);
-      GRect original_frame = layer_get_frame(layer);
-      if (!grect_equal(&frame, &original_frame)) {
+      const GSize content_size = scroll_layer_get_content_size(self->window.scroll_layer);
+      if (!gsize_equal(&frame.size, &content_size)) {
         layer_set_frame(layer, frame);
         scroll_layer_set_content_size(self->window.scroll_layer, frame.size);
       }

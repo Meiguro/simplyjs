@@ -339,7 +339,10 @@ static void layer_update_callback(Layer *layer, GContext *ctx) {
   if (self->window.is_scrollable) {
     frame.origin = GPointZero;
     layer_set_frame(layer, frame);
-    scroll_layer_set_content_size(self->window.scroll_layer, frame.size);
+    const GSize content_size = scroll_layer_get_content_size(self->window.scroll_layer);
+    if (!gsize_equal(&frame.size, &content_size)) {
+      scroll_layer_set_content_size(self->window.scroll_layer, frame.size);
+    }
   }
 }
 

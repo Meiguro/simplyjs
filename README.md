@@ -66,8 +66,8 @@ Making HTTP connections is very easy with the included `ajax` library.
 var ajax = require('ajax');
 ajax({ url: 'http://api.theysaidso.com/qod.json', type: 'json' },
   function(data) {
-    card.body(data.contents.quote);
-    card.title(data.contents.author);
+    card.body(data.contents.quotes[0].quote);
+    card.title(data.contents.quotes[0].author);
   }
 );
 ````
@@ -450,7 +450,7 @@ var ajax = require('ajax');
 
 ajax({ url: 'http://api.theysaidso.com/qod.json', type: 'json' },
   function(data, status, req) {
-    console.log('Quote of the day is: ' + data.contents.quote);
+    console.log('Quote of the day is: ' + data.contents.quotes[0].quote);
   }
 );
 ````
@@ -2048,7 +2048,7 @@ var ajax = require('ajax');
 
 ajax({ url: 'http://api.theysaidso.com/qod.json', type: 'json' },
   function(data) {
-    console.log('Quote of the day is: ' + data.contents.quote);
+    console.log('Quote of the day is: ' + data.contents.quotes[0].quote);
   }
 );
 ````

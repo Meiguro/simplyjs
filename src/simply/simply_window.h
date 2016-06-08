@@ -24,6 +24,7 @@ struct SimplyWindow {
   ButtonId button_mask:4;
   GColor8 background_color;
   bool is_scrollable:1;
+  bool is_paging:1;
   bool use_scroll_layer:1;
   bool use_status_bar:1;
   bool use_action_bar:1;
@@ -45,8 +46,8 @@ bool simply_window_disappear(SimplyWindow *self);
 
 void simply_window_single_click_handler(ClickRecognizerRef recognizer, void *context);
 
-void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable, bool animated,
-                                  bool reset);
+void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable, bool is_paging,
+                                  bool animated, bool reset);
 void simply_window_set_status_bar(SimplyWindow *self, bool use_status_bar);
 void simply_window_set_background_color(SimplyWindow *self, GColor8 background_color);
 

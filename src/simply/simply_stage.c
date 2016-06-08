@@ -509,6 +509,9 @@ static void window_load(Window *window) {
 
   simply_window_load(&self->window);
 
+  // Stage does not yet support text flow
+  scroll_layer_set_paging(self->window.scroll_layer, false);
+
   Layer * const window_layer = window_get_root_layer(window);
   const GRect frame = { .size = layer_get_frame(window_layer).size };
 

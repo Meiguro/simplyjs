@@ -22,6 +22,7 @@ struct __attribute__((__packed__)) WindowPropsPacket {
   uint32_t id;
   GColor8 background_color;
   bool scrollable;
+  bool paging;
 };
 
 typedef struct WindowButtonConfigPacket WindowButtonConfigPacket;
@@ -90,11 +91,15 @@ static void prv_set_scroll_layer_click_config(SimplyWindow *self) {
   }
 }
 
-void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable, bool animated,
-                                  bool reset) {
-  if (!self->use_scroll_layer || (self->is_scrollable == is_scrollable && !reset)) { return; }
+void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable, bool is_paging,
+                                  bool animated, bool reset) {
+  const bool is_state_same = (self->is_scrollable == is_scrollable &&
+                              self->is_paging == is_paging);
+  if (!self->use_scroll_layer || (is_state_same && !reset)) { return; }
 
   self->is_scrollable = is_scrollable;
+  self->is_paging = is_paging;
+  scroll_layer_set_paging(self->scroll_layer, is_paging);
 
   prv_set_scroll_layer_click_config(self);
 
@@ -105,7 +110,6 @@ void simply_window_set_scrollable(SimplyWindow *self, bool is_scrollable, bool a
     scroll_layer_set_content_offset(self->scroll_layer, GPointZero, animated);
     scroll_layer_set_content_size(self->scroll_layer, frame.size);
   }
-
 
   if (self->layer) {
     layer_mark_dirty(self->layer);
@@ -313,7 +317,6 @@ void simply_window_load(SimplyWindow *self) {
 
   scroll_layer_set_context(self->scroll_layer, self);
   scroll_layer_set_shadow_hidden(self->scroll_layer, true);
-  scroll_layer_set_paging(self->scroll_layer, PBL_IF_ROUND_ELSE(true, false)); // TODO: Expose this to JS
 
   self->status_bar_layer = status_bar_layer_create();
   status_bar_layer_set_separator_mode(self->status_bar_layer, StatusBarLayerSeparatorModeDotted);
@@ -379,7 +382,8 @@ static void prv_handle_window_props_packet(Simply *simply, Packet *data) {
   WindowPropsPacket *packet = (WindowPropsPacket *)data;
   simply_window_set_background_color(window, packet->background_color);
   const bool is_same_window = (window->id == packet->id);
-  simply_window_set_scrollable(window, packet->scrollable, is_same_window, !is_same_window);
+  simply_window_set_scrollable(window, packet->scrollable, packet->paging, is_same_window,
+                               !is_same_window);
   window->id = packet->id;
 }
 

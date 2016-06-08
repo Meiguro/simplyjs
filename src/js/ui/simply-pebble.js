@@ -447,6 +447,7 @@ var WindowPropsPacket = new struct([
   ['uint32', 'id'],
   ['uint8', 'backgroundColor', ColorType],
   ['bool', 'scrollable', BoolType],
+  ['bool', 'paging', BoolType],
 ]);
 
 var WindowButtonConfigPacket = new struct([

@@ -50,6 +50,7 @@ var defaults = {
   status: false,
   backgroundColor: 'black',
   scrollable: false,
+  paging: Feature.round(true, false),
 };
 
 var nextId = 1;

@@ -21,6 +21,7 @@ var configProps = [
   'fullscreen',
   'style',
   'scrollable',
+  'paging',
   'backgroundColor',
 ];
 

@@ -33,3 +33,11 @@
 #define IF_DIORITE_ELSE(diorite, other) other
 #define DIORITE_USAGE __attribute__((unused))
 #endif
+
+#if defined(PBL_PLATFORM_EMERY)
+#define IF_EMERY_ELSE(emery, other) emery
+#define EMERY_USAGE
+#else
+#define IF_EMERY_ELSE(emery, other) other
+#define EMERY_USAGE __attribute__((unused))
+#endif
